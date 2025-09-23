@@ -22,7 +22,7 @@ const downloadBytes = async (bytes, name) => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = name + ".ogg"
+    a.download = name
     a.click()
     setTimeout(() => URL.revokeObjectURL(url), 1000)
 }
@@ -65,22 +65,34 @@ function kanjiAndFurigana(node, o = ["", ""]) {
  * @param {HTMLAnchorElement} exampleAudioAnchor 
  */
 function logCard(exampleAudioAnchor) {
-    const wordRuby = exampleAudioAnchor.closest(".vocabulary").querySelector(".spelling ruby.v")
+    const vocab = exampleAudioAnchor.closest(".vocabulary")
+    const wordAudioAnchor = vocab.querySelector("*[data-audio].vocabulary-audio")
+    const wordRuby = vocab.querySelector(".spelling ruby.v")
+
     const [kanji, furigana] = kanjiAndFurigana(wordRuby)
 
     const usedIn = exampleAudioAnchor.parentElement.querySelector("div.used-in")
     const jpSentence = kanjiAndFurigana(usedIn.querySelector("div.jp"))
     const enSentence = usedIn.querySelector("div.en").textContent
 
-    // const audioName = kanji
+    const audio = wordAudioAnchor.dataset.audio.split(",")[0]
+    const audioLocalFile = `[sound:${kanji}_${audio.replace("/", "_")}.ogg]`
 
-    console.log({
+    const sentenceAudio = exampleAudioAnchor.dataset.audio.split(",")[0]
+    const sentenceAudioLocalFile = `[sound:${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg]`
+
+    const o = {
+        audioLocalFile,
+        sentenceAudioLocalFile,
         kanji,
         furigana,
         jpSentenceKanji: jpSentence[0],
         jpSentenceFuri: jpSentence[1],
         enSentence
-    })
+    }
+
+    console.log(o)
+    return o
 }
 
 document.addEventListener("DOMContentLoaded", () => {
