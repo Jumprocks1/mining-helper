@@ -1,0 +1,29 @@
+{
+  "name": "jpdb.io - Anki",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "main.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://jpdb.io/*"
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "inject.js"
+      ],
+      "matches": [
+        "https://jpdb.io/*"
+      ]
+    }
+  ]
+}
