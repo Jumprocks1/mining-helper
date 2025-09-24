@@ -1,3 +1,5 @@
+/// <reference path="types.d.ts" />
+
 const originalFetch = fetch;
 const fetches = {}
 window.fetch = (...args) => {
@@ -6,6 +8,7 @@ window.fetch = (...args) => {
     const prefix = "/static/v/"
     if (typeof input === "string" && input.startsWith(prefix)) {
         const audio = input.substring(prefix.length)
+        // console.log(`fetch ${audio}`)
         const originalThen1 = res1.then
         res1.then = (...args1) => {
             const res2 = originalThen1.apply(res1, args1)
@@ -17,8 +20,8 @@ window.fetch = (...args) => {
     return res1
 }
 
-const downloadBytes = async (bytes, name) => {
-    const blob = new Blob([bytes]);
+const downloadBytes = async (bytes, name) => downloadBlob(new Blob([bytes]), name)
+const downloadBlob = async (blob, name) => {
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -76,10 +79,12 @@ function logCard(exampleAudioAnchor) {
     const enSentence = usedIn.querySelector("div.en").textContent
 
     const audio = wordAudioAnchor.dataset.audio.split(",")[0]
-    const audioLocalFile = `[sound:${kanji}_${audio.replace("/", "_")}.ogg]`
+    const audioLocalFile = `${kanji}_${audio.replace("/", "_")}.ogg`
 
     const sentenceAudio = exampleAudioAnchor.dataset.audio.split(",")[0]
-    const sentenceAudioLocalFile = `[sound:${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg]`
+    const sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
+
+    preload_audio([audio, sentenceAudio])
 
     const o = {
         audioLocalFile,
@@ -91,25 +96,49 @@ function logCard(exampleAudioAnchor) {
         enSentence
     }
 
-    console.log(o)
+    console.log(o);
+
+    (async () => {
+        const zipFileWriter = new zip.BlobWriter();
+        const zipWriter = new zip.ZipWriter(zipFileWriter);
+
+        const audioBytes = (await fetches[audio])[0]
+        const sentenceAudioBytes = (await fetches[sentenceAudio])[0]
+
+        if (audioBytes)
+            await zipWriter.add(audioLocalFile, new zip.BlobReader(new Blob([audioBytes])))
+        else console.error(`audio not found ${audio}`)
+        if (sentenceAudioBytes)
+            await zipWriter.add(sentenceAudioLocalFile, new zip.BlobReader(new Blob([sentenceAudioBytes])))
+        else console.error(`sentence audio not found ${audio}`)
+
+        await zipWriter.close();
+        await downloadBlob(await zipFileWriter.getData(), "jpdb.zip")
+    })()
+
+
+
     return o
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const load = () => {
-        const audioTags = Array.from(document.querySelectorAll("*[data-audio]"));
-        audioTags.forEach(e => {
-            e.addEventListener("click", async ev => {
-                if (ev.shiftKey || ev.ctrlKey) {
-                    ev.preventDefault()
-                    ev.stopImmediatePropagation()
-                    ev.stopPropagation()
-                    logCard(e)
-                    // await downloadAudio(e.dataset.audio, name)
-                }
-            }, true)
-        })
-    }
-    load()
+const load = () => {
+    const audioTags = Array.from(document.querySelectorAll("*[data-audio].example-audio"));
+    audioTags.forEach(e => {
+        e.addEventListener("click", async ev => {
+            if (ev.shiftKey || ev.ctrlKey) {
+                ev.preventDefault()
+                ev.stopImmediatePropagation()
+                ev.stopPropagation()
+                logCard(e)
+                // await downloadAudio(e.dataset.audio, name)
+            }
+        }, true)
+    })
     document.addEventListener("virtual-refresh", load)
-})
+}
+
+if (document.readyState === "complete" || document.readyState === "interactive") {
+    load()
+} else {
+    document.addEventListener("DOMContentLoaded", () => load())
+}

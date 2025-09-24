@@ -11,6 +11,16 @@
         "https://jpdb.io/*"
       ],
       "js": [
+        "inject.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://jpdb.io/*"
+      ],
+      "js": [
         "content.js"
       ],
       "run_at": "document_start"
@@ -19,7 +29,7 @@
   "web_accessible_resources": [
     {
       "resources": [
-        "inject.js"
+        "zip-core.min.js"
       ],
       "matches": [
         "https://jpdb.io/*"
