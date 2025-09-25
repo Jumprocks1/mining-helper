@@ -1,117 +1,179 @@
 /// <reference path="types.d.ts" />
 
-const style = `
-.subsection-meanings .description:hover:not(.selected),
-    .subsection-examples .used-in:hover:not(.selected) {
+(function () {
+    const meaningCss = ".subsection-meanings .description"
+    const sentenceCss = ".subsection-examples .used-in"
+
+    const style = `
+${meaningCss}:hover:not(.selected),
+    ${sentenceCss}:hover:not(.selected) {
     background-color: oklch(0.7012 0.1888 143.23 / 15%);
     cursor: pointer;
 }
-.subsection-meanings .description.selected,
-    .subsection-examples .used-in.selected {
+${meaningCss}.selected,
+    ${sentenceCss}.selected {
     background-color: oklch(0.7012 0.1888 22.97 / 15%);
 }
 `
 
-const target = document.head || document.documentElement
+    const target = document.head || document.documentElement
 
 
-/**
- * @param {ArrayBuffer} bytes 
- * @param {string} name 
- */
-const downloadBytes = async (bytes, name) => downloadBlob(new Blob([bytes]), name)
-/**
- * @param {Blob} blob
- * @param {string} name 
- */
-const downloadBlob = async (blob, name) => {
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = name
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
-/** @param {string} s */
-const sound = s => `[sound:${s}]`
-
-/** @param {CardData[]} cards */
-function csv(cards) {
-    /** @type {{name:string, get: (e: CardData) => string}[]} */
-    const fields = [
-        { name: "Word", get: e => e.kanji },
-        { name: "Word Meaning", get: e => e.meaning },
-        { name: "Word Furigana", get: e => e.furigana },
-        { name: "Word Audio", get: e => sound(e.audioLocalFile) },
-        { name: "Sentence", get: e => e.jpSentenceKanji },
-        { name: "Sentence Meaning", get: e => e.enSentence },
-        { name: "Sentence Furigana", get: e => e.jpSentenceFuri },
-        { name: "Sentence Audio", get: e => sound(e.sentenceAudioLocalFile) },
-        // TODO add sentence hash as ID or something
-    ]
-    let o = ""
-    o += "#separator:Pipe\n"
-    o += "#html:true\n"
-    o += "#columns:"
-    for (let i = 0; i < fields.length; i++) {
-        o += fields[i].name
-        if (i < fields.length - 1) o += "|"
+    /**
+     * @param {ArrayBuffer} bytes 
+     * @param {string} name 
+     */
+    const downloadBytes = async (bytes, name) => downloadBlob(new Blob([bytes]), name)
+    /**
+     * @param {Blob} blob
+     * @param {string} name 
+     */
+    const downloadBlob = async (blob, name) => {
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = name
+        a.click()
+        setTimeout(() => URL.revokeObjectURL(url), 1000)
     }
-    o += "\n"
-    for (const card of cards) {
+
+    /** @param {string} s */
+    const sound = s => `[sound:${s}]`
+
+    /** @param {CardData[]} cards */
+    function csv(cards) {
+        /** @type {{name:string, get: (e: CardData) => string}[]} */
+        const fields = [
+            { name: "Word", get: e => e.kanji },
+            { name: "Word Meaning", get: e => e.meaning },
+            { name: "Word Furigana", get: e => e.furigana },
+            { name: "Word Audio", get: e => sound(e.audioLocalFile) },
+            { name: "Sentence", get: e => e.jpSentenceKanji },
+            { name: "Sentence Meaning", get: e => e.enSentence },
+            { name: "Sentence Furigana", get: e => e.jpSentenceFuri },
+            { name: "Sentence Audio", get: e => sound(e.sentenceAudioLocalFile) },
+            // TODO add sentence hash as ID or something
+        ]
+        let o = ""
+        o += "#separator:Pipe\n"
+        o += "#html:true\n"
+        o += "#columns:"
         for (let i = 0; i < fields.length; i++) {
-            o += fields[i].get(card)
+            o += fields[i].name
             if (i < fields.length - 1) o += "|"
         }
         o += "\n"
+        for (const card of cards) {
+            for (let i = 0; i < fields.length; i++) {
+                o += fields[i].get(card)
+                if (i < fields.length - 1) o += "|"
+            }
+            o += "\n"
+        }
+        return o
     }
-    return o
-}
-async function downloadPendingCards() {
-    const keys = await chrome.storage.session.getKeys()
-    const cardsObject = await chrome.storage.session.get(keys)
-    chrome.storage.session.clear()
-    /** @type {CardData[]} */
-    const cards = []
-    for (const key in cardsObject)
-        cards.push(cardsObject[key])
+    async function downloadPendingCards() {
+        const keys = await chrome.storage.session.getKeys()
+        const cardsObject = await chrome.storage.session.get(keys)
+        chrome.storage.session.clear()
+        /** @type {CardData[]} */
+        const cards = []
+        for (const key in cardsObject)
+            cards.push(cardsObject[key])
 
 
-    const csvString = csv(cards)
-    const zipFileWriter = new zip.BlobWriter();
-    const zipWriter = new zip.ZipWriter(zipFileWriter);
+        const csvString = csv(cards)
+        const zipFileWriter = new zip.BlobWriter();
+        const zipWriter = new zip.ZipWriter(zipFileWriter);
 
-    await zipWriter.add("cards.csv", new zip.TextReader(csvString))
+        await zipWriter.add("cards.csv", new zip.TextReader(csvString))
 
-    for (const card of cards) {
-        if (card.audioBytes)
-            await zipWriter.add(card.audioLocalFile, new zip.BlobReader(new Blob([card.audioBytes])))
-        if (card.sentenceAudioBytes)
-            await zipWriter.add(card.sentenceAudioLocalFile, new zip.BlobReader(new Blob([card.sentenceAudioBytes])))
+        for (const card of cards) {
+            if (card.audioBytes)
+                await zipWriter.add(card.audioLocalFile, new zip.BlobReader(new Blob([card.audioBytes])))
+            if (card.sentenceAudioBytes)
+                await zipWriter.add(card.sentenceAudioLocalFile, new zip.BlobReader(new Blob([card.sentenceAudioBytes])))
+        }
+
+        await zipWriter.close();
+        await downloadBlob(await zipFileWriter.getData(), "jpdb.zip")
     }
 
-    await zipWriter.close();
-    await downloadBlob(await zipFileWriter.getData(), "jpdb.zip")
-}
+    document.addEventListener("sentence-selected", async e => {
+        /** @type {CardData} */
+        // @ts-ignore
+        const data = e.detail.data
+        chrome.storage.session.set({ [data.kanji]: data })
+        console.log(data)
+    })
 
-document.addEventListener("sentence-selected", async e => {
-    /** @type {CardData} */
-    // @ts-ignore
-    const data = e.detail.data
-    chrome.storage.session.set({ [data.kanji]: data })
-    console.log(data)
-})
+    document.addEventListener("keypress", e => {
+        if (e.ctrlKey && e.shiftKey && e.code === "KeyS") {
+            downloadPendingCards()
+        }
+    })
 
-document.addEventListener("keypress", e => {
-    if (e.ctrlKey && e.shiftKey && e.code === "KeyS") {
-        downloadPendingCards()
+
+    const css = document.createElement("style")
+    css.innerHTML = style
+    target.prepend(css)
+
+    zip.configure({ useWebWorkers: false }) // these break everything, not sure why
+
+    /**
+     * @param {string} css
+     * @param {HTMLElement} node
+     */
+    function select(css, node) {
+        const all = document.querySelectorAll(css)
+        for (const e of all) e.classList.remove("selected")
+        node.classList.add("selected")
     }
-})
 
+    async function afterLoad() {
+        const vocabs = document.querySelectorAll(".vocabulary")
+        for (const vocab of vocabs) {
+            const wordRuby = vocab.querySelector(".spelling ruby.v")
+            if (wordRuby) {
+                const [kanji,] = kanjiAndFurigana(wordRuby)
+                const res = await chrome.storage.session.get(kanji)
+                /** @type {CardData} */
+                const stored = res[kanji]
+                if (stored) {
+                    // @ts-ignore
+                    select(meaningCss, document.querySelectorAll(meaningCss).item(stored.meaningIndex))
+                    // @ts-ignore
+                    select(sentenceCss, document.querySelectorAll(sentenceCss).item(stored.sentenceIndex))
+                }
+            }
+        }
+    }
 
-const css = document.createElement("style")
-css.innerHTML = style
-target.prepend(css)
-
-zip.configure({ useWebWorkers: false }) // these break everything, not sure why
+    /** @param {any} node */
+    function kanjiAndFurigana(node, o = ["", ""]) {
+        if (node.nodeType === 3) {
+            o[0] += node.textContent
+            o[1] += node.textContent
+        } else {
+            if (node.nodeName === "RT") {
+                const text = node.textContent
+                if (text) { // some of these are empty
+                    o[1] += "["
+                    o[1] += text
+                    o[1] += "]"
+                }
+            } else if (node.classList.contains("highlight")) {
+                o[0] += "<b>"
+                o[1] += "<b>";
+                [...node.childNodes].forEach(e => kanjiAndFurigana(e, o))
+                o[0] += "</b>"
+                o[1] += "</b>"
+            } else {
+                [...node.childNodes].forEach(e => kanjiAndFurigana(e, o))
+            }
+        }
+        return o
+    }
+    afterLoad()
+    document.addEventListener("virtual-refresh", afterLoad)
+})()

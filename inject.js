@@ -21,6 +21,7 @@ window.fetch = (...args) => {
     return res1
 }
 
+// TODO move usages of this to content.js and remove
 /**
  * @param {HTMLElement} node
  */
@@ -50,18 +51,18 @@ function kanjiAndFurigana(node, o = ["", ""]) {
 }
 
 function logCard() {
-    const usedInElement = document.querySelector(exampleCss + ".selected") ?? document.querySelector(exampleCss)
-    select(exampleCss, usedInElement)
+    const sentenceElement = document.querySelector(sentenceCss + ".selected") ?? document.querySelector(sentenceCss)
+    select(sentenceCss, sentenceElement)
 
-    const exampleAudioAnchor = usedInElement.parentElement.querySelector("*[data-audio].example-audio")
-    const vocab = usedInElement.closest(".vocabulary")
+    const exampleAudioAnchor = sentenceElement.parentElement.querySelector("*[data-audio].example-audio")
+    const vocab = sentenceElement.closest(".vocabulary")
     const wordAudioAnchor = vocab.querySelector("*[data-audio].vocabulary-audio")
     const wordRuby = vocab.querySelector(".spelling ruby.v")
 
     const [kanji, furigana] = kanjiAndFurigana(wordRuby)
 
-    const jpSentence = kanjiAndFurigana(usedInElement.querySelector("div.jp"))
-    const enSentence = usedInElement.querySelector("div.en").textContent
+    const jpSentence = kanjiAndFurigana(sentenceElement.querySelector("div.jp"))
+    const enSentence = sentenceElement.querySelector("div.en").textContent
 
     const audio = wordAudioAnchor.dataset.audio.split(",")[0]
     const audioLocalFile = `${kanji}_${audio.replace("/", "_")}.ogg`
@@ -69,9 +70,9 @@ function logCard() {
     const sentenceAudio = exampleAudioAnchor.dataset.audio.split(",")[0]
     const sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
 
-    const descriptionElement = vocab.querySelector(descriptionCss + ".selected") ?? vocab.querySelector(descriptionCss)
-    select(descriptionCss, descriptionElement)
-    let description = descriptionElement.childNodes[0].textContent
+    const meaningElement = vocab.querySelector(meaningCss + ".selected") ?? vocab.querySelector(meaningCss)
+    select(meaningCss, meaningElement)
+    let description = meaningElement.childNodes[0].textContent
     description = description.replace(/^\d+\./, "").trim()
 
 
@@ -91,7 +92,9 @@ function logCard() {
             enSentence,
             // surprisingly these ArrayBuffers are serializable
             audioBytes: (await fetches[audio])[0],
-            sentenceAudioBytes: (await fetches[sentenceAudio])[0]
+            sentenceAudioBytes: (await fetches[sentenceAudio])[0],
+            meaningIndex: [...document.querySelectorAll(meaningCss)].indexOf(meaningElement),
+            sentenceIndex: [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement),
         }
         const event = new CustomEvent("sentence-selected", {
             detail: {
@@ -102,10 +105,14 @@ function logCard() {
     })()
 }
 
-const descriptionCss = ".subsection-meanings .description"
-const exampleCss = ".subsection-examples .used-in"
+const meaningCss = ".subsection-meanings .description"
+const sentenceCss = ".subsection-examples .used-in"
 
-const select = (css, node) => {
+/**
+ * @param {string} css
+ * @param {HTMLElement} node
+ */
+function select(css, node) {
     const all = document.querySelectorAll(css)
     for (const e of all) e.classList.remove("selected")
     node.classList.add("selected")
@@ -123,7 +130,7 @@ document.addEventListener("click", ev => {
                 return found
             }
         }
-        if (check(descriptionCss) || check(exampleCss))
+        if (check(meaningCss) || check(sentenceCss))
             logCard()
     }
 })

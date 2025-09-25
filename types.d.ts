@@ -14,5 +14,8 @@ declare global {
         enSentence: string
         audioBytes: ArrayBuffer
         sentenceAudioBytes: ArrayBuffer
+
+        sentenceIndex: number
+        meaningIndex: number
     }
 }
