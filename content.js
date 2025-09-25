@@ -1,4 +1,5 @@
 /// <reference path="types.d.ts" />
+// @ts-nocheck
 
 (function () {
     const meaningCss = ".subsection-meanings .description"
@@ -18,12 +19,30 @@ ${meaningCss}.selected,
 
     const target = document.head || document.documentElement
 
-
+    /** @type {{[key in number]: (value: any) => void}} */
+    const pendingAudioRequests = {}
+    document.addEventListener("fetch-audio-response", ev => {
+        /** @type {CustomEvent} */
+        // @ts-ignore
+        const customEv = ev
+        pendingAudioRequests[customEv.detail.requestId](customEv.detail.audios)
+    })
+    let requestId = 0
     /**
-     * @param {ArrayBuffer} bytes 
-     * @param {string} name 
+     * 
+     * @param {string[]} audios 
+     * @returns {Promise<ArrayBuffer[]>}
      */
-    const downloadBytes = async (bytes, name) => downloadBlob(new Blob([bytes]), name)
+    async function requestAudio(audios) {
+        const myId = requestId++
+        return await new Promise(res => {
+            pendingAudioRequests[myId] = res
+            document.dispatchEvent(new CustomEvent("fetch-audio", {
+                detail: { audios, requestId: myId }
+            }))
+        })
+    }
+
     /**
      * @param {Blob} blob
      * @param {string} name 
@@ -176,4 +195,72 @@ ${meaningCss}.selected,
     }
     afterLoad()
     document.addEventListener("virtual-refresh", afterLoad)
+
+    async function logCard() {
+        const sentenceElement = document.querySelector(sentenceCss + ".selected") ?? document.querySelector(sentenceCss)
+        select(sentenceCss, sentenceElement)
+
+        const exampleAudioAnchor = sentenceElement.parentElement.querySelector("*[data-audio].example-audio")
+        const vocab = sentenceElement.closest(".vocabulary")
+        const wordAudioAnchor = vocab.querySelector("*[data-audio].vocabulary-audio")
+        const wordRuby = vocab.querySelector(".spelling ruby.v")
+
+        const [kanji, furigana] = kanjiAndFurigana(wordRuby)
+
+        const jpSentence = kanjiAndFurigana(sentenceElement.querySelector("div.jp"))
+        const enSentence = sentenceElement.querySelector("div.en").textContent
+
+        const audio = wordAudioAnchor.dataset.audio.split(",")[0]
+        const audioLocalFile = `${kanji}_${audio.replace("/", "_")}.ogg`
+
+        const sentenceAudio = exampleAudioAnchor.dataset.audio.split(",")[0]
+        const sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
+
+        const meaningElement = vocab.querySelector(meaningCss + ".selected") ?? vocab.querySelector(meaningCss)
+        select(meaningCss, meaningElement)
+        let description = meaningElement.childNodes[0].textContent
+        description = description.replace(/^\d+\./, "").trim()
+
+        const [audioBytes, sentenceAudioBytes] = await requestAudio([audio, sentenceAudio])
+
+        /** @type {CardData} */
+        const o = {
+            audioLocalFile,
+            meaning: description,
+            sentenceAudioLocalFile,
+            kanji,
+            furigana,
+            jpSentenceKanji: jpSentence[0],
+            jpSentenceFuri: jpSentence[1],
+            enSentence,
+            // surprisingly these ArrayBuffers are serializable
+            audioBytes,
+            sentenceAudioBytes,
+            meaningIndex: [...document.querySelectorAll(meaningCss)].indexOf(meaningElement),
+            sentenceIndex: [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement),
+        }
+        const event = new CustomEvent("sentence-selected", {
+            detail: {
+                data: o,
+            }
+        })
+        document.dispatchEvent(event)
+    }
+
+    document.addEventListener("click", ev => {
+        /** @type {HTMLElement} */
+        const clicked = ev.target
+        if (clicked) {
+            const check = (css) => {
+                const found = clicked.closest(css)
+                if (found) {
+                    select(css, found)
+                    // don't prevent default since selecting/copying is nice
+                    return found
+                }
+            }
+            if (check(meaningCss) || check(sentenceCss))
+                logCard()
+        }
+    })
 })()
