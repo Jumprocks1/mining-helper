@@ -49,19 +49,19 @@ function kanjiAndFurigana(node, o = ["", ""]) {
     return o
 }
 
-/**
- * @param {HTMLAnchorElement} exampleAudioAnchor 
- */
-function logCard(exampleAudioAnchor) {
-    const vocab = exampleAudioAnchor.closest(".vocabulary")
+function logCard() {
+    const usedInElement = document.querySelector(exampleCss + ".selected") ?? document.querySelector(exampleCss)
+    select(exampleCss, usedInElement)
+
+    const exampleAudioAnchor = usedInElement.parentElement.querySelector("*[data-audio].example-audio")
+    const vocab = usedInElement.closest(".vocabulary")
     const wordAudioAnchor = vocab.querySelector("*[data-audio].vocabulary-audio")
     const wordRuby = vocab.querySelector(".spelling ruby.v")
 
     const [kanji, furigana] = kanjiAndFurigana(wordRuby)
 
-    const usedIn = exampleAudioAnchor.parentElement.querySelector("div.used-in")
-    const jpSentence = kanjiAndFurigana(usedIn.querySelector("div.jp"))
-    const enSentence = usedIn.querySelector("div.en").textContent
+    const jpSentence = kanjiAndFurigana(usedInElement.querySelector("div.jp"))
+    const enSentence = usedInElement.querySelector("div.en").textContent
 
     const audio = wordAudioAnchor.dataset.audio.split(",")[0]
     const audioLocalFile = `${kanji}_${audio.replace("/", "_")}.ogg`
@@ -69,9 +69,10 @@ function logCard(exampleAudioAnchor) {
     const sentenceAudio = exampleAudioAnchor.dataset.audio.split(",")[0]
     const sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
 
-    const meaningsHeader = vocab.querySelector(".subsection-meanings")
-    let firstDescription = meaningsHeader.querySelector(".description").textContent
-    firstDescription = firstDescription.replace(/^\d+\./, "").trim()
+    const descriptionElement = vocab.querySelector(descriptionCss + ".selected") ?? vocab.querySelector(descriptionCss)
+    select(descriptionCss, descriptionElement)
+    let description = descriptionElement.childNodes[0].textContent
+    description = description.replace(/^\d+\./, "").trim()
 
 
     preload_audio([audio, sentenceAudio]);
@@ -81,7 +82,7 @@ function logCard(exampleAudioAnchor) {
         /** @type {CardData} */
         const o = {
             audioLocalFile,
-            meaning: firstDescription,
+            meaning: description,
             sentenceAudioLocalFile,
             kanji,
             furigana,
@@ -101,23 +102,29 @@ function logCard(exampleAudioAnchor) {
     })()
 }
 
-const load = () => {
-    const audioTags = Array.from(document.querySelectorAll("*[data-audio].example-audio"));
-    audioTags.forEach(e => {
-        e.addEventListener("click", async ev => {
-            if (ev.shiftKey || ev.ctrlKey) {
-                ev.preventDefault()
-                ev.stopImmediatePropagation()
-                ev.stopPropagation()
-                logCard(e)
-            }
-        }, true)
-    })
-    document.addEventListener("virtual-refresh", load)
+const descriptionCss = ".subsection-meanings .description"
+const exampleCss = ".subsection-examples .used-in"
+
+const select = (css, node) => {
+    const all = document.querySelectorAll(css)
+    for (const e of all) e.classList.remove("selected")
+    node.classList.add("selected")
 }
 
-if (document.readyState === "complete" || document.readyState === "interactive") {
-    load()
-} else {
-    document.addEventListener("DOMContentLoaded", () => load())
-}
+document.addEventListener("click", ev => {
+    /** @type {HTMLElement} */
+    const clicked = ev.target
+    if (clicked) {
+        const check = (css) => {
+            const found = clicked.closest(css)
+            if (found) {
+                select(css, found)
+                // don't prevent default since selecting/copying is nice
+                return found
+            }
+        }
+        if (check(descriptionCss) || check(exampleCss))
+            logCard()
+    }
+})
+

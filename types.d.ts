@@ -3,8 +3,6 @@ export { }
 declare global {
     var zip: typeof import("./zip-js")
 
-    var chrome: any
-
     interface CardData {
         audioLocalFile: string
         sentenceAudioLocalFile: string

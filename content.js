@@ -1,6 +1,15 @@
 /// <reference path="types.d.ts" />
 
 const style = `
+.subsection-meanings .description:hover:not(.selected),
+    .subsection-examples .used-in:hover:not(.selected) {
+    background-color: oklch(0.7012 0.1888 143.23 / 15%);
+    cursor: pointer;
+}
+.subsection-meanings .description.selected,
+    .subsection-examples .used-in.selected {
+    background-color: oklch(0.7012 0.1888 22.97 / 15%);
+}
 `
 
 const target = document.head || document.documentElement
@@ -60,17 +69,13 @@ function csv(cards) {
     return o
 }
 async function downloadPendingCards() {
-    const count = (await chrome.storage.session.get({ cardCount: 0 })).cardCount
-    if (!count) return
-    const request = []
-    for (let i = 0; i < count; i++)
-        request.push("card" + i)
-    const cardsObject = await chrome.storage.session.get(request)
+    const keys = await chrome.storage.session.getKeys()
+    const cardsObject = await chrome.storage.session.get(keys)
     chrome.storage.session.clear()
     /** @type {CardData[]} */
     const cards = []
-    for (let i = 0; i < count; i++)
-        cards.push(cardsObject["card" + i])
+    for (const key in cardsObject)
+        cards.push(cardsObject[key])
 
 
     const csvString = csv(cards)
@@ -91,9 +96,11 @@ async function downloadPendingCards() {
 }
 
 document.addEventListener("sentence-selected", async e => {
-    const count = (await chrome.storage.session.get({ "cardCount": 0 })).cardCount
+    /** @type {CardData} */
     // @ts-ignore
-    chrome.storage.session.set({ ["card" + count]: e.detail.data, cardCount: count + 1 })
+    const data = e.detail.data
+    chrome.storage.session.set({ [data.kanji]: data })
+    console.log(data)
 })
 
 document.addEventListener("keypress", e => {
