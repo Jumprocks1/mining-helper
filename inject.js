@@ -1,4 +1,5 @@
 /// <reference path="types.d.ts" />
+// @ts-nocheck
 
 const originalFetch = fetch;
 const fetches = {}
@@ -18,22 +19,6 @@ window.fetch = (...args) => {
         }
     }
     return res1
-}
-
-const downloadBytes = async (bytes, name) => downloadBlob(new Blob([bytes]), name)
-const downloadBlob = async (blob, name) => {
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = name
-    a.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-}
-
-const downloadAudio = async (audio, name) => {
-    preload_audio([audio])
-    const fetched = await fetches[audio]
-    downloadBytes(fetched[0], name)
 }
 
 /**
@@ -84,12 +69,19 @@ function logCard(exampleAudioAnchor) {
     const sentenceAudio = exampleAudioAnchor.dataset.audio.split(",")[0]
     const sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
 
+    const meaningsHeader = vocab.querySelector(".subsection-meanings")
+    let firstDescription = meaningsHeader.querySelector(".description").textContent
+    firstDescription = firstDescription.replace(/^\d+\./, "").trim()
+
+
     preload_audio([audio, sentenceAudio]);
 
 
     (async () => {
+        /** @type {CardData} */
         const o = {
             audioLocalFile,
+            meaning: firstDescription,
             sentenceAudioLocalFile,
             kanji,
             furigana,
@@ -118,7 +110,6 @@ const load = () => {
                 ev.stopImmediatePropagation()
                 ev.stopPropagation()
                 logCard(e)
-                // await downloadAudio(e.dataset.audio, name)
             }
         }, true)
     })

@@ -5,6 +5,12 @@
   "action": {
     "default_popup": "main.html"
   },
+  "background": {
+    "service_worker": "service-worker.js"
+  },
+  "permissions": [
+    "storage"
+  ],
   "content_scripts": [
     {
       "matches": [
@@ -21,19 +27,18 @@
         "https://jpdb.io/*"
       ],
       "js": [
-        "content.js"
-      ],
-      "run_at": "document_start"
-    }
-  ],
-  "web_accessible_resources": [
-    {
-      "resources": [
         "zip-core.min.js"
       ],
+      "run_at": "document_idle"
+    },
+    {
       "matches": [
         "https://jpdb.io/*"
-      ]
+      ],
+      "js": [
+        "content.js"
+      ],
+      "run_at": "document_idle"
     }
   ]
 }
