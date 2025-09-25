@@ -1,8 +1,5 @@
 {
     "compilerOptions": {
-        "checkJs": true,
-        "strict": true,
-        "noImplicitAny": true,
         "noEmit": true,
         "target": "ESNext"
     },

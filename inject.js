@@ -26,7 +26,7 @@ document.addEventListener("fetch-audio", async ev => {
     preload_audio(audios);
     const fetchedAudios = []
     for (const e of audios) {
-        fetchedAudios.push({ name: e, data: (await fetches[e])[0] })
+        fetchedAudios.push((await fetches[e])[0])
     }
     if (fetchedAudios.length > 0) {
         document.dispatchEvent(new CustomEvent("fetch-audio-response", {
