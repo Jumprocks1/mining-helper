@@ -84,41 +84,29 @@ function logCard(exampleAudioAnchor) {
     const sentenceAudio = exampleAudioAnchor.dataset.audio.split(",")[0]
     const sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
 
-    preload_audio([audio, sentenceAudio])
+    preload_audio([audio, sentenceAudio]);
 
-    const o = {
-        audioLocalFile,
-        sentenceAudioLocalFile,
-        kanji,
-        furigana,
-        jpSentenceKanji: jpSentence[0],
-        jpSentenceFuri: jpSentence[1],
-        enSentence
-    }
-
-    console.log(o);
 
     (async () => {
-        const zipFileWriter = new zip.BlobWriter();
-        const zipWriter = new zip.ZipWriter(zipFileWriter);
-
-        const audioBytes = (await fetches[audio])[0]
-        const sentenceAudioBytes = (await fetches[sentenceAudio])[0]
-
-        if (audioBytes)
-            await zipWriter.add(audioLocalFile, new zip.BlobReader(new Blob([audioBytes])))
-        else console.error(`audio not found ${audio}`)
-        if (sentenceAudioBytes)
-            await zipWriter.add(sentenceAudioLocalFile, new zip.BlobReader(new Blob([sentenceAudioBytes])))
-        else console.error(`sentence audio not found ${audio}`)
-
-        await zipWriter.close();
-        await downloadBlob(await zipFileWriter.getData(), "jpdb.zip")
+        const o = {
+            audioLocalFile,
+            sentenceAudioLocalFile,
+            kanji,
+            furigana,
+            jpSentenceKanji: jpSentence[0],
+            jpSentenceFuri: jpSentence[1],
+            enSentence,
+            // surprisingly these ArrayBuffers are serializable
+            audioBytes: (await fetches[audio])[0],
+            sentenceAudioBytes: (await fetches[sentenceAudio])[0]
+        }
+        const event = new CustomEvent("sentence-selected", {
+            detail: {
+                data: o,
+            }
+        })
+        document.dispatchEvent(event)
     })()
-
-
-
-    return o
 }
 
 const load = () => {
