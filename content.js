@@ -228,6 +228,7 @@ async function storeCard() {
         sentenceAudioBytes,
         meaningIndex: [...document.querySelectorAll(meaningCss)].indexOf(meaningElement),
         sentenceIndex: [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement),
+        modified: Date.now()
     }
     chrome.storage.session.set({ [cardData.kanji]: cardData })
     console.log(cardData)

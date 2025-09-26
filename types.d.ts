@@ -15,6 +15,7 @@ declare global {
         audioBytes: ArrayBuffer
         sentenceAudioBytes: ArrayBuffer
 
+        modified: number
         sentenceIndex: number
         meaningIndex: number
     }
