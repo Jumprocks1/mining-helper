@@ -1,8 +1,8 @@
-console.log("popup")
+/// <reference path="types.d.ts" />
+/// <reference path="chrome.d.ts" />
 
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("card-container")
-    container.addEventListener("click", refresh)
 
     function furiToReading(s) {
         let o = ""
@@ -50,6 +50,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (settings.innerHTML) el.innerHTML = settings.innerHTML
                 if (settings.children) el.replaceChildren(...settings.children)
                 if (settings.tooltip) tooltip(el, settings.tooltip)
+                if (settings.onClick) el.addEventListener("click", settings.onClick)
                 return el
             }
             return createElement("div", {
@@ -65,6 +66,14 @@ document.addEventListener("DOMContentLoaded", () => {
                             createElement("div", { textContent: e.enSentence })
                         ]
                     }),
+                    " ",
+                    createElement("span", {
+                        className: "delete-button", textContent: "x", onClick: async ev => {
+                            ev.preventDefault()
+                            await chrome.storage.session.remove(e.kanji)
+                            refresh()
+                        }
+                    })
                 ]
             })
         })

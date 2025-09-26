@@ -41,6 +41,18 @@ async function requestAudio(audios) {
     })
 }
 
+function furiToReading(s) {
+    let o = ""
+    for (let i = 0; i < s.length; i++) {
+        const c = s[i]
+        if (c === "[")
+            o = o.substring(0, o.length - 1)
+        else if (c !== "]")
+            o += c
+    }
+    return o
+}
+
 /**
  * @param {Blob} blob
  * @param {string} name 
@@ -62,6 +74,7 @@ function csv(cards) {
     /** @type {{name:string, get: (e: CardData) => string}[]} */
     const fields = [
         { name: "Word", get: e => e.kanji },
+        { name: "Word Reading", get: e => furiToReading(e.furigana) },
         { name: "Word Meaning", get: e => e.meaning },
         { name: "Word Furigana", get: e => e.furigana },
         { name: "Word Audio", get: e => sound(e.audioLocalFile) },
