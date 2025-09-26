@@ -1,7 +1,7 @@
 /// <reference path="types.d.ts" />
 
 const meaningCss = ".subsection-meanings .description"
-const sentenceCss = ".subsection-examples .used-in"
+const sentenceCss = ".subsection-examples .used-in:has(.en)"
 
 const style = `
 ${meaningCss}:hover:not(.selected),
@@ -171,18 +171,36 @@ async function afterLoad() {
     }
 }
 
-/** @param {any} node */
+/** @param {Node} node */
 function kanjiAndFurigana(node, o = ["", ""]) {
     if (node.nodeType === 3) {
         o[0] += node.textContent
         o[1] += node.textContent
     } else {
         if (node.nodeName === "RT") {
-            const text = node.textContent
-            if (text) { // some of these are empty
-                o[1] += "["
-                o[1] += text
-                o[1] += "]"
+            throw new Error("Unexpected <rt>")
+        } else if (node.nodeName === "RUBY") {
+            if (node.childNodes.length === 0) { }
+            else if (node.childNodes.length === 1) {
+                kanjiAndFurigana(node.childNodes[0])
+            } else {
+                if (node.childNodes.length > 2) throw new Error("More than 2 children in <ruby>")
+                const textNode = node.childNodes[0]
+                if (textNode.nodeType !== 3) throw new Error("First <ruby> child not text")
+                const text = textNode.textContent
+                o[0] += text
+                const rt = node.childNodes[1].textContent
+                if (rt) {
+                    if (o[1].length > 0) {
+                        const prev = o[1][o[1].length - 1]
+                        if (prev !== "]" && prev !== ">")
+                            o[1] += " "
+                    }
+                    o[1] += text
+                    o[1] += `[${rt}]`
+                } else {
+                    o[1] += text
+                }
             }
         } else if (node.classList.contains("highlight")) {
             o[0] += "<b>"
