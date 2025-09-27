@@ -184,22 +184,24 @@ function kanjiAndFurigana(node, o = ["", ""]) {
             else if (node.childNodes.length === 1) {
                 kanjiAndFurigana(node.childNodes[0])
             } else {
-                if (node.childNodes.length > 2) throw new Error("More than 2 children in <ruby>")
-                const textNode = node.childNodes[0]
-                if (textNode.nodeType !== 3) throw new Error("First <ruby> child not text")
-                const text = textNode.textContent
-                o[0] += text
-                const rt = node.childNodes[1].textContent
+                let pending = undefined
+                for (let i = 0; i < node.childNodes.length; i++) {
+                    const e = node.childNodes[i]
+                    if (e.nodeType === 3) {
+                        o[0] += pending = e.textContent
+                    } else if (e.nodeName === "RT") {
+                        const rt = e.textContent
                 if (rt) {
                     if (o[1].length > 0) {
                         const prev = o[1][o[1].length - 1]
                         if (prev !== "]" && prev !== ">")
                             o[1] += " "
                     }
-                    o[1] += text
+                            o[1] += pending
                     o[1] += `[${rt}]`
-                } else {
-                    o[1] += text
+                            pending = undefined
+                        }
+                    }
                 }
             }
         } else if (node.classList.contains("highlight")) {
