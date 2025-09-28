@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("card-container")
 
     function furiToReading(s) {
+        if (!s) return s
         let o = ""
         for (let i = 0; i < s.length; i++) {
             const c = s[i]
@@ -51,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (settings.children) el.replaceChildren(...settings.children)
                 if (settings.tooltip) tooltip(el, settings.tooltip)
                 if (settings.onClick) el.addEventListener("click", settings.onClick)
+                if (settings.href) { el.href = settings.href; el.target = "_blank" }
                 return el
             }
             return createElement("div", {
@@ -73,6 +75,11 @@ document.addEventListener("DOMContentLoaded", () => {
                             await chrome.storage.session.remove(e.kanji)
                             refresh()
                         }
+                    }),
+                    " ",
+                    createElement("a", {
+                        className: "sentence-search", textContent: "ss",
+                        href: "https://sentencesearch.neocities.org/#" + e.kanji
                     })
                 ]
             })

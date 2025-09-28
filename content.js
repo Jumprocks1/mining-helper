@@ -102,6 +102,8 @@ function csv(cards) {
     }
     return o
 }
+
+// TODO should move this to service worker?
 async function downloadPendingCards() {
     const keys = await chrome.storage.session.getKeys()
     const cardsObject = await chrome.storage.session.get(keys)
@@ -191,14 +193,14 @@ function kanjiAndFurigana(node, o = ["", ""]) {
                         o[0] += pending = e.textContent
                     } else if (e.nodeName === "RT") {
                         const rt = e.textContent
-                if (rt) {
-                    if (o[1].length > 0) {
-                        const prev = o[1][o[1].length - 1]
-                        if (prev !== "]" && prev !== ">")
-                            o[1] += " "
-                    }
+                        if (rt) {
+                            if (o[1].length > 0) {
+                                const prev = o[1][o[1].length - 1]
+                                if (prev !== "]" && prev !== ">")
+                                    o[1] += " "
+                            }
                             o[1] += pending
-                    o[1] += `[${rt}]`
+                            o[1] += `[${rt}]`
                             pending = undefined
                         }
                     }

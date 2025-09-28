@@ -11,6 +11,9 @@
   "permissions": [
     "storage"
   ],
+  "host_permissions": [
+    "https: //receptomanijalogi.web.app/*"
+  ],
   "content_scripts": [
     {
       "matches": [
@@ -37,6 +40,24 @@
       ],
       "js": [
         "content.js"
+      ],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://sentencesearch.neocities.org/*"
+      ],
+      "js": [
+        "api-key.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://sentencesearch.neocities.org/*"
+      ],
+      "js": [
+        "sentence-search.js"
       ],
       "run_at": "document_idle"
     }
