@@ -22,6 +22,8 @@ async function updateCard() {
     const sentenceElement = document.querySelector(sentenceCss + ".selected") ?? document.querySelector(sentenceCss)
     const searchInput = document.getElementById("searchInput") as HTMLInputElement
     if (!sentenceElement || !searchInput) return
+    const jpSentenceElement = sentenceElement.querySelector(".jap")
+    if (!jpSentenceElement) return
 
     const keys = await chrome.storage.session.getKeys()
     let kanji = searchInput.value
@@ -30,14 +32,20 @@ async function updateCard() {
 
     const card: CardData = (await chrome.storage.session.get({ [kanji]: {} }))[kanji]
     card.kanji = kanji
-    card.jpSentenceKanji = sentenceElement.querySelector(".jap")?.textContent
+    card.jpSentenceKanji = jpSentenceElement.textContent
+
+    // highlighting won't be perfect for conjugated verbs
+    // could also have issues with repeats
+    const highlight = jpSentenceElement.querySelector("bld")?.textContent
     card.enSentence = sentenceElement.querySelector(".eng")?.textContent
     const audioUrl = sentenceElement.querySelector<HTMLAnchorElement>("a.audioDownload")?.href
     card.sentenceAudioBytes = await urlToArrayBuffer(audioUrl)
     card.sentenceAudioLocalFile = `${card.kanji}_ex_sentencesearch.ogg`
     card.sentenceIndex = "ss_" + [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement)
 
-    card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji)
+    card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, highlight)
+    if (highlight)
+        card.jpSentenceKanji = card.jpSentenceKanji.replace(highlight, "<b>" + highlight + "</b>")
 
     console.log(card)
     chrome.storage.session.set({ [kanji]: card })

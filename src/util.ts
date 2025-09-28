@@ -9,7 +9,7 @@ function getApiKey() {
     })()
 }
 
-export async function lookupFuri(jp: string | undefined) {
+export async function lookupFuri(jp: string | undefined, highlight?: string) {
     if (!jp) return jp
     const res = await fetch("https://jpdb.io/api/v1/parse", {
         method: "POST",
@@ -28,27 +28,50 @@ export async function lookupFuri(jp: string | undefined) {
         })
     })
     const json = await res.json()
+    const highlightStart = highlight && jp.indexOf(highlight)
+    const highlightLength = highlight?.length
     // TODO we could get the furi for the kanji, but for now that will come from jpdb mining
+    let i = 0
+    let highlightOpen = false
+    function pushMain(count = 1) {
+        for (let j = 0; j < count; j++) {
+            if (i === highlightStart) {
+                o += "<b>"
+                highlightOpen = true
+            }
+            if (highlightOpen && highlightStart && highlightLength && i === highlightStart + highlightLength) {
+                o += "</b>"
+                highlightOpen = false
+            }
+            o += jp![i]
+            i += 1
+        }
+    }
     let o = ""
     for (const token of json.tokens) {
         const [position, length, furi] = token
         if (furi === null) {
-            o += jp.substring(position, position + length)
+            pushMain(length)
         }
         else {
             for (const part of furi) {
                 if (!Array.isArray(part)) {
-                    o += part
+                    pushMain(part.length)
                 } else {
                     if (o.length > 0) {
                         const prev = o[o.length - 1]
                         if (prev !== "]" && prev !== ">")
                             o += " "
                     }
-                    o += `${part[0]}[${part[1]}]`
+                    pushMain(part[0].length)
+                    o += `[${part[1]}]`
                 }
             }
         }
+    }
+    if (highlightOpen && highlightStart && highlightLength && i === highlightStart + highlightLength) {
+        o += "</b>"
+        highlightOpen = false
     }
     return o
 }
