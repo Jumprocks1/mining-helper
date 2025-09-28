@@ -1,5 +1,4 @@
-/// <reference path="types.d.ts" />
-/// <reference path="chrome.d.ts" />
+export { }
 
 const sentenceCss = "#search-results-list>.search-result"
 

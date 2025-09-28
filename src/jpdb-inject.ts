@@ -1,6 +1,3 @@
-/// <reference path="types.d.ts" />
-// @ts-nocheck
-
 const originalFetch = fetch;
 const fetches = {}
 window.fetch = (...args) => {

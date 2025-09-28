@@ -2,7 +2,10 @@ import * as esbuild from 'esbuild'
 
 const context = await esbuild.context({
     entryPoints: [
-        "./src/popup.ts"
+        "./src/popup.ts",
+        "./src/jpdb-inject.ts",
+        "./src/jpdb-content.ts",
+        "./src/ss-content.ts"
     ],
     bundle: true,
     // minify: true,

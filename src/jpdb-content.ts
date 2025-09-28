@@ -1,4 +1,4 @@
-/// <reference path="types.d.ts" />
+export { }
 
 const meaningCss = ".subsection-meanings .description"
 const sentenceCss = ".subsection-examples .used-in:has(.en)"
