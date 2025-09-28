@@ -60,11 +60,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     createElement("span", { className: "kanji", textContent: e.kanji, tooltip: furiToReading(e.furigana) }),
                     " - ",
                     e.meaningIndex ?
-                        createElement("span", { className: "meaning-index", textContent: `m${e.meaningIndex + 1}`, tooltip: e.meaning })
+                        createElement("span", { className: "meaning-index", textContent: `m_${e.meaningIndex}`, tooltip: e.meaning })
                         : "",
                     " ",
                     createElement("span", {
-                        className: "sentence-index", textContent: `ex${e.sentenceIndex + 1}`,
+                        className: "sentence-index", textContent: `ex_${e.sentenceIndex}`,
                         tooltip: [
                             createElement("div", { innerHTML: e.jpSentenceKanji }),
                             createElement("div", { textContent: e.enSentence })

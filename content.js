@@ -164,10 +164,10 @@ async function afterLoad() {
             /** @type {CardData} */
             const stored = res[kanji]
             if (stored) {
-                // @ts-ignore
-                select(meaningCss, document.querySelectorAll(meaningCss).item(stored.meaningIndex))
-                // @ts-ignore
-                select(sentenceCss, document.querySelectorAll(sentenceCss).item(stored.sentenceIndex))
+                if (stored.meaningIndex && stored.meaningIndex.startsWith("jpdb_"))
+                    select(meaningCss, document.querySelectorAll(meaningCss).item(parseInt(stored.meaningIndex.substring(5))))
+                if (stored.sentenceIndex && stored.sentenceIndex.startsWith("jpdb_"))
+                    select(sentenceCss, document.querySelectorAll(sentenceCss).item(stored.sentenceIndex.substring(5)))
             }
         }
     }
@@ -261,8 +261,8 @@ async function storeCard() {
         // surprisingly these ArrayBuffers are serializable
         audioBytes,
         sentenceAudioBytes,
-        meaningIndex: [...document.querySelectorAll(meaningCss)].indexOf(meaningElement),
-        sentenceIndex: [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement),
+        meaningIndex: "jpdb_" + [...document.querySelectorAll(meaningCss)].indexOf(meaningElement),
+        sentenceIndex: "jpdb_" + [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement),
         modified: Date.now()
     }
     chrome.storage.session.set({ [cardData.kanji]: cardData })

@@ -51,12 +51,16 @@ async function lookupFuri(card) {
         }
         else {
             for (const part of furi) {
-                if (o.length > 0) {
-                    const prev = o[o.length - 1]
-                    if (prev !== "]" && prev !== ">")
-                        o += " "
+                if (!Array.isArray(part)) {
+                    o += part
+                } else {
+                    if (o.length > 0) {
+                        const prev = o[o.length - 1]
+                        if (prev !== "]" && prev !== ">")
+                            o += " "
+                    }
+                    o += `${part[0]}[${part[1]}]`
                 }
-                o += `${part[0]}[${part[1]}]`
             }
         }
     }
@@ -75,14 +79,14 @@ async function updateCard() {
     const searchInput = document.getElementById("searchInput")
     const kanji = searchInput.value
     /** @type {CardData} */
-    const card = await chrome.storage.session.get(kanji) ?? {}
+    const card = (await chrome.storage.session.get({ [kanji]: {} }))[kanji]
     card.kanji = kanji
     card.jpSentenceKanji = sentenceElement.querySelector(".jap").textContent
     card.enSentence = sentenceElement.querySelector(".eng").textContent
     const audioUrl = sentenceElement.querySelector("a.audioDownload").href
     card.sentenceAudioBytes = await urlToArrayBuffer(audioUrl)
     card.sentenceAudioLocalFile = `${card.kanji}_ex_sentencesearch.ogg`
-    card.sentenceIndex = [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement) + 1
+    card.sentenceIndex = "ss_" + [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement)
 
     await lookupFuri(card)
 
