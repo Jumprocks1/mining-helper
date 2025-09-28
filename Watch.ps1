@@ -1,1 +1,1 @@
-tsc --watch
+node esbuild.mjs

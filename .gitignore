@@ -1,2 +1,6 @@
 api-key.js
 _metadata
+
+dist/js
+
+node_modules

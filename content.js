@@ -41,18 +41,6 @@ async function requestAudio(audios) {
     })
 }
 
-function furiToReading(s) {
-    // this will have issues with compound kanji
-    let o = ""
-    for (let i = 0; i < s.length; i++) {
-        const c = s[i]
-        if (c === "[")
-            o = o.substring(0, o.length - 1)
-        else if (c !== "]")
-            o += c
-    }
-    return o
-}
 
 /**
  * @param {Blob} blob

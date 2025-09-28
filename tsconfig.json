@@ -1,9 +1,13 @@
 {
     "compilerOptions": {
         "noEmit": true,
-        "target": "ESNext"
+        "target": "esnext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "isolatedModules": true,
+        "esModuleInterop": true
     },
-    "exclude": [
-        "*.min.js"
+    "include": [
+        "src"
     ]
 }
