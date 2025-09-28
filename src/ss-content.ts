@@ -23,7 +23,11 @@ async function updateCard() {
     const searchInput = document.getElementById("searchInput") as HTMLInputElement
     if (!sentenceElement || !searchInput) return
 
-    const kanji = searchInput.value
+    const keys = await chrome.storage.session.getKeys()
+    let kanji = searchInput.value
+    const foundKey = keys.find(e => e.includes(kanji))
+    if (foundKey) kanji = foundKey
+
     const card: CardData = (await chrome.storage.session.get({ [kanji]: {} }))[kanji]
     card.kanji = kanji
     card.jpSentenceKanji = sentenceElement.querySelector(".jap")?.textContent
