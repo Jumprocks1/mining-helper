@@ -57,6 +57,7 @@ interface AnkiConnectActionMap {
         returns: string
     },
     guiBrowse: { params: { query: string }, returns: number[] },
+    findCards: { params: { query: string }, returns: number[] },
     guiSelectCard: { params: { card: number }, returns: boolean },
     multi: { params: { actions: [] }, returns: any }
 }

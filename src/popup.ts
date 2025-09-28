@@ -33,7 +33,7 @@ async function save(card: CardData) {
     }
     tryAddAudio("Word Audio", card.audioLocalFile, card.audioBytes)
     tryAddAudio("Sentence Audio", card.sentenceAudioLocalFile, card.sentenceAudioBytes)
-    const res = await anki.call("addNote", {
+    const noteId = await anki.call("addNote", {
         note: {
             deckName: anki.targetDeck,
             modelName: anki.targetModel,
@@ -42,6 +42,10 @@ async function save(card: CardData) {
         }
     })
     await anki.call("guiBrowse", { query: "added:1" })
+    const cards = await anki.call("findCards", { query: `nid:${noteId}` })
+    const cardId = cards.length > 0 && cards[0]
+    if (cardId)
+        await anki.call("guiSelectCard", { card: cardId })
 }
 
 document.addEventListener("DOMContentLoaded", () => {
