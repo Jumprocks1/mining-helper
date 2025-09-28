@@ -75,17 +75,18 @@ async function updateCard() {
     const searchInput = document.getElementById("searchInput")
     const kanji = searchInput.value
     /** @type {CardData} */
-    const currentCard = await chrome.storage.session.get(kanji) ?? {}
-    currentCard.kanji = kanji
-    currentCard.jpSentenceKanji = sentenceElement.querySelector(".jap").textContent
-    currentCard.enSentence = sentenceElement.querySelector(".eng").textContent
+    const card = await chrome.storage.session.get(kanji) ?? {}
+    card.kanji = kanji
+    card.jpSentenceKanji = sentenceElement.querySelector(".jap").textContent
+    card.enSentence = sentenceElement.querySelector(".eng").textContent
     const audioUrl = sentenceElement.querySelector("a.audioDownload").href
-    currentCard.sentenceAudioBytes = await urlToArrayBuffer(audioUrl)
-    currentCard.sentenceAudioLocalFile = `${card.kanji}_ex_sentencesearch.ogg`
+    card.sentenceAudioBytes = await urlToArrayBuffer(audioUrl)
+    card.sentenceAudioLocalFile = `${card.kanji}_ex_sentencesearch.ogg`
+    card.sentenceIndex = [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement) + 1
 
-    await lookupFuri(currentCard)
+    await lookupFuri(card)
 
-    chrome.storage.session.set({ [kanji]: currentCard })
+    chrome.storage.session.set({ [kanji]: card })
 }
 
 function select(css, node) {

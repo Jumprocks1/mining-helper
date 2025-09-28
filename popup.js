@@ -59,7 +59,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 children: [
                     createElement("span", { className: "kanji", textContent: e.kanji, tooltip: furiToReading(e.furigana) }),
                     " - ",
-                    createElement("span", { className: "meaning-index", textContent: `m${e.meaningIndex + 1}`, tooltip: e.meaning }),
+                    e.meaningIndex ?
+                        createElement("span", { className: "meaning-index", textContent: `m${e.meaningIndex + 1}`, tooltip: e.meaning })
+                        : "",
                     " ",
                     createElement("span", {
                         className: "sentence-index", textContent: `ex${e.sentenceIndex + 1}`,
