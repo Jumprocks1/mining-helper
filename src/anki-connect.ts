@@ -44,9 +44,12 @@ interface AnkiConnectActionMap {
                 id: number,
                 fields: Record<string, string>
                 tags?: string[]
+                audio?: MediaAdd[]
+                video?: MediaAdd[]
+                picture?: MediaAdd[]
             }
         },
-        returns: string[]
+        returns: null
     },
     addNote: {
         params: { note: NoteAdd, }
@@ -56,7 +59,14 @@ interface AnkiConnectActionMap {
         params: { notes: NoteAdd[] }
         returns: string
     },
-    guiBrowse: { params: { query: string }, returns: number[] },
+    guiBrowse: {
+        params: {
+            query: string, reorderCards?: {
+                order: "descending" | "ascending",
+                columnId: string
+            }
+        }, returns: number[]
+    },
     findCards: { params: { query: string }, returns: number[] },
     guiSelectCard: { params: { card: number }, returns: boolean },
     multi: { params: { actions: [] }, returns: any }

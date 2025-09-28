@@ -60,7 +60,7 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
                 } else {
                     if (o.length > 0) {
                         const prev = o[o.length - 1]
-                        if (prev !== "]" && prev !== ">")
+                        if (prev !== "]" && prev !== ">" && i !== highlightStart)
                             o += " "
                     }
                     pushMain(part[0].length)

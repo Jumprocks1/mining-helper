@@ -49,6 +49,27 @@
             font-size: 16px;
         }
 
+
+        #card-container>div.card-row {
+            display: flex;
+        }
+
+        .card-row>* {
+            padding: 0px 3px
+        }
+
+        .card-row .button {
+            padding: 0px 5px 3px 5px;
+            text-decoration: underline;
+            border: 1px solid rgba(255, 255, 255, 30%);
+            margin: 0px 1px;
+            cursor: pointer;
+        }
+
+        .card-row .button:hover {
+            border: 1px solid rgb(255, 255, 255);
+        }
+
         .tooltip b {
             color: #a2f4ff;
         }
@@ -56,18 +77,32 @@
         .delete-button {
             color: rgb(192, 55, 55);
             font-weight: bold;
-            cursor: pointer;
         }
 
         .save-button {
             color: rgb(55, 192, 96);
             font-weight: bold;
-            cursor: pointer;
+        }
+
+        .update-button {
+            color: rgb(171, 192, 55);
+            font-weight: bold;
         }
 
         a.sentence-search {
-            text-decoration: underline;
             color: rgb(143, 143, 143)
+        }
+
+        #last-error {
+            color: rgb(202, 140, 140)
+        }
+
+        .hide {
+            display: none;
+        }
+
+        .flex-spacer {
+            flex-grow: 1;
         }
     </style>
 </head>
@@ -78,6 +113,7 @@
     <div id="card-container">
 
     </div>
+    <div id="last-error" class="hide"></div>
 </body>
 
 </html>
