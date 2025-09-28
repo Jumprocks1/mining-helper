@@ -4,12 +4,13 @@ function getApiKey() {
     // TODO need better way of settings
     // for now, run chrome.storage.local.set({apiKey:"XXX"})
     return (async function () {
-        _apiKey = (await chrome.storage.local.get({ apiKey: undefined })).apiKey
+        _apiKey = (await chrome.storage.local.get("apiKey")).apiKey
         return _apiKey
     })()
 }
 
-export async function lookupFuri(jp: string) {
+export async function lookupFuri(jp: string | undefined) {
+    if (!jp) return jp
     const res = await fetch("https://jpdb.io/api/v1/parse", {
         method: "POST",
         headers: {
@@ -53,10 +54,12 @@ export async function lookupFuri(jp: string) {
 }
 
 export interface CardData {
+    kanji: string
+    modified: number
+
     audioLocalFile?: string
     sentenceAudioLocalFile?: string
     meaning?: string
-    kanji?: string
     furigana?: string
     jpSentenceKanji?: string
     jpSentenceFuri?: string
@@ -64,12 +67,11 @@ export interface CardData {
     audioBytes?: ArrayBuffer
     sentenceAudioBytes?: ArrayBuffer
 
-    modified?: number
-    sentenceIndex?: number
-    meaningIndex?: number
+    sentenceIndex?: string
+    meaningIndex?: string
 }
 
-export function furiToReading(s: string) {
+export function furiToReading(s: string | undefined) {
     if (!s) return s
     // TODO this will have issues with compound kanji
     let o = ""
@@ -118,4 +120,10 @@ export function createElement<T extends keyof HTMLElementTagNameMap>(type: T, pr
         (el as HTMLAnchorElement).target = "_blank"
     }
     return el
+}
+
+export async function urlToArrayBuffer(url: string | undefined) {
+    if (!url) return
+    const res = await fetch(url)
+    return await (await res.blob()).arrayBuffer()
 }

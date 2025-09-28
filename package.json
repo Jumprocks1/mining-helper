@@ -3,7 +3,6 @@
   "scripts": {},
   "devDependencies": {
     "@types/chrome": "^0.1.12",
-    "@zip.js/zip.js": "^2.8.2",
     "esbuild": "0.25.10",
     "typescript": "^5.9.2"
   }

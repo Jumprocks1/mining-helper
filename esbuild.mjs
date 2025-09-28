@@ -9,7 +9,7 @@ const context = await esbuild.context({
     ],
     bundle: true,
     // minify: true,
-    sourcemap: process.env.NODE_ENV !== "production",
+    sourcemap: process.env.NODE_ENV !== "production" ? "inline" : false,
     outdir: "./dist/js",
     logLevel: "info"
 

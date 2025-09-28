@@ -1,5 +1,4 @@
-zip.js from https://github.com/gildas-lormeau/zip.js/tree/master/dist
-
 # TODO
-- convert to ts
-- AnkiConnect
+- Show error messages from anki connect
+- Allow updating cards
+- Try audio from yomitan?
