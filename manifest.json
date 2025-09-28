@@ -1,18 +1,30 @@
 {
   "name": "jpdb.io - Anki",
+  "$schema": "https://json.schemastore.org/chrome-manifest",
   "version": "1.0",
   "manifest_version": 3,
   "action": {
     "default_popup": "popup.html"
   },
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "rules",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
   "background": {
     "service_worker": "service-worker.js"
   },
   "permissions": [
-    "storage"
+    "storage",
+    "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
-    "https: //receptomanijalogi.web.app/*"
+    "https://receptomanijalogi.web.app/*",
+    "https://sentencesearch.neocities.org/*"
   ],
   "content_scripts": [
     {
