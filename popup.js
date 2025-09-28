@@ -1,6 +1,8 @@
 /// <reference path="types.d.ts" />
 /// <reference path="chrome.d.ts" />
 
+// TODO add save button which triggers anki connect
+
 document.addEventListener("DOMContentLoaded", () => {
     const container = document.getElementById("card-container")
 

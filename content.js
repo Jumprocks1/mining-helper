@@ -42,6 +42,7 @@ async function requestAudio(audios) {
 }
 
 function furiToReading(s) {
+    // this will have issues with compound kanji
     let o = ""
     for (let i = 0; i < s.length; i++) {
         const c = s[i]

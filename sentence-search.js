@@ -47,7 +47,7 @@ async function lookupFuri(card) {
         const left = position
         const right = position + length
         if (furi === null) {
-            o += s.substring(position, length)
+            o += s.substring(position, position + length)
         }
         else {
             for (const part of furi) {
@@ -90,6 +90,7 @@ async function updateCard() {
 
     await lookupFuri(card)
 
+    console.log(card)
     chrome.storage.session.set({ [kanji]: card })
 }
 
