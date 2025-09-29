@@ -1,8 +1,7 @@
 body {
-    background-color: #272727;
+    background-color: #303030;
     color: #fff;
     padding: 0;
-    margin: 0;
 
     &.popup {
         #body-container {
@@ -21,16 +20,40 @@ body {
     }
 }
 
-h1 {
-    margin: 0;
+
+body.popup #toolbar {
+    padding: 0 0;
 }
 
 #toolbar {
     height: 50px;
-    background-color: #1a1a1a;
+    background-color: #212121;
     display: flex;
     align-items: center;
-    padding: 3px 8px;
+    padding: 0 16px;
+    box-shadow: 0px 2px 4px -1px rgba(0, 0, 0, 0.2), 0px 4px 5px 0px rgba(0, 0, 0, 0.14), 0px 1px 10px 0px rgba(0, 0, 0, 0.12);
+
+    .button {
+        align-self: stretch;
+        font-size: 2em;
+        padding: 0 8px;
+        text-decoration: none;
+        user-select: none;
+        cursor: pointer;
+        border: 1px solid transparent;
+        display: flex;
+        align-items: center;
+
+        &.mpv {
+            background-color: #691f69;
+        }
+        &:hover {
+            border: 1px solid rgb(255, 255, 255, 50%);
+        }
+        &:active {
+            border: 1px solid rgb(255, 255, 255);
+        }
+    }
 }
 
 .tooltip {
@@ -87,10 +110,9 @@ span:hover>.tooltip {
     border: 1px solid rgba(255, 255, 255, 30%);
     margin: 0px 1px;
     cursor: pointer;
-}
-
-.card-row .button:hover {
-    border: 1px solid rgb(255, 255, 255);
+    &:hover {
+        border: 1px solid rgb(255, 255, 255);
+    }
 }
 
 .tooltip b {
@@ -144,6 +166,9 @@ a.sentence-search {
 }
 html {
     box-sizing: border-box;
+}
+body, h1, h2, h3, h4, h5, h6 {
+    margin: 0;
 }
 * {
     box-sizing: inherit;

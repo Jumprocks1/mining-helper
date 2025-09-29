@@ -96,8 +96,8 @@ async function save(card: CardData) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    if (new URLSearchParams(location.search).get("p") !== null)
-        document.body.classList.add("popup")
+    const popup = new URLSearchParams(location.search).get("p") !== null
+    if (popup) document.body.classList.add("popup")
     async function refresh() {
         const container = document.getElementById("card-container")
         if (!container) return
@@ -153,7 +153,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     refresh()
 
-    document.getElementById("fullscreen-button")?.addEventListener("click", () => {
-        chrome.tabs.create({ url: chrome.runtime.getURL("/popup.html") });
+    document.getElementById("title")?.addEventListener("click", () => {
+        if (popup)
+            chrome.tabs.create({ url: chrome.runtime.getURL("/popup.html") });
     })
 })

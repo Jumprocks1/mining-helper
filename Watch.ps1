@@ -1,4 +1,4 @@
-$sass = Start-Job -ScriptBlock { sass --embed-source-map --watch src/popup.scss:dist/popup.css } -Name "sass"
+$sass = Start-Job -ScriptBlock { sass --embed-source-map --watch src/main.scss:dist/main.css } -Name "sass"
 $esbuild = Start-Job -ScriptBlock { node esbuild.mjs } -Name esbuild
 
 try {
