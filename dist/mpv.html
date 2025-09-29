@@ -1,15 +1,20 @@
 <html>
 
 <head>
+    <script src="js/mpv.js"></script>
     <link rel="stylesheet" href="main.css">
 </head>
 
-<body>
+<body id="mpv-page">
     <div id="toolbar">
         <a class="button" id="title" href="/popup.html">Anki Loader</a>
         <a class="button mpv" href="/mpv.html">mpv</a>
     </div>
-    <div id="body-container">
+    <div id="outer-body-container">
+        <div id="current-time">00:00</div>
+        <div id="body-container">
+            <div id="subtitle-container"></div>
+        </div>
     </div>
 </body>
 

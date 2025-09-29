@@ -17,6 +17,7 @@ body {
     }
 
     &:not(.popup) {
+        font-size: 16px;
         #body-container {
             padding: 16px;
         }
@@ -28,7 +29,6 @@ body {
 
 
 #toolbar {
-    height: 50px;
     background-color: #212121;
     display: flex;
     align-items: center;
@@ -168,6 +168,7 @@ a.sentence-search {
 }
 html {
     box-sizing: border-box;
+    height: 100%;
 }
 body, h1, h2, h3, h4, h5, h6 {
     margin: 0;
@@ -177,4 +178,38 @@ body, h1, h2, h3, h4, h5, h6 {
 }
 a {
     color: inherit;
+}
+
+#mpv-page {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    #outer-body-container {
+        flex: 1 1 0;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        #body-container {
+            flex: 1 1 0;
+            overflow-y: auto;
+            scrollbar-color: rgba(0, 0, 0, 0.5) transparent;
+            scrollbar-width: thin;
+        }
+    }
+    #subtitle-container {
+        .subtitle {
+            .time {
+                font-family: monospace;
+                opacity: 0.5;
+                padding-right: 16px;
+            }
+        }
+    }
+    #current-time {
+        position: absolute;
+        font-family: monospace;
+        padding: 8px;
+        right: 8px;
+        top: 0;
+    }
 }
