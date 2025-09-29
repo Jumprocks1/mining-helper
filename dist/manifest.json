@@ -42,15 +42,6 @@
         "https://jpdb.io/*"
       ],
       "js": [
-        "zip-core.min.js"
-      ],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://jpdb.io/*"
-      ],
-      "js": [
         "js/jpdb-content.js"
       ],
       "run_at": "document_idle"
