@@ -2,113 +2,16 @@
 
 <head>
     <script src="js/popup.js"></script>
-    <style>
-        body {
-            width: 300px;
-            padding-bottom: 100px;
-            background-color: #272727;
-            color: #fff
-        }
-
-        .tooltip {
-            display: none;
-            /* ideally this would be max-width, but it behaves all weird with absolute pos inside inline element */
-            width: 280px;
-
-            top: 20px;
-            background-color: #222;
-            border: 1px solid rgba(255, 255, 255, 50%);
-            text-align: left;
-            border-radius: 3px;
-            padding: 5px;
-            position: absolute;
-            z-index: 1;
-        }
-
-        /* *:hover doesn't work for some reason */
-        span:hover>.tooltip {
-            display: block;
-        }
-
-        *:has(>.tooltip) {
-            position: relative
-        }
-
-
-        .tooltip:hover {
-            display: block;
-        }
-
-        .meaning-index,
-        .sentence-index,
-        .kanji {
-            cursor: default;
-        }
-
-        #card-container {
-            font-size: 16px;
-        }
-
-
-        #card-container>div.card-row {
-            display: flex;
-        }
-
-        .card-row>* {
-            padding: 0px 3px
-        }
-
-        .card-row .button {
-            padding: 0px 5px 3px 5px;
-            text-decoration: underline;
-            border: 1px solid rgba(255, 255, 255, 30%);
-            margin: 0px 1px;
-            cursor: pointer;
-        }
-
-        .card-row .button:hover {
-            border: 1px solid rgb(255, 255, 255);
-        }
-
-        .tooltip b {
-            color: #a2f4ff;
-        }
-
-        .delete-button {
-            color: rgb(192, 55, 55);
-            font-weight: bold;
-        }
-
-        .save-button {
-            color: rgb(55, 192, 96);
-            font-weight: bold;
-        }
-
-        .update-button {
-            color: rgb(171, 192, 55);
-            font-weight: bold;
-        }
-
-        a.sentence-search {
-            color: rgb(143, 143, 143)
-        }
-
-        #last-error {
-            color: rgb(202, 140, 140)
-        }
-
-        .hide {
-            display: none;
-        }
-
-        .flex-spacer {
-            flex-grow: 1;
-        }
-    </style>
+    <link rel="stylesheet" href="popup.css">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined&icon_names=opi&display=block"
+        rel="stylesheet" />
 </head>
 
 <body>
-    <h1>jpdb.io => Anki</h1>
+    <h1 id="title">jpdb.io => Anki
+        <div class="flex-spacer"></div>
+        <a class="material-symbols-outlined icon-button" id="fullscreen-button">open_in_new</a>
+    </h1>
     <h2>Pending Cards</h2>
     <div id="card-container">
 
