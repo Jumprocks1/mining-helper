@@ -9,3 +9,5 @@
         - `ffmpeg -map 0:4 -f srt pipe:1 -i file.mkv`
             - Think for now we convert everything to srt and only support 1 format on the web side
     - Also allow dropping in .srt files since those aren't in the .mkv sometimes
+- Auto search on ss if input matches url query
+- Bold could be better for だんだん元気が出てきた気がする。

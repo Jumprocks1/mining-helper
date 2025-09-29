@@ -28,7 +28,7 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
         })
     })
     const json = await res.json()
-    const highlightStart = highlight && jp.indexOf(highlight)
+    const highlightStart = highlight !== undefined && jp.indexOf(highlight)
     const highlightLength = highlight?.length
     // TODO we could get the furi for the kanji, but for now that will come from jpdb mining
     let i = 0
@@ -44,7 +44,7 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
             // could make it only apply for kana
             // code >= 0x3040 && code <= 0x309F
             // https://www.unicode.org/charts/PDF/Unicode-3.2/U32-3040.pdf
-            if (highlightOpen && highlightStart && highlightLength && i === highlightStart + highlightLength) {
+            if (highlightOpen && highlightStart !== false && highlightLength && i === highlightStart + highlightLength) {
                 o += "</b>"
                 highlightOpen = false
             }
@@ -55,6 +55,8 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
     let o = ""
     for (const token of json.tokens) {
         const [position, length, furi] = token
+        // sometimes tokens just get skipped in json.tokens. This pushes any skipped tokens. Frequently saw with jp comma
+        pushMain(position - i)
         if (furi === null) {
             pushMain(length)
         }

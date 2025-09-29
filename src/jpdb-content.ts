@@ -1,3 +1,5 @@
+import { CardData } from "./util"
+
 export { }
 
 const meaningCss = ".subsection-meanings .description"
@@ -17,21 +19,13 @@ ${meaningCss}.selected,
 
 const target = document.head || document.documentElement
 
-/** @type {{[key in number]: (value: any) => void}} */
-const pendingAudioRequests = {}
+const pendingAudioRequests: { [key in number]: (value: any) => void } = {}
 document.addEventListener("fetch-audio-response", ev => {
-    /** @type {CustomEvent} */
-    // @ts-ignore
-    const customEv = ev
+    const customEv = ev as CustomEvent
     pendingAudioRequests[customEv.detail.requestId](customEv.detail.audios)
 })
 let requestId = 0
-/**
- * 
- * @param {string[]} audios 
- * @returns {Promise<ArrayBuffer[]>}
- */
-async function requestAudio(audios) {
+async function requestAudio(audios: string[]): Promise<ArrayBuffer[]> {
     const myId = requestId++
     return await new Promise(res => {
         pendingAudioRequests[myId] = res
@@ -45,7 +39,7 @@ const css = document.createElement("style")
 css.innerHTML = style
 target.prepend(css)
 
-function select(css: string, node: HTMLElement | undefined) {
+function select(css: string, node: HTMLElement | undefined | null) {
     const all = document.querySelectorAll(css)
     for (const e of all) e.classList.remove("selected")
     if (node) node.classList.add("selected")
@@ -70,8 +64,7 @@ async function afterLoad() {
     }
 }
 
-/** @param {Node} node */
-function kanjiAndFurigana(node, o = ["", ""]) {
+function kanjiAndFurigana(node: HTMLElement, o = ["", ""]) {
     if (node.nodeType === 3) {
         o[0] += node.textContent
         o[1] += node.textContent
@@ -81,7 +74,7 @@ function kanjiAndFurigana(node, o = ["", ""]) {
         } else if (node.nodeName === "RUBY") {
             if (node.childNodes.length === 0) { }
             else if (node.childNodes.length === 1) {
-                kanjiAndFurigana(node.childNodes[0])
+                kanjiAndFurigana(node.childNodes[0] as HTMLElement)
             } else {
                 let pending = undefined
                 for (let i = 0; i < node.childNodes.length; i++) {
@@ -99,9 +92,14 @@ function kanjiAndFurigana(node, o = ["", ""]) {
                             o[1] += pending
                             o[1] += `[${rt}]`
                             pending = undefined
+                        } else {
+                            o[1] += pending
+                            pending = undefined
                         }
                     }
                 }
+                if (pending)
+                    o[1] += pending
             }
         } else if (node.classList.contains("highlight")) {
             o[0] += "<b>"
@@ -118,52 +116,66 @@ function kanjiAndFurigana(node, o = ["", ""]) {
 afterLoad()
 document.addEventListener("virtual-refresh", afterLoad)
 
-async function storeCard() {
-    const sentenceElement = document.querySelector(sentenceCss + ".selected") ?? document.querySelector(sentenceCss)
+async function storeCard(clicked: HTMLElement) {
+    const sentenceElement = document.querySelector<HTMLElement>(sentenceCss + ".selected") ?? document.querySelector(sentenceCss)
     select(sentenceCss, sentenceElement)
 
-    const exampleAudioAnchor = sentenceElement.parentElement.querySelector("*[data-audio].example-audio")
-    const vocab = sentenceElement.closest(".vocabulary")
+    const vocab = clicked.closest(".vocabulary")
+
+    if (!vocab) return
+
     const wordAudioAnchor = vocab.querySelector("*[data-audio].vocabulary-audio")
     const wordRuby = vocab.querySelector(".spelling ruby.v")
 
     const [kanji, furigana] = kanjiAndFurigana(wordRuby)
 
-    const jpSentence = kanjiAndFurigana(sentenceElement.querySelector("div.jp"))
-    const enSentence = sentenceElement.querySelector("div.en").textContent
-
     const audio = wordAudioAnchor.dataset.audio.split(",")[0]
     const audioLocalFile = `${kanji}_${audio.replace("/", "_")}.ogg`
-
-    const sentenceAudio = exampleAudioAnchor.dataset.audio.split(",")[0]
-    const sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
 
     const meaningElement = vocab.querySelector(meaningCss + ".selected") ?? vocab.querySelector(meaningCss)
     select(meaningCss, meaningElement)
     let description = meaningElement.childNodes[0].textContent
     description = description.replace(/^\d+\./, "").trim()
 
-    const [audioBytes, sentenceAudioBytes] = await requestAudio([audio, sentenceAudio])
 
-    /** @type {CardData} */
-    const cardData = {
+    const o: CardData = {
         audioLocalFile,
         meaning: description,
-        sentenceAudioLocalFile,
         kanji,
         furigana,
-        jpSentenceKanji: jpSentence[0],
-        jpSentenceFuri: jpSentence[1],
-        enSentence,
-        // surprisingly these ArrayBuffers are serializable
-        audioBytes,
-        sentenceAudioBytes,
         meaningIndex: "jpdb_" + [...document.querySelectorAll(meaningCss)].indexOf(meaningElement),
-        sentenceIndex: "jpdb_" + [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement),
         modified: Date.now()
     }
-    chrome.storage.session.set({ [cardData.kanji]: cardData })
-    console.log(cardData)
+
+    let sentenceAudio = undefined
+
+    if (sentenceElement) {
+        const jpSentence = kanjiAndFurigana(sentenceElement.querySelector("div.jp"))
+        o.jpSentenceKanji = jpSentence[0]
+        o.jpSentenceFuri = jpSentence[1]
+        o.enSentence = sentenceElement.querySelector("div.en")?.textContent
+        o.sentenceIndex = "jpdb_" + [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement)
+
+        const sentenceAudioAnchor = sentenceElement.parentElement?.querySelector("*[data-audio].example-audio")
+        if (sentenceAudioAnchor) {
+            sentenceAudio = sentenceAudioAnchor.dataset.audio.split(",")[0]
+            o.sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
+        }
+    }
+
+    if (sentenceAudio) {
+        const [audioBytes, sentenceAudioBytes] = await requestAudio([audio, sentenceAudio])
+        o.audioBytes = audioBytes
+        o.sentenceAudioBytes = sentenceAudioBytes
+
+
+    } else {
+        const [audioBytes,] = await requestAudio([audio,])
+        o.audioBytes = audioBytes
+    }
+
+    chrome.storage.session.set({ [o.kanji]: o })
+    console.log(o)
 }
 
 document.addEventListener("click", ev => {
@@ -178,7 +190,8 @@ document.addEventListener("click", ev => {
                 return found
             }
         }
-        if (check(meaningCss) || check(sentenceCss))
-            storeCard()
+        const found = check(meaningCss) || check(sentenceCss)
+        if (found)
+            storeCard(found)
     }
 })
