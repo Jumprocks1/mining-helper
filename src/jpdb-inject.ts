@@ -1,5 +1,5 @@
 const originalFetch = fetch;
-const fetches = {}
+const fetches: Record<string, Promise<[ArrayBuffer, string]>> = {}
 window.fetch = (...args) => {
     const input = args[0]
     const res1 = originalFetch.apply(window, args)
@@ -11,15 +11,17 @@ window.fetch = (...args) => {
         res1.then = (...args1) => {
             const res2 = originalThen1.apply(res1, args1)
             const originalThen2 = res2.then
-            res2.then = (...args2) => fetches[audio] = originalThen2.apply(res2, args2)
-            return res2
+            res2.then = (...args2) => fetches[audio] = originalThen2.apply(res2, args2) as any
+            return res2 as any
         }
     }
     return res1
 }
 
 document.addEventListener("fetch-audio", async ev => {
-    const audios = ev.detail.audios
+    const detail = (ev as any).detail
+    const audios = detail.audios
+    // @ts-ignore
     preload_audio(audios);
     const fetchedAudios = []
     for (const e of audios) {
@@ -27,7 +29,7 @@ document.addEventListener("fetch-audio", async ev => {
     }
     if (fetchedAudios.length > 0) {
         document.dispatchEvent(new CustomEvent("fetch-audio-response", {
-            detail: { audios: fetchedAudios, requestId: ev.detail.requestId }
+            detail: { audios: fetchedAudios, requestId: detail.requestId }
         }))
     }
 })
