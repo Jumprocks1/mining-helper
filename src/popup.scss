@@ -1,11 +1,36 @@
 body {
     background-color: #272727;
     color: #fff;
+    padding: 0;
+    margin: 0;
 
     &.popup {
-        width: 300px;
-        padding-bottom: 100px;
+        #body-container {
+            padding: 6px 6px 100px 6px;
+            width: 300px;
+        }
     }
+
+    &:not(.popup) {
+        #body-container {
+            padding: 16px;
+        }
+        #fullscreen-button {
+            display: none;
+        }
+    }
+}
+
+h1 {
+    margin: 0;
+}
+
+#toolbar {
+    height: 50px;
+    background-color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    padding: 3px 8px;
 }
 
 .tooltip {
@@ -110,16 +135,16 @@ a.sentence-search {
     }
 }
 
-body:not(.popup) {
-    #fullscreen-button {
-        display: none;
-    }
-}
-
 #title {
     display: flex
 }
 
 .flex-spacer {
     flex-grow: 1;
+}
+html {
+    box-sizing: border-box;
+}
+* {
+    box-sizing: inherit;
 }
