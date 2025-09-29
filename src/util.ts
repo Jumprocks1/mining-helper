@@ -39,6 +39,11 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
                 o += "<b>"
                 highlightOpen = true
             }
+            // TODO don't cancel highlight unless it's the end of a parsing block
+            // might cause issues with compound nouns? but should be good for verbs
+            // could make it only apply for kana
+            // code >= 0x3040 && code <= 0x309F
+            // https://www.unicode.org/charts/PDF/Unicode-3.2/U32-3040.pdf
             if (highlightOpen && highlightStart && highlightLength && i === highlightStart + highlightLength) {
                 o += "</b>"
                 highlightOpen = false

@@ -1,6 +1,11 @@
 # TODO
 - Try audio from yomitan?
-- Add tags to new cards + updated cards
-- Bold is missing oops
-    - Can filter deck for ones I messed up, should be sentence and setnence furi
-    - Export regex `^((?!<b>).)*$`
+- mpv hook + web page
+    - Will send srt to file to web and sync with a green line or something based on timestamps
+    - Have hotkey to lookup with jisho? maybe just use yomitan idk
+    - Pull subtitles with ffprobe + ffmpeg
+        - `ffprobe -loglevel error -select_streams s -show_entries stream=index,codec_name:stream_tags=title,language -of csv=p=0 file.mkv`
+        - `ffmpeg -map 0:4 -f ass pipe:1 -i file.mkv`
+        - `ffmpeg -map 0:4 -f srt pipe:1 -i file.mkv`
+            - Think for now we convert everything to srt and only support 1 format on the web side
+    - Also allow dropping in .srt files since those aren't in the .mkv sometimes

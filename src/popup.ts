@@ -84,7 +84,8 @@ async function save(card: CardData) {
             deckName: anki.targetDeck,
             modelName: anki.targetModel,
             fields,
-            audio
+            audio,
+            tags: ["ext-mined"]
         }
     })
     await anki.call("guiBrowse", { query: "added:1" })

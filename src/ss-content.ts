@@ -51,17 +51,16 @@ async function updateCard() {
     chrome.storage.session.set({ [kanji]: card })
 }
 
-function select(css, node) {
+function select(css: string, node: HTMLElement) {
     const all = document.querySelectorAll(css)
     for (const e of all) e.classList.remove("selected")
     node.classList.add("selected")
 }
 document.addEventListener("click", ev => {
-    /** @type {HTMLElement} */
-    const clicked = ev.target
+    const clicked = ev.target as HTMLElement | null
     if (clicked) {
         if (clicked.closest("a")) return // ignore if we clicked an anchor
-        const found = clicked.closest(sentenceCss)
+        const found = clicked.closest<HTMLElement>(sentenceCss)
         if (found) {
             select(sentenceCss, found)
             updateCard()
