@@ -1,4 +1,5 @@
 import { createElement } from "./util"
+import { parseSrt } from "./utils/srt"
 
 export { }
 
@@ -16,6 +17,28 @@ setInterval(() => {
 document.addEventListener("DOMContentLoaded", () => {
     const subtitleContainer = document.getElementById("subtitle-container")
     if (!subtitleContainer) return
+
+    subtitleContainer.addEventListener("dragover", ev => {
+        ev.preventDefault()
+    })
+    subtitleContainer.addEventListener("drop", ev => {
+        ev.preventDefault()
+        const files = ev.dataTransfer?.files
+        if (!files) return
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i]
+            if (file.name.endsWith(".srt")) {
+                const reader = new FileReader()
+                reader.onload = e => {
+                    const target = e.target
+                    if (target && typeof target.result === "string") {
+                        console.log(parseSrt(target.result))
+                    }
+                }
+                reader.readAsText(file)
+            }
+        }
+    })
 
     for (let i = 0; i < 250; i++) {
         subtitleContainer.append(createElement("div", {
