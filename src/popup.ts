@@ -153,8 +153,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     refresh()
 
-    document.getElementById("title")?.addEventListener("click", () => {
-        if (popup)
+    document.getElementById("title")?.addEventListener("click", ev => {
+        if (popup) {
             chrome.tabs.create({ url: chrome.runtime.getURL("/popup.html") });
+            ev.preventDefault()
+        }
     })
 })

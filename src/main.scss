@@ -8,6 +8,12 @@ body {
             padding: 6px 6px 100px 6px;
             width: 300px;
         }
+        #toolbar {
+            padding: 0 0;
+            a.button.mpv {
+                display: none;
+            }
+        }
     }
 
     &:not(.popup) {
@@ -20,10 +26,6 @@ body {
     }
 }
 
-
-body.popup #toolbar {
-    padding: 0 0;
-}
 
 #toolbar {
     height: 50px;
@@ -172,4 +174,7 @@ body, h1, h2, h3, h4, h5, h6 {
 }
 * {
     box-sizing: inherit;
+}
+a {
+    color: inherit;
 }
