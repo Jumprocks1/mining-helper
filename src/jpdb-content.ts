@@ -48,7 +48,7 @@ function select(css: string, node: HTMLElement | undefined | null) {
 async function afterLoad() {
     const vocabs = document.querySelectorAll(".vocabulary")
     for (const vocab of vocabs) {
-        const wordRuby = vocab.querySelector(".spelling ruby.v")
+        const wordRuby = vocab.querySelector<HTMLElement>(".spelling ruby.v")
         if (wordRuby) {
             const [kanji,] = kanjiAndFurigana(wordRuby)
             const res = await chrome.storage.session.get(kanji)
@@ -56,15 +56,15 @@ async function afterLoad() {
             const stored = res[kanji]
             if (stored) {
                 if (stored.meaningIndex && stored.meaningIndex.startsWith("jpdb_"))
-                    select(meaningCss, document.querySelectorAll(meaningCss).item(parseInt(stored.meaningIndex.substring(5))))
+                    select(meaningCss, document.querySelectorAll<HTMLElement>(meaningCss).item(parseInt(stored.meaningIndex.substring(5))))
                 if (stored.sentenceIndex && stored.sentenceIndex.startsWith("jpdb_"))
-                    select(sentenceCss, document.querySelectorAll(sentenceCss).item(stored.sentenceIndex.substring(5)))
+                    select(sentenceCss, document.querySelectorAll<HTMLElement>(sentenceCss).item(stored.sentenceIndex.substring(5)))
             }
         }
     }
 }
 
-function kanjiAndFurigana(node: HTMLElement, o = ["", ""]) {
+function kanjiAndFurigana(node: ChildNode, o = ["", ""]) {
     if (node.nodeType === 3) {
         o[0] += node.textContent
         o[1] += node.textContent
@@ -74,7 +74,7 @@ function kanjiAndFurigana(node: HTMLElement, o = ["", ""]) {
         } else if (node.nodeName === "RUBY") {
             if (node.childNodes.length === 0) { }
             else if (node.childNodes.length === 1) {
-                kanjiAndFurigana(node.childNodes[0] as HTMLElement)
+                kanjiAndFurigana(node.childNodes[0])
             } else {
                 let pending = undefined
                 for (let i = 0; i < node.childNodes.length; i++) {
@@ -101,7 +101,7 @@ function kanjiAndFurigana(node: HTMLElement, o = ["", ""]) {
                 if (pending)
                     o[1] += pending
             }
-        } else if (node.classList.contains("highlight")) {
+        } else if ((node as HTMLElement).classList.contains("highlight")) {
             o[0] += "<b>"
             o[1] += "<b>";
             [...node.childNodes].forEach(e => kanjiAndFurigana(e, o))
@@ -124,52 +124,61 @@ async function storeCard(clicked: HTMLElement) {
 
     if (!vocab) return
 
-    const wordAudioAnchor = vocab.querySelector("*[data-audio].vocabulary-audio")
     const wordRuby = vocab.querySelector(".spelling ruby.v")
+    if (!wordRuby) return
 
     const [kanji, furigana] = kanjiAndFurigana(wordRuby)
 
-    const audio = wordAudioAnchor.dataset.audio.split(",")[0]
-    const audioLocalFile = `${kanji}_${audio.replace("/", "_")}.ogg`
 
-    const meaningElement = vocab.querySelector(meaningCss + ".selected") ?? vocab.querySelector(meaningCss)
-    select(meaningCss, meaningElement)
-    let description = meaningElement.childNodes[0].textContent
-    description = description.replace(/^\d+\./, "").trim()
 
 
     const o: CardData = {
-        audioLocalFile,
-        meaning: description,
         kanji,
         furigana,
-        meaningIndex: "jpdb_" + [...document.querySelectorAll(meaningCss)].indexOf(meaningElement),
         modified: Date.now()
+    }
+
+    const meaningElement = vocab.querySelector<HTMLElement>(meaningCss + ".selected") ?? vocab.querySelector<HTMLElement>(meaningCss)
+    if (meaningElement) {
+        select(meaningCss, meaningElement)
+        let description = meaningElement.childNodes[0].textContent?.replace(/^\d+\./, "").trim()
+        if (description) o.meaning = description;
+        o.meaningIndex = "jpdb_" + [...document.querySelectorAll(meaningCss)].indexOf(meaningElement);
+    }
+
+    let audio = undefined
+
+    const wordAudioAnchor = vocab.querySelector<HTMLElement>("*[data-audio].vocabulary-audio")
+    if (wordAudioAnchor) {
+        audio = wordAudioAnchor.dataset.audio!.split(",")[0]
+        const audioLocalFile = `${kanji}_${audio.replace("/", "_")}.ogg`
+        o.audioLocalFile = audioLocalFile
     }
 
     let sentenceAudio = undefined
 
     if (sentenceElement) {
-        const jpSentence = kanjiAndFurigana(sentenceElement.querySelector("div.jp"))
-        o.jpSentenceKanji = jpSentence[0]
-        o.jpSentenceFuri = jpSentence[1]
+        const jpEl = sentenceElement.querySelector("div.jp");
+        if (jpEl) {
+            const jpSentence = kanjiAndFurigana(jpEl)
+            o.jpSentenceKanji = jpSentence[0]
+            o.jpSentenceFuri = jpSentence[1]
+        }
         o.enSentence = sentenceElement.querySelector("div.en")?.textContent
         o.sentenceIndex = "jpdb_" + [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement)
 
-        const sentenceAudioAnchor = sentenceElement.parentElement?.querySelector("*[data-audio].example-audio")
+        const sentenceAudioAnchor = sentenceElement.parentElement?.querySelector<HTMLElement>("*[data-audio].example-audio")
         if (sentenceAudioAnchor) {
-            sentenceAudio = sentenceAudioAnchor.dataset.audio.split(",")[0]
+            sentenceAudio = sentenceAudioAnchor.dataset.audio!.split(",")[0]
             o.sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
         }
     }
 
-    if (sentenceAudio) {
+    if (sentenceAudio && audio) {
         const [audioBytes, sentenceAudioBytes] = await requestAudio([audio, sentenceAudio])
         o.audioBytes = audioBytes
         o.sentenceAudioBytes = sentenceAudioBytes
-
-
-    } else {
+    } else if (audio) {
         const [audioBytes,] = await requestAudio([audio,])
         o.audioBytes = audioBytes
     }
@@ -179,11 +188,10 @@ async function storeCard(clicked: HTMLElement) {
 }
 
 document.addEventListener("click", ev => {
-    /** @type {HTMLElement} */
-    const clicked = ev.target
+    const clicked = ev.target as HTMLElement | null
     if (clicked) {
-        const check = (css) => {
-            const found = clicked.closest(css)
+        const check = (css: string) => {
+            const found = clicked.closest<HTMLElement>(css)
             if (found) {
                 select(css, found)
                 // don't prevent default since selecting/copying is nice
