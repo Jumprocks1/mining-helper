@@ -2,5 +2,6 @@ api-key.js
 _metadata
 
 dist/js
+dist/popup.css
 
 node_modules

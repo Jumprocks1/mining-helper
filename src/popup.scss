@@ -99,9 +99,6 @@ a.sentence-search {
     display: none;
 }
 
-.flex-spacer {
-    flex-grow: 1;
-}
 
 .icon-button {
     cursor: pointer;
@@ -113,6 +110,16 @@ a.sentence-search {
     }
 }
 
+body:not(.popup) {
+    #fullscreen-button {
+        display: none;
+    }
+}
+
 #title {
     display: flex
+}
+
+.flex-spacer {
+    flex-grow: 1;
 }
