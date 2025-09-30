@@ -118,6 +118,7 @@ export function furiToReading(s: string | undefined) {
 type Child = Node | string
 
 interface ElementProps {
+    data?: Record<string, string | undefined>;
     className?: string
     textContent?: string
     innerHTML?: string
@@ -148,6 +149,13 @@ export function createElement<T extends keyof HTMLElementTagNameMap>(type: T, pr
     if (props.href) {
         (el as HTMLAnchorElement).href = props.href;
         (el as HTMLAnchorElement).target = "_blank"
+    }
+    if (props.data) {
+        for (const key in props.data) {
+            const v = props.data[key]
+            if (v)
+                el.dataset[key] = v
+        }
     }
     return el
 }

@@ -3,11 +3,30 @@ interface SubtitleEntry {
     startTime: number // milliseconds
     endTime: number
     text: string
+    translation?: string
 }
 
-interface Subtitles {
+export interface Subtitles {
     entries: SubtitleEntry[]
     source: "srt"
+    language?: "eng" | "jp"
+    name?: string
+}
+
+export function timestampString(timestamp: number) {
+    let seconds = Math.floor(timestamp / 1000)
+    let minutes = Math.floor(seconds / 60)
+    seconds -= minutes * 60
+    let hours = Math.floor(minutes / 60)
+    minutes -= hours * 60
+    function f(s: number) {
+        return s.toString().padStart(2, "0")
+    }
+    if (hours <= 0) {
+        return `${f(minutes)}:${f(seconds)}`
+    } else {
+        return `${f(hours)}:${f(minutes)}:${f(seconds)}`
+    }
 }
 
 function parseTimestamp(timestamp: string) {

@@ -197,11 +197,28 @@ a {
         }
     }
     #subtitle-container {
-        .subtitle {
-            .time {
+        display: flex;
+        justify-content: center;
+        // padding-left: 30px; // save room for indicator of some sort
+        >div {
+            // maybe also set basis to 0 so they grow evenly?
+            flex-grow: 1;
+        }
+        .subtitle-entry {
+            &.highlight {
+                background-color: oklch(0.7012 0.1888 143.23 / 15%);
+            }
+            display: flex;
+            align-items: center;
+            .timestamp {
                 font-family: monospace;
                 opacity: 0.5;
                 padding-right: 16px;
+            }
+            .subtitles {
+                display: flex;
+                flex-direction: column;
+                white-space: pre-wrap;
             }
         }
     }
@@ -211,5 +228,31 @@ a {
         padding: 8px;
         right: 8px;
         top: 0;
+    }
+}
+
+[data-tooltip] {
+    position: relative;
+    &:before {
+        content: attr(data-tooltip);
+        top: 100%;
+        display: none;
+
+        /* ideally this would be max-width, but it behaves all weird with absolute pos inside inline element */
+        width: 280px;
+
+        pointer-events: none;
+
+        background-color: #222;
+        border: 1px solid rgba(255, 255, 255, 50%);
+        text-align: left;
+        border-radius: 3px;
+        padding: 5px;
+        position: absolute;
+        z-index: 1;
+    }
+
+    &:hover:before {
+        display: block;
     }
 }
