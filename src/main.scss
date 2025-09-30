@@ -203,6 +203,14 @@ a {
         >div {
             // maybe also set basis to 0 so they grow evenly?
             flex-grow: 1;
+            position: relative;
+            padding-left: 20px; // leave room for pointer
+            .pointer {
+                font-family: monospace;
+                position: absolute;
+                left: 0;
+                transform: translateY(-50%);
+            }
         }
         .subtitle-entry {
             &.highlight {

@@ -1,29 +1,90 @@
 import { createElement } from "./util"
 import subs from "./data/subs.json"
-import { parseSrt, Subtitles, timestampString } from "./utils/srt"
+import { parseSrt, Subtitles, formatTimestamp } from "./utils/srt"
 
-function updateTime(time: string) {
+
+let currentTime = 0
+
+function updateTime(timestamp: number) {
+    currentTime = timestamp
     const timeElement = document.getElementById("current-time")
     if (timeElement)
-        timeElement.textContent = time
+        timeElement.textContent = formatTimestamp(timestamp)
+
+    updateHighlighting(loadedSubtitles.main)
+    updateHighlighting(loadedSubtitles.secondary)
 }
 
+function updateHighlighting(subtitles?: Subtitles) {
+    const scroll = document.getElementById("body-container")
+    if (!subtitles || !scroll) return
+    const main = loadedSubtitles.main === subtitles
+    const pointer = scroll.querySelector<HTMLElement>(main ? "#main-subtitles .pointer" : "#secondary-subtitles .pointer")!
+    for (let i = 0; i < subtitles.entries.length; i++) {
+        const entry = subtitles.entries[i]
+        const node = entry.node
+        if (node) {
+            if (entry.startTime <= currentTime && entry.endTime >= currentTime) {
+                pointer.style.top = node.offsetTop + node.offsetHeight / 2 + "px"
+                break
+            }
+            if (entry.startTime > currentTime) {
+                const prevEntry = i > 0 ? subtitles.entries[i - 1] : undefined
+                const prevTime = prevEntry?.endTime ?? 0
+                const prevPos = (prevEntry && prevEntry.node) ?
+                    prevEntry.node.offsetTop + prevEntry.node.clientHeight / 2 : 0
+                const a = (currentTime - prevTime) / (entry.startTime - prevTime)
+                pointer.style.top = prevPos + (node.offsetTop + node.offsetHeight / 2 - prevPos) * a + "px"
+                break
+            }
+        }
+    }
+    for (const entry of subtitles.entries) {
+        const node = entry.node
+        if (node) {
+            if (entry.startTime <= currentTime && entry.endTime >= currentTime) {
+                // only scroll if we add a new highlight
+                if (!node.classList.contains("highlight")) {
+                    node.classList.add("highlight")
+                    if (main) {
+                        const center = node.offsetTop + node.offsetHeight / 2;
+                        const scrollHeight = scroll.clientHeight
+                        if (center < scroll.scrollTop + scroll.clientHeight / 6
+                            || center > scroll.scrollTop + scroll.clientHeight * (1 - 1 / 6)) {
+                            scroll.scrollTo({ top: center - scrollHeight / 6 });
+                        }
+                    }
+                }
+            } else {
+                node.classList.remove("highlight")
+            }
+        }
+    }
+}
+
+const loadedSubtitles: {
+    main?: Subtitles
+    secondary?: Subtitles
+} = {}
+
+const start = Date.now()
 setInterval(() => {
-    const date = new Date()
-    updateTime(date.getMinutes().toString().padStart(2, "0") + ":" + date.getSeconds().toString().padStart(2, "0"))
-}, 1000)
+    updateTime((Date.now() - start) + 90_000)
+}, 30)
 
 function loadSubtitles(subtitiles: Subtitles, main: boolean) {
     const subtitleContainer = document.getElementById(main ? "main-subtitles" : "secondary-subtitles")
     if (!subtitleContainer) return
+    const inner = subtitleContainer.querySelector<HTMLElement>(".inner")
+    if (!inner) return
     const newChildren: Node[] = []
     for (const entry of subtitiles.entries) {
-        newChildren.push(createElement("div", {
+        newChildren.push(entry.node = createElement("div", {
             className: "subtitle-entry",
             children: [
                 createElement("span", {
                     className: "timestamp",
-                    textContent: timestampString(entry.startTime),
+                    textContent: formatTimestamp(entry.startTime),
                 }),
                 createElement("div", {
                     className: "subtitles",
@@ -40,7 +101,9 @@ function loadSubtitles(subtitiles: Subtitles, main: boolean) {
             ]
         }))
     }
-    subtitleContainer.replaceChildren(...newChildren)
+    inner.replaceChildren(...newChildren)
+    if (main) loadedSubtitles.main = subtitiles
+    else loadedSubtitles.secondary = subtitiles
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -71,7 +134,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     })
 
-    loadSubtitles(subs as Subtitles, true)
+    loadSubtitles(JSON.parse(JSON.stringify(subs)) as Subtitles, true)
     loadSubtitles(subs as Subtitles, false)
 })
 

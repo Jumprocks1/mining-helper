@@ -4,6 +4,7 @@ interface SubtitleEntry {
     endTime: number
     text: string
     translation?: string
+    node?: HTMLElement
 }
 
 export interface Subtitles {
@@ -13,7 +14,7 @@ export interface Subtitles {
     name?: string
 }
 
-export function timestampString(timestamp: number) {
+export function formatTimestamp(timestamp: number) {
     let seconds = Math.floor(timestamp / 1000)
     let minutes = Math.floor(seconds / 60)
     seconds -= minutes * 60
