@@ -1,6 +1,7 @@
 import { createElement } from "./util"
 import subs from "./data/subs.json"
 import { parseSrt, Subtitles, formatTimestamp } from "./utils/srt"
+import MpvWebSocket from "./utils/MpvWebSocket"
 
 
 let currentTime = 0
@@ -67,11 +68,6 @@ const loadedSubtitles: {
     secondary?: Subtitles
 } = {}
 
-const start = Date.now()
-setInterval(() => {
-    updateTime((Date.now() - start) + 90_000)
-}, 30)
-
 function loadSubtitles(subtitiles: Subtitles, main: boolean) {
     const subtitleContainer = document.getElementById(main ? "main-subtitles" : "secondary-subtitles")
     if (!subtitleContainer) return
@@ -107,6 +103,10 @@ function loadSubtitles(subtitiles: Subtitles, main: boolean) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+    const webSocket = new MpvWebSocket()
+    webSocket.onMessage = (e) => {
+        updateTime(parseFloat(e.data))
+    }
     const subtitleContainer = document.getElementById("subtitle-container")
     if (!subtitleContainer) return
 
