@@ -144,6 +144,16 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 
     // loadSubtitles(JSON.parse(JSON.stringify(subs)) as Subtitles, true)
-    // loadSubtitles(subs as Subtitles, false)
-})
 
+document.addEventListener("keypress", ev => {
+    console.log(ev)
+    const sel = getSelection()
+    if (sel) {
+        const text = sel.toString()
+        if (ev.key === "j") {
+            chrome.tabs.create({ url: `https://jisho.org/search/${encodeURIComponent(text)}` });
+        } else if (ev.key == "d") {
+            chrome.tabs.create({ url: `https://jpdb.io/search?q=${encodeURIComponent(text)}&lang=english` });
+        }
+    }
+})
