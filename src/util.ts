@@ -126,6 +126,7 @@ interface ElementProps {
     tooltip?: Child[] | Child
     onClick?: EventListenerOrEventListenerObject
     href?: string
+    mutate?: (e: HTMLElement) => void
 }
 
 export function tooltip(node: HTMLElement, text: Child[] | Child) {
@@ -157,6 +158,7 @@ export function createElement<T extends keyof HTMLElementTagNameMap>(type: T, pr
                 el.dataset[key] = v
         }
     }
+    if (props.mutate) props.mutate(el)
     return el
 }
 

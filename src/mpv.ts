@@ -81,6 +81,7 @@ function loadSubtitles(subtitiles: Subtitles, main: boolean) {
                 createElement("span", {
                     className: "timestamp",
                     textContent: formatTimestamp(entry.startTime),
+                    mutate: (e: any) => e.entry = entry
                 }),
                 createElement("div", {
                     className: "subtitles",
@@ -116,6 +117,21 @@ document.addEventListener("DOMContentLoaded", () => {
         connectionDot.classList.remove("connected")
         connectionDot.classList.add("disconnected")
     }
+
+    document.addEventListener("click", ev => {
+        const clicked = ev.target as HTMLElement | null
+        if (clicked) {
+            if (clicked.classList.contains("timestamp")) {
+                if (webSocket.Connection.readyState === webSocket.Connection.OPEN) {
+                    const entry = (clicked as any).entry
+                    if (!entry) return
+                    const time = entry.startTime
+                    webSocket.Connection.send(`ipc:seek ${time / 1000} absolute`)
+                }
+            }
+        }
+    })
+
     const bodyContainer = document.getElementById("body-container")
     if (!bodyContainer) return
 
@@ -143,7 +159,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     })
 
+    // loadSubtitles(subs as Subtitles, true)
     // loadSubtitles(JSON.parse(JSON.stringify(subs)) as Subtitles, true)
+})
 
 document.addEventListener("keypress", ev => {
     console.log(ev)
