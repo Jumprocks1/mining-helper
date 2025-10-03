@@ -107,13 +107,22 @@ document.addEventListener("DOMContentLoaded", () => {
     webSocket.onMessage = (e) => {
         updateTime(parseFloat(e.data))
     }
-    const subtitleContainer = document.getElementById("subtitle-container")
-    if (!subtitleContainer) return
+    const connectionDot = document.getElementById("connection-status-dot")!
+    webSocket.onOpen = () => {
+        connectionDot.classList.add("connected")
+        connectionDot.classList.remove("disconnected")
+    }
+    webSocket.onClose = () => {
+        connectionDot.classList.remove("connected")
+        connectionDot.classList.add("disconnected")
+    }
+    const bodyContainer = document.getElementById("body-container")
+    if (!bodyContainer) return
 
-    subtitleContainer.addEventListener("dragover", ev => {
+    bodyContainer.addEventListener("dragover", ev => {
         ev.preventDefault()
     })
-    subtitleContainer.addEventListener("drop", ev => {
+    bodyContainer.addEventListener("drop", ev => {
         ev.preventDefault()
         const files = ev.dataTransfer?.files
         if (!files) return
@@ -134,7 +143,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     })
 
-    loadSubtitles(JSON.parse(JSON.stringify(subs)) as Subtitles, true)
-    loadSubtitles(subs as Subtitles, false)
+    // loadSubtitles(JSON.parse(JSON.stringify(subs)) as Subtitles, true)
+    // loadSubtitles(subs as Subtitles, false)
 })
 
