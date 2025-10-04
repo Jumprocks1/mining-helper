@@ -102,15 +102,36 @@ function loadSubtitles(subtitiles: Subtitles, main: boolean) {
     if (main) loadedSubtitles.main = subtitiles
     else loadedSubtitles.secondary = subtitiles
 }
+async function handleWebSocketData(command: string | Blob) {
+    if (typeof command === "string") {
+        const spl = command.indexOf(":")
+        if (spl === -1) { console.error({ command, message: "Missing :" }); return }
+        const commandName = command.substring(0, spl);
+        const commandValue = command.substring(spl + 1);
+        handleCommandAndData(commandName, commandValue)
+    } else {
+        const bytes = new Uint8Array(await command.arrayBuffer());
+        const spl = bytes.indexOf(":".charCodeAt(0))
+        if (spl === -1) return
+        const commandName = new TextDecoder().decode(bytes.subarray(0, spl));
+        handleCommandAndData(commandName, bytes.subarray(spl + 1))
+    }
+}
+function handleCommandAndData(commandName: string, commandData: string | Uint8Array<ArrayBuffer>) {
+    if (commandName === "time" || commandName === "t") {
+        updateTime(parseFloat(commandData as string))
+    } else if (commandName === "raw-sub-file") {
+        const decoded = new TextDecoder().decode(commandData as Uint8Array)
+        loadSubtitles(parseSrt(decoded), true)
+    }
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     let webSocket: MpvWebSocket
     function tryWebSocket() {
         if (webSocket) webSocket.close();
         webSocket = new MpvWebSocket()
-        webSocket.onMessage = (e) => {
-            updateTime(parseFloat(e.data))
-        }
+        webSocket.onMessage = (e) => handleWebSocketData(e.data)
         const connectionDot = document.getElementById("connection-status-dot")!
         connectionDot.classList.remove(...connectionDot.classList);
         webSocket.onOpen = () => {
@@ -124,11 +145,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     tryWebSocket()
 
+    document.addEventListener("keydown", ev => {
+        if (ev.key === "s") {
+            if (webSocket.Open) {
+                // TODO allow picking (instead of forcing id 6)
+                webSocket.Connection.send("ipc:script-message read_subtitles 6");
+            }
+        }
+    })
+
     document.addEventListener("click", ev => {
         const clicked = ev.target as HTMLElement | null
         if (clicked) {
             if (clicked.classList.contains("timestamp")) {
-                if (webSocket.Connection.readyState === webSocket.Connection.OPEN) {
+                if (webSocket.Open) {
                     const entry = (clicked as any).entry
                     if (!entry) return
                     const time = entry.startTime
@@ -168,9 +198,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     })
-
-    // loadSubtitles(subs as Subtitles, true)
-    // loadSubtitles(JSON.parse(JSON.stringify(subs)) as Subtitles, true)
 })
 
 document.addEventListener("keypress", ev => {

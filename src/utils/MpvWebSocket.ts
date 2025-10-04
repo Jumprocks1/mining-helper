@@ -6,6 +6,10 @@ export default class MpvWebSocket {
     onClose?: () => void
     onError: (e: Event) => void = console.error
 
+    public get Open() {
+        return this.Connection.readyState === this.Connection.OPEN;
+    }
+
     constructor(uri: string = "ws://127.0.0.1:412/") {
         console.log("Connecting WebSocket")
         this.Connection = new WebSocket(uri);
