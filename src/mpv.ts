@@ -104,19 +104,25 @@ function loadSubtitles(subtitiles: Subtitles, main: boolean) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    const webSocket = new MpvWebSocket()
-    webSocket.onMessage = (e) => {
-        updateTime(parseFloat(e.data))
+    let webSocket: MpvWebSocket
+    function tryWebSocket() {
+        if (webSocket) webSocket.close();
+        webSocket = new MpvWebSocket()
+        webSocket.onMessage = (e) => {
+            updateTime(parseFloat(e.data))
+        }
+        const connectionDot = document.getElementById("connection-status-dot")!
+        connectionDot.classList.remove(...connectionDot.classList);
+        webSocket.onOpen = () => {
+            connectionDot.classList.add("connected")
+            connectionDot.classList.remove("disconnected")
+        }
+        webSocket.onClose = () => {
+            connectionDot.classList.remove("connected")
+            connectionDot.classList.add("disconnected")
+        }
     }
-    const connectionDot = document.getElementById("connection-status-dot")!
-    webSocket.onOpen = () => {
-        connectionDot.classList.add("connected")
-        connectionDot.classList.remove("disconnected")
-    }
-    webSocket.onClose = () => {
-        connectionDot.classList.remove("connected")
-        connectionDot.classList.add("disconnected")
-    }
+    tryWebSocket()
 
     document.addEventListener("click", ev => {
         const clicked = ev.target as HTMLElement | null
@@ -127,7 +133,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (!entry) return
                     const time = entry.startTime
                     webSocket.Connection.send(`ipc:seek ${time / 1000} absolute`)
+                    ev.preventDefault();
                 }
+            } else if (clicked.matches("#connection-status-dot.disconnected")) {
+                tryWebSocket();
+                ev.preventDefault();
             }
         }
     })
