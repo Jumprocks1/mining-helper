@@ -5,3 +5,5 @@ dist/js
 dist/main.css
 
 node_modules
+
+dist/all_v11.json

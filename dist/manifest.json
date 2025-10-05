@@ -1,5 +1,5 @@
 {
-  "name": "jpdb.io - Anki",
+  "name": "Anki Mining Helper",
   "$schema": "https://json.schemastore.org/chrome-manifest",
   "version": "1.0",
   "manifest_version": 3,

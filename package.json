@@ -1,5 +1,5 @@
 {
-  "name": "jpdb-to-anki",
+  "name": "anki-mining-helper",
   "scripts": {},
   "devDependencies": {
     "@types/chrome": "^0.1.12",
