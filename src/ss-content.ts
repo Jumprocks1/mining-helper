@@ -1,4 +1,4 @@
-import { CardData, lookupFuri, urlToArrayBuffer } from "./util";
+import { CardData, lookupFuri, urlToArrayBuffer } from "./utils/util";
 
 export { }
 

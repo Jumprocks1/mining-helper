@@ -1,4 +1,4 @@
-import { createElement } from "../util"
+import { createElement } from "../utils/util"
 import { parseSrt, Subtitles, formatTimestamp } from "../utils/srt"
 import MpvWebSocket from "../utils/MpvWebSocket"
 

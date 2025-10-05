@@ -1,5 +1,5 @@
 import AnkiConnect, { MediaAdd } from "./utils/AnkiConnect"
-import { CardData, createElement, furiToReading } from "./util"
+import { CardData, createElement, furiToReading } from "./utils/util"
 
 
 const anki = new AnkiConnect()

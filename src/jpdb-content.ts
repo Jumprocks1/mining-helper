@@ -1,4 +1,4 @@
-import { CardData } from "./util"
+import { CardData } from "./utils/util"
 
 export { }
 
