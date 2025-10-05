@@ -3,6 +3,7 @@ import * as esbuild from 'esbuild'
 const context = await esbuild.context({
     entryPoints: [
         "./src/popup.ts",
+        "./src/anki/anki.tsx",
         "./src/jpdb-inject.ts",
         "./src/jpdb-content.ts",
         "./src/ss-content.ts",

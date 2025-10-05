@@ -1,4 +1,4 @@
-import MhHeader from "./components/MhHeader"
+import { seedHeader } from "./components/MhHeader"
 import AnkiConnect, { MediaAdd } from "./utils/AnkiConnect"
 import { CardData, createElement, furiToReading } from "./utils/util"
 
@@ -97,7 +97,7 @@ async function save(card: CardData) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    MhHeader()
+    seedHeader()
     const popup = new URLSearchParams(location.search).get("p") !== null
     if (popup) document.body.classList.add("popup")
     async function refresh() {

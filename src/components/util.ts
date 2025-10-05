@@ -19,3 +19,9 @@ export function seed(id: string, ...children: (Children | ((target: HTMLElement)
             target.append(childrenObj)
     }
 }
+
+export function seedPage(id: string, children: Child[]) {
+    const body = document.body
+    body.id = id
+    body.replaceChildren(...children)
+}

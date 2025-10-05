@@ -1,7 +1,7 @@
 import { createElement } from "../utils/util"
 import { parseSrt, Subtitles, formatTimestamp } from "../utils/srt"
 import MpvWebSocket from "../utils/MpvWebSocket"
-import MhHeader from "../components/MhHeader"
+import { seedHeader } from "../components/MhHeader"
 
 let currentTime = 0
 
@@ -126,7 +126,7 @@ function handleCommandAndData(commandName: string, commandData: string | Uint8Ar
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    MhHeader()
+    seedHeader()
     let webSocket = new MpvWebSocket()
     webSocket.onMessage = (e) => handleWebSocketData(e.data)
     const connectionDot = document.getElementById("connection-status-dot")!
