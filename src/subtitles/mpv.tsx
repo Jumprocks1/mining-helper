@@ -3,6 +3,7 @@ import { parseSrt, Subtitles, formatTimestamp } from "../utils/srt"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import MhHeader from "../components/MhHeader"
 import { seedPage } from "../components/util"
+import SubtitleViewer from "./SubtitleViewer"
 
 let currentTime = 0
 
@@ -68,39 +69,23 @@ const loadedSubtitles: {
     secondary?: Subtitles
 } = {}
 
-function loadSubtitles(subtitiles: Subtitles, main: boolean) {
-    const subtitleContainer = document.getElementById(main ? "main-subtitles" : "secondary-subtitles")
-    if (!subtitleContainer) return
-    const inner = subtitleContainer.querySelector<HTMLElement>(".inner")
-    if (!inner) return
-    const newChildren: Node[] = []
-    for (const entry of subtitiles.entries) {
-        newChildren.push(entry.node = oldCreateElement("div", {
-            className: "subtitle-entry",
-            children: [
-                oldCreateElement("span", {
-                    className: "timestamp",
-                    textContent: formatTimestamp(entry.startTime),
-                    mutate: (e: any) => e.entry = entry
-                }),
-                oldCreateElement("div", {
-                    className: "subtitles",
-                    children: [
-                        oldCreateElement("span", {
-                            className: "main-subtitle",
-                            textContent: entry.text,
-                            data: {
-                                tooltip: entry.translation
-                            }
-                        }),
-                    ]
-                })
-            ]
-        }))
+function loadSubtitles(subtitles: Subtitles, main: boolean) {
+    const container = document.getElementById("subtitle-container")
+    if (!container) return
+
+    const mainId = "main-subtitles"
+
+    if (main) {
+        const existing = document.getElementById(mainId)
+        if (existing) existing.remove()
     }
-    inner.replaceChildren(...newChildren)
-    if (main) loadedSubtitles.main = subtitiles
-    else loadedSubtitles.secondary = subtitiles
+
+    const block = SubtitleViewer(subtitles)
+    if (main) block.id = mainId
+    container.append(block)
+
+    if (main) loadedSubtitles.main = subtitles
+    else loadedSubtitles.secondary = subtitles
 }
 async function handleWebSocketData(command: string | Blob) {
     if (typeof command === "string") {
@@ -136,14 +121,6 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <div id="body-container">
                 <div id="subtitle-container">
-                    <div id="main-subtitles">
-                        <div className="pointer">-&gt;</div>
-                        <div className="inner"></div>
-                    </div>
-                    <div id="secondary-subtitles">
-                        <div className="pointer">-&gt;</div>
-                        <div className="inner"></div>
-                    </div>
                 </div>
             </div>
         </div>
