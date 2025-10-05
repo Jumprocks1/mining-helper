@@ -127,42 +127,29 @@ function handleCommandAndData(commandName: string, commandData: string | Uint8Ar
 
 document.addEventListener("DOMContentLoaded", () => {
     MhHeader()
-    let webSocket: MpvWebSocket
-    function tryWebSocket() {
-        if (webSocket) {
-            if (webSocket.Connecting || webSocket.Open) return
-            webSocket.close();
-        }
-        webSocket = new MpvWebSocket()
-        webSocket.onMessage = (e) => handleWebSocketData(e.data)
-        const connectionDot = document.getElementById("connection-status-dot")!
+    let webSocket = new MpvWebSocket()
+    webSocket.onMessage = (e) => handleWebSocketData(e.data)
+    const connectionDot = document.getElementById("connection-status-dot")!
+    webSocket.onConnecting = () => {
         connectionDot.title = "WebSocket connecting"
         connectionDot.classList.remove(...connectionDot.classList);
-        webSocket.onOpen = () => {
-            connectionDot.title = "WebSocket connected"
-            connectionDot.classList.add("connected")
-            connectionDot.classList.remove("disconnected")
-        }
-        webSocket.onClose = () => {
-            connectionDot.title = "WebSocket disconnected\nClick to retry"
-            connectionDot.classList.remove("connected")
-            connectionDot.classList.add("disconnected")
-        }
     }
-    tryWebSocket()
-    // returns promise which guarentees open connection
-    function guaranteeOpenWebSocket() {
-        if (webSocket.Open) return
-        if (webSocket.Connecting) return webSocket.OpenPromise
-        tryWebSocket()
-        return webSocket.OpenPromise
+    webSocket.onOpen = () => {
+        connectionDot.title = "WebSocket connected"
+        connectionDot.classList.add("connected")
+        connectionDot.classList.remove("disconnected")
     }
+    webSocket.onClose = () => {
+        connectionDot.title = "WebSocket disconnected\nClick to retry"
+        connectionDot.classList.remove("connected")
+        connectionDot.classList.add("disconnected")
+    }
+    webSocket.Connect()
 
-    document.addEventListener("keydown", async ev => {
+    document.addEventListener("keydown", ev => {
         if (ev.key === "s") {
-            await guaranteeOpenWebSocket()
             // TODO allow picking (instead of forcing id 6)
-            webSocket.Connection.send("ipc:script-message read_subtitles 6");
+            webSocket.OpenAndSend("ipc:script-message read_subtitles 6");
         }
     })
 
@@ -170,15 +157,13 @@ document.addEventListener("DOMContentLoaded", () => {
         const clicked = ev.target as HTMLElement | null
         if (clicked) {
             if (clicked.classList.contains("timestamp")) {
-                if (webSocket.Open) {
-                    const entry = (clicked as any).entry
-                    if (!entry) return
-                    const time = entry.startTime
-                    webSocket.Connection.send(`ipc:seek ${time / 1000} absolute`)
-                    ev.preventDefault();
-                }
+                const entry = (clicked as any).entry
+                if (!entry) return
+                const time = entry.startTime
+                webSocket.OpenAndSend(`ipc:seek ${time / 1000} absolute`)
+                ev.preventDefault();
             } else if (clicked.matches("#connection-status-dot.disconnected")) {
-                tryWebSocket();
+                webSocket.Connect();
                 ev.preventDefault();
             }
         }
