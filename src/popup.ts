@@ -1,4 +1,4 @@
-import AnkiConnect, { MediaAdd } from "./anki-connect"
+import AnkiConnect, { MediaAdd } from "./utils/AnkiConnect"
 import { CardData, createElement, furiToReading } from "./util"
 
 
