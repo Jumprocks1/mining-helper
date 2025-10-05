@@ -10,7 +10,7 @@ body {
             padding: 6px 6px 100px 6px;
             width: 500px;
         }
-        #toolbar {
+        #mh-header {
             padding: 0 0;
             a.button.mpv {
                 display: none;
@@ -30,7 +30,7 @@ body {
 }
 
 
-#toolbar {
+#mh-header {
     background-color: #212121;
     display: flex;
     align-items: center;

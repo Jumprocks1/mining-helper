@@ -6,7 +6,10 @@
         "strict": true,
         "isolatedModules": true,
         "esModuleInterop": true,
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "jsx": "react",
+        "jsxFactory": "createElement",
+        "jsxFragmentFactory": "createFragment"
     },
     "include": [
         "src"
