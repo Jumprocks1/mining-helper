@@ -1,7 +1,6 @@
-import { createElement } from "./util"
-import subs from "./data/subs.json"
-import { parseSrt, Subtitles, formatTimestamp } from "./utils/srt"
-import MpvWebSocket from "./utils/MpvWebSocket"
+import { createElement } from "../util"
+import { parseSrt, Subtitles, formatTimestamp } from "../utils/srt"
+import MpvWebSocket from "../utils/MpvWebSocket"
 
 
 let currentTime = 0
