@@ -143,13 +143,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
     tryWebSocket()
+    // returns promise which guarentees open connection
+    function guaranteeOpenWebSocket() {
+        if (webSocket.Open) return
+        if (webSocket.Connecting) return webSocket.OpenPromise
+        tryWebSocket()
+        return webSocket.OpenPromise
+    }
 
-    document.addEventListener("keydown", ev => {
+    document.addEventListener("keydown", async ev => {
         if (ev.key === "s") {
-            if (webSocket.Open) {
-                // TODO allow picking (instead of forcing id 6)
-                webSocket.Connection.send("ipc:script-message read_subtitles 6");
-            }
+            await guaranteeOpenWebSocket()
+            // TODO allow picking (instead of forcing id 6)
+            webSocket.Connection.send("ipc:script-message read_subtitles 6");
         }
     })
 
