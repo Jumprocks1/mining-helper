@@ -13,9 +13,10 @@ export default class MpvWebSocket {
         return this.Connection.readyState === this.Connection.CONNECTING;
     }
 
-    pendingOpenPromises: (() => void)[] = []
+    _openPromise: Promise<void> | undefined
+    _openPromiseResolve: (() => void) | undefined
     public get OpenPromise() {
-        return new Promise<void>(e => this.pendingOpenPromises.push(e))
+        return this._openPromise ??= new Promise<void>(e => this._openPromiseResolve = e)
     }
 
     constructor(uri: string = "ws://127.0.0.1:412/") {
@@ -23,13 +24,13 @@ export default class MpvWebSocket {
         this.Connection = new WebSocket(uri);
 
         this.Connection.onopen = () => {
-            this.pendingOpenPromises.forEach(e => e())
-            this.pendingOpenPromises = []
+            this._openPromiseResolve?.()
+            this._openPromiseResolve = undefined
             this.Connection.onmessage = e => this.onMessage?.(e)
             this.onOpen?.();
         };
         this.Connection.onclose = () => {
-            this.pendingOpenPromises = []
+            this._openPromiseResolve = undefined
             this.onClose?.();
         }
         this.Connection.onerror = e => this.onError(e);

@@ -128,16 +128,22 @@ function handleCommandAndData(commandName: string, commandData: string | Uint8Ar
 document.addEventListener("DOMContentLoaded", () => {
     let webSocket: MpvWebSocket
     function tryWebSocket() {
-        if (webSocket) webSocket.close();
+        if (webSocket) {
+            if (webSocket.Connecting || webSocket.Open) return
+            webSocket.close();
+        }
         webSocket = new MpvWebSocket()
         webSocket.onMessage = (e) => handleWebSocketData(e.data)
         const connectionDot = document.getElementById("connection-status-dot")!
+        connectionDot.title = "WebSocket connecting"
         connectionDot.classList.remove(...connectionDot.classList);
         webSocket.onOpen = () => {
+            connectionDot.title = "WebSocket connected"
             connectionDot.classList.add("connected")
             connectionDot.classList.remove("disconnected")
         }
         webSocket.onClose = () => {
+            connectionDot.title = "WebSocket disconnected\nClick to retry"
             connectionDot.classList.remove("connected")
             connectionDot.classList.add("disconnected")
         }
