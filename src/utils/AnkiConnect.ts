@@ -69,7 +69,8 @@ interface AnkiConnectActionMap {
     },
     findCards: { params: { query: string }, returns: number[] },
     guiSelectCard: { params: { card: number }, returns: boolean },
-    multi: { params: { actions: [] }, returns: any }
+    multi: { params: { actions: [] }, returns: any },
+    findNotes: { params: { query: string }, returns: number[] }
 }
 
 interface NoteAdd {

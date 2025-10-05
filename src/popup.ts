@@ -53,7 +53,7 @@ function activeFields(card: CardData) {
 }
 
 async function update(card: CardData) {
-    const notes = await anki.callAny("findNotes", { query: `word:*${card.kanji}*` })
+    const notes = await anki.call("findNotes", { query: `word:*${card.kanji}*` })
     if (notes.length === 0) throw new Error(`No notes matching ${card.kanji}`)
     if (notes.length > 1) throw new Error(`Multiple notes matching ${card.kanji}`)
     const noteId = notes[0]
