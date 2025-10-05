@@ -14,7 +14,7 @@ function updateTime(timestamp: number) {
         timeElement.textContent = formatTimestamp(timestamp)
 
     updateHighlighting(loadedSubtitles.main)
-    updateHighlighting(loadedSubtitles.secondary)
+    loadedSubtitles.secondary.forEach(updateHighlighting)
 }
 
 function updateHighlighting(subtitles?: Subtitles) {
@@ -66,8 +66,8 @@ function updateHighlighting(subtitles?: Subtitles) {
 
 const loadedSubtitles: {
     main?: Subtitles
-    secondary?: Subtitles
-} = {}
+    secondary: Subtitles[]
+} = { secondary: [] }
 
 function loadSubtitles(subtitles: Subtitles, main: boolean) {
     const container = document.getElementById("subtitle-container")
@@ -85,7 +85,7 @@ function loadSubtitles(subtitles: Subtitles, main: boolean) {
     container.append(block)
 
     if (main) loadedSubtitles.main = subtitles
-    else loadedSubtitles.secondary = subtitles
+    else loadedSubtitles.secondary.push(subtitles)
 }
 async function handleWebSocketData(command: string | Blob) {
     if (typeof command === "string") {
@@ -136,6 +136,8 @@ document.addEventListener("DOMContentLoaded", () => {
         connectionDot.title = "WebSocket connected"
         connectionDot.classList.add("connected")
         connectionDot.classList.remove("disconnected")
+        if (!loadedSubtitles.main)
+            webSocket.SendIfOpen("ipc:script-message read_subtitles 6");
     }
     webSocket.onClose = () => {
         connectionDot.title = "WebSocket disconnected\nClick to retry"
@@ -144,10 +146,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     webSocket.Connect()
 
-    document.addEventListener("keydown", ev => {
-        if (ev.key === "s") {
-            // TODO allow picking (instead of forcing id 6)
-            webSocket.OpenAndSend("ipc:script-message read_subtitles 6");
+    document.addEventListener("keypress", ev => {
+        const sel = getSelection()
+        if (sel) {
+            const text = sel.toString()
+            if (ev.key === "j") {
+                chrome.tabs.create({ url: `https://jisho.org/search/${encodeURIComponent(text)}` });
+            } else if (ev.key == "d") {
+                chrome.tabs.create({ url: `https://jpdb.io/search?q=${encodeURIComponent(text)}&lang=english` });
+            } else if (ev.key === "s") {
+                chrome.tabs.create({ url: `https://sentencesearch.neocities.org/#${encodeURIComponent(text)}` });
+            }
         }
     })
 
@@ -193,17 +202,4 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     })
-})
-
-document.addEventListener("keypress", ev => {
-    console.log(ev)
-    const sel = getSelection()
-    if (sel) {
-        const text = sel.toString()
-        if (ev.key === "j") {
-            chrome.tabs.create({ url: `https://jisho.org/search/${encodeURIComponent(text)}` });
-        } else if (ev.key == "d") {
-            chrome.tabs.create({ url: `https://jpdb.io/search?q=${encodeURIComponent(text)}&lang=english` });
-        }
-    }
 })
