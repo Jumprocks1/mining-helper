@@ -70,7 +70,11 @@
             height: 0.4em;
             border-radius: 50%;
 
-            background-color: rgb(255, 205, 125);
+            &:not(.disconnected):not(.connected) {
+                background-color: rgb(255, 205, 125);
+                cursor: wait;
+            }
+
             &.disconnected {
                 background-color: rgb(254, 97, 99);
                 cursor: pointer;

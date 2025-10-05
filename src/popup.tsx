@@ -1,6 +1,7 @@
-import { seedHeader } from "./components/MhHeader"
+import MhHeader from "./components/MhHeader"
+import { seedPage } from "./components/util"
 import AnkiConnect, { MediaAdd } from "./utils/AnkiConnect"
-import { CardData, createElement, furiToReading } from "./utils/util"
+import { CardData, oldCreateElement, furiToReading } from "./utils/util"
 
 
 const anki = new AnkiConnect()
@@ -97,7 +98,15 @@ async function save(card: CardData) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    seedHeader()
+    seedPage("popup-page", [
+        MhHeader(),
+        <div id="body-container">
+            <h2>Pending Cards</h2>
+            <div id="card-container">
+            </div>
+            <div id="last-error" className="hide"></div>
+        </div>
+    ])
     const popup = new URLSearchParams(location.search).get("p") !== null
     if (popup) document.body.classList.add("popup")
     async function refresh() {
@@ -109,42 +118,42 @@ document.addEventListener("DOMContentLoaded", () => {
             cards.push(cardsObject[key])
         cards.sort((a, b) => a.modified - b.modified)
         const newChildren = cards.map(e => {
-            return createElement("div", {
+            return oldCreateElement("div", {
                 className: "card-row",
                 children: [
-                    createElement("span", { className: "kanji", textContent: e.kanji, tooltip: furiToReading(e.furigana) }),
+                    oldCreateElement("span", { className: "kanji", textContent: e.kanji, tooltip: furiToReading(e.furigana) }),
                     "-",
                     e.meaningIndex ?
-                        createElement("span", { className: "meaning-index", textContent: `m_${e.meaningIndex}`, tooltip: e.meaning })
+                        oldCreateElement("span", { className: "meaning-index", textContent: `m_${e.meaningIndex}`, tooltip: e.meaning })
                         : "",
-                    createElement("span", {
+                    oldCreateElement("span", {
                         className: "sentence-index", textContent: `ex_${e.sentenceIndex}`,
                         tooltip: [
-                            createElement("div", { innerHTML: e.jpSentenceKanji }),
-                            createElement("div", { textContent: e.enSentence })
+                            oldCreateElement("div", { innerHTML: e.jpSentenceKanji }),
+                            oldCreateElement("div", { textContent: e.enSentence })
                         ]
                     }),
-                    createElement("div", { className: "flex-spacer" }),
-                    createElement("span", {
+                    oldCreateElement("div", { className: "flex-spacer" }),
+                    oldCreateElement("span", {
                         className: "delete-button button", textContent: "x", onClick: async ev => {
                             ev.preventDefault()
                             await chrome.storage.session.remove(e.kanji)
                             refresh()
                         }
                     }),
-                    createElement("span", {
+                    oldCreateElement("span", {
                         className: "save-button button", textContent: "save", onClick: async ev => {
                             ev.preventDefault()
                             handleErrors(() => save(e))
                         }
                     }),
-                    createElement("span", {
+                    oldCreateElement("span", {
                         className: "update-button button", textContent: "up", onClick: async ev => {
                             ev.preventDefault()
                             handleErrors(() => update(e))
                         }
                     }),
-                    createElement("a", {
+                    oldCreateElement("a", {
                         className: "sentence-search button", textContent: "ss",
                         href: "https://sentencesearch.neocities.org/#" + e.kanji
                     })
@@ -155,10 +164,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     refresh()
 
-    document.getElementById("title")?.addEventListener("click", ev => {
-        if (popup) {
-            chrome.tabs.create({ url: chrome.runtime.getURL("/popup.html") });
-            ev.preventDefault()
-        }
-    })
+    if (popup) {
+        document.addEventListener("click", ev => {
+            const target = ev.target as HTMLAnchorElement | null
+            if (target && target.matches("#mh-header a.button")) {
+                chrome.tabs.create({ url: chrome.runtime.getURL(target.getAttribute("href")!) });
+                ev.preventDefault()
+            }
+        })
+    }
 })

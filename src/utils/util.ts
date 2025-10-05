@@ -139,7 +139,7 @@ export function tooltip(node: HTMLElement, text: Child[] | Child) {
     node.append(tooltip)
 }
 
-export function createElement<T extends keyof HTMLElementTagNameMap>(type: T, props: ElementProps): HTMLElementTagNameMap[T] {
+export function oldCreateElement<T extends keyof HTMLElementTagNameMap>(type: T, props: ElementProps): HTMLElementTagNameMap[T] {
     const el = document.createElement(type)
     if (props.className) el.className = props.className
     if (props.textContent) el.textContent = props.textContent

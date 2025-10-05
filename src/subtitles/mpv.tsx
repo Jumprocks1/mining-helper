@@ -1,7 +1,8 @@
-import { createElement } from "../utils/util"
+import { oldCreateElement } from "../utils/util"
 import { parseSrt, Subtitles, formatTimestamp } from "../utils/srt"
 import MpvWebSocket from "../utils/MpvWebSocket"
-import { seedHeader } from "../components/MhHeader"
+import MhHeader from "../components/MhHeader"
+import { seedPage } from "../components/util"
 
 let currentTime = 0
 
@@ -74,18 +75,18 @@ function loadSubtitles(subtitiles: Subtitles, main: boolean) {
     if (!inner) return
     const newChildren: Node[] = []
     for (const entry of subtitiles.entries) {
-        newChildren.push(entry.node = createElement("div", {
+        newChildren.push(entry.node = oldCreateElement("div", {
             className: "subtitle-entry",
             children: [
-                createElement("span", {
+                oldCreateElement("span", {
                     className: "timestamp",
                     textContent: formatTimestamp(entry.startTime),
                     mutate: (e: any) => e.entry = entry
                 }),
-                createElement("div", {
+                oldCreateElement("div", {
                     className: "subtitles",
                     children: [
-                        createElement("span", {
+                        oldCreateElement("span", {
                             className: "main-subtitle",
                             textContent: entry.text,
                             data: {
@@ -126,7 +127,27 @@ function handleCommandAndData(commandName: string, commandData: string | Uint8Ar
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    seedHeader()
+    seedPage("mpv-page", [
+        MhHeader(),
+        <div id="outer-body-container">
+            <div id="status-info">
+                <span id="current-time">00:00</span>
+                <span id="connection-status-dot"></span>
+            </div>
+            <div id="body-container">
+                <div id="subtitle-container">
+                    <div id="main-subtitles">
+                        <div className="pointer">-&gt;</div>
+                        <div className="inner"></div>
+                    </div>
+                    <div id="secondary-subtitles">
+                        <div className="pointer">-&gt;</div>
+                        <div className="inner"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    ])
     let webSocket = new MpvWebSocket()
     webSocket.onMessage = (e) => handleWebSocketData(e.data)
     const connectionDot = document.getElementById("connection-status-dot")!

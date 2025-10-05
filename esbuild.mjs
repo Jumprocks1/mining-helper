@@ -2,12 +2,12 @@ import * as esbuild from 'esbuild'
 
 const context = await esbuild.context({
     entryPoints: [
-        "./src/popup.ts",
+        "./src/popup.tsx",
         "./src/anki/anki.tsx",
         "./src/jpdb-inject.ts",
         "./src/jpdb-content.ts",
         "./src/ss-content.ts",
-        "./src/subtitles/mpv.ts"
+        "./src/subtitles/mpv.tsx"
     ],
     bundle: true,
     // minify: true,
