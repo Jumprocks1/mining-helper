@@ -1,5 +1,20 @@
 type FC = (props: Record<string, any>) => JSX.Element
 
+function appendChildren(el: ParentNode, children: any[]) {
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        if (Array.isArray(child)) {
+            appendChildren(el, child)
+        } else if (typeof child === "object") {
+            el.append(child);
+        } else if (typeof child === "string") {
+            el.append(child);
+        } else if (child !== undefined && child !== false) {
+            el.append(child.toString());
+        }
+    }
+}
+
 export function createElement(element: string | FC,
     properties?: any, ...children: any[]) {
     if (properties && properties.children && (!children || children.length === 0)) {
@@ -30,17 +45,7 @@ export function createElement(element: string | FC,
             el = element(properties ?? {});
         }
     }
-
-    for (let i = 0; i < children.length; i++) {
-        const child = children[i];
-        if (typeof child === "object") {
-            el.appendChild(child);
-        } else if (typeof child === "string") {
-            el.appendChild(document.createTextNode(child));
-        } else if (child !== undefined && child !== false) {
-            el.appendChild(document.createTextNode(child.toString()));
-        }
-    }
+    appendChildren(el, children)
     return el;
 }
 
