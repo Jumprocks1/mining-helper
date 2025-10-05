@@ -75,6 +75,8 @@ export default class SubtitleViewer {
                 }
             }
         }
+
+        // this is pretty inefficient
         for (const entry of this.subtitles.entries) {
             const node = entry.node
             if (node) {
@@ -83,11 +85,13 @@ export default class SubtitleViewer {
                     if (!node.classList.contains("highlight")) {
                         node.classList.add("highlight")
                         if (this.main) {
-                            const center = node.offsetTop + node.offsetHeight / 2;
-                            const scrollHeight = scroll.clientHeight
+                            const computedStyle = getComputedStyle(scroll);
+                            const paddingTop = parseFloat(computedStyle.paddingTop);
+                            const center = node.offsetTop + node.offsetHeight / 2 + paddingTop;
+
                             if (center < scroll.scrollTop + scroll.clientHeight / 6
                                 || center > scroll.scrollTop + scroll.clientHeight * (1 - 1 / 6)) {
-                                scroll.scrollTo({ top: center - scrollHeight / 6 });
+                                scroll.scrollTo({ top: center - scroll.clientHeight / 6 });
                             }
                         }
                     }
