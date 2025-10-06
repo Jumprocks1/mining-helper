@@ -1,0 +1,80 @@
+import AnkiConnect from "../utils/AnkiConnect"
+
+enum CharacterType {
+    Kana,
+    Punctuation,
+    Kanji,
+    Other
+}
+
+export default () => {
+    const refresh = <button>Refresh</button>
+    const anki = new AnkiConnect()
+    const loadedCount = <span></span>
+    const uniqueCharacters = <div></div>
+    const uniqueSets = <div className="unique-sets"></div>
+
+    let ankiWords: string[] = []
+
+    function unicodeType(c: string): CharacterType {
+        // https://stackoverflow.com/a/15034560/11435204
+        // const code = c.code
+        const unicode = c.charCodeAt(0)
+        if (unicode >= 0x3000 && unicode <= 0x303f)
+            return CharacterType.Punctuation
+        if (unicode >= 0x3040 && unicode <= 0x309f)
+            return CharacterType.Kana // hiragana
+        if (unicode >= 0x30a0 && unicode <= 0x30ff)
+            return CharacterType.Kana // katakana
+        if (unicode >= 0x4e00 && unicode <= 0x9faf)
+            return CharacterType.Kanji
+        return CharacterType.Other
+    }
+
+    function update() {
+        loadedCount.textContent = `Currently loaded notes: ${ankiWords.length}`
+
+        const characters = new Set();
+        const sets: Partial<Record<CharacterType, Set<string>>> = {}
+        for (const word of ankiWords) {
+            for (const c of word) {
+                characters.add(c)
+                const type = unicodeType(c)
+                const set = sets[type] ??= new Set()
+                set.add(c)
+            }
+        }
+        uniqueCharacters.textContent = `Unique Characters: ${characters.size}`
+        let s = ""
+        for (const setType in sets) {
+            // @ts-expect-error
+            const set = sets[setType]
+            // @ts-expect-error
+            s += `Unique ${CharacterType[setType]}: ${set.size}\n`
+        }
+        uniqueSets.textContent = s;
+        console.log(sets)
+    }
+
+    (async () => {
+        ankiWords = (await chrome.storage.local.get({ ankiWords: [] })).ankiWords
+        update()
+    })();
+
+    refresh.onclick = async () => {
+        // this returns a ton of info we don't really want right now
+        // only need the word field
+        // it responds instantly pretty much, so the extra web traffic is fine
+        // for me it's 2.6MB
+        // saved to local storage was only 15kB
+        const notes = await anki.call("notesInfo", { query: "" })
+        ankiWords = notes.map(e => e.fields.Word.value)
+        chrome.storage.local.set({ ankiWords })
+        update()
+    }
+    return <div className="card-list">
+        <div className="flex-row">{loadedCount} {refresh}</div>
+        {uniqueCharacters}
+        {uniqueSets}
+    </div>
+}

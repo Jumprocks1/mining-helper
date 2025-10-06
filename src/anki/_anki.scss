@@ -1,0 +1,12 @@
+#anki-page {
+    .card-list {
+        .flex-row {
+            display: flex;
+            align-items: center;
+            gap: 0.5em;
+        }
+        .unique-sets {
+            white-space: pre;
+        }
+    }
+}
