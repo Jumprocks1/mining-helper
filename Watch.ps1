@@ -1,11 +1,11 @@
-$sass = Start-Job -ScriptBlock { sass --embed-source-map --watch src/main.scss:dist/main.css } -Name "sass"
-$esbuild = Start-Job -ScriptBlock { node esbuild.mjs } -Name esbuild
+$sass = Start-Process cmd "/c sass --embed-source-map --watch src/main.scss:dist/main.css" -NoNewWindow -PassThru
+$esbuild = Start-Process node esbuild.mjs -NoNewWindow -PassThru
 
 try {
     Write-Host "Jobs started"
-    Receive-Job ($sass,$esbuild) -Wait -AutoRemoveJob
+    Wait-Process -Id $sass.Id,$esbuild.Id
 } finally {
     Write-Host "Exiting"
-    Stop-Job ($sass,$esbuild)
-    Remove-Job ($sass,$esbuild)
+    Stop-Process $sass
+    Stop-Process $esbuild
 }
