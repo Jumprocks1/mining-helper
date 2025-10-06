@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.addEventListener("keypress", ev => {
         const sel = getSelection()
-        if (sel) {
+        if (sel && !sel.isCollapsed) {
             const text = sel.toString()
             if (ev.key === "j") {
                 chrome.tabs.create({ url: `https://jisho.org/search/${encodeURIComponent(text)}` });
@@ -107,6 +107,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 chrome.tabs.create({ url: `https://jpdb.io/search?q=${encodeURIComponent(text)}&lang=english` });
             } else if (ev.key === "s") {
                 chrome.tabs.create({ url: `https://sentencesearch.neocities.org/#${encodeURIComponent(text)}` });
+            }
+        } else {
+            if (ev.key === "h") {
+                loadedSubtitles.main?.HighlightAnkiWords()
             }
         }
     })

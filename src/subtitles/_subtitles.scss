@@ -33,6 +33,9 @@
             &:has(>.inner:empty) {
                 display: none;
             }
+            .unknown {
+                background-color: oklch(0.7012 0.1888 22.97 / 15%);
+            }
         }
         .subtitle-entry {
             &.highlight {
@@ -47,8 +50,9 @@
                 padding-right: 16px;
             }
             .subtitles {
-                display: flex;
-                flex-direction: column;
+                // Not sure why I had these styles
+                // display: flex;
+                // flex-direction: column;
                 white-space: pre-wrap;
             }
         }

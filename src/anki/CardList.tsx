@@ -1,10 +1,25 @@
 import AnkiConnect from "../utils/AnkiConnect"
 
-enum CharacterType {
+export enum UnicodeCharacterType {
     Kana,
     Punctuation,
     Kanji,
     Other
+}
+
+export function unicodeType(c: string): UnicodeCharacterType {
+    // https://stackoverflow.com/a/15034560/11435204
+    // const code = c.code
+    const unicode = c.charCodeAt(0)
+    if (unicode >= 0x3000 && unicode <= 0x303f)
+        return UnicodeCharacterType.Punctuation
+    if (unicode >= 0x3040 && unicode <= 0x309f)
+        return UnicodeCharacterType.Kana // hiragana
+    if (unicode >= 0x30a0 && unicode <= 0x30ff)
+        return UnicodeCharacterType.Kana // katakana
+    if (unicode >= 0x4e00 && unicode <= 0x9faf)
+        return UnicodeCharacterType.Kanji
+    return UnicodeCharacterType.Other
 }
 
 export default () => {
@@ -16,26 +31,11 @@ export default () => {
 
     let ankiWords: string[] = []
 
-    function unicodeType(c: string): CharacterType {
-        // https://stackoverflow.com/a/15034560/11435204
-        // const code = c.code
-        const unicode = c.charCodeAt(0)
-        if (unicode >= 0x3000 && unicode <= 0x303f)
-            return CharacterType.Punctuation
-        if (unicode >= 0x3040 && unicode <= 0x309f)
-            return CharacterType.Kana // hiragana
-        if (unicode >= 0x30a0 && unicode <= 0x30ff)
-            return CharacterType.Kana // katakana
-        if (unicode >= 0x4e00 && unicode <= 0x9faf)
-            return CharacterType.Kanji
-        return CharacterType.Other
-    }
-
     function update() {
         loadedCount.textContent = `Currently loaded notes: ${ankiWords.length}`
 
         const characters = new Set();
-        const sets: Partial<Record<CharacterType, Set<string>>> = {}
+        const sets: Partial<Record<UnicodeCharacterType, Set<string>>> = {}
         for (const word of ankiWords) {
             for (const c of word) {
                 characters.add(c)
@@ -50,7 +50,7 @@ export default () => {
             // @ts-expect-error
             const set = sets[setType]
             // @ts-expect-error
-            s += `Unique ${CharacterType[setType]}: ${set.size}\n`
+            s += `Unique ${UnicodeCharacterType[setType]}: ${set.size}\n`
         }
         uniqueSets.textContent = s;
         console.log(sets)

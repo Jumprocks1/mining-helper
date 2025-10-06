@@ -1,3 +1,4 @@
+import { UnicodeCharacterType, unicodeType } from "../anki/CardList"
 import { formatTimestamp, Subtitles } from "../utils/srt"
 import { oldCreateElement } from "../utils/util"
 
@@ -34,18 +35,7 @@ export default class SubtitleViewer {
                         textContent: formatTimestamp(entry.startTime),
                         mutate: (e: any) => e.entry = entry
                     }),
-                    oldCreateElement("div", {
-                        className: "subtitles",
-                        children: [
-                            oldCreateElement("span", {
-                                className: "main-subtitle",
-                                textContent: entry.text,
-                                data: {
-                                    tooltip: entry.translation
-                                }
-                            }),
-                        ]
-                    })
+                    <div className="subtitles">{entry.text}</div>
                 ]
             }))
         }
@@ -99,6 +89,48 @@ export default class SubtitleViewer {
                     node.classList.remove("highlight")
                 }
             }
+        }
+    }
+
+    async HighlightAnkiWords() {
+        const ankiWords = (await chrome.storage.local.get({ ankiWords: [] })).ankiWords
+        const knownCharacters = new Set<string>()
+        for (const word of ankiWords) {
+            for (const c of word) {
+                knownCharacters.add(c)
+            }
+        }
+        const nodes = this.Node.querySelectorAll(".subtitle-entry .subtitles")
+        let pendingText = ""
+        let pendingStyle = "none"
+        function pushPending(node: ParentNode) {
+            if (pendingText) {
+                if (pendingStyle === "none")
+                    node.append(pendingText)
+                else
+                    node.append(<span className={pendingStyle}>{pendingText}</span>)
+            }
+            pendingText = ""
+            pendingStyle = "none"
+        }
+        function pushCharacter(node: ParentNode, c: string, style: string) {
+            if (pendingStyle === style) pendingText += c
+            else {
+                pushPending(node)
+                pendingText = c
+                pendingStyle = style
+            }
+        }
+        for (const node of nodes) {
+            const text = node.textContent
+            node.replaceChildren()
+            for (const character of text) {
+                if (!knownCharacters.has(character) && unicodeType(character) === UnicodeCharacterType.Kanji)
+                    pushCharacter(node, character, "unknown")
+                else
+                    pushCharacter(node, character, "none")
+            }
+            pushPending(node)
         }
     }
 }
