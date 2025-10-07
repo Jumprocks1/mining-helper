@@ -157,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     oldCreateElement("span", {
                         className: "save-button button", textContent: "save", onClick: async ev => {
                             ev.preventDefault()
-                            handleErrors(() => saveAndRemove(e), "Saved")
+                            handleErrors(() => saveAndRemove(e), "Saved " + e.kanji)
                         }
                     }),
                     oldCreateElement("span", {
