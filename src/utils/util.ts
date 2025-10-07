@@ -30,6 +30,7 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
     const json = await res.json()
     const highlightStart = highlight !== undefined && jp.indexOf(highlight)
     const highlightLength = highlight?.length
+    const highlightEnd = highlightStart !== false && highlightLength && (highlightStart + highlightLength)
     // TODO we could get the furi for the kanji, but for now that will come from jpdb mining
     let i = 0
     let highlightOpen = false
@@ -44,7 +45,7 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
             // could make it only apply for kana
             // code >= 0x3040 && code <= 0x309F
             // https://www.unicode.org/charts/PDF/Unicode-3.2/U32-3040.pdf
-            if (highlightOpen && highlightStart !== false && highlightLength && i === highlightStart + highlightLength) {
+            if (highlightOpen && i === highlightEnd) {
                 o += "</b>"
                 highlightOpen = false
             }
@@ -67,7 +68,7 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
                 } else {
                     if (o.length > 0) {
                         const prev = o[o.length - 1]
-                        if (prev !== "]" && prev !== ">" && i !== highlightStart)
+                        if (prev !== "]" && prev !== ">" && i !== highlightStart && i !== highlightEnd)
                             o += " "
                     }
                     pushMain(part[0].length)
@@ -76,7 +77,7 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
             }
         }
     }
-    if (highlightOpen && highlightStart && highlightLength && i === highlightStart + highlightLength) {
+    if (highlightOpen && i === highlightEnd) {
         o += "</b>"
         highlightOpen = false
     }
