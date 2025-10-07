@@ -1,3 +1,4 @@
+import { addAnkiWord } from "./anki/CardList"
 import MhHeader from "./components/MhHeader"
 import { seedPage } from "./components/util"
 import AnkiConnect, { MediaAdd } from "./utils/AnkiConnect"
@@ -99,6 +100,7 @@ async function save(card: CardData) {
             tags: ["ext-mined"]
         }
     })
+    await addAnkiWord(card.kanji) // could probably skip awaiting this
     await anki.call("guiBrowse", { query: "added:1" })
     const cards = await anki.call("findCards", { query: `nid:${noteId}` })
     const cardId = cards.length > 0 && cards[0]

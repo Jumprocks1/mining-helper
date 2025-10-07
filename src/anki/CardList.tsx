@@ -31,10 +31,10 @@ export async function getAnkiWords(disableCache = false): Promise<string[]> {
 }
 
 export async function addAnkiWord(word: string) {
-    const words = await getAnkiWords()
+    const words = await getAnkiWords(true) // can't use cache, too risky
     if (!words.includes(word)) {
         words.push(word)
-        await chrome.storage.local.set({ ankiWords: localAnkiWords })
+        await chrome.storage.local.set({ ankiWords: words })
     }
     return words
 }
