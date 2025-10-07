@@ -89,40 +89,42 @@ async function update(card: CardData) {
         await anki.call("guiSelectCard", { card: cardId })
 }
 
-async function save(card: CardData) {
-    const [fields, audio] = activeFields(card);
-    const noteId = await anki.call("addNote", {
-        note: {
-            deckName: anki.targetDeck,
-            modelName: anki.targetModel,
-            fields,
-            audio,
-            tags: ["ext-mined"]
-        }
-    })
-    await addAnkiWord(card.kanji) // could probably skip awaiting this
-    await anki.call("guiBrowse", { query: "added:1" })
-    const cards = await anki.call("findCards", { query: `nid:${noteId}` })
-    const cardId = cards.length > 0 && cards[0]
-    if (cardId)
-        await anki.call("guiSelectCard", { card: cardId })
-}
+const cardContainer = <div id="card-container" />
 
 document.addEventListener("DOMContentLoaded", () => {
     seedPage("popup-page", [
         MhHeader(),
         <div id="body-container">
             <h2>Pending Cards</h2>
-            <div id="card-container">
-            </div>
+            {cardContainer}
             {resultDiv}
         </div>
     ])
+
+    async function saveAndRemove(card: CardData) {
+        const [fields, audio] = activeFields(card);
+        const noteId = await anki.call("addNote", {
+            note: {
+                deckName: anki.targetDeck,
+                modelName: anki.targetModel,
+                fields,
+                audio,
+                tags: ["ext-mined"]
+            }
+        })
+        await addAnkiWord(card.kanji) // could probably skip awaiting this
+        await anki.call("guiBrowse", { query: "added:1" })
+        const cards = await anki.call("findCards", { query: `nid:${noteId}` })
+        const cardId = cards.length > 0 && cards[0]
+        if (cardId)
+            await anki.call("guiSelectCard", { card: cardId })
+        await chrome.storage.session.remove(card.kanji)
+        refresh()
+    }
+
     const popup = new URLSearchParams(location.search).get("p") !== null
     if (popup) document.body.classList.add("popup")
     async function refresh() {
-        const container = document.getElementById("card-container")
-        if (!container) return
         const cardsObject = await chrome.storage.session.get()
         const cards: CardData[] = []
         for (const key in cardsObject)
@@ -155,7 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     oldCreateElement("span", {
                         className: "save-button button", textContent: "save", onClick: async ev => {
                             ev.preventDefault()
-                            handleErrors(() => save(e), "Saved")
+                            handleErrors(() => saveAndRemove(e), "Saved")
                         }
                     }),
                     oldCreateElement("span", {
@@ -171,7 +173,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ]
             })
         })
-        container.replaceChildren(...newChildren)
+        cardContainer.replaceChildren(...newChildren)
     }
     refresh()
 
