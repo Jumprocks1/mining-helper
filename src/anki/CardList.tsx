@@ -83,8 +83,9 @@ export default () => {
         // saved to local storage was only 15kB
         const notes = await anki.call("notesInfo", { query: "" })
         localAnkiWords = notes.map(e => e.fields.Word.value)
+        // don't need to await this
         chrome.storage.local.set({ ankiWords: localAnkiWords })
-        update(true)
+        update(false)
     }
     return <div className="card-list">
         <div className="flex-row">{loadedCount} {refresh}</div>
