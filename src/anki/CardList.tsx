@@ -22,6 +22,24 @@ export function unicodeType(c: string): UnicodeCharacterType {
     return UnicodeCharacterType.Other
 }
 
+// cache
+let localAnkiWords: string[] | undefined
+
+export async function getAnkiWords(disableCache = false): Promise<string[]> {
+    if (!disableCache && localAnkiWords) return localAnkiWords
+    return localAnkiWords = (await chrome.storage.local.get({ ankiWords: [] })).ankiWords
+}
+
+export async function addAnkiWord(word: string) {
+    const words = await getAnkiWords()
+    if (!words.includes(word)) {
+        words.push(word)
+        await chrome.storage.local.set({ ankiWords: localAnkiWords })
+    }
+    return words
+}
+
+
 export default () => {
     const refresh = <button>Refresh</button>
     const anki = new AnkiConnect()
@@ -29,9 +47,8 @@ export default () => {
     const uniqueCharacters = <div></div>
     const uniqueSets = <div className="unique-sets"></div>
 
-    let ankiWords: string[] = []
-
-    function update() {
+    async function update(disableCache: boolean) {
+        const ankiWords = await getAnkiWords(disableCache)
         loadedCount.textContent = `Currently loaded notes: ${ankiWords.length}`
 
         const characters = new Set();
@@ -56,10 +73,7 @@ export default () => {
         console.log(sets)
     }
 
-    (async () => {
-        ankiWords = (await chrome.storage.local.get({ ankiWords: [] })).ankiWords
-        update()
-    })();
+    update(false)
 
     refresh.onclick = async () => {
         // this returns a ton of info we don't really want right now
@@ -68,9 +82,9 @@ export default () => {
         // for me it's 2.6MB
         // saved to local storage was only 15kB
         const notes = await anki.call("notesInfo", { query: "" })
-        ankiWords = notes.map(e => e.fields.Word.value)
-        chrome.storage.local.set({ ankiWords })
-        update()
+        localAnkiWords = notes.map(e => e.fields.Word.value)
+        chrome.storage.local.set({ ankiWords: localAnkiWords })
+        update(true)
     }
     return <div className="card-list">
         <div className="flex-row">{loadedCount} {refresh}</div>
