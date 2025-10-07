@@ -6,20 +6,29 @@ import { CardData, oldCreateElement, furiToReading } from "./utils/util"
 
 const anki = new AnkiConnect()
 
-async function handleErrors(func: () => void | Promise<void>) {
+const resultDiv = <div id="result" className="hide" />
+function clearResult() {
+    resultDiv.classList = "hide"
+}
+function showError(err: string) {
+    resultDiv.textContent = err
+    resultDiv.classList = "error"
+}
+function showMessage(message: string) {
+    resultDiv.textContent = message
+    resultDiv.classList = "success"
+}
+
+async function handleErrors(func: () => void | Promise<void>, message = "Success") {
     try {
-        return await func()
+        clearResult()
+        await func()
+        showMessage(message)
     } catch (e) {
         showError((e as Error).message)
     }
 }
 
-function showError(err: string) {
-    const errorDiv = document.getElementById("last-error")
-    if (!errorDiv) return
-    errorDiv.textContent = err
-    errorDiv.classList.remove("hide")
-}
 
 function activeFields(card: CardData) {
     // not sure how undefined behaves, so we filters those out first
@@ -104,7 +113,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <h2>Pending Cards</h2>
             <div id="card-container">
             </div>
-            <div id="last-error" className="hide"></div>
+            {resultDiv}
         </div>
     ])
     const popup = new URLSearchParams(location.search).get("p") !== null
@@ -144,13 +153,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     oldCreateElement("span", {
                         className: "save-button button", textContent: "save", onClick: async ev => {
                             ev.preventDefault()
-                            handleErrors(() => save(e))
+                            handleErrors(() => save(e), "Saved")
                         }
                     }),
                     oldCreateElement("span", {
                         className: "update-button button", textContent: "up", onClick: async ev => {
                             ev.preventDefault()
-                            handleErrors(() => update(e))
+                            handleErrors(() => update(e), "Updated")
                         }
                     }),
                     oldCreateElement("a", {

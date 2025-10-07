@@ -143,8 +143,10 @@ a.sentence-search {
     color: rgb(143, 143, 143)
 }
 
-#last-error {
-    color: rgb(202, 140, 140)
+div#result {
+    &.error {
+        color: rgb(202, 140, 140)
+    }
 }
 
 .hide {
