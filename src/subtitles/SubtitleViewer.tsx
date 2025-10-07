@@ -79,9 +79,9 @@ export default class SubtitleViewer {
                             const paddingTop = parseFloat(computedStyle.paddingTop);
                             const center = node.offsetTop + node.offsetHeight / 2 + paddingTop;
 
-                            if (scroll.scrollTop > center - scroll.clientHeight / 6
-                                || scroll.scrollTop < center - scroll.clientHeight * (1 - 1 / 6)) {
-                                scroll.scrollTo({ top: center - scroll.clientHeight / 6 });
+                            if (scroll.scrollTop > center - scroll.clientHeight / 5
+                                || scroll.scrollTop < center - scroll.clientHeight * (1 - 1 / 5)) {
+                                scroll.scrollTo({ top: center - scroll.clientHeight / 5 });
                             }
                         }
                     }
