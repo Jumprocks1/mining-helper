@@ -4,6 +4,7 @@ import MpvWebSocket from "../utils/MpvWebSocket"
 import MhHeader from "../components/MhHeader"
 import { seedPage } from "../components/util"
 import SubtitleViewer from "./SubtitleViewer"
+import { UnicodeCharacterType, unicodeType } from "../anki/CardList"
 
 let currentTime = 0
 
@@ -104,7 +105,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (ev.key === "j") {
                 chrome.tabs.create({ url: `https://jisho.org/search/${encodeURIComponent(text)}` });
             } else if (ev.key == "d") {
-                chrome.tabs.create({ url: `https://jpdb.io/search?q=${encodeURIComponent(text)}&lang=english` });
+                const isSingleKanji = text.length === 1 && unicodeType(text) === UnicodeCharacterType.Kanji
+                if (isSingleKanji)
+                    chrome.tabs.create({ url: `https://jpdb.io/kanji/${encodeURIComponent(text)}` });
+                else
+                    chrome.tabs.create({ url: `https://jpdb.io/search?q=${encodeURIComponent(text)}&lang=english` });
             } else if (ev.key === "s") {
                 chrome.tabs.create({ url: `https://sentencesearch.neocities.org/#${encodeURIComponent(text)}` });
             }
