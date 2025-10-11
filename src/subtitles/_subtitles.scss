@@ -42,9 +42,11 @@
                 background-color: oklch(0.7012 0.1888 143.23 / 15%);
             }
             display: flex;
-            align-items: center;
+            align-items: stretch;
             .timestamp {
                 cursor: pointer;
+                align-items: center;
+                display: flex;
                 font-family: monospace;
                 opacity: 0.5;
                 padding-right: 16px;
