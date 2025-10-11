@@ -1,4 +1,4 @@
-import { handleKeypress } from "./utils/GlobalHotkeys"
+import { handleKeypress, keyPressedWithText } from "./utils/GlobalHotkeys"
 import { CardData } from "./utils/util"
 
 export { }
@@ -117,6 +117,8 @@ function kanjiAndFurigana(node: ChildNode, o = ["", ""]) {
 afterLoad()
 document.addEventListener("virtual-refresh", afterLoad)
 
+let latestWord: string | undefined = undefined
+
 async function storeCard(clicked: HTMLElement) {
     const sentenceElement = document.querySelector<HTMLElement>(sentenceCss + ".selected") ?? document.querySelector(sentenceCss)
     select(sentenceCss, sentenceElement)
@@ -129,6 +131,7 @@ async function storeCard(clicked: HTMLElement) {
     if (!wordRuby) return
 
     const [kanji, furigana] = kanjiAndFurigana(wordRuby)
+    latestWord = kanji
 
 
 
@@ -207,4 +210,19 @@ document.addEventListener("click", ev => {
 
 document.addEventListener("keypress", ev => {
     if (handleKeypress(ev)) return
+
+    let target = latestWord
+    if (!target) {
+        const meaning = document.querySelector<HTMLElement>(meaningCss + ".selected") ?? document.querySelector<HTMLElement>(meaningCss)
+        const vocab = meaning?.closest(".vocabulary")
+        if (vocab) {
+            const wordRuby = vocab.querySelector(".spelling ruby.v")
+            if (wordRuby) {
+                const [kanji,] = kanjiAndFurigana(wordRuby)
+                if (kanji)
+                    target = kanji
+            }
+        }
+    }
+    if (target && keyPressedWithText(ev, target)) return
 })
