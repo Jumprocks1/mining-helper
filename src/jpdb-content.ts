@@ -1,3 +1,4 @@
+import { getAnkiWords } from "./anki/CardList"
 import { handleKeypress, keyPressedWithText } from "./utils/GlobalHotkeys"
 import { CardData } from "./utils/util"
 
@@ -15,6 +16,10 @@ ${meaningCss}:hover:not(.selected),
 ${meaningCss}.selected,
     ${sentenceCss}.selected {
     background-color: oklch(0.7012 0.1888 22.97 / 15%);
+}
+
+.vocabulary.has-anki-card .primary-spelling > .spelling > div {
+    background: oklch(0.7012 0.1888 143.23 / 30%);
 }
 `
 
@@ -47,19 +52,24 @@ function select(css: string, node: HTMLElement | undefined | null) {
 }
 
 async function afterLoad() {
+    const allAnkiWords = await getAnkiWords()
     const vocabs = document.querySelectorAll(".vocabulary")
     for (const vocab of vocabs) {
         const wordRuby = vocab.querySelector<HTMLElement>(".spelling ruby.v")
         if (wordRuby) {
             const [kanji,] = kanjiAndFurigana(wordRuby)
+            if (allAnkiWords.includes(kanji)) {
+                vocab.classList.add("has-anki-card")
+                const target = vocab.querySelector<HTMLElement>(".primary-spelling > .spelling > div")
+                if (target) target.title = "Already has Anki card with this exact word field"
+            }
             const res = await chrome.storage.session.get(kanji)
-            /** @type {CardData} */
-            const stored = res[kanji]
+            const stored: CardData = res[kanji]
             if (stored) {
                 if (stored.meaningIndex && stored.meaningIndex.startsWith("jpdb_"))
                     select(meaningCss, document.querySelectorAll<HTMLElement>(meaningCss).item(parseInt(stored.meaningIndex.substring(5))))
                 if (stored.sentenceIndex && stored.sentenceIndex.startsWith("jpdb_"))
-                    select(sentenceCss, document.querySelectorAll<HTMLElement>(sentenceCss).item(stored.sentenceIndex.substring(5)))
+                    select(sentenceCss, document.querySelectorAll<HTMLElement>(sentenceCss).item(parseInt(stored.sentenceIndex.substring(5))))
             }
         }
     }
