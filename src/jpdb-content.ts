@@ -18,8 +18,13 @@ ${meaningCss}.selected,
     background-color: oklch(0.7012 0.1888 22.97 / 15%);
 }
 
+.vocabulary:has(.tag:is(.blacklisted, .known, .overdue)) .primary-spelling > .spelling > div
+{
+    background: oklch(54.017% 0.13237 263.851 / 0.30);
+}
+
 .vocabulary.has-anki-card .primary-spelling > .spelling > div {
-    background: oklch(0.7012 0.1888 143.23 / 30%);
+    background: oklch(0.7012 0.1888 143.23 / 40%) !important;
 }
 `
 
