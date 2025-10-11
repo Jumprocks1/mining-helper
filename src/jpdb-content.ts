@@ -1,3 +1,4 @@
+import { handleKeypress } from "./utils/GlobalHotkeys"
 import { CardData } from "./utils/util"
 
 export { }
@@ -202,4 +203,8 @@ document.addEventListener("click", ev => {
         if (found)
             storeCard(found)
     }
+})
+
+document.addEventListener("keypress", ev => {
+    if (handleKeypress(ev)) return
 })

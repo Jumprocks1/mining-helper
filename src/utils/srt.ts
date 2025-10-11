@@ -46,6 +46,7 @@ export function parseSrt(srt: string): Subtitles {
 
     function closePending() {
         if (pendingEntry) {
+            pendingEntry.text = pendingEntry.text?.trim()
             entries.push(pendingEntry as SubtitleEntry)
             pendingEntry = undefined
         }
@@ -74,7 +75,7 @@ export function parseSrt(srt: string): Subtitles {
             pendingEntry.endTime = parseTimestamp(spl[1])
         } else {
             if (!pendingEntry.text) pendingEntry.text = line
-            else pendingEntry.text += line
+            else pendingEntry.text += "\n" + line
         }
     }
 
