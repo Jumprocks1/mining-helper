@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }),
                     oldCreateElement("a", {
                         className: "sentence-search button", textContent: "ss",
-                        href: "https://sentencesearch.neocities.org/#" + e.kanji
+                        href: "ss.html?q=" + encodeURIComponent(e.kanji)
                     })
                 ]
             })

@@ -32,10 +32,10 @@
     }
 
     #results {
-        padding-left: 1em;
+        padding-left: 0.5em;
         >div.match {
             border-bottom: 1px solid #FFFFFF30;
-            padding: 0.25em 0;
+            padding: 0.25em;
             &:hover {
                 &:not(.selected) {
                     background-color: color.change(variables.$brightGreen, $alpha: 0.2);

@@ -24,7 +24,7 @@ export function keyPressedWithText(ev: KeyboardEvent, text: string) {
             return true
         }
     } else if (ev.key === "s") {
-        openTab(`https://sentencesearch.neocities.org/#${encodeURIComponent(text)}`)
+        openTab(`ss.html?q=${encodeURIComponent(text)}`)
         return true
     }
 }

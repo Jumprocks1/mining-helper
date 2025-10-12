@@ -18,7 +18,7 @@ interface SsEntry {
     audioBytes?: Promise<ArrayBuffer | undefined>
 }
 
-const searchInput = <input autocomplete="off" id="search" /> as HTMLInputElement
+const searchInput = <input autocomplete="off" id="search" placeholder="Search..." /> as HTMLInputElement
 const searchButton = <span className="search-icon icon-button material-symbols-outlined">search</span>
 const form = <form id="search-container">
     {searchInput}
@@ -64,6 +64,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         body
     ])
 
+    const query = new URLSearchParams(location.search).get("q")
+    if (query) searchInput.value = query
 
     const data: SsEntry[] = await (await dataPromise).json()
     data.forEach(e => {
