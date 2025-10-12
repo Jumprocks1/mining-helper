@@ -2,9 +2,10 @@
 @use "anki/anki";
 @use "styles/loader";
 @use "styles/variables";
+@use "sass:color";
 
 body {
-    background-color: #303030;
+    background-color: variables.$background1;
     color: #fff;
     padding: 0;
 
@@ -31,7 +32,7 @@ body {
 
 
 #mh-header {
-    background-color: #212121;
+    background-color: variables.$background0;
     display: flex;
     align-items: center;
     padding: 0 16px;
@@ -53,6 +54,9 @@ body {
         }
         &.anki {
             background-color: rgba(0, 188, 255, 30%);
+        }
+        &.ss {
+            background-color: color.change($color: variables.$yellow, $alpha: 0.3);
         }
         &:hover {
             border: 1px solid rgb(255, 255, 255, 50%);
