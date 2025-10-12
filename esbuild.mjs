@@ -7,7 +7,8 @@ const context = await esbuild.context({
         "./src/jpdb-inject.ts",
         "./src/jpdb-content.ts",
         "./src/ss-content.ts",
-        "./src/subtitles/subs.tsx"
+        "./src/subtitles/subs.tsx",
+        "./src/pages/ss.tsx"
     ],
     bundle: true,
     // minify: true,
