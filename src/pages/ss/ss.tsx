@@ -3,6 +3,7 @@ import { seedPage } from "../../components/util"
 import { CardData, lookupFuri, urlToArrayBuffer } from "../../utils/util"
 
 
+const audioBaseUrl = "https://receptomanijalogi.web.app/audio/"
 const dataUrl = chrome.runtime.getURL("all_v11.json")
 const dataPromise = fetch(dataUrl)
 
@@ -113,20 +114,25 @@ document.addEventListener("DOMContentLoaded", async () => {
             const highlighted = res.jap.replace(query, "<b>" + query + "</b>")
             const jap = <span className="jap"></span>
             jap.innerHTML = highlighted
+            const playButton = <span className="play-icon icon-button material-symbols-outlined">play_arrow</span>
             const row = <div className="match">
-                {jap}
-                <span className="eng">{res.eng}</span>
+                {playButton}
+                <div>
+                    {jap}
+                    <span className="eng">{res.eng}</span>
+                </div>
             </div>
             results.appendChild(row)
-            row.addEventListener("click", async () => {
-                results.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"))
-                const audioBaseUrl = "https://receptomanijalogi.web.app/audio/"
-                row.classList.add("selected")
-
+            row.addEventListener("click", async ev => {
                 res.audioBytes ??= urlToArrayBuffer(audioBaseUrl + res.audio_jap)
                 const bytes = await res.audioBytes
                 if (bytes) play(bytes)
 
+                // don't update card if we only clicked the play button
+                if (ev.target === playButton) return
+
+                results.querySelectorAll(".selected").forEach(e => e.classList.remove("selected"))
+                row.classList.add("selected")
                 updateCard(res)
             })
             i += 1
