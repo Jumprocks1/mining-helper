@@ -1,5 +1,7 @@
-@import "subtitles/subtitles";
-@import "anki/anki";
+@use "subtitles/subtitles";
+@use "anki/anki";
+@use "styles/loader";
+@use "styles/variables";
 
 body {
     background-color: #303030;
@@ -47,7 +49,7 @@ body {
         align-items: center;
 
         &.subs {
-            background-color: #691f69;
+            background-color: variables.$mpv-color;
         }
         &.anki {
             background-color: rgba(0, 188, 255, 30%);

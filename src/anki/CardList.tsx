@@ -42,6 +42,7 @@ export async function addAnkiWord(word: string) {
 
 export default () => {
     const refresh = <button>Refresh</button>
+    const loader = <div className="loader"></div>
     const anki = new AnkiConnect()
     const loadedCount = <span></span>
     const uniqueCharacters = <div></div>
@@ -49,6 +50,7 @@ export default () => {
 
     async function update(disableCache: boolean) {
         const ankiWords = await getAnkiWords(disableCache)
+        loader.classList.add("hide")
         loadedCount.textContent = `Currently loaded notes: ${ankiWords.length}`
 
         const characters = new Set();
@@ -76,6 +78,7 @@ export default () => {
     update(false)
 
     refresh.onclick = async () => {
+        loader.classList.remove("hide")
         // this returns a ton of info we don't really want right now
         // only need the word field
         // it responds instantly pretty much, so the extra web traffic is fine
@@ -88,7 +91,7 @@ export default () => {
         update(false)
     }
     return <div className="card-list">
-        <div className="flex-row">{loadedCount} {refresh}</div>
+        <div className="flex-row">{loadedCount} {refresh} {loader}</div>
         {uniqueCharacters}
         {uniqueSets}
     </div>
