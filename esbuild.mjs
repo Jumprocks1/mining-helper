@@ -6,7 +6,6 @@ const context = await esbuild.context({
         "./src/anki/anki.tsx",
         "./src/jpdb-inject.ts",
         "./src/jpdb-content.ts",
-        "./src/ss-content.ts",
         "./src/subtitles/subs.tsx",
         "./src/pages/ss/ss.tsx"
     ],

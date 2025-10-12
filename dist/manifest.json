@@ -23,8 +23,7 @@
     "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
-    "https://receptomanijalogi.web.app/*",
-    "https://sentencesearch.neocities.org/*"
+    "https://receptomanijalogi.web.app/*"
   ],
   "content_scripts": [
     {
@@ -43,15 +42,6 @@
       ],
       "js": [
         "js/jpdb-content.js"
-      ],
-      "run_at": "document_idle"
-    },
-    {
-      "matches": [
-        "https://sentencesearch.neocities.org/*"
-      ],
-      "js": [
-        "js/ss-content.js"
       ],
       "run_at": "document_idle"
     }
