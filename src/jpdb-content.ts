@@ -224,6 +224,8 @@ document.addEventListener("click", ev => {
 })
 
 document.addEventListener("keypress", ev => {
+    const targetElement = ev.target as HTMLElement | null
+    if (targetElement && targetElement.nodeName === "INPUT") return
     if (handleKeypress(ev)) return
 
     let target = latestWord
