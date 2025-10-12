@@ -63,7 +63,7 @@ function handleCommandAndData(commandName: string, commandData: string | Uint8Ar
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    seedPage("mpv-page", [
+    seedPage("subs-page", [
         MhHeader(),
         <div id="outer-body-container">
             <div id="status-info">
