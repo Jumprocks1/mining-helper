@@ -1,4 +1,5 @@
 @use "../../styles/variables";
+@use "sass:color";
 
 #ss-page {
     #search-container {
@@ -27,6 +28,30 @@
 
         .search-icon {
             font-size: inherit;
+        }
+    }
+
+    #results {
+        padding-left: 1em;
+        >div {
+            border-bottom: 1px solid #FFFFFF30;
+            display: flex;
+            flex-direction: column;
+            padding: 0.25em 0;
+            &:hover {
+                &:not(.selected) {
+                    background-color: color.change(variables.$brightGreen, $alpha: 0.2);
+                }
+                cursor: pointer;
+            }
+
+            &.selected {
+                background-color: color.change(variables.$brightRed, $alpha: 0.2);
+            }
+
+            b {
+                color: color.mix(#FFFFFF, variables.$brightGreen, 30%);
+            }
         }
     }
 }
