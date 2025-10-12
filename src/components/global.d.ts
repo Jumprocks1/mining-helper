@@ -1,6 +1,6 @@
 declare namespace JSX {
     type IntrinsicElements = {
-        [K in keyof HTMLElementTagNameMap]: DeepPartial<HTMLElementTagNameMap[K]>
+        [K in keyof HTMLElementTagNameMap]: Partial<HTMLElementTagNameMap[K]>
     };
 
     type Element = HTMLElement // technically this should be `Node`, but HTMLElement is easier to work with

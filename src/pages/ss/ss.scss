@@ -1,0 +1,32 @@
+@use "../../styles/variables";
+
+#ss-page {
+    #search-container {
+        font-size: 1.2em;
+        display: flex;
+        width: 20em;
+        padding: 0.3em;
+        background-color: variables.$background0;
+        border: 1px solid #FFFFFF30;
+        border-radius: 4px;
+        align-items: center;
+        &:focus-within {
+            border: 1px solid #FFFFFF80;
+        }
+
+        #search {
+            flex: 1;
+            padding: 0;
+            font-size: inherit;
+            color: inherit;
+            border: none;
+            outline: none;
+            font-family: inherit;
+            background: none;
+        }
+
+        .search-icon {
+            font-size: inherit;
+        }
+    }
+}
