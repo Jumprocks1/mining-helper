@@ -35,14 +35,17 @@ const body = <div id="body-container">
 
 let audioContext: AudioContext | undefined = undefined
 
-let playing: AudioBufferSourceNode[] = []
+let playing: Record<string, AudioBufferSourceNode> = {}
 
 function stopAll() {
-    playing.forEach(e => e.stop())
-    playing = []
+    for (const key in playing) {
+        playing[key].stop()
+        delete playing[key]
+    }
 }
 
-async function play(bytes: ArrayBuffer) {
+async function play(name: string, bytes: ArrayBuffer) {
+    if (playing[name]) return
     audioContext ??= new AudioContext()
     const source = audioContext.createBufferSource();
     // audio thread needs a copy of the buffer, so we have to slice
@@ -51,9 +54,8 @@ async function play(bytes: ArrayBuffer) {
 
     stopAll()
 
-    let i = playing.length
-    playing.push(source)
-    source.onended = () => playing = playing.splice(i, 1)
+    playing[name] = source
+    source.onended = () => delete playing[name]
     source.start()
 }
 
@@ -128,7 +130,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             row.addEventListener("click", async ev => {
                 res.audioBytes ??= urlToArrayBuffer(audioBaseUrl + res.audio_jap)
                 const bytes = await res.audioBytes
-                if (bytes) play(bytes)
+                if (bytes) play(res.audio_jap, bytes)
 
                 // don't update card if we only clicked the play button
                 if (ev.target === playButton) return
