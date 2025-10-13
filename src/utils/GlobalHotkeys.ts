@@ -4,7 +4,11 @@ export function openTab(url: string) {
     if (chrome.tabs) {
         chrome.tabs.create({ url })
     } else {
-        window.open(url, "_blank", "noopener,noreferrer");
+        if (url.startsWith("http"))
+            window.open(url, "_blank", "noopener,noreferrer");
+        else {
+            chrome.runtime.sendMessage(`open:${url}`);
+        }
     }
 }
 
