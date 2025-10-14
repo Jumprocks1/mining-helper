@@ -101,6 +101,45 @@ document.addEventListener("DOMContentLoaded", () => {
         if (handleKeypress(ev)) return
         if (ev.key === "h") {
             loadedSubtitles.main?.HighlightAnkiWords()
+        } else if (ev.key === "v") {
+            webSocket.SendIfOpen("ipc:cycle sub-visibility");
+        } else if (ev.key === " ") {
+            webSocket.SendIfOpen("ipc:cycle pause");
+            ev.preventDefault()
+        }
+    })
+
+    document.addEventListener("keydown", ev => {
+        const subs = loadedSubtitles.main
+        if (subs) {
+            if (ev.key === "ArrowUp") {
+                const entries = subs.subtitles.entries
+                for (let i = 1; i < entries.length; i++) {
+                    if (entries[i].endTime > currentTime) {
+                        webSocket.SendIfOpen(`ipc:seek ${entries[i - 1].startTime / 1000} absolute`)
+                        ev.preventDefault();
+                        break
+                    }
+                }
+            } else if (ev.key === "ArrowDown" || ev.key === "ArrowRight") {
+                const entries = subs.subtitles.entries
+                for (let i = 0; i < entries.length; i++) {
+                    if (entries[i].startTime > currentTime) {
+                        webSocket.SendIfOpen(`ipc:seek ${entries[i].startTime / 1000} absolute`)
+                        ev.preventDefault();
+                        break
+                    }
+                }
+            } else if (ev.key === "ArrowLeft") {
+                const entries = subs.subtitles.entries
+                for (let i = 0; i < entries.length - 1; i++) {
+                    if (entries[i].startTime < currentTime && entries[i + 1].startTime > currentTime) {
+                        webSocket.SendIfOpen(`ipc:seek ${entries[i].startTime / 1000} absolute`)
+                        ev.preventDefault();
+                        break
+                    }
+                }
+            }
         }
     })
 
