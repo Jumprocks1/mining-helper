@@ -104,46 +104,48 @@ span:hover>.tooltip {
 }
 
 #card-container {
-    font-size: 16px;
-}
-
-
-#card-container>div.card-row {
+    font-size: 1.25em;
     display: flex;
-}
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    >div.card-row {
+        display: flex;
+        align-items: center;
+        min-width: min(40em, 100%);
+        gap: 6px;
+        .button {
+            padding: 0px 5px 3px 5px;
+            text-decoration: underline;
+            border: 1px solid rgba(255, 255, 255, 30%);
+            cursor: pointer;
+            &:hover {
+                border: 1px solid rgb(255, 255, 255);
+            }
+        }
 
-.card-row>* {
-    padding: 0px 3px
-}
+        .tooltip {
+            font-size: 0.75em;
+        }
+        .tooltip b {
+            color: #a2f4ff;
+        }
 
-.card-row .button {
-    padding: 0px 5px 3px 5px;
-    text-decoration: underline;
-    border: 1px solid rgba(255, 255, 255, 30%);
-    margin: 0px 1px;
-    cursor: pointer;
-    &:hover {
-        border: 1px solid rgb(255, 255, 255);
+        .delete-button {
+            color: rgb(192, 55, 55);
+            font-weight: bold;
+        }
+
+        .save-button {
+            color: rgb(55, 192, 96);
+            font-weight: bold;
+        }
+
+        .update-button {
+            color: rgb(171, 192, 55);
+            font-weight: bold;
+        }
     }
-}
-
-.tooltip b {
-    color: #a2f4ff;
-}
-
-.delete-button {
-    color: rgb(192, 55, 55);
-    font-weight: bold;
-}
-
-.save-button {
-    color: rgb(55, 192, 96);
-    font-weight: bold;
-}
-
-.update-button {
-    color: rgb(171, 192, 55);
-    font-weight: bold;
 }
 
 a.sentence-search {
