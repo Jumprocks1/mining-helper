@@ -1,8 +1,7 @@
 import { getAnkiWords } from "./anki/CardList"
 import { handleKeypress, keyPressedWithText } from "./utils/GlobalHotkeys"
 import { CardData } from "./utils/util"
-
-export { }
+import "./utils/createElement"
 
 const meaningCss = ".subsection-meanings .description"
 const sentenceCss = ".subsection-examples .used-in:has(.en)"
@@ -77,6 +76,11 @@ async function afterLoad() {
                     select(sentenceCss, document.querySelectorAll<HTMLElement>(sentenceCss).item(parseInt(stored.sentenceIndex.substring(5))))
             }
         }
+    }
+
+    const wordBoxes = document.querySelectorAll(".vbox .subsection-headword>.menu");
+    for (const menu of wordBoxes) {
+        menu.parentNode!.insertBefore(<div>aaa</div>, menu)
     }
 }
 
