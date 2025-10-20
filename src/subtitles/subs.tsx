@@ -11,7 +11,7 @@ function updateTime(timestamp: number) {
     currentTime = timestamp
     const timeElement = document.getElementById("current-time")
     if (timeElement)
-        timeElement.textContent = formatTimestamp(timestamp)
+        timeElement.textContent = formatTimestamp(currentTime)
 
     loadedSubtitles.main?.UpdateHighlighting(currentTime)
     loadedSubtitles.secondary.forEach(e => e.UpdateHighlighting(currentTime))

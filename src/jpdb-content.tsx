@@ -25,6 +25,30 @@ ${meaningCss}.selected,
 .vocabulary.has-anki-card .primary-spelling > .spelling > div {
     background: oklch(0.7012 0.1888 143.23 / 40%) !important;
 }
+
+.good-audio {
+    cursor: pointer;
+    position: relative;
+}
+.audio-menu {
+    position: absolute;
+    left: 0;
+    top: 100%;
+    display: flex;
+    background: #111;
+    border: 1px solid white;
+    z-index: 1000;
+    flex-direction: column;
+}
+.audio-menu-source {
+    padding: 3px;
+}
+.audio-menu-source:hover {
+    background: #FFFFFF20;
+}
+.audio-menu-source:not(:last-child) {
+    border-bottom: 1px solid #FFFFFF80;
+}
 `
 
 const target = document.head || document.documentElement
@@ -49,10 +73,56 @@ const css = document.createElement("style")
 css.innerHTML = style
 target.prepend(css)
 
+let audioContext
+async function playAudio(arrayBuffer: ArrayBuffer) {
+    audioContext ??= new AudioContext();
+    const source = audioContext.createBufferSource();
+    source.buffer = await audioContext.decodeAudioData(arrayBuffer);
+    source.connect(audioContext.destination);
+    source.start();
+}
+
+interface AudioEntry {
+    Source: string
+    File: string
+    Reading: string
+    ID: number
+}
+
 function select(css: string, node: HTMLElement | undefined | null) {
     const all = document.querySelectorAll(css)
     for (const e of all) e.classList.remove("selected")
     if (node) node.classList.add("selected")
+}
+
+async function getAudioOptions(vocab?: HTMLElement | null) {
+    if (!vocab) return
+    const wordRuby = vocab.querySelector<HTMLElement>(".spelling ruby.v")
+    if (!wordRuby) return
+    const [kanji,] = kanjiAndFurigana(wordRuby)
+    return getAudioOptionsFromKanji(kanji)
+}
+
+async function getAudioOptionsFromKanji(kanji: string) {
+    const audioOptions = await fetch("http://127.0.0.1:8080", { method: "POST", body: `lookup-audio::${kanji}` })
+    return await audioOptions.json() as AudioEntry[]
+}
+
+async function getAudio(entry?: AudioEntry) {
+    if (!entry) return
+    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes::${entry.ID}` })
+    if (!audioBytes.ok) return
+    return await audioBytes.arrayBuffer()
+}
+
+async function getFirstAudio(kanji: string) {
+    const options = await getAudioOptionsFromKanji(kanji)
+    if (options.length > 0) {
+        const buffer = await getAudio(options[0])
+        if (buffer) {
+            return [options[0], buffer] as const
+        }
+    }
 }
 
 async function afterLoad() {
@@ -80,7 +150,39 @@ async function afterLoad() {
 
     const wordBoxes = document.querySelectorAll(".vbox .subsection-headword>.menu");
     for (const menu of wordBoxes) {
-        menu.parentNode!.insertBefore(<div>aaa</div>, menu)
+        const goodAudioButton = <div className="good-audio">audio</div>
+        goodAudioButton.onclick = async (ev) => {
+            ev.preventDefault()
+            let menu = goodAudioButton.querySelector<HTMLElement>(".audio-menu")
+            if (menu) {
+                menu.remove()
+                return
+            }
+            const audioOptions = await getAudioOptions(goodAudioButton.closest<HTMLElement>(".vocabulary"))
+            if (!audioOptions) return
+            console.log(audioOptions)
+            menu = <div className="audio-menu">
+                {audioOptions.map(e => {
+                    const o = <div className="audio-menu-source">{e.Source}</div>
+                    // @ts-expect-error
+                    o.audioEntry = e
+                    return o
+                })}
+            </div>
+            menu.onclick = async ev => {
+                ev.stopPropagation();
+                ev.preventDefault();
+                const target = ev.target as HTMLElement | null
+                if (target && target.classList.contains("audio-menu-source")) {
+                    const entry: AudioEntry = (target as any).audioEntry
+                    const audioBytes = await getAudio(entry)
+                    if (audioBytes)
+                        await playAudio(audioBytes)
+                }
+            }
+            goodAudioButton.appendChild(menu)
+        }
+        menu.parentNode!.insertBefore(goodAudioButton, menu)
     }
 }
 
@@ -169,14 +271,21 @@ async function storeCard(clicked: HTMLElement) {
         o.meaningIndex = "jpdb_" + [...document.querySelectorAll(meaningCss)].indexOf(meaningElement);
     }
 
-    let audio = undefined
+    let jpdbAudio = undefined
 
-    const wordAudioAnchor = vocab.querySelector<HTMLElement>("*[data-audio].vocabulary-audio")
-    if (wordAudioAnchor) {
-        audio = wordAudioAnchor.dataset.audio!.split(",")[0]
-        const audioLocalFile = `${kanji}_${audio.replace("/", "_")}.ogg`
-        o.audioLocalFile = audioLocalFile
+    const firstAudio = await getFirstAudio(kanji)
+    if (firstAudio) {
+        o.audioLocalFile = `${kanji}_${firstAudio[0].Source}.mp3`
+        o.audioBytes = firstAudio[1]
+    } else {
+        const wordAudioAnchor = vocab.querySelector<HTMLElement>("*[data-audio].vocabulary-audio")
+        if (wordAudioAnchor) {
+            jpdbAudio = wordAudioAnchor.dataset.audio!.split(",")[0]
+            const audioLocalFile = `${kanji}_${jpdbAudio.replace("/", "_")}.ogg`
+            o.audioLocalFile = audioLocalFile
+        }
     }
+
 
     let sentenceAudio = undefined
 
@@ -197,12 +306,12 @@ async function storeCard(clicked: HTMLElement) {
         }
     }
 
-    if (sentenceAudio && audio) {
-        const [audioBytes, sentenceAudioBytes] = await requestAudio([audio, sentenceAudio])
+    if (sentenceAudio && jpdbAudio) {
+        const [audioBytes, sentenceAudioBytes] = await requestAudio([jpdbAudio, sentenceAudio])
         o.audioBytes = audioBytes
         o.sentenceAudioBytes = sentenceAudioBytes
-    } else if (audio) {
-        const [audioBytes,] = await requestAudio([audio,])
+    } else if (jpdbAudio) {
+        const [audioBytes,] = await requestAudio([jpdbAudio,])
         o.audioBytes = audioBytes
     }
 
