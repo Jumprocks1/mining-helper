@@ -100,6 +100,11 @@ document.addEventListener("DOMContentLoaded", () => {
             {resultDiv}
         </div>
     ])
+    async function updateAndRemove(card: CardData) {
+        update(card)
+        await chrome.storage.session.remove(card.kanji)
+        refresh()
+    }
 
     async function saveAndRemove(card: CardData) {
         const [fields, audio] = activeFields(card);
@@ -163,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     oldCreateElement("span", {
                         className: "update-button button", textContent: "up", onClick: async ev => {
                             ev.preventDefault()
-                            handleErrors(() => update(e), "Updated")
+                            handleErrors(() => updateAndRemove(e), "Updated")
                         }
                     }),
                     oldCreateElement("a", {

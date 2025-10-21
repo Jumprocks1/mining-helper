@@ -22,8 +22,10 @@ ${meaningCss}.selected,
     background: oklch(54.017% 0.13237 263.851 / 0.30);
 }
 
-.vocabulary.has-anki-card .primary-spelling > .spelling > div {
-    background: oklch(0.7012 0.1888 143.23 / 40%) !important;
+.vocabulary.has-anki-card .primary-spelling > .spelling > div,
+    .entry.has-anki-card .vocabulary-spelling > a
+{
+    background: oklch(0.7012 0.1888 143.23 / 30%) !important;
 }
 
 .good-audio {
@@ -103,6 +105,7 @@ async function getAudioOptions(vocab?: HTMLElement | null) {
     return getAudioOptionsFromKanji(kanji)
 }
 
+// todo filter more based on reading too, since many kanji have multiple readings
 async function getAudioOptionsFromKanji(kanji: string) {
     const audioOptions = await fetch("http://127.0.0.1:8080", { method: "POST", body: `lookup-audio::${kanji}` })
     return await audioOptions.json() as AudioEntry[]
@@ -147,6 +150,15 @@ async function afterLoad() {
             }
         }
     }
+    const entries = document.querySelectorAll(".entry")
+    for (const vocab of entries) {
+        const wordRuby = vocab.querySelector<HTMLElement>(".vocabulary-spelling>a")
+        if (wordRuby) {
+            const [kanji,] = kanjiAndFurigana(wordRuby)
+            if (allAnkiWords.includes(kanji))
+                vocab.classList.add("has-anki-card")
+        }
+    }
 
     const wordBoxes = document.querySelectorAll(".vbox .subsection-headword>.menu");
     for (const menu of wordBoxes) {
@@ -158,7 +170,8 @@ async function afterLoad() {
                 menu.remove()
                 return
             }
-            const audioOptions = await getAudioOptions(goodAudioButton.closest<HTMLElement>(".vocabulary"))
+            const vocab = goodAudioButton.closest<HTMLElement>(".vocabulary")
+            const audioOptions = await getAudioOptions(vocab)
             if (!audioOptions) return
             console.log(audioOptions)
             menu = <div className="audio-menu">
@@ -176,8 +189,21 @@ async function afterLoad() {
                 if (target && target.classList.contains("audio-menu-source")) {
                     const entry: AudioEntry = (target as any).audioEntry
                     const audioBytes = await getAudio(entry)
-                    if (audioBytes)
-                        await playAudio(audioBytes)
+                    if (audioBytes) {
+                        // slice so we still have access to arrayBuffer, otherwise audio thread steals it
+                        await playAudio(audioBytes.slice(0))
+                        if (!vocab) return
+                        const wordRuby = vocab.querySelector<HTMLElement>(".spelling ruby.v")
+                        if (!wordRuby) return
+                        const [kanji,] = kanjiAndFurigana(wordRuby)
+                        const res = await chrome.storage.session.get({ [kanji]: {} })
+                        const stored: CardData = res[kanji]
+                        stored.modified = Date.now()
+                        stored.kanji = kanji
+                        stored.audioBytes = audioBytes
+                        stored.audioLocalFile = `${kanji}_${entry.Source}.mp3`
+                        await chrome.storage.session.set(res)
+                    }
                 }
             }
             goodAudioButton.appendChild(menu)
@@ -196,7 +222,7 @@ function kanjiAndFurigana(node: ChildNode, o = ["", ""]) {
         } else if (node.nodeName === "RUBY") {
             if (node.childNodes.length === 0) { }
             else if (node.childNodes.length === 1) {
-                kanjiAndFurigana(node.childNodes[0])
+                kanjiAndFurigana(node.childNodes[0], o)
             } else {
                 let pending = undefined
                 for (let i = 0; i < node.childNodes.length; i++) {
@@ -256,12 +282,11 @@ async function storeCard(clicked: HTMLElement) {
 
 
 
-
-    const o: CardData = {
-        kanji,
-        furigana,
-        modified: Date.now()
-    }
+    const res = await chrome.storage.session.get({ [kanji]: {} })
+    const o: CardData = res[kanji]
+    o.kanji = kanji
+    o.furigana = furigana
+    o.modified = Date.now()
 
     const meaningElement = vocab.querySelector<HTMLElement>(meaningCss + ".selected") ?? vocab.querySelector<HTMLElement>(meaningCss)
     if (meaningElement) {
@@ -273,16 +298,18 @@ async function storeCard(clicked: HTMLElement) {
 
     let jpdbAudio = undefined
 
-    const firstAudio = await getFirstAudio(kanji)
-    if (firstAudio) {
-        o.audioLocalFile = `${kanji}_${firstAudio[0].Source}.mp3`
-        o.audioBytes = firstAudio[1]
-    } else {
-        const wordAudioAnchor = vocab.querySelector<HTMLElement>("*[data-audio].vocabulary-audio")
-        if (wordAudioAnchor) {
-            jpdbAudio = wordAudioAnchor.dataset.audio!.split(",")[0]
-            const audioLocalFile = `${kanji}_${jpdbAudio.replace("/", "_")}.ogg`
-            o.audioLocalFile = audioLocalFile
+    if (!o.audioBytes) {
+        const firstAudio = await getFirstAudio(kanji)
+        if (firstAudio) {
+            o.audioLocalFile = `${kanji}_${firstAudio[0].Source}.mp3`
+            o.audioBytes = firstAudio[1]
+        } else {
+            const wordAudioAnchor = vocab.querySelector<HTMLElement>("*[data-audio].vocabulary-audio")
+            if (wordAudioAnchor) {
+                jpdbAudio = wordAudioAnchor.dataset.audio!.split(",")[0]
+                const audioLocalFile = `${kanji}_${jpdbAudio.replace("/", "_")}.ogg`
+                o.audioLocalFile = audioLocalFile
+            }
         }
     }
 
@@ -315,7 +342,7 @@ async function storeCard(clicked: HTMLElement) {
         o.audioBytes = audioBytes
     }
 
-    chrome.storage.session.set({ [o.kanji]: o })
+    chrome.storage.session.set(res)
     console.log(o)
 }
 
