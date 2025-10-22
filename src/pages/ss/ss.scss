@@ -51,7 +51,7 @@
                 display: flex;
                 flex-direction: column;
                 b {
-                    color: color.mix(#FFFFFF, variables.$brightGreen, 30%);
+                    color: variables.$highlighted;
                 }
             }
             .play-icon {

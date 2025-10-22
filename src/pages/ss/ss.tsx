@@ -1,7 +1,9 @@
 import MhHeader from "../../components/MhHeader"
 import { seedPage } from "../../components/util"
+import AddIcons from "../../utils/AddIcons"
 import { CardData, lookupFuri, urlToArrayBuffer } from "../../utils/util"
 
+AddIcons()
 
 const audioBaseUrl = "https://receptomanijalogi.web.app/audio/"
 const dataUrl = chrome.runtime.getURL("all_v11.json")

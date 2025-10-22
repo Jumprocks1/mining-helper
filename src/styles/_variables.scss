@@ -1,3 +1,5 @@
+@use "sass:color";
+
 $mpv-color: #691f69;
 
 $black: #1E1E1E;
@@ -12,7 +14,7 @@ $yellow: #E5E510;
 
 $brightBlack: #666666;
 $brightBlue: #3B8EEA;
-$brightCyan: #D670D6;
+$brightCyan: #29B8DB;
 $brightGreen: #23D18B;
 $brightPurple: #D670D6;
 $brightRed: #F14C4C;
@@ -21,3 +23,7 @@ $brightYellow: #F5F543;
 
 $background0: $black;
 $background1: #303030;
+
+$border0: 1px solid #FFFFFF80;
+
+$highlighted: color.mix(#FFFFFF, $brightGreen, 30%)

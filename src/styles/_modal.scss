@@ -1,0 +1,35 @@
+@use "variables";
+
+.modal {
+    width: 100%;
+    height: 100%;
+    background-color: #00000080;
+    position: absolute;
+    left: 0;
+    top: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    .inner-modal {
+        min-width: 30em;
+        background-color: variables.$background0;
+        border: variables.$border0;
+        b {
+            color: variables.$highlighted
+        }
+        .header {
+            border-bottom: variables.$border0;
+            padding: 0.2em;
+            font-size: 1.2em;
+            display: flex;
+            align-items: center;
+            .close-button {
+                margin-left: auto;
+            }
+        }
+        .body {
+            padding: 0.2em;
+            white-space: pre-wrap;
+        }
+    }
+}

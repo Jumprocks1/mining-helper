@@ -1,6 +1,12 @@
 import { UnicodeCharacterType, unicodeType } from "../anki/CardList"
-import { formatTimestamp, Subtitles } from "../utils/srt"
+import { formatTimestamp, SubtitleEntry, Subtitles } from "../utils/srt"
 import { oldCreateElement } from "../utils/util"
+
+declare global {
+    interface HTMLElement {
+        subtitleEntry?: SubtitleEntry
+    }
+}
 
 export default class SubtitleViewer {
     Node: HTMLElement
@@ -38,6 +44,7 @@ export default class SubtitleViewer {
                     <div className="subtitles">{entry.text}</div>
                 ]
             }))
+            entry.node.subtitleEntry = entry
         }
         inner.replaceChildren(...newChildren)
     }
