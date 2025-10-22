@@ -14,19 +14,22 @@ export interface Subtitles {
     name?: string
 }
 
-export function formatTimestamp(timestamp: number) {
+export function formatTimestamp(timestamp: number, showMs: false | 1 | 2 | 3 = false) {
     let seconds = Math.floor(timestamp / 1000)
+    const ms = timestamp - seconds * 1000
     let minutes = Math.floor(seconds / 60)
     seconds -= minutes * 60
     let hours = Math.floor(minutes / 60)
     minutes -= hours * 60
-    function f(s: number) {
-        return s.toString().padStart(2, "0")
+    function f(s: number, p = 2) {
+        return s.toString().padStart(p, "0")
     }
+    let msS = ""
+    if (showMs) msS = "." + f(ms, 3).substring(0, showMs)
     if (hours <= 0) {
-        return `${f(minutes)}:${f(seconds)}`
+        return `${f(minutes)}:${f(seconds)}${msS}`
     } else {
-        return `${f(hours)}:${f(minutes)}:${f(seconds)}`
+        return `${f(hours)}:${f(minutes)}:${f(seconds)}${msS}`
     }
 }
 

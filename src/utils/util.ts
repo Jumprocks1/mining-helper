@@ -9,6 +9,10 @@ function getApiKey() {
     })()
 }
 
+export function jpdbEntryUrl(word: string) {
+    return `https://jpdb.io/search?q=${encodeURIComponent(word)}&lang=english`
+}
+
 export async function lookupFuri(jp: string | undefined, highlight?: string) {
     if (!jp) return jp
     const res = await fetch("https://jpdb.io/api/v1/parse", {

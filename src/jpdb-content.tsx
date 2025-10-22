@@ -2,6 +2,7 @@ import { getAnkiWords } from "./anki/CardList"
 import { handleKeypress, keyPressedWithText } from "./utils/GlobalHotkeys"
 import { CardData } from "./utils/util"
 import "./utils/createElement"
+import { getOrCreatePendingCard, saveCard } from "./utils/MiningUtil"
 
 const meaningCss = ".subsection-meanings .description"
 const sentenceCss = ".subsection-examples .used-in:has(.en)"
@@ -282,9 +283,7 @@ async function storeCard(clicked: HTMLElement) {
 
 
 
-    const res = await chrome.storage.session.get({ [kanji]: {} })
-    const o: CardData = res[kanji]
-    o.kanji = kanji
+    const o = await getOrCreatePendingCard(kanji)
     o.furigana = furigana
     o.modified = Date.now()
 
@@ -342,7 +341,7 @@ async function storeCard(clicked: HTMLElement) {
         o.audioBytes = audioBytes
     }
 
-    chrome.storage.session.set(res)
+    await saveCard(o)
     console.log(o)
 }
 

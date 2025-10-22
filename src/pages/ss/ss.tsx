@@ -1,6 +1,7 @@
 import MhHeader from "../../components/MhHeader"
 import { seedPage } from "../../components/util"
 import AddIcons from "../../utils/AddIcons"
+import { playAudio } from "../../utils/Audio"
 import { CardData, lookupFuri, urlToArrayBuffer } from "../../utils/util"
 
 AddIcons()
@@ -34,32 +35,6 @@ const body = <div id="body-container">
     {form}
     {results}
 </div>
-
-let audioContext: AudioContext | undefined = undefined
-
-let playing: Record<string, AudioBufferSourceNode> = {}
-
-function stopAll() {
-    for (const key in playing) {
-        playing[key].stop()
-        delete playing[key]
-    }
-}
-
-async function play(name: string, bytes: ArrayBuffer) {
-    if (playing[name]) return
-    audioContext ??= new AudioContext()
-    const source = audioContext.createBufferSource();
-    // audio thread needs a copy of the buffer, so we have to slice
-    source.buffer = await audioContext.decodeAudioData(bytes.slice(0));
-    source.connect(audioContext.destination);
-
-    stopAll()
-
-    playing[name] = source
-    source.onended = () => delete playing[name]
-    source.start()
-}
 
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -131,8 +106,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             results.appendChild(row)
             row.addEventListener("click", async ev => {
                 res.audioBytes ??= urlToArrayBuffer(audioBaseUrl + res.audio_jap)
-                const bytes = await res.audioBytes
-                if (bytes) play(res.audio_jap, bytes)
+                playAudio(res.audio_jap, res.audioBytes)
 
                 // don't update card if we only clicked the play button
                 if (ev.target === playButton) return

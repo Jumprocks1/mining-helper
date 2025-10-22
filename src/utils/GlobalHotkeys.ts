@@ -1,4 +1,5 @@
 import { UnicodeCharacterType, unicodeType } from "../anki/CardList";
+import { jpdbEntryUrl } from "./util";
 
 export function openTab(url: string) {
     if (chrome.tabs) {
@@ -24,7 +25,7 @@ export function keyPressedWithText(ev: KeyboardEvent, text: string) {
             return true
         }
         else {
-            openTab(`https://jpdb.io/search?q=${encodeURIComponent(text)}&lang=english`)
+            openTab(jpdbEntryUrl(text))
             return true
         }
     } else if (ev.key === "s") {
