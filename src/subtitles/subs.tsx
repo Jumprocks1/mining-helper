@@ -4,6 +4,7 @@ import MhHeader from "../components/MhHeader"
 import { seedPage } from "../components/util"
 import SubtitleViewer from "./SubtitleViewer"
 import { handleKeypress } from "../utils/GlobalHotkeys"
+import MinerModal from "../components/MinerModal"
 
 let currentTime = 0
 
@@ -38,29 +39,34 @@ function loadSubtitles(subtitles: Subtitles, main: boolean) {
     if (main) loadedSubtitles.main = viewer
     else loadedSubtitles.secondary.push(viewer)
 }
-async function handleWebSocketData(command: string | Blob) {
+async function handleWebSocketData(webSocket: MpvWebSocket, command: string | Blob) {
     if (typeof command === "string") {
         const spl = command.indexOf(":")
         if (spl === -1) { console.error({ command, message: "Missing :" }); return }
         const commandName = command.substring(0, spl);
         const commandValue = command.substring(spl + 1);
-        handleCommandAndData(commandName, commandValue)
+        await handleCommandAndData(webSocket, commandName, commandValue)
     } else {
         const bytes = new Uint8Array(await command.arrayBuffer());
         const spl = bytes.indexOf(":".charCodeAt(0))
         if (spl === -1) return
         const commandName = new TextDecoder().decode(bytes.subarray(0, spl));
-        handleCommandAndData(commandName, bytes.subarray(spl + 1))
+        await handleCommandAndData(webSocket, commandName, bytes.subarray(spl + 1))
     }
 }
-function handleCommandAndData(commandName: string, commandData: string | Uint8Array<ArrayBuffer>) {
+async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string, commandData: string | Uint8Array<ArrayBuffer>) {
     if (commandName === "time" || commandName === "t") {
         updateTime(parseFloat(commandData as string))
     } else if (commandName === "raw-sub-file") {
         const decoded = new TextDecoder().decode(commandData as Uint8Array)
         loadSubtitles(parseSrt(decoded), true)
+    } else if (commandName === "response") {
+        await webSocket.HandleResponse(commandData)
     }
 }
+
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
 document.addEventListener("DOMContentLoaded", () => {
     seedPage("subs-page", [
@@ -77,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     ])
     let webSocket = new MpvWebSocket()
-    webSocket.onMessage = (e) => handleWebSocketData(e.data)
+    webSocket.onMessage = (e) => handleWebSocketData(webSocket, e.data)
     const connectionDot = document.getElementById("connection-status-dot")!
     webSocket.onConnecting = () => {
         connectionDot.title = "WebSocket connecting"
@@ -88,7 +94,7 @@ document.addEventListener("DOMContentLoaded", () => {
         connectionDot.classList.add("connected")
         connectionDot.classList.remove("disconnected")
         if (!loadedSubtitles.main)
-            webSocket.SendIfOpen("ipc:script-message read_subtitles 6");
+            webSocket.SendIfOpen("ipc:script-message read_subtitles jp");
     }
     webSocket.onClose = () => {
         connectionDot.title = "WebSocket disconnected\nClick to retry"
@@ -96,6 +102,17 @@ document.addEventListener("DOMContentLoaded", () => {
         connectionDot.classList.add("disconnected")
     }
     webSocket.Connect()
+
+    let modal: Node | null = null;
+    function openModal(o: PartialBy<Parameters<(typeof MinerModal)>[0], "onClose">) {
+        o.onClose = () => {
+            if (modal) {
+                document.body.removeChild(modal)
+                modal = null
+            }
+        }
+        document.body.append(modal = MinerModal(o as any))
+    }
 
     document.addEventListener("keypress", ev => {
         if (handleKeypress(ev)) return
@@ -106,6 +123,20 @@ document.addEventListener("DOMContentLoaded", () => {
         } else if (ev.key === " ") {
             webSocket.SendIfOpen("ipc:cycle pause");
             ev.preventDefault()
+        } else if (ev.key === "m") {
+            if (modal) {
+                document.body.removeChild(modal)
+                modal = null
+            } else {
+                const selected = getSelection()
+                if (selected) {
+                    const anchor = selected.anchorNode?.parentElement as HTMLElement
+                    const entry = anchor?.closest<HTMLElement>(".subtitle-entry")?.subtitleEntry
+                    if (entry) {
+                        openModal({ word: selected.toString(), entry, mpv: webSocket })
+                    }
+                }
+            }
         }
     })
 

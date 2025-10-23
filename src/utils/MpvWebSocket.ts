@@ -56,4 +56,35 @@ export default class MpvWebSocket {
         if (this.Connecting) return // throws exception otherwise
         this.Connection?.send(message)
     }
+
+    pendingRequests = new Map<string, (response: Uint8Array<ArrayBuffer> | string) => void>()
+    nextRequestId = 1;
+    public async RequestIfOpen(message: string) {
+        return new Promise<Uint8Array<ArrayBuffer> | string>(res => {
+            const requestId = this.nextRequestId++;
+            this.SendIfOpen(`request:${requestId}:${message}`);
+            this.pendingRequests.set(requestId.toString(), res)
+        })
+    }
+
+    public async HandleResponse(response: string | Uint8Array<ArrayBuffer>) {
+        if (typeof response === "string") {
+            const spl = response.indexOf(":")
+            const requestId = response.substring(0, spl);
+            const commandValue = response.substring(spl + 1);
+            const callback = this.pendingRequests.get(requestId)
+            if (callback) {
+                callback(commandValue)
+                this.pendingRequests.delete(requestId)
+            }
+        } else {
+            const spl = response.indexOf(":".charCodeAt(0))
+            const requestId = new TextDecoder().decode(response.subarray(0, spl));
+            const callback = this.pendingRequests.get(requestId)
+            if (callback) {
+                callback(response.subarray(spl + 1))
+                this.pendingRequests.delete(requestId)
+            }
+        }
+    }
 }

@@ -11,12 +11,17 @@ function stopAll() {
     }
 }
 
-export type PlayableAudio = ArrayBuffer | Promise<ArrayBuffer | undefined> | (() => ArrayBuffer | Promise<ArrayBuffer>) | string | undefined
+type PlayableAudioBase = Uint8Array<ArrayBuffer> | ArrayBuffer | undefined
+export type PlayableAudio = PlayableAudioBase | Promise<PlayableAudioBase> | (() => PlayableAudioBase) | string
 
 export async function resolveAudio(audio: PlayableAudio): Promise<ArrayBuffer | undefined> {
     let loadedAudio = audio
     if (typeof loadedAudio === "string") loadedAudio = urlToArrayBuffer(loadedAudio)
     if (typeof loadedAudio === "function") loadedAudio = loadedAudio()
+    if (loadedAudio && "buffer" in loadedAudio) {
+        loadedAudio = loadedAudio.buffer.slice(loadedAudio.byteOffset, loadedAudio.byteOffset + loadedAudio.byteLength)
+    }
+    // @ts-expect-error - for some reason the type guard isn't perfect, but I think it's correct
     return await loadedAudio;
 }
 

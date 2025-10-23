@@ -108,13 +108,13 @@ async function getAudioOptions(vocab?: HTMLElement | null) {
 
 // todo filter more based on reading too, since many kanji have multiple readings
 async function getAudioOptionsFromKanji(kanji: string) {
-    const audioOptions = await fetch("http://127.0.0.1:8080", { method: "POST", body: `lookup-audio::${kanji}` })
+    const audioOptions = await fetch("http://127.0.0.1:8080", { method: "POST", body: `lookup-audio:${kanji}` })
     return await audioOptions.json() as AudioEntry[]
 }
 
 async function getAudio(entry?: AudioEntry) {
     if (!entry) return
-    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes::${entry.ID}` })
+    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes:${entry.ID}` })
     if (!audioBytes.ok) return
     return await audioBytes.arrayBuffer()
 }
