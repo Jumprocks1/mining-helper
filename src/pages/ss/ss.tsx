@@ -2,7 +2,8 @@ import MhHeader from "../../components/MhHeader"
 import { seedPage } from "../../components/util"
 import AddIcons from "../../utils/AddIcons"
 import { playAudio } from "../../utils/Audio"
-import { CardData, lookupFuri, urlToArrayBuffer } from "../../utils/util"
+import { mutatePendingCard } from "../../utils/MiningUtil"
+import { lookupFuri, urlToArrayBuffer } from "../../utils/util"
 
 AddIcons()
 
@@ -53,26 +54,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     async function updateCard(entry: SsEntry) {
-        const keys = await chrome.storage.session.getKeys()
-        const query = searchInput.value.trim()
-        let kanji = query
-        const foundKey = keys.find(e => e.includes(kanji))
-        if (foundKey) kanji = foundKey
+        const query = searchInput.value
 
-        const card: CardData = (await chrome.storage.session.get({ [kanji]: {} }))[kanji]
-        card.kanji = kanji
-        card.jpSentenceKanji = entry.jap
-        card.enSentence = entry.eng
+        await mutatePendingCard(query, true, async card => {
+            const kanji = card.kanji
 
-        card.sentenceAudioBytes = await entry.audioBytes
-        card.sentenceAudioLocalFile = `${card.kanji}_ex_sentencesearch.ogg`
-        card.sentenceIndex = "ss_" + data.indexOf(entry)
+            card.jpSentenceKanji = entry.jap
+            card.enSentence = entry.eng
 
-        card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, query)
-        card.jpSentenceKanji = card.jpSentenceKanji.replace(query, "<b>" + query + "</b>")
+            card.sentenceAudioBytes = await entry.audioBytes
+            card.sentenceAudioLocalFile = `${card.kanji}_ex_sentencesearch.ogg`
+            card.sentenceIndex = "ss_" + data.indexOf(entry)
 
-        console.log(card)
-        chrome.storage.session.set({ [kanji]: card })
+            card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, query)
+            card.jpSentenceKanji = card.jpSentenceKanji.replace(query, "<b>" + query + "</b>")
+        })
     }
 
     function update() {
