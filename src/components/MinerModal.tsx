@@ -1,4 +1,5 @@
 import AddIcons from "../utils/AddIcons"
+import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
 import { getOrCreatePendingCard, saveCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, SubtitleEntry } from "../utils/srt"
@@ -30,8 +31,7 @@ export default (props: Props) => {
             card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, word)
             card.jpSentenceKanji = card.jpSentenceKanji.replace(word, "<b>" + word + "</b>")
 
-            // TODO this doesn't save to Anki
-            await saveCard(card)
+            await saveToAnkiAndRemove(card)
             modal.Close()
         }
 
@@ -69,6 +69,7 @@ export default (props: Props) => {
         }
 
         inner.append(<div className="footer">
+            {/* Could make this a loading button */}
             <button onclick={save}>Save</button>
         </div>)
         return labeled
