@@ -2,7 +2,7 @@ import { getAnkiWords } from "./anki/CardList"
 import { handleKeypress, keyPressedWithText } from "./utils/GlobalHotkeys"
 import { CardData } from "./utils/util"
 import "./utils/createElement"
-import { getOrCreatePendingCard, saveCard } from "./utils/MiningUtil"
+import { mutatePendingCard } from "./utils/MiningUtil"
 
 const meaningCss = ".subsection-meanings .description"
 const sentenceCss = ".subsection-examples .used-in:has(.en)"
@@ -197,13 +197,10 @@ async function afterLoad() {
                         const wordRuby = vocab.querySelector<HTMLElement>(".spelling ruby.v")
                         if (!wordRuby) return
                         const [kanji,] = kanjiAndFurigana(wordRuby)
-                        const res = await chrome.storage.session.get({ [kanji]: {} })
-                        const stored: CardData = res[kanji]
-                        stored.modified = Date.now()
-                        stored.kanji = kanji
-                        stored.audioBytes = audioBytes
-                        stored.audioLocalFile = `${kanji}_${entry.Source}.mp3`
-                        await chrome.storage.session.set(res)
+                        await mutatePendingCard(kanji, false, card => {
+                            card.audioBytes = audioBytes
+                            card.audioLocalFile = `${kanji}_${entry.Source}.mp3`
+                        })
                     }
                 }
             }
@@ -282,67 +279,63 @@ async function storeCard(clicked: HTMLElement) {
     latestWord = kanji
 
 
+    await mutatePendingCard(kanji, false, async card => {
+        card.furigana = furigana
 
-    const o = await getOrCreatePendingCard(kanji)
-    o.furigana = furigana
-    o.modified = Date.now()
+        const meaningElement = vocab.querySelector<HTMLElement>(meaningCss + ".selected") ?? vocab.querySelector<HTMLElement>(meaningCss)
+        if (meaningElement) {
+            select(meaningCss, meaningElement)
+            let description = meaningElement.childNodes[0].textContent?.replace(/^\d+\./, "").trim()
+            if (description) card.meaning = description;
+            card.meaningIndex = "jpdb_" + [...document.querySelectorAll(meaningCss)].indexOf(meaningElement);
+        }
 
-    const meaningElement = vocab.querySelector<HTMLElement>(meaningCss + ".selected") ?? vocab.querySelector<HTMLElement>(meaningCss)
-    if (meaningElement) {
-        select(meaningCss, meaningElement)
-        let description = meaningElement.childNodes[0].textContent?.replace(/^\d+\./, "").trim()
-        if (description) o.meaning = description;
-        o.meaningIndex = "jpdb_" + [...document.querySelectorAll(meaningCss)].indexOf(meaningElement);
-    }
+        let jpdbAudio = undefined
 
-    let jpdbAudio = undefined
-
-    if (!o.audioBytes) {
-        const firstAudio = await getFirstAudio(kanji)
-        if (firstAudio) {
-            o.audioLocalFile = `${kanji}_${firstAudio[0].Source}.mp3`
-            o.audioBytes = firstAudio[1]
-        } else {
-            const wordAudioAnchor = vocab.querySelector<HTMLElement>("*[data-audio].vocabulary-audio")
-            if (wordAudioAnchor) {
-                jpdbAudio = wordAudioAnchor.dataset.audio!.split(",")[0]
-                const audioLocalFile = `${kanji}_${jpdbAudio.replace("/", "_")}.ogg`
-                o.audioLocalFile = audioLocalFile
+        if (!card.audioBytes) {
+            const firstAudio = await getFirstAudio(kanji)
+            if (firstAudio) {
+                card.audioLocalFile = `${kanji}_${firstAudio[0].Source}.mp3`
+                card.audioBytes = firstAudio[1]
+            } else {
+                const wordAudioAnchor = vocab.querySelector<HTMLElement>("*[data-audio].vocabulary-audio")
+                if (wordAudioAnchor) {
+                    jpdbAudio = wordAudioAnchor.dataset.audio!.split(",")[0]
+                    const audioLocalFile = `${kanji}_${jpdbAudio.replace("/", "_")}.ogg`
+                    card.audioLocalFile = audioLocalFile
+                }
             }
         }
-    }
 
 
-    let sentenceAudio = undefined
+        let sentenceAudio = undefined
 
-    if (sentenceElement) {
-        const jpEl = sentenceElement.querySelector("div.jp");
-        if (jpEl) {
-            const jpSentence = kanjiAndFurigana(jpEl)
-            o.jpSentenceKanji = jpSentence[0]
-            o.jpSentenceFuri = jpSentence[1]
+        if (sentenceElement) {
+            const jpEl = sentenceElement.querySelector("div.jp");
+            if (jpEl) {
+                const jpSentence = kanjiAndFurigana(jpEl)
+                card.jpSentenceKanji = jpSentence[0]
+                card.jpSentenceFuri = jpSentence[1]
+            }
+            card.enSentence = sentenceElement.querySelector("div.en")?.textContent
+            card.sentenceIndex = "jpdb_" + [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement)
+
+            const sentenceAudioAnchor = sentenceElement.parentElement?.querySelector<HTMLElement>("*[data-audio].example-audio")
+            if (sentenceAudioAnchor) {
+                sentenceAudio = sentenceAudioAnchor.dataset.audio!.split(",")[0]
+                card.sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
+            }
         }
-        o.enSentence = sentenceElement.querySelector("div.en")?.textContent
-        o.sentenceIndex = "jpdb_" + [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement)
 
-        const sentenceAudioAnchor = sentenceElement.parentElement?.querySelector<HTMLElement>("*[data-audio].example-audio")
-        if (sentenceAudioAnchor) {
-            sentenceAudio = sentenceAudioAnchor.dataset.audio!.split(",")[0]
-            o.sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
+        if (sentenceAudio && jpdbAudio) {
+            const [audioBytes, sentenceAudioBytes] = await requestAudio([jpdbAudio, sentenceAudio])
+            card.audioBytes = audioBytes
+            card.sentenceAudioBytes = sentenceAudioBytes
+        } else if (jpdbAudio) {
+            const [audioBytes,] = await requestAudio([jpdbAudio,])
+            card.audioBytes = audioBytes
         }
-    }
-
-    if (sentenceAudio && jpdbAudio) {
-        const [audioBytes, sentenceAudioBytes] = await requestAudio([jpdbAudio, sentenceAudio])
-        o.audioBytes = audioBytes
-        o.sentenceAudioBytes = sentenceAudioBytes
-    } else if (jpdbAudio) {
-        const [audioBytes,] = await requestAudio([jpdbAudio,])
-        o.audioBytes = audioBytes
-    }
-
-    await saveCard(o)
-    console.log(o)
+    })
 }
 
 document.addEventListener("click", ev => {
