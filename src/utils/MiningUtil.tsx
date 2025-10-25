@@ -16,7 +16,7 @@ export async function getOrCreatePendingCard(word: string, checkPartial: boolean
     return card
 }
 
-export async function mutatePendingCard(word: string, checkPartial: boolean, mutate: (card: CardData) => Promise<void>) {
+export async function mutatePendingCard(word: string, checkPartial: boolean, mutate: (card: CardData) => Promise<void> | void) {
     const card = await getOrCreatePendingCard(word, checkPartial)
     card.modified = Date.now()
     await mutate(card)

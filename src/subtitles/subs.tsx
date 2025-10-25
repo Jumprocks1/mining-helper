@@ -5,6 +5,7 @@ import { seedPage } from "../components/util"
 import SubtitleViewer from "./SubtitleViewer"
 import { handleKeypress } from "../utils/GlobalHotkeys"
 import MinerModal from "../components/MinerModal"
+import { Modal } from "../components/Modal"
 
 let currentTime = 0
 
@@ -103,16 +104,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     webSocket.Connect()
 
-    let modal: Node | null = null;
-    function openModal(o: PartialBy<Parameters<(typeof MinerModal)>[0], "onClose">) {
-        o.onClose = () => {
-            if (modal) {
-                document.body.removeChild(modal)
-                modal = null
-            }
-        }
-        document.body.append(modal = MinerModal(o as any))
-    }
+    let miningModal: Modal | undefined;
 
     document.addEventListener("keypress", ev => {
         if (handleKeypress(ev)) return
@@ -124,16 +116,19 @@ document.addEventListener("DOMContentLoaded", () => {
             webSocket.SendIfOpen("ipc:cycle pause");
             ev.preventDefault()
         } else if (ev.key === "m") {
-            if (modal) {
-                document.body.removeChild(modal)
-                modal = null
+            if (miningModal) {
+                miningModal.Close()
             } else {
                 const selected = getSelection()
                 if (selected) {
                     const anchor = selected.anchorNode?.parentElement as HTMLElement
                     const entry = anchor?.closest<HTMLElement>(".subtitle-entry")?.subtitleEntry
                     if (entry) {
-                        openModal({ word: selected.toString(), entry, mpv: webSocket })
+                        miningModal = MinerModal({
+                            word: selected.toString(), entry, mpv: webSocket,
+                            onClose: () => miningModal = undefined
+                        })
+                        miningModal.Open()
                     }
                 }
             }

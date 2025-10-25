@@ -54,10 +54,15 @@ export class Modal extends Component {
         this.Node = res
     }
 
-    Close() {
+    // bit awkward but should be fine
+    _closeNoOnClose() {
         if (!this.IsOpen) return
         this.IsOpen = false;
         this.Node.remove()
+    }
+    Close() {
+        if (!this.IsOpen) return
+        this._closeNoOnClose()
         // it's fine if OnClose calls this Close for some reason since the guard above will prevent a loop
         this.OnClose()
     }
