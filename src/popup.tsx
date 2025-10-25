@@ -144,13 +144,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     e.meaningIndex ?
                         oldCreateElement("span", { className: "meaning-index", textContent: `m_${e.meaningIndex}`, tooltip: e.meaning })
                         : "",
-                    oldCreateElement("span", {
-                        className: "sentence-index", textContent: `ex_${e.sentenceIndex}`,
-                        tooltip: [
-                            oldCreateElement("div", { innerHTML: e.jpSentenceKanji }),
-                            oldCreateElement("div", { textContent: e.enSentence })
-                        ]
-                    }),
+                    e.sentenceIndex ?
+                        oldCreateElement("span", {
+                            className: "sentence-index", textContent: `ex_${e.sentenceIndex}`,
+                            tooltip: [
+                                oldCreateElement("div", { innerHTML: e.jpSentenceKanji }),
+                                oldCreateElement("div", { textContent: e.enSentence })
+                            ]
+                        }) : "",
                     oldCreateElement("div", { className: "flex-spacer" }),
                     oldCreateElement("span", {
                         className: "delete-button button", textContent: "x", onClick: async ev => {
