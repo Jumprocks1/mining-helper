@@ -1,11 +1,9 @@
-import { addAnkiWord } from "./anki/CardList"
 import MhHeader from "./components/MhHeader"
 import { seedPage } from "./components/util"
-import AnkiConnect, { MediaAdd } from "./utils/AnkiConnect"
+import { saveToAnkiAndRemove, updateInAnkiAndRemove } from "./utils/AnkiUtil"
 import { CardData, oldCreateElement, furiToReading } from "./utils/util"
 
 
-const anki = new AnkiConnect()
 
 const resultDiv = <div id="result" className="hide" />
 function clearResult() {
@@ -30,65 +28,6 @@ async function handleErrors(func: () => void | Promise<void>, message = "Success
     }
 }
 
-
-function activeFields(card: CardData) {
-    // not sure how undefined behaves, so we filters those out first
-    const tryFields = {
-        ["Word"]: card.kanji,
-        ["Word Reading"]: furiToReading(card.furigana),
-        ["Word Meaning"]: card.meaning,
-        ["Word Furigana"]: card.furigana,
-        ["Sentence"]: card.jpSentenceKanji,
-        ["Sentence Meaning"]: card.enSentence,
-        ["Sentence Furigana"]: card.jpSentenceFuri,
-    }
-    const fields: Record<string, string> = {}
-    for (const key in tryFields) {
-        const v = tryFields[key as keyof typeof tryFields]
-        if (v) fields[key] = v
-    }
-    const audio: MediaAdd[] = []
-    function tryAddAudio(field: string, localFile: string | undefined, bytes: ArrayBuffer | undefined) {
-        if (localFile && bytes) {
-            audio.push({
-                // @ts-ignore
-                data: new Uint8Array(bytes).toBase64(),
-                filename: localFile,
-                fields: [field]
-            })
-            fields[field] = "" // have to reset field so it doesn't add duplicate audio
-        }
-    }
-    tryAddAudio("Word Audio", card.audioLocalFile, card.audioBytes)
-    tryAddAudio("Sentence Audio", card.sentenceAudioLocalFile, card.sentenceAudioBytes)
-    return [fields, audio] as const
-}
-
-async function update(card: CardData) {
-    const notes = await anki.call("findNotes", { query: `word:*${card.kanji}*` })
-    if (notes.length === 0) throw new Error(`No notes matching ${card.kanji}`)
-    if (notes.length > 1) throw new Error(`Multiple notes matching ${card.kanji}`)
-    const noteId = notes[0]
-
-    const [fields, audio] = activeFields(card);
-    // not allowed to update these for now
-    delete fields["Word"]
-    delete fields["Word Reading"]
-    delete fields["Word Furigana"]
-    await anki.call("updateNote", {
-        note: {
-            id: noteId,
-            fields,
-            audio
-        }
-    })
-    await anki.call("guiBrowse", { query: "edited:1" })
-    const cards = await anki.call("findCards", { query: `nid:${noteId}` })
-    const cardId = cards.length > 0 && cards[0]
-    if (cardId)
-        await anki.call("guiSelectCard", { card: cardId })
-}
-
 const cardContainer = <div id="card-container" />
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -100,32 +39,6 @@ document.addEventListener("DOMContentLoaded", () => {
             {resultDiv}
         </div>
     ])
-    async function updateAndRemove(card: CardData) {
-        update(card)
-        await chrome.storage.session.remove(card.kanji)
-        refresh()
-    }
-
-    async function saveAndRemove(card: CardData) {
-        const [fields, audio] = activeFields(card);
-        const noteId = await anki.call("addNote", {
-            note: {
-                deckName: anki.targetDeck,
-                modelName: anki.targetModel,
-                fields,
-                audio,
-                tags: ["ext-mined"]
-            }
-        })
-        await addAnkiWord(card.kanji) // could probably skip awaiting this
-        await anki.call("guiBrowse", { query: "added:1" })
-        const cards = await anki.call("findCards", { query: `nid:${noteId}` })
-        const cardId = cards.length > 0 && cards[0]
-        if (cardId)
-            await anki.call("guiSelectCard", { card: cardId })
-        await chrome.storage.session.remove(card.kanji)
-        refresh()
-    }
 
     const popup = new URLSearchParams(location.search).get("p") !== null
     if (popup) document.body.classList.add("popup")
@@ -163,13 +76,19 @@ document.addEventListener("DOMContentLoaded", () => {
                     oldCreateElement("span", {
                         className: "save-button button", textContent: "save", onClick: async ev => {
                             ev.preventDefault()
-                            handleErrors(() => saveAndRemove(e), "Saved " + e.kanji)
+                            handleErrors(async () => {
+                                await saveToAnkiAndRemove(e)
+                                await refresh()
+                            }, "Saved " + e.kanji)
                         }
                     }),
                     oldCreateElement("span", {
                         className: "update-button button", textContent: "up", onClick: async ev => {
                             ev.preventDefault()
-                            handleErrors(() => updateAndRemove(e), "Updated")
+                            handleErrors(async () => {
+                                await updateInAnkiAndRemove(e)
+                                await refresh()
+                            }, "Updated")
                         }
                     }),
                     oldCreateElement("a", {
