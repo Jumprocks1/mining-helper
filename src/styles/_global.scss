@@ -1,0 +1,22 @@
+@use "variables";
+
+// These styles are relatively unrestricted, keep them in bind
+
+button {
+    background: none;
+    color: inherit;
+    outline: none;
+    border: 1px solid #FFFFFF40;
+    padding: 0 variables.$s1 * 2;
+    font: inherit;
+    cursor: pointer;
+    border-radius: variables.$s1;
+    user-select: none;
+    &:hover {
+        background: rgba(255, 255, 255, 10%);
+        border: 1px solid #FFFFFF80;
+    }
+    &:active {
+        background: rgba(255, 255, 255, 20%);
+    }
+}
