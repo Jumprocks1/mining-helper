@@ -172,3 +172,8 @@ export async function urlToArrayBuffer(url: string | undefined) {
     const res = await fetch(url)
     return await (await res.blob()).arrayBuffer()
 }
+
+// don't use for real code, useful for testing though
+export function delay(delay: number) {
+    return new Promise(resolve => setTimeout(resolve, delay))
+}

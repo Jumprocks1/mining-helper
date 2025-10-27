@@ -9,7 +9,7 @@
 
 body {
     background-color: variables.$background1;
-    color: #fff;
+    color: variables.$fontColor;
     padding: 0;
 
     &.popup {
@@ -184,17 +184,6 @@ div#result {
 
 .flex-spacer {
     flex-grow: 1;
-}
-html {
-    box-sizing: border-box;
-    height: 100%;
-}
-* {
-    box-sizing: inherit;
-    margin: 0;
-}
-a {
-    color: inherit;
 }
 
 [data-tooltip] {
