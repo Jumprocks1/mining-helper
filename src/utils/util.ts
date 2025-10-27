@@ -175,5 +175,5 @@ export async function urlToArrayBuffer(url: string | undefined) {
 
 // don't use for real code, useful for testing though
 export function delay(delay: number) {
-    return new Promise(resolve => setTimeout(resolve, delay))
+    return new Promise<void>(resolve => setTimeout(() => resolve(), delay))
 }

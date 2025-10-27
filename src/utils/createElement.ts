@@ -6,7 +6,10 @@ function appendChildren(el: ParentNode, children: any[]) {
         if (Array.isArray(child)) {
             appendChildren(el, child)
         } else if (typeof child === "object") {
-            el.append(child);
+            if ("Node" in child)
+                el.append(child.Node)
+            else
+                el.append(child);
         } else if (typeof child === "string") {
             el.append(child);
         } else if (child !== undefined && child !== false) {
@@ -41,6 +44,9 @@ export function createElement(element: string | FC,
     } else {
         if (element === createFragment) {
             el = createFragment();
+        } else if ("constructor" in element.prototype) {
+            // @ts-expect-error
+            el = new element(properties ?? {}).Node;
         } else {
             el = element(properties ?? {});
         }

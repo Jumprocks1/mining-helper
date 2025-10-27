@@ -70,7 +70,7 @@ export default (props: Props) => {
         }
 
         inner.append(<div className="footer">
-            {new LoadingButton({ text: "Save", onClick: save })}
+            <LoadingButton onClick={save}>Save</LoadingButton>
         </div>)
         return labeled
     }

@@ -3,6 +3,8 @@ declare namespace JSX {
         [K in keyof HTMLElementTagNameMap]: Partial<HTMLElementTagNameMap[K]>
     };
 
+    // sadly this is the only return type
+    // there's nothing related to generics or overloads that we can do to have different return types based on inputs
     type Element = HTMLElement // technically this should be `Node`, but HTMLElement is easier to work with
 }
 

@@ -15,14 +15,11 @@ export default class LoadingButton extends Component {
     get Loading() { return this._loading }
 
     constructor(props: {
-        text: string
         onClick: () => Promise<void> | void
     }) {
         super()
 
-        this.Node = <button>
-            {props.text}
-        </button>
+        this.Node = <button />
 
         this.Node.addEventListener("click", () => {
             if (this.Loading) return
