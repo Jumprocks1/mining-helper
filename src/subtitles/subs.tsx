@@ -26,6 +26,22 @@ const loadedSubtitles: {
     secondary: SubtitleViewer[]
 } = { secondary: [] }
 
+function setCurrentOffset(offset: number) {
+    const subs = loadedSubtitles.main?.subtitles
+    if (subs) {
+        const previousOffset = subs.offset ?? 0
+        subs.offset = offset
+        console.log(`offset set to ${offset}`)
+        const diff = offset - previousOffset
+        for (const entry of subs.entries) {
+            // TODO this is pretty bad, but should pretty much be perfect anyways
+            entry.startTime += diff
+            entry.endTime += diff
+        }
+        loadSubtitles(subs, true)
+    }
+}
+
 function loadSubtitles(subtitles: Subtitles, main: boolean) {
     const container = document.getElementById("subtitle-container")
     if (!container) return
@@ -176,8 +192,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 const entry = (clicked as any).entry
                 if (!entry) return
                 const time = entry.startTime
-                if (webSocket.Open) webSocket.SendIfOpen(`ipc:seek ${time / 1000} absolute`)
-                else updateTime(time)
+                if (ev.ctrlKey) {
+                    const subs = loadedSubtitles.main?.subtitles
+                    setCurrentOffset((subs?.offset ?? 0) + currentTime - entry.startTime)
+                } else {
+                    if (webSocket.Open) webSocket.SendIfOpen(`ipc:seek ${time / 1000} absolute`)
+                    else updateTime(time)
+                }
                 ev.preventDefault();
             } else if (clicked.matches("#connection-status-dot.disconnected")) {
                 webSocket.Connect();

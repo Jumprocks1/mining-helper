@@ -8,6 +8,7 @@ export interface SubtitleEntry {
 }
 
 export interface Subtitles {
+    offset?: number
     entries: SubtitleEntry[]
     source: "srt"
     language?: "eng" | "jp"
@@ -55,8 +56,6 @@ export function parseSrt(srt: string): Subtitles {
         }
     }
 
-    const offset = 0
-
     const lines = srt.split("\n");
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim()
@@ -76,8 +75,8 @@ export function parseSrt(srt: string): Subtitles {
         } else if (pendingEntry.startTime === undefined) {
             const spl = line.split("-->")
             if (spl.length !== 2) throw new Error(`Expected 2 timestamps on line ${i}`)
-            pendingEntry.startTime = parseTimestamp(spl[0]) + offset
-            pendingEntry.endTime = parseTimestamp(spl[1]) + offset
+            pendingEntry.startTime = parseTimestamp(spl[0])
+            pendingEntry.endTime = parseTimestamp(spl[1])
         } else {
             if (!pendingEntry.text) pendingEntry.text = line
             else pendingEntry.text += "\n" + line
