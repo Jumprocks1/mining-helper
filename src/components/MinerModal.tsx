@@ -5,6 +5,7 @@ import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, SubtitleEntry } from "../utils/srt"
 import { jpdbEntryUrl, lookupFuri } from "../utils/util"
 import AudioButton from "./AudioButton"
+import LoadingButton from "./LoadingButton"
 import { Modal } from "./Modal"
 
 interface Props {
@@ -69,8 +70,7 @@ export default (props: Props) => {
         }
 
         inner.append(<div className="footer">
-            {/* Could make this a loading button */}
-            <button onclick={save}>Save</button>
+            {new LoadingButton({ text: "Save", onClick: save })}
         </div>)
         return labeled
     }
