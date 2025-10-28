@@ -53,7 +53,10 @@ function loadSubtitles(subtitles: Subtitles, main: boolean) {
     container.append(viewer.Node)
     viewer.UpdateHighlighting(currentTime)
 
-    if (main) loadedSubtitles.main = viewer
+    if (main) {
+        loadedSubtitles.main = viewer
+        viewer.JumpTo(viewer.LatestEntry(currentTime))
+    }
     else loadedSubtitles.secondary.push(viewer)
 }
 async function handleWebSocketData(webSocket: MpvWebSocket, command: string | Blob) {
@@ -81,9 +84,6 @@ async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string
         await webSocket.HandleResponse(commandData)
     }
 }
-
-type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
-type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
 document.addEventListener("DOMContentLoaded", () => {
     seedPage("subs-page", [

@@ -49,6 +49,28 @@ export default class SubtitleViewer {
         inner.replaceChildren(...newChildren)
     }
 
+    JumpTo(entry: SubtitleEntry | undefined) {
+        if (!entry) return
+        const node = entry.node
+        const scroll = document.getElementById("body-container")
+        if (!scroll || !node) return
+        const computedStyle = getComputedStyle(scroll);
+        const paddingTop = parseFloat(computedStyle.paddingTop);
+        const center = node.offsetTop + node.offsetHeight / 2 + paddingTop;
+        scroll.scrollTo({ top: center - scroll.clientHeight / 5 });
+    }
+
+    LatestEntry(currentTime: number) {
+        let latest: SubtitleEntry | undefined = undefined
+        for (const entry of this.subtitles.entries) {
+            if (entry.startTime <= currentTime)
+                latest = entry
+            else
+                break;
+        }
+        return latest
+    }
+
 
     UpdateHighlighting(currentTime: number) {
         const scroll = document.getElementById("body-container")
