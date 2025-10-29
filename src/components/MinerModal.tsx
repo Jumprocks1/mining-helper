@@ -1,10 +1,10 @@
-import AddIcons from "../utils/AddIcons"
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
 import { getOrCreatePendingCard, saveCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, SubtitleEntry } from "../utils/srt"
 import { jpdbEntryUrl, lookupFuri } from "../utils/util"
 import AudioButton from "./AudioButton"
+import Loader from "./Loader"
 import LoadingButton from "./LoadingButton"
 import { Modal } from "./Modal"
 
@@ -55,18 +55,23 @@ export default (props: Props) => {
         let timestamp = formatTimestamp(entry.startTime, 1)
         add("Time", timestamp + " + " + (duration / 1000).toFixed(1) + "s")
 
-        // TODO configure
+        // TODO allow configure
         const endOffset = 0
 
         if (mpv) {
-            const sentenceAudio = await mpv.RequestIfOpen(`mpv-audio:${entry.startTime}-${entry.endTime + endOffset}`)
-            if (typeof sentenceAudio !== "string") {
-                const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)
-                card.sentenceAudioBytes = buffer
-                card.sentenceAudioLocalFile = `${card.kanji}_ex_mpv.ogg`
-                card.sentenceIndex = "mpv"
-                add("Sentence Audio", AudioButton({ audio: buffer, name: kanji + "_ex" }))
-            }
+            const mpvPromise = mpv.RequestIfOpen(`mpv-audio:${entry.startTime}-${entry.endTime + endOffset}`)
+            add("Sentence Audio", Loader({
+                // sadly this makes the layout shift, not sure of a good way around it
+                load: mpvPromise.then(sentenceAudio => {
+                    if (typeof sentenceAudio !== "string") {
+                        const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)
+                        card.sentenceAudioBytes = buffer
+                        card.sentenceAudioLocalFile = `${card.kanji}_ex_mpv.ogg`
+                        card.sentenceIndex = "mpv"
+                        return AudioButton({ audio: buffer, name: kanji + "_ex" })
+                    } else return "Failed to load"
+                })
+            }))
         }
 
         inner.append(<div className="footer">
