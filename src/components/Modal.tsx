@@ -8,6 +8,21 @@ interface Props {
     body: HTMLElement | string | ((body: HTMLElement) => Promise<(string | Node)[]>)
 }
 
+const OpenModals: Modal[] = []
+
+let hooked = false
+function hookListener() {
+    if (hooked) return
+    hooked = true
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            if (OpenModals.length > 0) {
+                OpenModals[OpenModals.length - 1].Close()
+            }
+        }
+    })
+}
+
 export class Modal extends Component {
 
     Node: HTMLElement
@@ -20,7 +35,7 @@ export class Modal extends Component {
         super()
         this.OnClose = props.onClose
 
-        const closeButton = <IconButton icon="close" onClick={this.OnClose} />
+        const closeButton = <IconButton icon="close" onClick={() => this.Close()} />
 
         const body = <div className="body"></div>
 
@@ -45,7 +60,7 @@ export class Modal extends Component {
         const res = <div className="modal">
             {inner}
         </div>
-        res.onclick = ev => {
+        res.onpointerdown = ev => {
             if (ev.target === res) {
                 this.Close()
             }
@@ -61,6 +76,8 @@ export class Modal extends Component {
     }
     Close() {
         if (!this.IsOpen) return
+        const index = OpenModals.indexOf(this)
+        if (index >= 0) OpenModals.splice(index, 1)
         this._closeNoOnClose()
         // it's fine if OnClose calls this Close for some reason since the guard above will prevent a loop
         this.OnClose()
@@ -68,7 +85,9 @@ export class Modal extends Component {
 
     Open() {
         if (this.IsOpen) return
+        hookListener()
         this.IsOpen = true
+        OpenModals.push(this)
         document.body.append(this.Node)
     }
 }
