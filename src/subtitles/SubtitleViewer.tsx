@@ -15,7 +15,8 @@ export default class SubtitleViewer {
     pointer: HTMLElement = <div className="pointer">-&gt;</div>
     static readonly MAIN_ID = "main-subtitles";
 
-
+    // use to block scrolling when selecting
+    MouseDown = false
 
     constructor(subtitles: Subtitles, main: boolean) {
         this.main = main
@@ -26,6 +27,13 @@ export default class SubtitleViewer {
         if (main) this.Node.id = SubtitleViewer.MAIN_ID
         this.subtitles = subtitles
         this.updateBlock()
+
+        this.Node.addEventListener("pointerdown", () => {
+            this.MouseDown = true
+        })
+        this.Node.addEventListener("pointerup", () => {
+            this.MouseDown = false
+        })
     }
 
     updateBlock() {
@@ -95,6 +103,9 @@ export default class SubtitleViewer {
             }
         }
 
+        // technically can break if mouse up doesn't fire, but it's pretty solid
+        const allowScroll = this.main && !this.MouseDown
+
         // this is pretty inefficient
         for (const entry of this.subtitles.entries) {
             const node = entry.node
@@ -103,7 +114,7 @@ export default class SubtitleViewer {
                     // only scroll if we add a new highlight
                     if (!node.classList.contains("highlight")) {
                         node.classList.add("highlight")
-                        if (this.main) {
+                        if (allowScroll) {
                             const computedStyle = getComputedStyle(scroll);
                             const paddingTop = parseFloat(computedStyle.paddingTop);
                             const center = node.offsetTop + node.offsetHeight / 2 + paddingTop;
