@@ -5,7 +5,7 @@ interface Props {
     header: any
     footer?: any
     onClose: () => void
-    body: HTMLElement | ((body: HTMLElement) => Promise<(string | Node)[]>)
+    body: HTMLElement | string | ((body: HTMLElement) => Promise<(string | Node)[]>)
 }
 
 export class Modal extends Component {
@@ -24,12 +24,13 @@ export class Modal extends Component {
 
         const body = <div className="body"></div>
 
-        let innerBody: HTMLElement
-        if (props.body instanceof Element) {
+        let innerBody: Node | string
+        if (props.body instanceof Element || typeof props.body === "string") {
             innerBody = props.body
         } else {
-            innerBody = <div className="loader" />
-            props.body(body).then(e => innerBody.replaceWith(...e))
+            const loader = <div className="loader" />
+            innerBody = loader
+            props.body(body).then(e => loader.replaceWith(...e))
         }
         body.append(innerBody)
 
@@ -70,4 +71,16 @@ export class Modal extends Component {
         this.IsOpen = true
         document.body.append(this.Node)
     }
+}
+
+
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
+type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
+export function OpenModal(props: PartialBy<Props, "onClose">) {
+    if (!props.onClose)
+        props.onClose = () => { }
+    const modal = new Modal(props as Props)
+    modal.Open()
+    return modal
 }
