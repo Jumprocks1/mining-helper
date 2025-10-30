@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         connectionDot.classList.add("connected")
         connectionDot.classList.remove("disconnected")
         if (!loadedSubtitles.main)
-            webSocket.SendIfOpen("ipc:script-message read_subtitles jp");
+            webSocket.SendIfOpen("ipc:script-message read_subtitles ja");
     }
     webSocket.onClose = () => {
         connectionDot.title = "WebSocket disconnected\nClick to retry"
