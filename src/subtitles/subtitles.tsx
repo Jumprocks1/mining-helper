@@ -6,6 +6,7 @@ import SubtitleViewer from "./SubtitleViewer"
 import { handleKeypress } from "../utils/GlobalHotkeys"
 import MinerModal from "../components/MinerModal"
 import { Modal } from "../components/Modal"
+import IconButton from "../components/basic/IconButton"
 
 let currentTime = 0
 
@@ -90,6 +91,7 @@ document.addEventListener("DOMContentLoaded", () => {
         MhHeader(),
         <div id="outer-body-container">
             <div id="status-info">
+                <IconButton icon="settings" />
                 <span id="current-time">00:00</span>
                 <span id="connection-status-dot"></span>
             </div>

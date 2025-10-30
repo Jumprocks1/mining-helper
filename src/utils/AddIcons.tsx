@@ -1,3 +1,5 @@
+import "./createElement" // probably possible to not have to do this but couldn't figure it out
+
 let added = false
 
 // https://fonts.google.com/icons

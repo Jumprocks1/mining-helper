@@ -1,3 +1,4 @@
+import IconButton from "../../components/basic/IconButton"
 import MhHeader from "../../components/MhHeader"
 import { seedPage } from "../../components/util"
 import AddIcons from "../../utils/AddIcons"
@@ -23,7 +24,7 @@ interface SsEntry {
 }
 
 const searchInput = <input autocomplete="off" id="search" placeholder="Search..." /> as HTMLInputElement
-const searchButton = <span className="search-icon icon-button material-symbols-outlined">search</span>
+const searchButton = <IconButton icon="search" />
 const form = <form id="search-container">
     {searchInput}
     {searchButton}

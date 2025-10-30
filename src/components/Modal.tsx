@@ -1,4 +1,4 @@
-import AddIcons from "../utils/AddIcons";
+import IconButton from "./basic/IconButton";
 import { Component } from "./Component";
 
 interface Props {
@@ -20,8 +20,7 @@ export class Modal extends Component {
         super()
         this.OnClose = props.onClose
 
-        AddIcons()
-        const closeButton = <span className="material-symbols-outlined icon-button close-button">close</span>
+        const closeButton = <IconButton icon="close" onClick={this.OnClose} />
 
         const body = <div className="body"></div>
 
@@ -50,7 +49,6 @@ export class Modal extends Component {
                 this.Close()
             }
         }
-        closeButton.onclick = this.Close
         this.Node = res
     }
 
