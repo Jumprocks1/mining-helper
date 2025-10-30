@@ -44,7 +44,7 @@ export function createElement(element: string | FC,
     } else {
         if (element === createFragment) {
             el = createFragment();
-        } else if ("constructor" in element.prototype) {
+        } else if (element.prototype && "constructor" in element.prototype) {
             // @ts-expect-error
             el = new element(properties ?? {}).Node;
         } else {
