@@ -14,8 +14,24 @@ export default class LoadingButton extends Component {
 
     get Loading() { return this._loading }
 
+    waitFor(promise: Promise<any> | void) {
+        if (promise) {
+            this.Loading = true;
+            this.Node.classList.add("loading")
+            promise.then(() => {
+                this.Loading = false;
+                this.Node.classList.remove("loading")
+            }).catch(error => {
+                // TODO should put a little notice on the button
+                console.error({ message: "error in promise", error })
+            })
+        }
+    }
+
     constructor(props: {
-        onClick: () => Promise<void> | void
+        onClick: () => Promise<void> | void,
+        // Will show as loading initially until loading promise finishes
+        loading?: Promise<any>
     }) {
         super()
 
@@ -23,15 +39,8 @@ export default class LoadingButton extends Component {
 
         this.Node.addEventListener("click", () => {
             if (this.Loading) return
-            const res = props.onClick()
-            if (res) {
-                this.Loading = true;
-                this.Node.classList.add("loading")
-                res.then(() => {
-                    this.Loading = false;
-                    this.Node.classList.remove("loading")
-                })
-            }
+            this.waitFor(props.onClick())
         })
+        this.waitFor(props.loading)
     }
 }

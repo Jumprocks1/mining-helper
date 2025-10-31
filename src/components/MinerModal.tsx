@@ -58,8 +58,10 @@ export default (props: Props) => {
         // TODO allow configure
         const endOffset = 0
 
+        let mpvPromise: Promise<string | Uint8Array<ArrayBuffer>> | undefined = undefined
+
         if (mpv) {
-            const mpvPromise = mpv.RequestIfOpen(`mpv-audio:${entry.startTime}-${entry.endTime + endOffset}`)
+            mpvPromise = mpv.RequestIfOpen(`mpv-audio:${entry.startTime}-${entry.endTime + endOffset}`)
             add("Sentence Audio", Loader({
                 // sadly this makes the layout shift, not sure of a good way around it
                 load: mpvPromise.then(sentenceAudio => {
@@ -75,7 +77,7 @@ export default (props: Props) => {
         }
 
         inner.append(<div className="footer">
-            <LoadingButton onClick={save}>Save</LoadingButton>
+            <LoadingButton onClick={save} loading={mpvPromise}>Save</LoadingButton>
         </div>)
         return labeled
     }
