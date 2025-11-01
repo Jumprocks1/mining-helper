@@ -1,5 +1,14 @@
-export default ({ load }: { load: Promise<Node | string> }) => {
+export type DOMable = Node | string | Node[] | string[]
+export type Loadable = Promise<DOMable> | (() => Promise<DOMable>)
+
+export default ({ load }: { load: Loadable }) => {
     const node = <div className="loader" />
-    load.then(e => node.replaceWith(e))
+    if (typeof load === "function") load = load()
+    load.then(e => {
+        if (Array.isArray(e))
+            node.replaceWith(...e)
+        else
+            node.replaceWith(e)
+    })
     return node
 }

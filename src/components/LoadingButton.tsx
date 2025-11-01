@@ -23,6 +23,7 @@ export default class LoadingButton extends Component {
                 this.Node.classList.remove("loading")
             }).catch(error => {
                 // TODO should put a little notice on the button
+                // Will need some sort of `allowRetry` property since an initial load failure can't retry
                 console.error({ message: "error in promise", error })
             })
         }

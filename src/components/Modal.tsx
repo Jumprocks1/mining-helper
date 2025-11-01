@@ -1,11 +1,12 @@
 import IconButton from "./basic/IconButton";
 import { Component } from "./Component";
+import Loader, { DOMable } from "./Loader";
 
 interface Props {
     header: any
     footer?: any
     onClose: () => void
-    body: HTMLElement | string | ((body: HTMLElement) => Promise<(string | Node)[]>)
+    body: DOMable | Promise<DOMable> | ((body: HTMLElement) => Promise<DOMable>)
 }
 
 const OpenModals: Modal[] = []
@@ -39,15 +40,18 @@ export class Modal extends Component {
 
         const body = <div className="body"></div>
 
-        let innerBody: Node | string
-        if (props.body instanceof Element || typeof props.body === "string") {
+        let innerBody: DOMable
+        if (typeof props.body === "string" || (typeof props.body !== "function" && !("then" in props.body))) {
             innerBody = props.body
         } else {
-            const loader = <div className="loader" />
-            innerBody = loader
-            props.body(body).then(e => loader.replaceWith(...e))
+            if (typeof props.body === "function")
+                props.body = props.body(body)
+            innerBody = <Loader load={props.body} />
         }
-        body.append(innerBody)
+        if (Array.isArray(innerBody))
+            body.append(...innerBody)
+        else
+            body.append(innerBody)
 
         const inner = <div className="inner-modal">
             <div className="header">
