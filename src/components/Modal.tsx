@@ -6,6 +6,7 @@ interface Props {
     header: any
     footer?: any
     onClose: () => void
+    id?: string
     body: DOMable | Promise<DOMable> | ((body: HTMLElement) => Promise<DOMable>)
 }
 
@@ -64,6 +65,7 @@ export class Modal extends Component {
         const res = <div className="modal">
             {inner}
         </div>
+        if (props.id) res.id = props.id
         res.onpointerdown = ev => {
             if (ev.target === res) {
                 this.Close()
@@ -89,6 +91,7 @@ export class Modal extends Component {
 
     Open() {
         if (this.IsOpen) return
+        if (this.Node.id) OpenModals.find(e => e.Node.id === this.Node.id)?.Close()
         hookListener()
         this.IsOpen = true
         OpenModals.push(this)
