@@ -134,6 +134,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.addEventListener("keypress", ev => {
         if (handleKeypress(ev)) return
+        const targetElement = ev.target as HTMLElement | null
+        if (targetElement && targetElement.nodeName === "INPUT") return
         if (ev.key === "h") {
             loadedSubtitles.main?.HighlightAnkiWords()
         } else if (ev.key === "v") {
@@ -162,6 +164,8 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 
     document.addEventListener("keydown", ev => {
+        const targetElement = ev.target as HTMLElement | null
+        if (targetElement && targetElement.nodeName === "INPUT") return
         const subs = loadedSubtitles.main
         if (subs) {
             if (ev.key === "ArrowUp") {
