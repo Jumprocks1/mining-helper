@@ -32,6 +32,9 @@ export default (props: Props) => {
             card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, word)
             card.jpSentenceKanji = card.jpSentenceKanji.replace(word, "<b>" + word + "</b>")
 
+            const sentenceMeaning = sentenceMeaningInput.value
+            if (sentenceMeaning) card.enSentence = sentenceMeaning
+
             await saveToAnkiAndRemove(card)
             modal.Close()
         }
@@ -51,6 +54,11 @@ export default (props: Props) => {
         add("Word Audio", card.audioBytes ? AudioButton({ audio: card.audioBytes, name: kanji }) : "N/A")
         add("Meaning", card.meaning ?? <a target="_blank" rel="noopener noreferrer" href={jpdbEntryUrl(kanji)}>N/A</a>)
         add("Sentence", sentence)
+        const sentenceMeaningInput = <input /> as HTMLInputElement
+        labeled.push(<div className="field">
+            <label>Sentence Meaning</label>
+            {sentenceMeaningInput}
+        </div>)
         const duration = entry.endTime - entry.startTime
         let timestamp = formatTimestamp(entry.startTime, 1)
         add("Time", timestamp + " + " + (duration / 1000).toFixed(1) + "s")
