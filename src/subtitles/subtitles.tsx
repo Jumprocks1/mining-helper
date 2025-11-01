@@ -7,6 +7,7 @@ import { handleKeypress } from "../utils/GlobalHotkeys"
 import MinerModal from "../components/MinerModal"
 import { Modal } from "../components/Modal"
 import IconButton from "../components/basic/IconButton"
+import SettingsModal, { getSetting, onSettingChange, setSetting } from "../views/SettingsModal"
 
 let currentTime = 0
 
@@ -27,25 +28,32 @@ const loadedSubtitles: {
     secondary: SubtitleViewer[]
 } = { secondary: [] }
 
-function setCurrentOffset(offset: number) {
+onSettingChange("offset", offset => {
     const subs = loadedSubtitles.main?.subtitles
     if (subs) {
-        const previousOffset = subs.offset ?? 0
-        subs.offset = offset
-        console.log(`offset set to ${offset}`)
-        const diff = offset - previousOffset
-        for (const entry of subs.entries) {
-            // TODO this is pretty bad, but should pretty much be perfect anyways
-            entry.startTime += diff
-            entry.endTime += diff
+        if (subs.offset ?? 0 !== offset) {
+            subs.offset = offset
+            loadSubtitles(subs, true)
         }
-        loadSubtitles(subs, true)
     }
-}
+})
 
 function loadSubtitles(subtitles: Subtitles, main: boolean) {
+
+    const offset = subtitles.offset ?? 0
+    setSetting("offset", offset)
+    subtitles.processedEntries = subtitles.originalEntries.map(e => ({
+        ...e,
+        startTime: e.startTime + offset,
+        endTime: e.endTime + offset
+    }))
+
     const container = document.getElementById("subtitle-container")
     if (!container) return
+
+    if (subtitles.hash) {
+        chrome.storage.local.set({ recentOffsets: { [subtitles.hash]: offset } })
+    }
 
 
     if (main) loadedSubtitles.main?.Node.remove()
@@ -80,7 +88,7 @@ async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string
         updateTime(parseFloat(commandData as string))
     } else if (commandName === "raw-sub-file") {
         const decoded = new TextDecoder().decode(commandData as Uint8Array)
-        loadSubtitles(parseSrt(decoded), true)
+        loadSubtitles(await parseSrt(decoded), true)
     } else if (commandName === "response") {
         await webSocket.HandleResponse(commandData)
     }
@@ -91,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
         MhHeader(),
         <div id="outer-body-container">
             <div id="status-info">
-                <IconButton icon="settings" />
+                <IconButton icon="settings" onClick={() => SettingsModal()} />
                 <span id="current-time">00:00</span>
                 <span id="connection-status-dot"></span>
             </div>
@@ -157,7 +165,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const subs = loadedSubtitles.main
         if (subs) {
             if (ev.key === "ArrowUp") {
-                const entries = subs.subtitles.entries
+                const entries = subs.subtitles.processedEntries
                 for (let i = 1; i < entries.length; i++) {
                     if (entries[i].endTime > currentTime) {
                         webSocket.SendIfOpen(`ipc:seek ${entries[i - 1].startTime / 1000} absolute`)
@@ -166,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             } else if (ev.key === "ArrowDown" || ev.key === "ArrowRight") {
-                const entries = subs.subtitles.entries
+                const entries = subs.subtitles.processedEntries
                 for (let i = 0; i < entries.length; i++) {
                     if (entries[i].startTime > currentTime) {
                         webSocket.SendIfOpen(`ipc:seek ${entries[i].startTime / 1000} absolute`)
@@ -175,7 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             } else if (ev.key === "ArrowLeft") {
-                const entries = subs.subtitles.entries
+                const entries = subs.subtitles.processedEntries
                 for (let i = 0; i < entries.length - 1; i++) {
                     if (entries[i].startTime < currentTime && entries[i + 1].startTime > currentTime) {
                         webSocket.SendIfOpen(`ipc:seek ${entries[i].startTime / 1000} absolute`)
@@ -196,7 +204,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const time = entry.startTime
                 if (ev.ctrlKey) {
                     const subs = loadedSubtitles.main?.subtitles
-                    setCurrentOffset((subs?.offset ?? 0) + currentTime - entry.startTime)
+                    setSetting("offset", (subs?.offset ?? 0) + currentTime - entry.startTime)
                 } else {
                     if (webSocket.Open) webSocket.SendIfOpen(`ipc:seek ${time / 1000} absolute`)
                     else updateTime(time)
@@ -223,12 +231,10 @@ document.addEventListener("DOMContentLoaded", () => {
             const file = files[i]
             if (file.name.endsWith(".srt")) {
                 const reader = new FileReader()
-                reader.onload = e => {
+                reader.onload = async e => {
                     const target = e.target
                     if (target && typeof target.result === "string") {
-                        const subs = parseSrt(target.result)
-                        console.log(subs)
-                        loadSubtitles(subs, true)
+                        loadSubtitles(await parseSrt(target.result), true)
                     }
                 }
                 reader.readAsText(file)

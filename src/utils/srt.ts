@@ -9,10 +9,22 @@ export interface SubtitleEntry {
 
 export interface Subtitles {
     offset?: number
-    entries: SubtitleEntry[]
+    originalEntries: SubtitleEntry[]
+    processedEntries: SubtitleEntry[]
     source: "srt"
     language?: "eng" | "jp"
     name?: string
+    hash?: number
+}
+
+// https://stackoverflow.com/a/7616484/11435204
+function hash(s: string) {
+    let hash = 0;
+    for (const char of s) {
+        hash = (hash << 5) - hash + char.charCodeAt(0);
+        hash |= 0; // Constrain to 32bit integer
+    }
+    return hash;
 }
 
 export function formatTimestamp(timestamp: number, showMs: false | 1 | 2 | 3 = false) {
@@ -42,9 +54,13 @@ function parseTimestamp(timestamp: string) {
     return ((parseInt(hours) * 60 + parseInt(minutes)) * 60 + parseInt(seconds)) * 1000 + milliseconds
 }
 
-export function parseSrt(srt: string): Subtitles {
+export async function parseSrt(srt: string): Promise<Subtitles> {
     const entries: SubtitleEntry[] = []
-    const o: Subtitles = { source: "srt", entries }
+    const o: Subtitles = { source: "srt", originalEntries: entries, processedEntries: [], hash: hash(srt) }
+
+    // TODO this would be nicer in session storage, but that is currently limited to card keys
+    const offsets = (await chrome.storage.local.get({ recentOffsets: {} })).recentOffsets
+    if (o.hash && offsets[o.hash]) o.offset = offsets[o.hash]
 
     let pendingEntry: Partial<SubtitleEntry> | undefined = undefined
 
