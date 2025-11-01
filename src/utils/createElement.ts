@@ -1,3 +1,7 @@
+import HotReload from "./HotReload";
+
+HotReload() // Idk where else to put this oh well
+
 type FC = (props: Record<string, any>) => JSX.Element
 
 function appendChildren(el: ParentNode, children: any[]) {

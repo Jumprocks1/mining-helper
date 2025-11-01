@@ -21,11 +21,11 @@ public static class Program
 
         using var server = new WebSocketServer();
 
-        if (!File.Exists(path)) throw new DirectoryNotFoundException($"Folder {path} not found. CWD: {Environment.CurrentDirectory}");
+        if (!Directory.Exists(path)) throw new DirectoryNotFoundException($"Folder {path} not found. CWD: {Environment.CurrentDirectory}");
 
         // I'm sure there's a better/thread safer way to do all this, but I'm pretty sure this will be fine
         var queuedChanges = new Dictionary<string, int>();
-        using var watcher = new FileSystemWatcher(path);
+        using var watcher = new FileSystemWatcher(path) { EnableRaisingEvents = true };
         watcher.Changed += (_, ev) =>
         {
             var path = ev.FullPath;
@@ -42,7 +42,11 @@ public static class Program
                         if (queuedChanges.TryGetValue(path, out var i) && i == myI)
                             send = true;
                     }
-                    if (send) await server.SendMessage($"changed:{path}");
+                    if (send)
+                    {
+                        // Console.WriteLine($"changed:{path}");
+                        await server.SendMessage($"changed:{path}");
+                    }
                 });
             }
         };
