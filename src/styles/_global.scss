@@ -52,3 +52,13 @@ html {
 a {
     color: inherit;
 }
+
+input {
+    font-size: inherit;
+    color: inherit;
+    outline: none;
+    font-family: inherit;
+    background: none;
+    border: variables.$border0;
+    padding: variables.$s1 * 0.5;
+}
