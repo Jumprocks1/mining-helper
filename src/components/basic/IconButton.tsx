@@ -6,7 +6,7 @@ interface Props {
     icon: (typeof MaterialIcons)[number]
 
     // TODO we could make these like a "standard props" that we can apply generally to any component/node
-    onClick?: () => void
+    onClick?: (ev: PointerEvent) => void
     className?: string // extras
 }
 

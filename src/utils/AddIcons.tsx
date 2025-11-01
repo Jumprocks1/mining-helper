@@ -8,7 +8,9 @@ export const MaterialIcons = [
     "close",
     "play_arrow",
     "search",
-    "settings"
+    "settings",
+    "stat_1",
+    "stat_minus_1"
 ] as const satisfies string[]
 
 export default () => {

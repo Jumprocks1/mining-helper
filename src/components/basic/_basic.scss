@@ -1,0 +1,18 @@
+@use "../../styles/variables" as *;
+
+.number-field {
+    display: flex;
+    .change-buttons {
+        display: flex;
+        flex-direction: column;
+        >* {
+            font-size: 0.75em;
+            padding: 0.05em;
+        }
+    }
+    align-items: center;
+
+    &:hover {
+        background: #FFFFFF10;
+    }
+}
