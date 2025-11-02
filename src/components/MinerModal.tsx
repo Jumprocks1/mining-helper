@@ -4,6 +4,7 @@ import { getOrCreatePendingCard, saveCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, SubtitleEntry } from "../utils/srt"
 import { jpdbEntryUrl, lookupFuri } from "../utils/util"
+import { applyRegexTo } from "../views/RegexReplacements"
 import AudioButton from "./AudioButton"
 import IconButton from "./basic/IconButton"
 import NumberField from "./basic/NumberField"
@@ -26,8 +27,10 @@ export default (props: Props) => {
         const card = await getOrCreatePendingCard(word, true)
         const kanji = card.kanji // this can be different if word is a verb
 
+        const entrySentenceModified = (await applyRegexTo(entry.text)).replace("　", " ")
+
         async function save() {
-            card.jpSentenceKanji = entry.text.replace("\n", " ").replace("　", " ");
+            card.jpSentenceKanji = entrySentenceModified.replace("\n", " ");
             // TODO pull from eng subs. Choose subs that have >50% overlap with the JP sub (based on their own durations)
             // TODO allow setting english manually for now, don't worry about pulling from subs
             card.enSentence = undefined
@@ -51,7 +54,7 @@ export default (props: Props) => {
         }
 
         const sentence = <div />
-        sentence.innerHTML = entry.text.replace(word, "<b>" + word + "</b>");
+        sentence.innerHTML = entrySentenceModified.replace(word, "<b>" + word + "</b>");
         add("Kanji", kanji)
         add("Reading", card.furigana ?? "N/A")
         add("Word Audio", card.audioBytes ? AudioButton({ audio: card.audioBytes, name: kanji }) : "N/A")

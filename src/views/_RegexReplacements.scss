@@ -1,0 +1,21 @@
+@use "../styles/variables" as *;
+
+.regex-replacements-modal {
+    display: flex;
+    flex-direction: column;
+    gap: $s1;
+    .row {
+        display: flex;
+        align-items: center;
+        gap: $s1;
+    }
+    .row-container {
+        display: flex;
+        flex-direction: column;
+        gap: $s1;
+    }
+
+    input {
+        border-radius: $s1;
+    }
+}
