@@ -5,6 +5,9 @@
 @use "styles/variables";
 @use "styles/modal";
 @use "styles/global";
+@use "components/basic/basic";
+@use "components/components";
+@use "views/RegexReplacements";
 @use "sass:color";
 
 body {
@@ -168,7 +171,7 @@ div#result {
 .icon-button {
     cursor: pointer;
     user-select: none;
-    padding: 5px;
+    padding: variables.$s1;
     border-radius: 30%;
     &:hover {
         background: rgba(255, 255, 255, 10%);

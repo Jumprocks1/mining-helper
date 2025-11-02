@@ -4,6 +4,8 @@ import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, SubtitleEntry } from "../utils/srt"
 import { jpdbEntryUrl, lookupFuri } from "../utils/util"
 import AudioButton from "./AudioButton"
+import IconButton from "./basic/IconButton"
+import NumberField from "./basic/NumberField"
 import Loader from "./Loader"
 import LoadingButton from "./LoadingButton"
 import { Modal } from "./Modal"
@@ -43,7 +45,7 @@ export default (props: Props) => {
         function add(label: string, el: HTMLElement | string) {
             labeled.push(<div className="field">
                 <label>{label}</label>
-                <div className="fieldValue">{el}</div>
+                <div className="field-value">{el}</div>
             </div>)
         }
 
@@ -59,12 +61,26 @@ export default (props: Props) => {
             <label>Sentence Meaning</label>
             {sentenceMeaningInput}
         </div>)
-        const duration = entry.endTime - entry.startTime
-        let timestamp = formatTimestamp(entry.startTime, 1)
-        add("Time", timestamp + " + " + (duration / 1000).toFixed(1) + "s")
 
-        // TODO allow configure
-        const endOffset = 0
+
+        let startOffset = 0
+        let endOffset = 0
+
+        const duration = entry.endTime - entry.startTime
+
+        let timestamp = formatTimestamp(entry.startTime, 1)
+        labeled.push(<div className="field time-field">
+            <label>Time</label>
+            <div className="field-value">
+                {timestamp + " + " + (duration / 1000).toFixed(1) + "s"}
+                <NumberField onChange={v => startOffset = v} defaultValue={startOffset} label="Start" showPlus />
+                <NumberField onChange={v => endOffset = v} defaultValue={endOffset} label="End" showPlus />
+                <IconButton icon="refresh" onClick={() => {
+                    // TODO refresh the mpv promise
+                }} />
+            </div>
+        </div>)
+
 
         let mpvPromise: Promise<string | Uint8Array<ArrayBuffer>> | undefined = undefined
 
@@ -95,5 +111,6 @@ export default (props: Props) => {
         header: <div>Mining <b>{word}</b></div>,
         onClose: props.onClose
     });
+    modal.Node.classList.add("miner-modal")
     return modal
 }

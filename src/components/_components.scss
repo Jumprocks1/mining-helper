@@ -1,0 +1,9 @@
+@use "../styles/variables";
+
+.miner-modal {
+    .time-field .field-value {
+        display: flex;
+        align-items: center;
+        gap: variables.$s1;
+    }
+}
