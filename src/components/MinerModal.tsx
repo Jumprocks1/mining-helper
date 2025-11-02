@@ -1,4 +1,5 @@
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
+import { playAudio } from "../utils/Audio"
 import { getOrCreatePendingCard, saveCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, SubtitleEntry } from "../utils/srt"
@@ -65,8 +66,11 @@ export default (props: Props) => {
 
         let startOffset = 0
         let endOffset = 0
+        let loadedOffsets: [number, number] | undefined = undefined
 
         const duration = entry.endTime - entry.startTime
+
+        const playButtonPlaceholder = <div></div>
 
         let timestamp = formatTimestamp(entry.startTime, 1)
         labeled.push(<div className="field time-field">
@@ -75,34 +79,40 @@ export default (props: Props) => {
                 {timestamp + " + " + (duration / 1000).toFixed(1) + "s"}
                 <NumberField onChange={v => startOffset = v} defaultValue={startOffset} label="Start" showPlus />
                 <NumberField onChange={v => endOffset = v} defaultValue={endOffset} label="End" showPlus />
-                <IconButton icon="refresh" onClick={loadMpvAudio} />
+                {playButtonPlaceholder}
             </div>
         </div>)
 
         let mpvPromise: Promise<string | Uint8Array<ArrayBuffer>> | undefined = undefined
 
-        let mpvPlaceholder = <div></div>
-
         async function loadMpvAudio() {
             if (!mpv) return
-            mpvPromise = mpv.RequestIfOpen(`mpv-audio:${entry.startTime + startOffset}-${entry.endTime + endOffset}`)
-            mpvPlaceholder.replaceChildren(Loader({
-                load: mpvPromise.then(sentenceAudio => {
-                    if (typeof sentenceAudio !== "string") {
-                        const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)
-                        card.sentenceAudioBytes = buffer
-                        card.sentenceAudioLocalFile = `${card.kanji}_ex_mpv.ogg`
-                        card.sentenceIndex = "mpv"
-                        return AudioButton({ audio: buffer, name: kanji + "_ex" })
-                    } else return "Failed to load"
-                })
-            }))
+            const so = startOffset
+            const eo = endOffset
+            mpvPromise = mpv.RequestIfOpen(`mpv-audio:${entry.startTime + so}-${entry.endTime + eo}`)
+            const loadedButton = mpvPromise.then(sentenceAudio => {
+                if (typeof sentenceAudio !== "string") {
+                    const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)
+                    card.sentenceAudioBytes = buffer
+                    card.sentenceAudioLocalFile = `${card.kanji}_ex_mpv.ogg`
+                    card.sentenceIndex = "mpv"
+                    loadedOffsets = [so, eo]
+                    return <IconButton className="play-icon" icon="play_arrow" onClick={async () => {
+                        if (!loadedOffsets) return
+                        if (startOffset !== loadedOffsets[0] || endOffset !== loadedOffsets[1]) {
+                            const el = await loadMpvAudio()
+                            if (el instanceof HTMLElement) el.click()
+                        }
+                        else
+                            playAudio(kanji + "_ex", buffer)
+                    }
+                    } />
+                } else return "Failed to load"
+            })
+            playButtonPlaceholder.replaceChildren(Loader({ load: loadedButton }))
+            return loadedButton
         }
-
-        if (mpv) {
-            add("Sentence Audio", mpvPlaceholder)
-            loadMpvAudio()
-        }
+        loadMpvAudio()
 
         inner.append(<div className="footer">
             <LoadingButton onClick={save} loading={mpvPromise}>Save</LoadingButton>
