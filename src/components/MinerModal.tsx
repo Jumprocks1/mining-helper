@@ -75,19 +75,18 @@ export default (props: Props) => {
                 {timestamp + " + " + (duration / 1000).toFixed(1) + "s"}
                 <NumberField onChange={v => startOffset = v} defaultValue={startOffset} label="Start" showPlus />
                 <NumberField onChange={v => endOffset = v} defaultValue={endOffset} label="End" showPlus />
-                <IconButton icon="refresh" onClick={() => {
-                    // TODO refresh the mpv promise
-                }} />
+                <IconButton icon="refresh" onClick={loadMpvAudio} />
             </div>
         </div>)
 
-
         let mpvPromise: Promise<string | Uint8Array<ArrayBuffer>> | undefined = undefined
 
-        if (mpv) {
-            mpvPromise = mpv.RequestIfOpen(`mpv-audio:${entry.startTime}-${entry.endTime + endOffset}`)
-            add("Sentence Audio", Loader({
-                // sadly this makes the layout shift, not sure of a good way around it
+        let mpvPlaceholder = <div></div>
+
+        async function loadMpvAudio() {
+            if (!mpv) return
+            mpvPromise = mpv.RequestIfOpen(`mpv-audio:${entry.startTime + startOffset}-${entry.endTime + endOffset}`)
+            mpvPlaceholder.replaceChildren(Loader({
                 load: mpvPromise.then(sentenceAudio => {
                     if (typeof sentenceAudio !== "string") {
                         const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)
@@ -98,6 +97,11 @@ export default (props: Props) => {
                     } else return "Failed to load"
                 })
             }))
+        }
+
+        if (mpv) {
+            add("Sentence Audio", mpvPlaceholder)
+            loadMpvAudio()
         }
 
         inner.append(<div className="footer">
