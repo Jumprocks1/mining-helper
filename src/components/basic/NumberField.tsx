@@ -8,10 +8,16 @@ interface Props {
 }
 
 export default (props: Props) => {
-    let value = props.defaultValue ?? 0
+    const defaultValue = props.defaultValue ?? 0
+    let pendingValue = "" // when typing
+    let value = defaultValue
+    function updateInnerText() {
+        pendingValue = ""
+        display.innerText = props.showPlus && value >= 0 ? "+" + value : value.toString()
+    }
     function setValue(v: number) {
         value = v
-        display.innerText = props.showPlus && value >= 0 ? "+" + value : value.toString()
+        updateInnerText()
         props.onChange(v)
     }
     function handleEv(ev: MouseEvent, negative: boolean) {
@@ -21,7 +27,8 @@ export default (props: Props) => {
         setValue(value + (negative ? -1 : 1) * mult)
         ev.preventDefault()
     }
-    const display = <div className="number-display">{props.showPlus && value >= 0 ? "+" + value : value.toString()}</div>
+    const display = <div className="number-display"></div>
+    updateInnerText()
     const res = <div className="number-field">
         <div className="change-buttons">
             <IconButton icon="stat_1" onClick={ev => { handleEv(ev, false) }} />
@@ -37,6 +44,31 @@ export default (props: Props) => {
         if (dir !== 0) {
             handleEv(ev, dir < 0)
         }
+    })
+
+    function commitPending() {
+        const v = parseInt(pendingValue)
+        if (Number.isFinite(v)) setValue(v)
+        else updateInnerText()
+    }
+
+    function onKeyDown(e: KeyboardEvent) {
+        if (e.key === "r") {
+            setValue(defaultValue)
+        } else if (e.key === "-" || (e.key >= "0" && e.key <= "9")) {
+            pendingValue += e.key
+            display.innerText = pendingValue
+        } else if (e.key === "Backspace") {
+            if (pendingValue.length > 0) pendingValue = pendingValue.substring(0, pendingValue.length - 1)
+            display.innerText = pendingValue
+        } else if (e.key === "Enter") {
+            commitPending()
+        }
+    }
+    res.addEventListener("mouseenter", () => document.addEventListener("keydown", onKeyDown))
+    res.addEventListener("mouseleave", () => {
+        document.removeEventListener("keydown", onKeyDown)
+        commitPending()
     })
     return res
 }

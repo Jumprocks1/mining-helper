@@ -41,7 +41,7 @@ export default () => {
         const defaultValue = getSetting(props.key)
         return <div className="setting-row field">
             <label htmlFor="offset">Offset</label>
-            <NumberField defaultValue={defaultValue} onChange={v => setSetting("offset", v)} />
+            <NumberField defaultValue={defaultValue} onChange={v => setSetting("offset", v)} showPlus />
         </div>
     }
 
