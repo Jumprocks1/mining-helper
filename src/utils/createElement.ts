@@ -2,23 +2,26 @@ import HotReload from "./HotReload";
 
 HotReload() // Idk where else to put this oh well
 
+type NormalChild = string | Node
+type SingleChild = NormalChild | { Node: NormalChild }
+type Children = SingleChild | Children[] | (() => Children)
+
 type FC = (props: Record<string, any>) => JSX.Element
 
-function appendChildren(el: ParentNode, children: any[]) {
-    for (let i = 0; i < children.length; i++) {
-        const child = children[i];
-        if (Array.isArray(child)) {
-            appendChildren(el, child)
-        } else if (typeof child === "object") {
-            if ("Node" in child)
-                el.append(child.Node)
-            else
-                el.append(child);
-        } else if (typeof child === "string") {
+export function appendChild(el: ParentNode, child: Children) {
+    if (Array.isArray(child)) {
+        for (let i = 0; i < child.length; i++) appendChild(el, child[i])
+    } else if (typeof child === "object") {
+        if ("Node" in child)
+            el.append(child.Node)
+        else
             el.append(child);
-        } else if (child !== undefined && child !== false) {
-            el.append(child.toString());
-        }
+    } else if (typeof child === "string") {
+        el.append(child);
+    } else if (typeof child === "function") {
+        appendChild(el, child())
+    } else {
+        throw new Error(`Unrecognized child: ${child}`)
     }
 }
 
@@ -55,7 +58,7 @@ export function createElement(element: string | FC,
             el = element(properties ?? {});
         }
     }
-    appendChildren(el, children)
+    appendChild(el, children)
     return el;
 }
 
