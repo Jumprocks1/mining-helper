@@ -6,4 +6,7 @@
         align-items: center;
         gap: variables.$s1;
     }
+    .editable-sentence {
+        padding: variables.$s1 * 0.5;
+    }
 }

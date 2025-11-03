@@ -54,7 +54,7 @@ export default (props: Props) => {
             </div>)
         }
 
-        const sentence = <div contentEditable="plaintext-only" />
+        const sentence = <div contentEditable="plaintext-only" className="editable-sentence" />
         sentence.innerHTML = entrySentenceModified.replace(word, "<b>" + word + "</b>");
         add("Kanji", kanji)
         add("Reading", card.furigana ?? "N/A")
