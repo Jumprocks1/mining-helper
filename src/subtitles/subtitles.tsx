@@ -4,7 +4,7 @@ import MhHeader from "../components/MhHeader"
 import { seedPage } from "../components/util"
 import SubtitleViewer from "./SubtitleViewer"
 import { handleKeypress } from "../utils/GlobalHotkeys"
-import MinerModal from "../components/MinerModal"
+import MiningModal from "../components/MiningModal"
 import { Modal } from "../components/Modal"
 import IconButton from "../components/basic/IconButton"
 import SettingsModal, { getSetting, onSettingChange, setSetting } from "../views/SettingsModal"
@@ -152,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const anchor = selected.anchorNode?.parentElement as HTMLElement
                     const entry = anchor?.closest<HTMLElement>(".subtitle-entry")?.subtitleEntry
                     if (entry) {
-                        miningModal = MinerModal({
+                        miningModal = MiningModal({
                             word: selected.toString(), entry, mpv: webSocket,
                             onClose: () => miningModal = undefined
                         })
