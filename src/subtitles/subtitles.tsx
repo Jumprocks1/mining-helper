@@ -3,7 +3,7 @@ import MpvWebSocket from "../utils/MpvWebSocket"
 import MhHeader from "../components/MhHeader"
 import { seedPage } from "../components/util"
 import SubtitleViewer from "./SubtitleViewer"
-import { handleKeypress } from "../utils/GlobalHotkeys"
+import { disallowGlobalInput, handleKeypress } from "../utils/GlobalHotkeys"
 import MiningModal from "../components/MiningModal"
 import { Modal } from "../components/Modal"
 import IconButton from "../components/basic/IconButton"
@@ -133,9 +133,8 @@ document.addEventListener("DOMContentLoaded", () => {
     let miningModal: Modal | undefined;
 
     document.addEventListener("keypress", ev => {
+        if (disallowGlobalInput(ev)) return
         if (handleKeypress(ev)) return
-        const targetElement = ev.target as HTMLElement | null
-        if (targetElement && targetElement.nodeName === "INPUT") return
         if (ev.key === "h") {
             loadedSubtitles.main?.HighlightAnkiWords()
         } else if (ev.key === "v") {
@@ -164,8 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
     })
 
     document.addEventListener("keydown", ev => {
-        const targetElement = ev.target as HTMLElement | null
-        if (targetElement && targetElement.nodeName === "INPUT") return
+        if (disallowGlobalInput(ev)) return
         const subs = loadedSubtitles.main
         if (subs) {
             if (ev.key === "ArrowUp") {

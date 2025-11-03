@@ -1,5 +1,5 @@
 import { getAnkiWords } from "./anki/CardList"
-import { handleKeypress, keyPressedWithText } from "./utils/GlobalHotkeys"
+import { disallowGlobalInput, handleKeypress, keyPressedWithText } from "./utils/GlobalHotkeys"
 import { CardData } from "./utils/util"
 import "./utils/createElement"
 import { mutatePendingCard } from "./utils/MiningUtil"
@@ -356,8 +356,7 @@ document.addEventListener("click", ev => {
 })
 
 document.addEventListener("keypress", ev => {
-    const targetElement = ev.target as HTMLElement | null
-    if (targetElement && targetElement.nodeName === "INPUT") return
+    if (disallowGlobalInput(ev)) return
     if (handleKeypress(ev)) return
 
     let target = latestWord

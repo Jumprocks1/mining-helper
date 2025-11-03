@@ -30,7 +30,8 @@ export default (props: Props) => {
         const entrySentenceModified = (await applyRegexTo(entry.text)).replace("　", " ")
 
         async function save() {
-            card.jpSentenceKanji = entrySentenceModified.replace("\n", " ");
+            // sentence.interText should be entrySentenceModified unless we modify the content editable
+            card.jpSentenceKanji = sentence.innerText.replace("\n", " ");
             // TODO pull from eng subs. Choose subs that have >50% overlap with the JP sub (based on their own durations)
             // TODO allow setting english manually for now, don't worry about pulling from subs
             card.enSentence = undefined
@@ -53,7 +54,7 @@ export default (props: Props) => {
             </div>)
         }
 
-        const sentence = <div />
+        const sentence = <div contentEditable="plaintext-only" />
         sentence.innerHTML = entrySentenceModified.replace(word, "<b>" + word + "</b>");
         add("Kanji", kanji)
         add("Reading", card.furigana ?? "N/A")
