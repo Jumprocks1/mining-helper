@@ -81,6 +81,8 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
             }
         }
     }
+    // push any remaining tokens, usually need this when there's loose punctuation or kana at the end
+    pushMain(jp.length - i)
     if (highlightOpen && i === highlightEnd) {
         o += "</b>"
         highlightOpen = false
