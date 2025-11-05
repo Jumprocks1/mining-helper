@@ -39,6 +39,7 @@ export function setSetting<K extends SettingsKeys>(key: K, v: AllSettings[K]) {
         if (temporarySettings[key as keyof TemporarySettings] as AllSettings[K] === v) return
         // @ts-expect-error
         temporarySettings[key] = v
+        triggerSettingChanged(key, v)
     }
     else throw new Error()
 }
