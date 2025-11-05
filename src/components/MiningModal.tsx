@@ -27,7 +27,7 @@ export default (props: Props) => {
         const card = await getOrCreatePendingCard(word, true)
         const kanji = card.kanji // this can be different if word is a verb
 
-        const entrySentenceModified = (await applyRegexTo(entry.text)).replace("　", " ")
+        const entrySentenceModified = (await applyRegexTo(entry.text, true)).replace("　", " ")
 
         async function save() {
             // sentence.interText should be entrySentenceModified unless we modify the content editable

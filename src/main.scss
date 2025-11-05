@@ -217,4 +217,8 @@ div#result {
 
 .material-symbols-outlined {
     user-select: none;
+
+    &.fill {
+        font-variation-settings: 'FILL' 1;
+    }
 }

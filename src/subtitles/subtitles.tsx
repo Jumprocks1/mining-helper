@@ -8,6 +8,7 @@ import MiningModal from "../components/MiningModal"
 import { Modal } from "../components/Modal"
 import IconButton from "../components/basic/IconButton"
 import SettingsModal, { getSetting, onSettingChange, setSetting } from "../views/SettingsModal"
+import { applyReplacementsTo, getReplacements } from "../views/RegexReplacements"
 
 let currentTime = 0
 
@@ -28,24 +29,26 @@ const loadedSubtitles: {
     secondary: SubtitleViewer[]
 } = { secondary: [] }
 
-onSettingChange("offset", offset => {
+onSettingChange("offset", async offset => {
     const subs = loadedSubtitles.main?.subtitles
     if (subs) {
         if (subs.offset ?? 0 !== offset) {
             subs.offset = offset
-            loadSubtitles(subs, true)
+            await loadSubtitles(subs, true)
         }
     }
 })
 
-function loadSubtitles(subtitles: Subtitles, main: boolean) {
+async function loadSubtitles(subtitles: Subtitles, main: boolean) {
 
     const offset = subtitles.offset ?? 0
     setSetting("offset", offset)
+    const replacements = await getReplacements()
     subtitles.processedEntries = subtitles.originalEntries.map(e => ({
         ...e,
         startTime: e.startTime + offset,
-        endTime: e.endTime + offset
+        endTime: e.endTime + offset,
+        text: applyReplacementsTo(replacements, e.text, false)
     }))
 
     const container = document.getElementById("subtitle-container")
@@ -88,7 +91,7 @@ async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string
         updateTime(parseFloat(commandData as string))
     } else if (commandName === "raw-sub-file") {
         const decoded = new TextDecoder().decode(commandData as Uint8Array)
-        loadSubtitles(await parseSrt(decoded), true)
+        await loadSubtitles(await parseSrt(decoded), true)
     } else if (commandName === "response") {
         await webSocket.HandleResponse(commandData)
     }
@@ -236,7 +239,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 reader.onload = async e => {
                     const target = e.target
                     if (target && typeof target.result === "string") {
-                        loadSubtitles(await parseSrt(target.result), true)
+                        await loadSubtitles(await parseSrt(target.result), true)
                     }
                 }
                 reader.readAsText(file)

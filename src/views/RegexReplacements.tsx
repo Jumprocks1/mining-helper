@@ -3,14 +3,18 @@ import Loader from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
 
-interface ReplacementEntry {
+export interface ReplacementEntry {
     match: string
     replace: string
+    early?: boolean
 }
 
-export async function applyRegexTo(s: string) {
-    const replacements = await getReplacements()
+export async function applyRegexTo(s: string, mining: boolean) {
+    return applyReplacementsTo(await getReplacements(), s, mining)
+}
+export function applyReplacementsTo(replacements: ReplacementEntry[], s: string, mining: boolean) {
     for (const replacement of replacements) {
+        if ((replacement.early ?? false) === mining) continue
         const regex = new RegExp(replacement.match, "g")
         s = s.replaceAll(regex, replacement.replace)
     }
@@ -25,9 +29,21 @@ export default () => {
     let rowBody = <div className="row-container"></div>
     let replacements: ReplacementEntry[] = []
     function renderEntry(entry: ReplacementEntry) {
+        function updateButton() {
+            if (entry.early) toggleButton.classList.add("fill")
+            else toggleButton.classList.remove("fill")
+            toggleButton.title = entry.early ? "Click to only apply when mining" : "Click to apply when loading subtitles"
+        }
+        const toggleButton = <IconButton icon="star" onClick={() => {
+            entry.early = !entry.early
+            updateButton()
+        }} />
+        updateButton()
+
         const node = <div className="row">
             <input className="regex-match" value={entry.match} />
             <input className="regex-replace" value={entry.replace} />
+            {toggleButton}
             <IconButton icon="close" onClick={() => {
                 node.remove()
                 replacements.splice(replacements.indexOf(entry), 1)
