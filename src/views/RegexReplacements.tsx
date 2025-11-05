@@ -2,6 +2,7 @@ import IconButton from "../components/basic/IconButton"
 import Loader from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
+import { triggerSettingChanged } from "./SettingsModal"
 
 export interface ReplacementEntry {
     match: string
@@ -73,6 +74,7 @@ export default () => {
                 }
             }
             await chrome.storage.local.set({ regexReplacements: replacements })
+            triggerSettingChanged("regexReplacements", replacements)
         }} loading={load}>Save</LoadingButton></div>
     </div>
 

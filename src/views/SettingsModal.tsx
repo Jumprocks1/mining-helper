@@ -1,10 +1,10 @@
 import NumberField from "../components/basic/NumberField"
 import Loader from "../components/Loader"
 import { OpenModal } from "../components/Modal"
-import RegexReplacements from "./RegexReplacements"
+import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 
 interface FieldProps<T> {
-    key: SettingsKeys
+    key: { [K in SettingsKeys]: AllSettings[K] extends T ? K : never }[SettingsKeys]
 }
 
 // resets on page load
@@ -12,24 +12,37 @@ interface TemporarySettings {
     offset: number
 }
 
+interface LocalSettings {
+    regexReplacements: ReplacementEntry[]
+}
+
 const temporarySettings: TemporarySettings = {
     offset: 0
 }
 
-type SettingsKeys = keyof TemporarySettings
+type AllSettings = LocalSettings & TemporarySettings
+type SettingsKeys = keyof TemporarySettings | keyof LocalSettings
 
 const listeners: { key: string, listener: (v: any) => void }[] = []
 
-export function onSettingChange<K extends SettingsKeys>(key: K, listener: (v: TemporarySettings[K]) => void) {
+export function onSettingChange<K extends SettingsKeys>(key: K, listener: (v: AllSettings[K]) => void) {
     listeners.push({ key, listener })
 }
 
-export function getSetting<K extends SettingsKeys>(key: K): TemporarySettings[K] {
-    return temporarySettings[key]
+export function getSetting<K extends SettingsKeys>(key: K): AllSettings[K] {
+    if (key in temporarySettings)
+        return temporarySettings[key as keyof TemporarySettings] as AllSettings[K]
+    throw new Error()
 }
-export function setSetting<K extends SettingsKeys>(key: K, v: TemporarySettings[K]) {
-    if (temporarySettings[key] === v) return
-    temporarySettings[key] = v
+export function setSetting<K extends SettingsKeys>(key: K, v: AllSettings[K]) {
+    if (key in temporarySettings) {
+        if (temporarySettings[key as keyof TemporarySettings] as AllSettings[K] === v) return
+        // @ts-expect-error
+        temporarySettings[key] = v
+    }
+    else throw new Error()
+}
+export function triggerSettingChanged<K extends SettingsKeys>(key: K, v: AllSettings[K]) {
     for (const listener of listeners) {
         if (listener.key === key)
             listener.listener(v)

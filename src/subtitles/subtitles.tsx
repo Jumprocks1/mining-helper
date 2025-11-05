@@ -38,6 +38,10 @@ onSettingChange("offset", async offset => {
         }
     }
 })
+onSettingChange("regexReplacements", async offset => {
+    const subs = loadedSubtitles.main?.subtitles
+    if (subs) await loadSubtitles(subs, true)
+})
 
 async function loadSubtitles(subtitles: Subtitles, main: boolean) {
 
