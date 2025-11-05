@@ -6,7 +6,11 @@
         align-items: center;
         gap: variables.$s1;
     }
-    .editable-sentence {
-        padding: variables.$s1 * 0.5;
+
+    .field {
+        div[contentEditable="plaintext-only"] {
+            padding-left: variables.$s1 * 0.5;
+            margin-left: variables.$s1 * -0.5;
+        }
     }
 }

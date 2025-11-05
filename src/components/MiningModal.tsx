@@ -31,10 +31,13 @@ export default (props: Props) => {
 
         async function save() {
             // sentence.interText should be entrySentenceModified unless we modify the content editable
-            card.jpSentenceKanji = sentence.innerText.replace("\n", " ");
+            card.jpSentenceKanji = sentenceCE.innerText.replace("\n", " ");
             // TODO pull from eng subs. Choose subs that have >50% overlap with the JP sub (based on their own durations)
             // TODO allow setting english manually for now, don't worry about pulling from subs
             card.enSentence = undefined
+
+            const meaning = meaningCE.innerText
+            if (meaning) card.meaning = meaning
 
             card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, word)
             card.jpSentenceKanji = card.jpSentenceKanji.replace(word, "<b>" + word + "</b>")
@@ -54,13 +57,20 @@ export default (props: Props) => {
             </div>)
         }
 
-        const sentence = <div contentEditable="plaintext-only" className="editable-sentence" />
-        sentence.innerHTML = entrySentenceModified.replace(word, "<b>" + word + "</b>");
+
+        const meaningCE = <div contentEditable="plaintext-only" />
+        const sentenceCE = <div contentEditable="plaintext-only" />
+        sentenceCE.innerHTML = entrySentenceModified.replace(word, "<b>" + word + "</b>");
         add("Kanji", kanji)
         add("Reading", card.furigana ?? "N/A")
         add("Word Audio", card.audioBytes ? AudioButton({ audio: card.audioBytes, name: kanji }) : "N/A")
-        add("Meaning", card.meaning ?? <a target="_blank" rel="noopener noreferrer" href={jpdbEntryUrl(kanji)}>N/A</a>)
-        add("Sentence", sentence)
+        if (card.meaning) {
+            meaningCE.innerText = card.meaning
+            add("Meaning", meaningCE)
+        } else {
+            add("Meaning", <a target="_blank" rel="noopener noreferrer" href={jpdbEntryUrl(kanji)}>N/A</a>)
+        }
+        add("Sentence", sentenceCE)
         const sentenceMeaningInput = <input /> as HTMLInputElement
         labeled.push(<div className="field">
             <label>Sentence Meaning</label>
