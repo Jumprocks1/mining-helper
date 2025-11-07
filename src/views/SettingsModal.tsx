@@ -1,5 +1,6 @@
 import NumberField from "../components/basic/NumberField"
 import Loader from "../components/Loader"
+import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 
@@ -50,6 +51,15 @@ export function triggerSettingChanged<K extends SettingsKeys>(key: K, v: AllSett
     }
 }
 
+async function ClearCache() {
+    const keys = await chrome.storage.local.getKeys()
+    for (const key of keys) {
+        if (key.startsWith("jpdb_cache_")) {
+            await chrome.storage.local.remove(key)
+        }
+    }
+}
+
 export default () => {
     async function numberField(props: FieldProps<number>) {
         const defaultValue = getSetting(props.key)
@@ -63,6 +73,7 @@ export default () => {
         return <div className="list">
             <button className="list-button" onclick={RegexReplacements}>Regex replacements</button>
             {await numberField({ key: "offset" })}
+            <LoadingButton className="list-button" onClick={ClearCache}>Clear Cache</LoadingButton>
         </div>
     }} />
 
