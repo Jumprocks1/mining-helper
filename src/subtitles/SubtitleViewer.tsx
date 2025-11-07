@@ -1,7 +1,7 @@
-import { UnicodeCharacterType, unicodeType } from "../anki/CardList"
+import { getAnkiWords, UnicodeCharacterType, unicodeType } from "../anki/CardList"
 import { Popover } from "../components/basic/Popover"
 import { JpdbParseResponse } from "../jpdb/JpdbParseText"
-import { getHoveredCharacterIndex } from "../utils/CharacterHighlighter"
+import { getCharacterIndex, getHoveredCharacterIndex, getTextNodeAtIndex } from "../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, Subtitles } from "../utils/srt"
 import { oldCreateElement } from "../utils/util"
 
@@ -10,6 +10,8 @@ declare global {
         subtitleEntry?: SubtitleEntry
     }
 }
+
+type JpdbVocabulary = JpdbParseResponse["vocabulary"][number]
 
 export default class SubtitleViewer {
     Node: HTMLElement
@@ -20,6 +22,7 @@ export default class SubtitleViewer {
 
     hoverRectangle: HTMLElement = <div className="hover-rectangle" />
     popover: Popover | undefined
+    knownWords: string[] | undefined
 
     // use to block scrolling when selecting
     MouseDown = false
@@ -46,9 +49,7 @@ export default class SubtitleViewer {
         let y: number | undefined = undefined
         document.addEventListener("keydown", ev => {
             if (this.subtitles.jpdbParse) {
-                if (this.popover) {
-                    if (this.popover.Node.contains(ev.target as HTMLElement)) return
-                }
+                if (this.popover?.Visible) return
                 if (x !== undefined && y !== undefined)
                     this.UpdateHoverInfo(x, y, ev.shiftKey)
             }
@@ -64,9 +65,11 @@ export default class SubtitleViewer {
                 this.UpdateHoverInfo(x, y, ev.shiftKey)
             }
         })
+
+        getAnkiWords().then(e => this.knownWords = e)
     }
 
-    UpdateHoverBox(rect: DOMRect | undefined) {
+    UpdateHoverBox(rect: DOMRect | undefined, vocab: JpdbVocabulary | undefined) {
         if (!rect) {
             this.hoverRectangle.classList.add("hide")
             return
@@ -77,16 +80,25 @@ export default class SubtitleViewer {
 
         const parentRect = parent.getBoundingClientRect()
 
+        let known = false
+        if (vocab && this.knownWords) {
+            known = this.knownWords.includes(vocab[0])
+        }
+        if (known)
+            this.hoverRectangle.classList.add("known")
+        else
+            this.hoverRectangle.classList.remove("known")
+
         this.hoverRectangle.style.width = rect.width + "px"
         this.hoverRectangle.style.height = rect.height + "px"
         this.hoverRectangle.style.top = rect.top - parentRect.top + "px"
         this.hoverRectangle.style.left = rect.left - parentRect.left + "px"
     }
 
-    LoadedVocab: JpdbParseResponse["vocabulary"][number] | undefined
+    LoadedVocab: JpdbVocabulary | undefined
 
-    SetHoverState(rect: DOMRect | undefined, vocab: JpdbParseResponse["vocabulary"][number] | undefined, shift: boolean) {
-        this.UpdateHoverBox(rect)
+    SetHoverState(rect: DOMRect | undefined, vocab: JpdbVocabulary | undefined, shift: boolean) {
+        this.UpdateHoverBox(rect, vocab)
         if (!shift && vocab && vocab !== this.LoadedVocab) vocab = undefined
         if (vocab && rect) {
             if (!this.popover) {
@@ -124,12 +136,13 @@ export default class SubtitleViewer {
             return
         }
         const htmlElement = res[0].parentElement!
-        const subtitles = htmlElement.closest(".subtitles")
+        const subtitles = htmlElement.closest<HTMLElement>(".subtitles")
         if (!subtitles) return
         const entry = subtitles.closest<HTMLElement>(".subtitle-entry")?.subtitleEntry
         if (!entry) return
         const processedEntry = this.subtitles.processedEntries[entry.index]
-        const offset = processedEntry.characterOffset + res[1]
+        const indexInParent = getCharacterIndex(subtitles, res[0], res[1])
+        const offset = processedEntry.characterOffset + indexInParent
         let token: JpdbParseResponse["tokens"][number] | undefined = undefined
         // this is probably really slow, could do binary search
         for (const e of jpdb.tokens) {
@@ -140,8 +153,10 @@ export default class SubtitleViewer {
         }
         if (token) {
             const range = document.createRange()
-            range.setStart(res[0], token[0] - processedEntry.characterOffset)
-            range.setEnd(res[0], token[0] - processedEntry.characterOffset + token[1])
+            const start = getTextNodeAtIndex(subtitles, token[0] - processedEntry.characterOffset)
+            range.setStart(start[0], start[1])
+            const end = getTextNodeAtIndex(subtitles, token[0] - processedEntry.characterOffset + token[1])
+            range.setEnd(end[0], end[1])
             const rect = range.getBoundingClientRect()
             this.SetHoverState(rect, jpdb.vocabulary[token[3]], shift)
         }

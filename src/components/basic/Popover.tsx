@@ -31,4 +31,8 @@ export class Popover extends Component {
     Hide() {
         this.Node.classList.add("hide")
     }
+
+    get Visible() {
+        return !this.Node.classList.contains("hide")
+    }
 }

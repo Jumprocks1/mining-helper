@@ -1,4 +1,5 @@
 @use "../styles/variables" as *;
+@use "sass:color";
 
 #subs-page {
     height: 100%;
@@ -61,7 +62,10 @@
             }
         }
         .hover-rectangle {
-            outline: 2px dashed $red;
+            border-bottom: 2px dashed color.change($red, $alpha: 0.7);
+            &.known {
+                border-bottom: 2px dashed color.change($green, $alpha: 0.7);
+            }
             position: absolute;
             pointer-events: none;
         }

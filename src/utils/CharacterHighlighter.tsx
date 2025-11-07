@@ -34,3 +34,26 @@ export function getHoveredCharacterIndex(x: number, y: number) {
     if (hitIndex === undefined) return
     return [node, hitIndex] as const
 }
+
+export function getCharacterIndex(parent: HTMLElement, node: Node, offset: number) {
+    const walker = document.createTreeWalker(parent, NodeFilter.SHOW_TEXT, null);
+    let current;
+    let index = 0;
+    while (current = walker.nextNode()) {
+        if (current === node) return index + offset
+        index += current.textContent!.length;
+    }
+    throw new Error("Node not found in parent")
+}
+
+export function getTextNodeAtIndex(parent: HTMLElement, offset: number) {
+    const walker = document.createTreeWalker(parent, NodeFilter.SHOW_TEXT, null);
+    let current;
+    let remaining = offset;
+    while (current = walker.nextNode()) {
+        const length = current.textContent!.length
+        if (remaining <= length) return [current, remaining] as const
+        remaining -= length
+    }
+    throw new Error("Node not found in parent")
+}
