@@ -24,3 +24,14 @@
         background: #FFFFFF10;
     }
 }
+
+.popover {
+    .header {
+        font-size: 1.2em;
+        display: flex;
+    }
+    font-size: 0.75em;
+    padding: 0.2em;
+    background-color: $background0;
+    border: $border0;
+}

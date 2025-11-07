@@ -1,5 +1,5 @@
 let _apiKey: string | undefined = undefined
-function getApiKey() {
+export function getJpdbApiKey() {
     if (_apiKey) return _apiKey;
     // TODO need better way of settings
     // for now, run chrome.storage.local.set({apiKey:"XXX"})
@@ -18,7 +18,7 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
     const res = await fetch("https://jpdb.io/api/v1/parse", {
         method: "POST",
         headers: {
-            Authorization: `Bearer ${await getApiKey()}`,
+            Authorization: `Bearer ${await getJpdbApiKey()}`,
             "Content-Type": "application/json"
         },
         body: JSON.stringify({

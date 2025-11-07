@@ -1,4 +1,4 @@
-import { parseSrt, Subtitles, formatTimestamp } from "../utils/srt"
+import { parseSrt, Subtitles, formatTimestamp, SubtitleEntryWithCharacterOffset } from "../utils/srt"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import MhHeader from "../components/MhHeader"
 import { seedPage } from "../components/util"
@@ -9,6 +9,7 @@ import { Modal } from "../components/Modal"
 import IconButton from "../components/basic/IconButton"
 import SettingsModal, { getSetting, onSettingChange, setSetting } from "../views/SettingsModal"
 import { applyReplacementsTo, getReplacements } from "../views/RegexReplacements"
+import { JpdbParseSubtitles } from "../jpdb/JpdbParseText"
 
 let currentTime = 0
 
@@ -48,12 +49,21 @@ async function loadSubtitles(subtitles: Subtitles, main: boolean) {
     const offset = subtitles.offset ?? 0
     setSetting("offset", offset)
     const replacements = await getReplacements()
-    subtitles.processedEntries = subtitles.originalEntries.map(e => ({
-        ...e,
-        startTime: e.startTime + offset,
-        endTime: e.endTime + offset,
-        text: applyReplacementsTo(replacements, e.text, false)
-    }))
+    const res: SubtitleEntryWithCharacterOffset[] = []
+
+    let characterOffset = 0
+    for (const entry of subtitles.originalEntries) {
+        const p = {
+            ...entry,
+            startTime: entry.startTime + offset,
+            endTime: entry.endTime + offset,
+            text: applyReplacementsTo(replacements, entry.text, false),
+            characterOffset
+        } satisfies SubtitleEntryWithCharacterOffset
+        res.push(p)
+        characterOffset += p.text.length + 1 // +1 for \n when joining lines for jpdb
+    }
+    subtitles.processedEntries = res
 
     const container = document.getElementById("subtitle-container")
     if (!container) return

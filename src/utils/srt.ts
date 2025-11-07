@@ -1,5 +1,8 @@
+import { JpdbParseResponse } from "../jpdb/JpdbParseText"
+
 export interface SubtitleEntry {
     id: number
+    index: number
     startTime: number // milliseconds
     endTime: number
     text: string
@@ -7,18 +10,25 @@ export interface SubtitleEntry {
     node?: HTMLElement
 }
 
+export interface SubtitleEntryWithCharacterOffset extends SubtitleEntry {
+    // 1 per previous character + 1 for \n between entries
+    // maps to jpdb indexes
+    characterOffset: number
+}
+
 export interface Subtitles {
     offset?: number
     originalEntries: SubtitleEntry[]
-    processedEntries: SubtitleEntry[]
+    processedEntries: SubtitleEntryWithCharacterOffset[]
     source: "srt"
     language?: "eng" | "jp"
     name?: string
     hash?: number
+    jpdbParse?: JpdbParseResponse
 }
 
 // https://stackoverflow.com/a/7616484/11435204
-function hash(s: string) {
+export function hash(s: string) {
     let hash = 0;
     for (const char of s) {
         hash = (hash << 5) - hash + char.charCodeAt(0);
@@ -110,6 +120,9 @@ export async function parseSrt(srt: string): Promise<Subtitles> {
                 o.originalEntries.splice(i, 1)
             }
         }
+    }
+    for (let i = 0; i < entries.length; i++) {
+        entries[i].index = i
     }
 
     return o
