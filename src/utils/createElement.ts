@@ -51,9 +51,7 @@ export function createElement(element: string | FC,
             }
         }
     } else {
-        if (element === createFragment) {
-            el = createFragment();
-        } else if (element.prototype && "constructor" in element.prototype) {
+        if (element.prototype && "constructor" in element.prototype) {
             // @ts-expect-error
             el = new element(properties ?? {}).Node;
         } else {
@@ -64,8 +62,9 @@ export function createElement(element: string | FC,
     return el;
 }
 
-export function createFragment(...children: any[]): HTMLElement {
-    throw new Error("Not supported")
+// can't be a regular function since those have prototypes + constructors
+export const createFragment = () => {
+    return document.createDocumentFragment()
 }
 
 window.createElement = createElement;
