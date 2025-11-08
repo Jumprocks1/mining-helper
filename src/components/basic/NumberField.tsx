@@ -1,4 +1,5 @@
 import IconButton from "./IconButton"
+import UpDownButtons from "./UpDownButtons"
 
 interface Props {
     defaultValue?: number
@@ -30,10 +31,7 @@ export default (props: Props) => {
     const display = <div className="number-display"></div>
     updateInnerText()
     const res = <div className="number-field">
-        <div className="change-buttons">
-            <IconButton icon="stat_1" onClick={ev => { handleEv(ev, false) }} />
-            <IconButton icon="stat_minus_1" onClick={ev => { handleEv(ev, true) }} />
-        </div>
+        <UpDownButtons onClick={handleEv} />
         <div className="display">
             {props.label && <label>{props.label}</label>}
             {display}

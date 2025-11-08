@@ -1,17 +1,16 @@
-@use "../styles/variables";
+@use "../styles/variables" as *;
 
-// TODO change classname and put in subtitles.scss
-.miner-modal {
+#mining-modal {
     .time-field .field-value {
         display: flex;
         align-items: center;
-        gap: variables.$s1;
+        gap: $s1;
     }
 
     .field {
         div[contentEditable="plaintext-only"] {
-            padding-left: variables.$s1 * 0.5;
-            margin-left: variables.$s1 * -0.5;
+            padding-left: $s1 * 0.5;
+            margin-left: $s1 * -0.5;
         }
     }
 

@@ -24,6 +24,10 @@ interface Props {
 
 export default (props: Props) => {
     const { word } = props
+    async function getSentenceCeInnerHTML(entry: SubtitleEntry) {
+        // don't remember why I don't do the space replacement with regex
+        return (await applyRegexTo(entry.text, true)).replace("　", " ").replaceAll(word, "<b>" + word + "</b>")
+    }
 
     async function body(inner: HTMLElement) {
         const { word, entry, mpv } = props
@@ -60,10 +64,6 @@ export default (props: Props) => {
         const meaningCE = <div contentEditable="plaintext-only" />
         const sentenceCE = <div contentEditable="plaintext-only" />
 
-        async function getSentenceCeInnerHTML(entry: SubtitleEntry) {
-            // don't remember why I don't do the space replacement with regex
-            return (await applyRegexTo(entry.text, true)).replace("　", " ").replaceAll(word, "<b>" + word + "</b>")
-        }
         sentenceCE.innerHTML = await getSentenceCeInnerHTML(entry);
         add("Kanji", kanji)
         add("Reading", card.furigana ?? "N/A")
@@ -82,7 +82,7 @@ export default (props: Props) => {
 
         add(<>
             Sentence
-            {firstEntryIndex !== -1 && <UpDownButtons onClick={async down => {
+            {firstEntryIndex !== -1 && <UpDownButtons onClick={async (_, down) => {
                 if (down) {
                     if (lastEntryIndex === props.entries.length - 1) return
                     lastEntryIndex += 1
@@ -168,8 +168,8 @@ export default (props: Props) => {
     const modal = new Modal({
         body,
         header: <div>Mining <b>{word}</b></div>,
-        onClose: props.onClose
+        onClose: props.onClose,
+        id: "mining-modal"
     });
-    modal.Node.classList.add("miner-modal")
     return modal
 }

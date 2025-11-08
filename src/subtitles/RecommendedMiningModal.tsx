@@ -42,7 +42,7 @@ export default (subtitles: Subtitles) => {
                     row.remove()
                 }} />
                 {vocab[2]}
-                <UpDownButtons onClick={down => {
+                <UpDownButtons onClick={(_, down) => {
                     const options: SubtitleEntry[] = []
                     for (const entry of subtitles.processedEntries) {
                         const end = entry.characterOffset + entry.text.length
