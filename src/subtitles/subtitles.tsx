@@ -53,11 +53,13 @@ async function loadSubtitles(subtitles: Subtitles, main: boolean) {
 
     let characterOffset = 0
     for (const entry of subtitles.originalEntries) {
+        const text = applyReplacementsTo(replacements, entry.text, false)
+        if (!text) continue
         const p = {
             ...entry,
             startTime: entry.startTime + offset,
             endTime: entry.endTime + offset,
-            text: applyReplacementsTo(replacements, entry.text, false),
+            text,
             characterOffset
         } satisfies SubtitleEntryWithCharacterOffset
         res.push(p)

@@ -2,7 +2,9 @@ import { JpdbParseResponse } from "../jpdb/JpdbParseText"
 
 export interface SubtitleEntry {
     id: number
-    index: number
+    // index in originalEntries only
+    // does not necessarily match processedEntries
+    originalIndex: number
     startTime: number // milliseconds
     endTime: number
     text: string
@@ -112,17 +114,17 @@ export async function parseSrt(srt: string): Promise<Subtitles> {
     // might need to apply this after regex for consistency...
     const dedup = true
     if (dedup) {
-        for (let i = o.originalEntries.length - 1; i > 0; i--) {
-            const previous = o.originalEntries[i - 1]
-            if (previous.text === o.originalEntries[i].text) {
-                previous.startTime = Math.min(previous.startTime, o.originalEntries[i].startTime)
-                previous.endTime = Math.max(previous.endTime, o.originalEntries[i].endTime)
-                o.originalEntries.splice(i, 1)
+        for (let i = entries.length - 1; i > 0; i--) {
+            const previous = entries[i - 1]
+            if (previous.text === entries[i].text) {
+                previous.startTime = Math.min(previous.startTime, entries[i].startTime)
+                previous.endTime = Math.max(previous.endTime, entries[i].endTime)
+                entries.splice(i, 1)
             }
         }
     }
     for (let i = 0; i < entries.length; i++) {
-        entries[i].index = i
+        entries[i].originalIndex = i
     }
 
     return o

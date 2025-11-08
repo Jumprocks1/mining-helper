@@ -2,12 +2,12 @@ import { getAnkiWords, getAnkiWordsSync, UnicodeCharacterType, unicodeType } fro
 import { Popover } from "../components/basic/Popover"
 import { getVocabState, getVocabStateAndNote, JpdbParseResponse, JpdbVocabulary, VocabState } from "../jpdb/JpdbParseText"
 import { getCharacterIndex, getHoveredCharacterIndex, getTextNodeAtIndex } from "../utils/CharacterHighlighter"
-import { formatTimestamp, SubtitleEntry, Subtitles } from "../utils/srt"
+import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
 import { oldCreateElement } from "../utils/util"
 
 declare global {
     interface HTMLElement {
-        subtitleEntry?: SubtitleEntry
+        subtitleEntry?: SubtitleEntryWithCharacterOffset
     }
 }
 
@@ -152,9 +152,8 @@ export default class SubtitleViewer {
         if (!subtitles) return
         const entry = subtitles.closest<HTMLElement>(".subtitle-entry")?.subtitleEntry
         if (!entry) return
-        const processedEntry = this.subtitles.processedEntries[entry.index]
         const indexInParent = getCharacterIndex(subtitles, res[0], res[1])
-        const offset = processedEntry.characterOffset + indexInParent
+        const offset = entry.characterOffset + indexInParent
         let token: JpdbParseResponse["tokens"][number] | undefined = undefined
         // this is probably really slow, could do binary search
         for (const e of jpdb.tokens) {
@@ -165,9 +164,9 @@ export default class SubtitleViewer {
         }
         if (token) {
             const range = document.createRange()
-            const start = getTextNodeAtIndex(subtitles, token[0] - processedEntry.characterOffset)
+            const start = getTextNodeAtIndex(subtitles, token[0] - entry.characterOffset)
             range.setStart(start[0], start[1])
-            const end = getTextNodeAtIndex(subtitles, token[0] - processedEntry.characterOffset + token[1])
+            const end = getTextNodeAtIndex(subtitles, token[0] - entry.characterOffset + token[1])
             range.setEnd(end[0], end[1])
             const rect = range.getBoundingClientRect()
             this.SetHoverState(rect, jpdb.vocabulary[token[3]], shift)
