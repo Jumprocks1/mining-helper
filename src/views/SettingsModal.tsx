@@ -74,6 +74,9 @@ export default () => {
             <button className="list-button" onclick={RegexReplacements}>Regex replacements</button>
             {await numberField({ key: "offset" })}
             <LoadingButton className="list-button" onClick={ClearCache}>Clear Cache</LoadingButton>
+            <LoadingButton className="list-button" onClick={async () => console.log(await chrome.storage.local.get())}>
+                Log Storage
+            </LoadingButton>
         </div>
     }} />
 

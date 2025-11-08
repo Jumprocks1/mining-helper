@@ -28,6 +28,12 @@ export function unicodeType(c: string): UnicodeCharacterType {
 
 // cache
 let localAnkiWords: string[] | undefined
+let localAnkiWordsSet: Set<string> | undefined
+
+export function getAnkiWordsSetSync() {
+    if (!localAnkiWords) return
+    return localAnkiWordsSet ??= new Set(localAnkiWords)
+}
 
 export function getAnkiWordsSync() { return localAnkiWords }
 

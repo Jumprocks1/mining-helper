@@ -88,7 +88,7 @@ export default class SubtitleViewer {
             const state = getVocabState(vocab)
             if (state === VocabState.Known)
                 this.hoverRectangle.classList.add("known")
-            else if (state === VocabState.Similar)
+            else if (state === VocabState.Similar || state === VocabState.AltSpelling)
                 this.hoverRectangle.classList.add("similar")
             else if (state !== VocabState.New)
                 this.hoverRectangle.classList.add("ignore")
@@ -171,6 +171,8 @@ export default class SubtitleViewer {
             range.setEnd(end[0], end[1])
             const rect = range.getBoundingClientRect()
             this.SetHoverState(rect, jpdb.vocabulary[token[3]], shift)
+        } else {
+            this.SetHoverState(undefined, undefined, shift)
         }
     }
 

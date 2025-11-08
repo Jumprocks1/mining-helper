@@ -1,10 +1,10 @@
 import { hash, Subtitles } from "../utils/srt";
 import { delay, getJpdbApiKey } from "../utils/util";
 import "../utils/CharacterHighlighter";
-import { getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
+import { getAnkiWordsSetSync, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
 
-// spelling, reading, frequency_rank, meanings, parts of speech, vid
-export type JpdbVocabulary = [string, string, number, string[], string[], number]
+// spelling, reading, frequency_rank, meanings, parts of speech, vid, alt_spelling
+export type JpdbVocabulary = [string, string, number, string[], string[], number, string[]]
 
 export interface JpdbParseResponse {
     // start, length, reading, vocab index
@@ -18,7 +18,7 @@ export enum VocabState {
     Particle,
     Kana,
     Similar,
-    // AltSpelling
+    AltSpelling,
     Ignored
 }
 
@@ -27,14 +27,15 @@ export function getVocabState(vocab: JpdbVocabulary): VocabState {
     return getVocabStateAndNote(vocab)[0]
 }
 export function getVocabStateAndNote(vocab: JpdbVocabulary): [VocabState, any] {
-    // TODO could use a hashset here for much faster includes
-    // add getAnkiWordsSetSync()
-    // would make alt_spellings really cheap, definitely do it when we add alt_spellings
     const knownWords = getAnkiWordsSync()
+    const knownWordsSet = getAnkiWordsSetSync()
     const word = vocab[0]
-    if (vocab && knownWords) {
-        if (knownWords.includes(word))
+    if (vocab && knownWordsSet) {
+        if (knownWordsSet.has(word))
             return [VocabState.Known, undefined]
+        for (const spelling of vocab[6])
+            if (knownWordsSet.has(spelling))
+                return [VocabState.AltSpelling, spelling]
     }
     if (vocab[4].includes("prt"))
         return [VocabState.Particle, undefined]
@@ -44,7 +45,9 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary): [VocabState, any] {
         if (unicode === UnicodeCharacterType.Kanji)
             kanji = true;
     }
-    if (!kanji) return [VocabState.Kana, undefined] // TODO these can still be valuable
+    // TODO these can still be valuable
+    // stop filtering once we set up good ignoring
+    if (!kanji) return [VocabState.Kana, undefined]
     if (knownWords) {
         const startsWithKanji = unicodeType(word[0]) === UnicodeCharacterType.Kanji
         const endsWithKanji = unicodeType(word[word.length - 1]) === UnicodeCharacterType.Kanji
@@ -67,7 +70,6 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary): [VocabState, any] {
                 }
             }
         }
-        // TODO could add checks for alt_spellings from jpdb
     }
     return [VocabState.New, undefined]
 }
@@ -141,6 +143,7 @@ async function cacheValue<T>(key: string, get: () => Promise<T>, forceRefresh?: 
 // seems inconsistent, might exclude certain characters or something
 const maxParseCharacters = 5000
 
+// measured ~150kB per episode
 export default async function JpdbParseText(s: string[]) {
     const fullJoin = s.join("\n")
     const value = await cacheValue("jpdb_" + hash(fullJoin), async () => {
@@ -178,8 +181,8 @@ export default async function JpdbParseText(s: string[]) {
                         "frequency_rank",
                         "meanings",
                         "part_of_speech",
-                        "vid"
-                        // alt_spellings would be good for finding if we have a redundant card
+                        "vid",
+                        "alt_spellings"
                     ],
                     position_length_encoding: "utf16"
                 })
@@ -211,8 +214,8 @@ export default async function JpdbParseText(s: string[]) {
             if (existing !== undefined) {
                 indexMapping.set(i, existing)
             } else {
-                indexMapping.set(i, i)
-                vocabMapping.set(id, i)
+                indexMapping.set(i, dedupedVocab.length)
+                vocabMapping.set(id, dedupedVocab.length)
                 dedupedVocab.push(dupedVocab[i])
             }
         }
