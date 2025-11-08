@@ -273,7 +273,7 @@ export default class SubtitleViewer {
     }
 
     async HighlightAnkiWords() {
-        const ankiWords = (await chrome.storage.local.get({ ankiWords: [] })).ankiWords
+        const ankiWords = await getAnkiWords()
         const knownCharacters = new Set<string>()
         for (const word of ankiWords) {
             for (const c of word) {
