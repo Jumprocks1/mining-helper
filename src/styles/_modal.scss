@@ -10,7 +10,9 @@
     display: flex;
     align-items: flex-start;
     padding-top: variables.$s1 * 16;
+    padding-bottom: variables.$s1 * 8;
     justify-content: center;
+    overflow: auto;
     .inner-modal {
         min-width: 30em;
         background-color: variables.$background0;

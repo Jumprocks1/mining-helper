@@ -66,14 +66,36 @@
             &.known {
                 border-bottom: 2px dashed color.change($green, $alpha: 0.7);
             }
+            &.similar {
+                border-bottom: 2px dashed color.change($yellow, $alpha: 0.7);
+            }
+            &.ignore {
+                border-bottom: 2px dashed color.change($blue, $alpha: 0.7);
+            }
             position: absolute;
             pointer-events: none;
         }
         .popover {
             .header {
-                .frequency {
+                gap: $s1;
+                .vocab-state {
                     padding-left: 1em;
                     margin-left: auto;
+                    font-size: 0.6em;
+                    &.new {
+                        color: $brightRed;
+                    }
+                    &.known {
+                        color: $brightGreen;
+                    }
+                    &.particle {
+                        color: $brightBlue;
+                    }
+                    &.similar, &.kana, &.ignored {
+                        color: $brightYellow;
+                    }
+                }
+                .frequency {
                     font-size: 0.6em;
                     &::before {
                         content: "Top "
@@ -116,6 +138,14 @@
             &.connected {
                 background-color: rgb(69, 197, 83);
             }
+        }
+    }
+
+    #recommended-mining-modal {
+        .vocab-row {
+            display: flex;
+            align-items: center;
+            gap: $s1;
         }
     }
 }

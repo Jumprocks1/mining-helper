@@ -1,6 +1,6 @@
-import { getAnkiWords, UnicodeCharacterType, unicodeType } from "../anki/CardList"
+import { getAnkiWords, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList"
 import { Popover } from "../components/basic/Popover"
-import { JpdbParseResponse } from "../jpdb/JpdbParseText"
+import { getVocabState, getVocabStateAndNote, JpdbParseResponse, JpdbVocabulary, VocabState } from "../jpdb/JpdbParseText"
 import { getCharacterIndex, getHoveredCharacterIndex, getTextNodeAtIndex } from "../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, Subtitles } from "../utils/srt"
 import { oldCreateElement } from "../utils/util"
@@ -11,8 +11,6 @@ declare global {
     }
 }
 
-type JpdbVocabulary = JpdbParseResponse["vocabulary"][number]
-
 export default class SubtitleViewer {
     Node: HTMLElement
     subtitles: Subtitles
@@ -22,7 +20,6 @@ export default class SubtitleViewer {
 
     hoverRectangle: HTMLElement = <div className="hover-rectangle" />
     popover: Popover | undefined
-    knownWords: string[] | undefined
 
     // use to block scrolling when selecting
     MouseDown = false
@@ -66,28 +63,36 @@ export default class SubtitleViewer {
             }
         })
 
-        getAnkiWords().then(e => this.knownWords = e)
+        // make sure anki words are loaded for later, this caches the result
+        // no harm in calling multiple times if promise isn't resolved yet
+        getAnkiWords()
     }
 
+    LoadedHoverRect: DOMRect | undefined
     UpdateHoverBox(rect: DOMRect | undefined, vocab: JpdbVocabulary | undefined) {
+        if (this.LoadedHoverRect === rect) return
+        this.LoadedHoverRect = rect
         if (!rect) {
             this.hoverRectangle.classList.add("hide")
             return
         }
-        else this.hoverRectangle.classList.remove("hide")
         const parent = this.hoverRectangle.parentElement
         if (!parent) return
 
+        // remove all other classes
+        this.hoverRectangle.className = "hover-rectangle"
+
         const parentRect = parent.getBoundingClientRect()
 
-        let known = false
-        if (vocab && this.knownWords) {
-            known = this.knownWords.includes(vocab[0])
+        if (vocab) {
+            const state = getVocabState(vocab)
+            if (state === VocabState.Known)
+                this.hoverRectangle.classList.add("known")
+            else if (state === VocabState.Similar)
+                this.hoverRectangle.classList.add("similar")
+            else if (state !== VocabState.New)
+                this.hoverRectangle.classList.add("ignore")
         }
-        if (known)
-            this.hoverRectangle.classList.add("known")
-        else
-            this.hoverRectangle.classList.remove("known")
 
         this.hoverRectangle.style.width = rect.width + "px"
         this.hoverRectangle.style.height = rect.height + "px"
@@ -95,11 +100,14 @@ export default class SubtitleViewer {
         this.hoverRectangle.style.left = rect.left - parentRect.left + "px"
     }
 
-    LoadedVocab: JpdbVocabulary | undefined
+    LoadedPopoverVocab: JpdbVocabulary | undefined
 
     SetHoverState(rect: DOMRect | undefined, vocab: JpdbVocabulary | undefined, shift: boolean) {
         this.UpdateHoverBox(rect, vocab)
-        if (!shift && vocab && vocab !== this.LoadedVocab) vocab = undefined
+        if (!shift && vocab && vocab !== this.LoadedPopoverVocab) vocab = undefined
+        if (this.LoadedPopoverVocab === vocab) return
+        this.LoadedPopoverVocab = vocab
+
         if (vocab && rect) {
             if (!this.popover) {
                 this.popover = new Popover({
@@ -108,21 +116,25 @@ export default class SubtitleViewer {
                 })
                 this.Node.append(this.popover.Node)
             }
-            this.LoadedVocab = vocab
             const parent = this.popover.Node.parentElement!
             const parentRect = parent.getBoundingClientRect()
-            // TODO try fragment
-            this.popover.SetContent([
-                <div className="header">{vocab[0]}<span className="frequency">{vocab[2]}</span></div>,
-                <div className="reading">{vocab[1]}</div>,
-                vocab[3].map((e, i) => <div>
+            const [vocabState, vocabNote] = getVocabStateAndNote(vocab)
+            const vocabStateString = VocabState[vocabState].toLowerCase()
+
+            this.popover.SetContent(<>
+                <div className="header">{vocab[0]}
+                    <span className={"vocab-state " + vocabStateString}>
+                        {vocabStateString}{vocabNote ? <> - {vocabNote}</> : undefined}
+                    </span>
+                    <span className="frequency">{vocab[2]}</span>
+                </div>
+                <div className="reading">{vocab[1]}</div>
+                {vocab[3].map((e, i) => <div>
                     {i + 1}. {e}
-                </div>)
-            ])
-            // +2 for outline offset
+                </div>)}
+            </>)
             this.popover.Show(rect.left - parentRect.left, rect.bottom - parentRect.top)
         } else {
-            this.LoadedVocab = undefined
             this.popover?.Hide()
         }
     }

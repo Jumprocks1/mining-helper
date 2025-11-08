@@ -33,10 +33,12 @@ export default class LoadingButton extends Component {
         onClick: () => Promise<void> | void,
         // Will show as loading initially until loading promise finishes
         loading?: Promise<any>
+        className?: string
     }) {
         super()
 
         this.Node = <button />
+        if (props.className) this.Node.classList.add(props.className)
 
         this.Node.addEventListener("click", () => {
             if (this.Loading) return

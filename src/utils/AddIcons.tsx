@@ -6,6 +6,7 @@ let added = false
 // must be alphabetical
 export const MaterialIcons = [
     "close",
+    "delete",
     "play_arrow",
     "refresh",
     "search",

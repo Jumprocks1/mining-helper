@@ -5,6 +5,7 @@ export enum UnicodeCharacterType {
     Kana,
     Punctuation,
     Kanji,
+    Number,
     Other
 }
 
@@ -20,11 +21,15 @@ export function unicodeType(c: string): UnicodeCharacterType {
         return UnicodeCharacterType.Kana // katakana
     if (unicode >= 0x4e00 && unicode <= 0x9faf)
         return UnicodeCharacterType.Kanji
+    if (unicode >= 0xFF10 && unicode <= 0xFF19)
+        return UnicodeCharacterType.Number
     return UnicodeCharacterType.Other
 }
 
 // cache
 let localAnkiWords: string[] | undefined
+
+export function getAnkiWordsSync() { return localAnkiWords }
 
 export async function getAnkiWords(disableCache = false): Promise<string[]> {
     if (!disableCache && localAnkiWords) return localAnkiWords
