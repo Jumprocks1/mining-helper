@@ -1,5 +1,6 @@
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
 import { playAudio } from "../utils/Audio"
+import { Children } from "../utils/createElement"
 import { getOrCreatePendingCard, saveCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, SubtitleEntry } from "../utils/srt"
@@ -8,6 +9,7 @@ import { applyRegexTo } from "../views/RegexReplacements"
 import AudioButton from "./AudioButton"
 import IconButton from "./basic/IconButton"
 import NumberField from "./basic/NumberField"
+import UpDownButtons from "./basic/UpDownButtons"
 import Loader from "./Loader"
 import LoadingButton from "./LoadingButton"
 import { Modal } from "./Modal"
@@ -16,6 +18,7 @@ interface Props {
     word: string
     onClose: () => void
     entry: SubtitleEntry
+    entries: SubtitleEntry[] // for finding adjacent entries as needed
     mpv?: MpvWebSocket
 }
 
@@ -27,10 +30,7 @@ export default (props: Props) => {
         const card = await getOrCreatePendingCard(word, true)
         const kanji = card.kanji // this can be different if word is a verb
 
-        const entrySentenceModified = (await applyRegexTo(entry.text, true)).replace("　", " ")
-
         async function save() {
-            // sentence.interText should be entrySentenceModified unless we modify the content editable
             card.jpSentenceKanji = sentenceCE.innerText.replace("\n", " ");
             // TODO pull from eng subs. Choose subs that have >50% overlap with the JP sub (based on their own durations)
             // TODO allow setting english manually for now, don't worry about pulling from subs
@@ -50,17 +50,21 @@ export default (props: Props) => {
         }
 
         const labeled: HTMLElement[] = []
-        function add(label: string, el: HTMLElement | string) {
+        function add(label: Children, el: Children) {
             labeled.push(<div className="field">
                 <label>{label}</label>
                 <div className="field-value">{el}</div>
             </div>)
         }
 
-
         const meaningCE = <div contentEditable="plaintext-only" />
         const sentenceCE = <div contentEditable="plaintext-only" />
-        sentenceCE.innerHTML = entrySentenceModified.replace(word, "<b>" + word + "</b>");
+
+        async function getSentenceCeInnerHTML(entry: SubtitleEntry) {
+            // don't remember why I don't do the space replacement with regex
+            return (await applyRegexTo(entry.text, true)).replace("　", " ").replaceAll(word, "<b>" + word + "</b>")
+        }
+        sentenceCE.innerHTML = await getSentenceCeInnerHTML(entry);
         add("Kanji", kanji)
         add("Reading", card.furigana ?? "N/A")
         add("Word Audio", card.audioBytes ? AudioButton({ audio: card.audioBytes, name: kanji }) : "N/A")
@@ -70,7 +74,30 @@ export default (props: Props) => {
         } else {
             add("Meaning", <a target="_blank" rel="noopener noreferrer" href={jpdbEntryUrl(kanji)}>N/A</a>)
         }
-        add("Sentence", sentenceCE)
+        let firstEntryIndex = props.entries.indexOf(entry)
+        let lastEntryIndex = firstEntryIndex // not exclusive, unlike most things
+
+        let startTime = entry.startTime
+        let endTime = entry.endTime
+
+        add(<>
+            Sentence
+            {firstEntryIndex !== -1 && <UpDownButtons onClick={async down => {
+                if (down) {
+                    if (lastEntryIndex === props.entries.length - 1) return
+                    lastEntryIndex += 1
+                    sentenceCE.innerHTML += "\n" + await getSentenceCeInnerHTML(props.entries[lastEntryIndex])
+                } else {
+                    if (firstEntryIndex === 0) return
+                    firstEntryIndex -= 1
+                    sentenceCE.innerHTML = await getSentenceCeInnerHTML(props.entries[firstEntryIndex]) + "\n" + sentenceCE.innerHTML
+                }
+                startTime = props.entries[firstEntryIndex].startTime
+                endTime = props.entries[lastEntryIndex].endTime
+                updateTimeField()
+                await loadMpvAudio()
+            }} />}
+        </>, sentenceCE)
         const sentenceMeaningInput = <input /> as HTMLInputElement
         labeled.push(<div className="field">
             <label>Sentence Meaning</label>
@@ -82,15 +109,19 @@ export default (props: Props) => {
         let endOffset = 0
         let loadedOffsets: [number, number] | undefined = undefined
 
-        const duration = entry.endTime - entry.startTime
-
         const playButtonPlaceholder = <div></div>
 
-        let timestamp = formatTimestamp(entry.startTime, 1)
+        const timeField = <span></span>
+        function updateTimeField() {
+            const timestamp = formatTimestamp(startTime, 1)
+            const duration = endTime - startTime
+            timeField.innerText = timestamp + " + " + (duration / 1000).toFixed(1) + "s"
+        }
+        updateTimeField()
         labeled.push(<div className="field time-field">
             <label>Time</label>
             <div className="field-value">
-                {timestamp + " + " + (duration / 1000).toFixed(1) + "s"}
+                {timeField}
                 <NumberField onChange={v => startOffset = v} defaultValue={startOffset} label="Start" showPlus />
                 <NumberField onChange={v => endOffset = v} defaultValue={endOffset} label="End" showPlus />
                 {playButtonPlaceholder}
@@ -103,7 +134,7 @@ export default (props: Props) => {
             if (!mpv) return
             const so = startOffset
             const eo = endOffset
-            mpvPromise = mpv.RequestIfOpen(`mpv-audio:${entry.startTime + so}-${entry.endTime + eo}`)
+            mpvPromise = mpv.RequestIfOpen(`mpv-audio:${startTime + so}-${endTime + eo}`)
             const loadedButton = mpvPromise.then(sentenceAudio => {
                 if (typeof sentenceAudio !== "string") {
                     const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)

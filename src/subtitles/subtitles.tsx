@@ -113,6 +113,36 @@ async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string
     }
 }
 
+let mpvWebSocket: MpvWebSocket | undefined
+export function seekToSubtitle(entry: SubtitleEntry) {
+    if (!mpvWebSocket) return
+    mpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
+}
+export function getCurrentMpvTime() { return currentTime }
+
+export function seekToNextEntry(entries: SubtitleEntry[], backwards: boolean) {
+    // TODO add epsilon
+    // const epsilon = 200 // ms
+    if (!mpvWebSocket) return
+    if (backwards) {
+        for (let i = 1; i < entries.length; i++) {
+            if (entries[i].endTime > currentTime) {
+                seekToSubtitle(entries[i - 1])
+                return
+            }
+        }
+        seekToSubtitle(entries[0])
+    } else {
+        for (let i = 0; i < entries.length; i++) {
+            if (entries[i].startTime > currentTime) {
+                seekToSubtitle(entries[i])
+                return
+            }
+        }
+        seekToSubtitle(entries[entries.length - 1])
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     seedPage("subs-page", [
         MhHeader(),
@@ -129,6 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     ])
     let webSocket = new MpvWebSocket()
+    mpvWebSocket = webSocket
     webSocket.onMessage = (e) => handleWebSocketData(webSocket, e.data)
     const connectionDot = document.getElementById("connection-status-dot")!
     webSocket.onConnecting = () => {
@@ -172,6 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     if (entry) {
                         miningModal = MiningModal({
                             word: selected.toString(), entry, mpv: webSocket,
+                            entries: loadedSubtitles.main!.subtitles.processedEntries,
                             onClose: () => miningModal = undefined
                         })
                         miningModal.Open()
@@ -186,23 +218,11 @@ document.addEventListener("DOMContentLoaded", () => {
         const subs = loadedSubtitles.main
         if (subs) {
             if (ev.key === "ArrowUp") {
-                const entries = subs.subtitles.processedEntries
-                for (let i = 1; i < entries.length; i++) {
-                    if (entries[i].endTime > currentTime) {
-                        webSocket.SendIfOpen(`ipc:seek ${entries[i - 1].startTime / 1000} absolute`)
-                        ev.preventDefault();
-                        break
-                    }
-                }
+                seekToNextEntry(subs.subtitles.processedEntries, true)
+                ev.preventDefault()
             } else if (ev.key === "ArrowDown" || ev.key === "ArrowRight") {
-                const entries = subs.subtitles.processedEntries
-                for (let i = 0; i < entries.length; i++) {
-                    if (entries[i].startTime > currentTime) {
-                        webSocket.SendIfOpen(`ipc:seek ${entries[i].startTime / 1000} absolute`)
-                        ev.preventDefault();
-                        break
-                    }
-                }
+                seekToNextEntry(subs.subtitles.processedEntries, false)
+                ev.preventDefault()
             } else if (ev.key === "ArrowLeft") {
                 const entries = subs.subtitles.processedEntries
                 for (let i = 0; i < entries.length - 1; i++) {
