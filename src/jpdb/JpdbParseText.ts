@@ -14,9 +14,15 @@ export type JpdbVocabulary = [
     alt_spelling: string[]
 ]
 
+export type JpdbToken = [
+    start: number,
+    length: number,
+    reading: (string | [string, string])[] | null,
+    vocab_index: number
+]
+
 export interface JpdbParseResponse {
-    // start, length, reading, vocab index
-    tokens: [number, number, (string | [string, string])[] | null, number][]
+    tokens: JpdbToken[]
     vocabulary: JpdbVocabulary[]
 }
 

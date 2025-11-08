@@ -3,14 +3,6 @@
 .number-field {
     display: flex;
     align-items: center;
-    .change-buttons {
-        display: flex;
-        flex-direction: column;
-        >* {
-            font-size: 0.75em;
-            padding: 0.05em;
-        }
-    }
     .display {
         display: flex;
         flex-direction: column;
@@ -34,4 +26,13 @@
     padding: 0.2em;
     background-color: $background0;
     border: $border0;
+}
+
+.up-down-buttons {
+    display: flex;
+    flex-direction: column;
+    >* {
+        font-size: 0.75em;
+        padding: 0.05em;
+    }
 }

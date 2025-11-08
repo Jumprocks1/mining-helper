@@ -146,6 +146,18 @@
             display: flex;
             align-items: center;
             gap: $s1;
+            .up-down-buttons {
+                margin-right: -$s1; // remove gap
+                position: relative;
+                .usage-count {
+                    font-size: 0.6em;
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    pointer-events: none;
+                }
+            }
         }
     }
 }
