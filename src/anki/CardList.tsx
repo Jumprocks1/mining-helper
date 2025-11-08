@@ -48,7 +48,6 @@ export async function addAnkiWord(word: string) {
         words.push(word)
         await chrome.storage.local.set({ ankiWords: words })
     }
-    localAnkiWords = words
     if (localAnkiWordsSet) localAnkiWordsSet.add(word)
     return words
 }

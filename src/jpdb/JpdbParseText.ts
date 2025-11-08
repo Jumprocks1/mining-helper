@@ -2,9 +2,17 @@ import { hash, Subtitles } from "../utils/srt";
 import { delay, getJpdbApiKey } from "../utils/util";
 import "../utils/CharacterHighlighter";
 import { getAnkiWordsSetSync, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
+import { isIgnoredSync } from "./IgnoreList";
 
-// spelling, reading, frequency_rank, meanings, parts of speech, vid, alt_spelling
-export type JpdbVocabulary = [string, string, number, string[], string[], number, string[]]
+export type JpdbVocabulary = [
+    spelling: string,
+    reading: string,
+    frequency_rank: number,
+    meanings: string[],
+    parts_of_speech: string[],
+    vid: number,
+    alt_spelling: string[]
+]
 
 export interface JpdbParseResponse {
     // start, length, reading, vocab index
@@ -37,6 +45,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary): [VocabState, any] {
             if (knownWordsSet.has(spelling))
                 return [VocabState.AltSpelling, spelling]
     }
+    if (isIgnoredSync(vocab[5])) return [VocabState.Ignored, undefined]
     if (vocab[4].includes("prt"))
         return [VocabState.Particle, undefined]
     let kanji = false
