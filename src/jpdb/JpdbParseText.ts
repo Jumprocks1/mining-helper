@@ -1,5 +1,5 @@
 import { hash, Subtitles } from "../utils/srt";
-import { getJpdbApiKey } from "../utils/util";
+import { delay, getJpdbApiKey } from "../utils/util";
 import "../utils/CharacterHighlighter";
 import { getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
 
@@ -139,42 +139,62 @@ const maxParseCharacters = 5000
 export default async function JpdbParseText(s: string[]) {
     const fullJoin = s.join("\n")
     const value = await cacheValue("jpdb_" + hash(fullJoin), async () => {
-        // TODO if we exceed limit, send more requests after a second or so
-        let count = 0;
-        let len = -1; // -1 since first line doesn't have a \n
-        while (count < s.length) {
-            if (len + s[count].length + 1 > maxParseCharacters) break
-            len += s[count].length + 1
-            count += 1;
-        }
-        console.log(`Taking ${count} lines, ${len} out of ${s.length}, ${fullJoin.length}`)
-        const res = await fetch("https://jpdb.io/api/v1/parse", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${await getJpdbApiKey()}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                text: s.slice(0, count).join("\n"),
-                token_fields: [
-                    "position",
-                    "length",
-                    "furigana",
-                    "vocabulary_index"
-                ],
-                vocabulary_fields: [
-                    "spelling",
-                    "reading",
-                    "frequency_rank",
-                    "meanings",
-                    "part_of_speech"
-                ],
-                position_length_encoding: "utf16"
+        const finalRes: JpdbParseResponse = { tokens: [], vocabulary: [] }
+        let start = 0 // line number start of next request
+        let responseOffset = 0 // character count to add to token indexes after response
+        let sentCount = 0 // how many requests we've hit jpdb with
+        while (start < s.length) {
+            let end = start;
+            let len = -1; // -1 since first line doesn't have a \n
+            while (end < s.length) {
+                if (len + s[end].length + 1 > maxParseCharacters) break
+                len += s[end].length + 1
+                end += 1;
+            }
+            console.log(`Fetching ${start}-${end} / ${s.length} lines, ${len} / ${fullJoin.length} characters`)
+            const text = s.slice(start, end).join("\n")
+            const res = await fetch("https://jpdb.io/api/v1/parse", {
+                method: "POST",
+                headers: {
+                    Authorization: `Bearer ${await getJpdbApiKey()}`,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    text,
+                    token_fields: [
+                        "position",
+                        "length",
+                        "furigana",
+                        "vocabulary_index"
+                    ],
+                    vocabulary_fields: [
+                        "spelling",
+                        "reading",
+                        "frequency_rank",
+                        "meanings",
+                        "part_of_speech"
+                    ],
+                    position_length_encoding: "utf16"
+                })
             })
-        })
-        const json = await res.json()
-        // console.log(json)
-        return json
+            const json = await res.json() as JpdbParseResponse
+            for (const token of json.tokens) {
+                token[0] += responseOffset
+                token[3] += finalRes.vocabulary.length
+                finalRes.tokens.push(token)
+            }
+            for (const vocab of json.vocabulary) {
+                // TODO could dedup these if needed
+                finalRes.vocabulary.push(vocab)
+            }
+            sentCount += 1
+            responseOffset += text.length + 1 // +1 because the merged text will have another \n
+            start = end
+            // not sure if needed, I accidentally sent like 20 in a row before without issue
+            // anime are usually ~1-1.3 requests, so most of the time this will never trigger
+            if (start < s.length && sentCount >= 2) await delay(2000)
+        }
+        return finalRes
     })
     console.log(value)
     return value as JpdbParseResponse
