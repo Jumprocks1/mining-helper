@@ -3,12 +3,12 @@ import { delay, getJpdbApiKey } from "../utils/util";
 import "../utils/CharacterHighlighter";
 import { getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
 
-export type JpdbVocabulary = [string, string, number, string[], string[]]
+// spelling, reading, frequency_rank, meanings, parts of speech, vid
+export type JpdbVocabulary = [string, string, number, string[], string[], number]
 
 export interface JpdbParseResponse {
     // start, length, reading, vocab index
     tokens: [number, number, (string | [string, string])[] | null, number][]
-    // spelling, reading, frequency_rank, meanings, parts of speech
     vocabulary: JpdbVocabulary[]
 }
 
@@ -18,6 +18,7 @@ export enum VocabState {
     Particle,
     Kana,
     Similar,
+    // AltSpelling
     Ignored
 }
 
@@ -26,6 +27,9 @@ export function getVocabState(vocab: JpdbVocabulary): VocabState {
     return getVocabStateAndNote(vocab)[0]
 }
 export function getVocabStateAndNote(vocab: JpdbVocabulary): [VocabState, any] {
+    // TODO could use a hashset here for much faster includes
+    // add getAnkiWordsSetSync()
+    // would make alt_spellings really cheap, definitely do it when we add alt_spellings
     const knownWords = getAnkiWordsSync()
     const word = vocab[0]
     if (vocab && knownWords) {
@@ -63,6 +67,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary): [VocabState, any] {
                 }
             }
         }
+        // TODO could add checks for alt_spellings from jpdb
     }
     return [VocabState.New, undefined]
 }
@@ -172,7 +177,9 @@ export default async function JpdbParseText(s: string[]) {
                         "reading",
                         "frequency_rank",
                         "meanings",
-                        "part_of_speech"
+                        "part_of_speech",
+                        "vid"
+                        // alt_spellings would be good for finding if we have a redundant card
                     ],
                     position_length_encoding: "utf16"
                 })
@@ -194,6 +201,24 @@ export default async function JpdbParseText(s: string[]) {
             // anime are usually ~1-1.3 requests, so most of the time this will never trigger
             if (start < s.length && sentCount >= 2) await delay(2000)
         }
+        const vocabMapping = new Map<number, number>()
+        const indexMapping = new Map<number, number>()
+        const dedupedVocab = []
+        const dupedVocab = finalRes.vocabulary
+        for (let i = 0; i < dupedVocab.length; i++) {
+            const id = dupedVocab[i][5]
+            const existing = vocabMapping.get(id)
+            if (existing !== undefined) {
+                indexMapping.set(i, existing)
+            } else {
+                indexMapping.set(i, i)
+                vocabMapping.set(id, i)
+                dedupedVocab.push(dupedVocab[i])
+            }
+        }
+        finalRes.vocabulary = dedupedVocab
+        for (const token of finalRes.tokens)
+            token[3] = indexMapping.get(token[3])!
         return finalRes
     })
     console.log(value)
