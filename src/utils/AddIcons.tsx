@@ -8,6 +8,8 @@ export const MaterialIcons = [
     "close",
     "delete",
     "error",
+    "maximize",
+    "minimize",
     "play_arrow",
     "refresh",
     "search",

@@ -12,9 +12,7 @@
         position: relative;
         #body-container {
             flex: 1 1 0;
-            overflow-y: auto;
-            scrollbar-color: rgba(0, 0, 0, 0.5) transparent;
-            scrollbar-width: thin;
+            @include vertical-scroll;
         }
     }
     #subtitle-container {

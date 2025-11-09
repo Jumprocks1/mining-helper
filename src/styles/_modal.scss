@@ -12,7 +12,15 @@
     padding-top: variables.$s1 * 16;
     padding-bottom: variables.$s1 * 8;
     justify-content: center;
-    overflow: auto;
+    @include variables.vertical-scroll;
+    &.minimized {
+        padding: 0;
+        .inner-modal {
+            min-width: unset;
+        }
+        // only visible under scrollbar
+        background: variables.$background1;
+    }
     .inner-modal {
         min-width: 30em;
         background-color: variables.$background0;
@@ -26,7 +34,7 @@
             font-size: 1.2em;
             display: flex;
             align-items: center;
-            .close-button {
+            .icon-button:first-of-type {
                 margin-left: auto;
             }
         }

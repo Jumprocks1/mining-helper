@@ -1,3 +1,4 @@
+import { GetCurrentPageContext } from "../framework/PageContext";
 import IconButton from "./basic/IconButton";
 import { Component } from "./Component";
 import Loader, { DOMable } from "./Loader";
@@ -8,6 +9,7 @@ interface Props {
     onClose: () => void
     id?: string
     body: DOMable | Promise<DOMable> | ((body: HTMLElement) => Promise<DOMable>)
+    allowMinimize?: boolean
 }
 
 const OpenModals: Modal[] = []
@@ -54,9 +56,37 @@ export class Modal extends Component {
         else
             body.append(innerBody)
 
+        let minimizeButton: HTMLElement | undefined
+        if (props.allowMinimize) {
+            let minimize = true
+            minimizeButton = <IconButton icon="minimize" onClick={() => {
+                if (minimize) {
+                    const rect = GetCurrentPageContext()?.getMinimizeTarget?.()
+                    if (rect) {
+                        minimizeButton!.textContent = "maximize"
+                        minimize = false
+                        res.classList.add("minimized")
+                        res.style.left = rect.x + "px"
+                        res.style.top = rect.y + "px"
+                        res.style.width = rect.width + "px"
+                        res.style.height = rect.height + "px"
+                    }
+                } else {
+                    minimizeButton!.textContent = "minimize"
+                    minimize = true
+                    res.classList.remove("minimized")
+                    res.style.removeProperty("left")
+                    res.style.removeProperty("top")
+                    res.style.removeProperty("width")
+                    res.style.removeProperty("height")
+                }
+            }} />
+        }
+
         const inner = <div className="inner-modal">
             <div className="header">
                 <div>{props.header}</div>
+                {minimizeButton}
                 {closeButton}
             </div>
             {body}

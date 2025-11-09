@@ -7,7 +7,8 @@ import { IgnoreVid, loadIgnoreList } from "../jpdb/IgnoreList";
 import { getVocabState, JpdbVocabulary, VocabState } from "../jpdb/JpdbParseText";
 import { playAudio } from "../utils/Audio";
 import { SubtitleEntry, Subtitles } from "../utils/srt";
-import { getCurrentMpvTime, seekToNextEntry, seekToSubtitle } from "./subtitles";
+import { seekToNextEntry } from "./subtitles";
+// TODO ^ this import is really dangerous
 
 async function tryPlayAudio(vocab: JpdbVocabulary) {
     const kanji = vocab[0]
@@ -68,7 +69,8 @@ export default (subtitles: Subtitles) => {
     const res = OpenModal({
         header: "Recommended Vocab",
         body,
-        id: "recommended-mining-modal"
+        id: "recommended-mining-modal",
+        allowMinimize: true
     })
     return res
 } 

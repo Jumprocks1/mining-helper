@@ -1,4 +1,4 @@
-import { parseSrt, Subtitles, formatTimestamp, SubtitleEntryWithCharacterOffset } from "../utils/srt"
+import { parseSrt, Subtitles, formatTimestamp, SubtitleEntryWithCharacterOffset, SubtitleEntry } from "../utils/srt"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import MhHeader from "../components/MhHeader"
 import { seedPage } from "../components/util"
@@ -10,6 +10,8 @@ import IconButton from "../components/basic/IconButton"
 import SettingsModal, { getSetting, onSettingChange, setSetting } from "../views/SettingsModal"
 import { applyReplacementsTo, getReplacements } from "../views/RegexReplacements"
 import { JpdbParseSubtitles } from "../jpdb/JpdbParseText"
+import RecommendedMiningModal from "./RecommendedMiningModal"
+import { RegisterPageContext } from "../framework/PageContext"
 
 let currentTime = 0
 
@@ -22,6 +24,7 @@ function updateTime(timestamp: number) {
     loadedSubtitles.main?.UpdateHighlighting(currentTime)
     loadedSubtitles.secondary.forEach(e => e.UpdateHighlighting(currentTime))
 }
+// TODO there's probably a much easier way to do this now
 // @ts-expect-error
 window.updateTime = updateTime
 
@@ -114,11 +117,10 @@ async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string
 }
 
 let mpvWebSocket: MpvWebSocket | undefined
-export function seekToSubtitle(entry: SubtitleEntry) {
+function seekToSubtitle(entry: SubtitleEntry) {
     if (!mpvWebSocket) return
     mpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
 }
-export function getCurrentMpvTime() { return currentTime }
 
 export function seekToNextEntry(entries: SubtitleEntry[], backwards: boolean) {
     // TODO add epsilon
@@ -144,20 +146,34 @@ export function seekToNextEntry(entries: SubtitleEntry[], backwards: boolean) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    seedPage("subs-page", [
-        MhHeader(),
+    const subtitleContainer = <div id="subtitle-container" />
+    const bodyContainer = <div id="body-container">
+        {subtitleContainer}
+    </div>
+    const header = MhHeader()
+    seedPage("subs-page", <>
+        {header}
         <div id="outer-body-container">
             <div id="status-info">
                 <IconButton icon="settings" onClick={() => SettingsModal()} />
                 <span id="current-time">00:00</span>
                 <span id="connection-status-dot"></span>
             </div>
-            <div id="body-container">
-                <div id="subtitle-container">
-                </div>
-            </div>
+            {bodyContainer}
         </div>
-    ])
+    </>)
+    RegisterPageContext({
+        name: "Subtitles",
+        getMinimizeTarget: () => {
+            const main = loadedSubtitles.main?.Node
+            if (!main) return
+            const mainRect = main.getBoundingClientRect()
+            const headerRect = header.getBoundingClientRect()
+            const full = document.body.getBoundingClientRect()
+            const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
+            return rect
+        }
+    })
     let webSocket = new MpvWebSocket()
     mpvWebSocket = webSocket
     webSocket.onMessage = (e) => handleWebSocketData(webSocket, e.data)
@@ -257,9 +273,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     })
-
-    const bodyContainer = document.getElementById("body-container")
-    if (!bodyContainer) return
 
     bodyContainer.addEventListener("dragover", ev => {
         ev.preventDefault()

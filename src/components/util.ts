@@ -1,4 +1,5 @@
 import "../utils/createElement"
+import { appendChild } from "../utils/createElement"
 
 type Child = string | Node
 type Children = Child | Child[]
@@ -20,8 +21,9 @@ export function seed(id: string, ...children: (Children | ((target: HTMLElement)
     }
 }
 
-export function seedPage(id: string, children: Child[]) {
+export function seedPage(id: string, children: Children) {
     const body = document.body
     body.id = id
-    body.replaceChildren(...children)
+    body.replaceChildren()
+    appendChild(body, children)
 }
