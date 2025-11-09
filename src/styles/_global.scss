@@ -38,6 +38,49 @@ button {
             @include loader.LoadingCircle
         }
     }
+    &.disabled {
+        color: color.scale(variables.$fontColor, $alpha: -50%);
+        cursor: not-allowed;
+    }
+    &.errored {
+        position: relative;
+        &::before {
+            color: variables.$brightRed;
+            content: "error";
+            position: absolute;
+            right: 0;
+            top: 0;
+
+            // not sure how to clean this up - should probably make a mixin?
+            user-select: none;
+            font-family: 'Material Symbols Outlined';
+            font-weight: normal;
+            font-style: normal;
+            font-size: 16px;
+            line-height: 1;
+            letter-spacing: normal;
+            text-transform: none;
+            font-feature-settings: 'liga';
+            -webkit-font-feature-settings: 'liga';
+            -webkit-font-smoothing: antialiased;
+        }
+        &:hover {
+            &::after {
+                content: attr(data-error);
+                font-size: 1rem;
+                white-space: pre;
+                border: variables.$border0;
+                padding: variables.$s1;
+                background: variables.$background0;
+                position: absolute;
+                left: calc(100% + variables.$s1);
+                top: 0;
+                bottom: 0;
+                display: flex;
+                align-items: center;
+            }
+        }
+    }
 }
 
 

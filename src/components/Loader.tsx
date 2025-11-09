@@ -4,6 +4,7 @@ export type Loadable = Promise<DOMable> | (() => Promise<DOMable>)
 export default ({ load }: { load: Loadable }) => {
     const node = <div className="loader" />
     if (typeof load === "function") load = load()
+    // TODO should catch exception here
     load.then(e => {
         if (Array.isArray(e))
             node.replaceWith(...e)

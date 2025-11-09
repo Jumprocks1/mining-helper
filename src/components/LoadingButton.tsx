@@ -1,5 +1,7 @@
+import { userErrorMessage } from "../utils/UserError";
 import { Component } from "./Component"
 
+// Also catches errors nicely
 export default class LoadingButton extends Component {
     Node: HTMLElement;
 
@@ -14,17 +16,31 @@ export default class LoadingButton extends Component {
 
     get Loading() { return this._loading }
 
-    waitFor(promise: Promise<any> | void) {
+    _disabled = false
+    set Disabled(disabled: boolean) {
+        if (this._disabled === disabled) return
+        this._disabled = disabled
+        if (disabled) this.Node.classList.add("disabled")
+        else this.Node.classList.remove("disabled")
+    }
+    get Disabled() { return this._disabled }
+
+    waitFor(promise: Promise<any> | void, canRetry: boolean) {
         if (promise) {
             this.Loading = true;
             this.Node.classList.add("loading")
-            promise.then(() => {
-                this.Loading = false;
-                this.Node.classList.remove("loading")
-            }).catch(error => {
+            this.Node.classList.remove("errored")
+            promise.catch(error => {
                 // TODO should put a little notice on the button
                 // Will need some sort of `allowRetry` property since an initial load failure can't retry
                 console.error({ message: "error in promise", error })
+                const message = userErrorMessage(error)
+                this.Node.classList.add("errored")
+                this.Node.dataset.error = message
+                if (!canRetry) this.Disabled = true
+            }).then(() => {
+                this.Loading = false;
+                this.Node.classList.remove("loading")
             })
         }
     }
@@ -41,9 +57,9 @@ export default class LoadingButton extends Component {
         if (props.className) this.Node.classList.add(props.className)
 
         this.Node.addEventListener("click", () => {
-            if (this.Loading) return
-            this.waitFor(props.onClick())
+            if (this.Loading || this.Disabled) return
+            this.waitFor(props.onClick(), true)
         })
-        this.waitFor(props.loading)
+        this.waitFor(props.loading, false)
     }
 }

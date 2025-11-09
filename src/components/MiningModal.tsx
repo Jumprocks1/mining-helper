@@ -4,6 +4,7 @@ import { Children } from "../utils/createElement"
 import { getOrCreatePendingCard, saveCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, SubtitleEntry } from "../utils/srt"
+import UserError from "../utils/UserError"
 import { jpdbEntryUrl, lookupFuri } from "../utils/util"
 import { applyRegexTo } from "../views/RegexReplacements"
 import AudioButton from "./AudioButton"
@@ -41,7 +42,8 @@ export default (props: Props) => {
             card.enSentence = undefined
 
             const meaning = meaningCE.innerText
-            if (meaning) card.meaning = meaning
+            if (!meaning) throw new UserError("Meaning missing")
+            card.meaning = meaning
 
             card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, word)
             card.jpSentenceKanji = card.jpSentenceKanji.replace(word, "<b>" + word + "</b>")

@@ -7,6 +7,7 @@ let added = false
 export const MaterialIcons = [
     "close",
     "delete",
+    "error",
     "play_arrow",
     "refresh",
     "search",
