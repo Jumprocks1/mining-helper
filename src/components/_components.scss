@@ -10,7 +10,12 @@
     .field {
         div[contentEditable="plaintext-only"] {
             padding-left: $s1 * 0.5;
-            margin-left: $s1 * -0.5;
+            padding-right: $s1 * 0.5;
+            border: $border0;
+            outline: none;
+            &:focus {
+                border: $border1;
+            }
         }
     }
 

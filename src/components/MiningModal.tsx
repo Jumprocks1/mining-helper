@@ -56,7 +56,11 @@ export default (props: Props) => {
             const vocab = jpdb.vocabulary[token[3]]
             card.kanji = vocab[0]
             card.meaning = vocab[3][0]
-            card.audioBytes = await tryGetAudioBytes(vocab)
+            // prefer better audio over jpdb audio
+            if (!card.audioLocalFile || card.audioLocalFile.includes("jpdb")) {
+                card.audioBytes = await tryGetAudioBytes(vocab)
+                if (card.audioBytes) card.audioLocalFile = `${card.kanji}_auto.mp3`
+            }
             if (!card.furigana)
                 card.furigana = furiFromToken(vocab[0], token)
         }
@@ -72,6 +76,7 @@ export default (props: Props) => {
 
             const meaning = meaningCE.innerText
             if (!meaning) throw new UserError("Meaning missing")
+            if (!card.audioBytes) throw new UserError("Missing word audio")
             card.meaning = meaning
 
             // could load this from tokens, but it's tricky since user can modify it
@@ -79,10 +84,10 @@ export default (props: Props) => {
             card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, word)
             card.jpSentenceKanji = card.jpSentenceKanji.replace(word, "<b>" + word + "</b>")
 
-            const sentenceMeaning = sentenceMeaningInput.value
+            const sentenceMeaning = sentenceMeaningCE.textContent
             if (sentenceMeaning) card.enSentence = sentenceMeaning
 
-            await saveToAnkiAndRemove(card)
+            await saveToAnkiAndRemove(card, "mining-modal")
             modal.Close()
         }
 
@@ -131,10 +136,20 @@ export default (props: Props) => {
                 await loadMpvAudio()
             }} />}
         </>, sentenceCE)
-        const sentenceMeaningInput = <input /> as HTMLInputElement
+
+        const sentenceMeaningCE = <div contentEditable="plaintext-only" /> as HTMLDivElement
         labeled.push(<div className="field">
             <label>Sentence Meaning</label>
-            {sentenceMeaningInput}
+            <div className="field-value">
+                <Loader load={async () => {
+                    let english = subtitles.translated
+                    if (!english) {
+                        // TODO pull from mpv
+                        // english = 
+                    }
+                    return sentenceMeaningCE
+                }} />
+            </div>
         </div>)
 
 
