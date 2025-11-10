@@ -1,3 +1,5 @@
+import { JpdbParseResponse, JpdbToken } from "../jpdb/JpdbParseText";
+
 let _apiKey: string | undefined = undefined
 export function getJpdbApiKey() {
     if (_apiKey) return _apiKey;
@@ -11,6 +13,27 @@ export function getJpdbApiKey() {
 
 export function jpdbEntryUrl(word: string) {
     return `https://jpdb.io/search?q=${encodeURIComponent(word)}&lang=english`
+}
+
+// token will not necessarily match word, mainly with verb conjugations
+// This might have some issues, but I can't think of any, so will leave it until we find some
+export function furiFromToken(word: string, token: JpdbToken) {
+    if (Array.isArray(token[2])) {
+        for (const reading of token[2]) {
+            if (Array.isArray(reading)) {
+                word = word.replaceAll(reading[0], (_, offset) => {
+                    const rep = reading[0] + "[" + reading[1] + "]"
+                    if (offset > 0) {
+                        const prev = word[offset - 1]
+                        if (prev !== "]" && prev !== " " && prev !== ">")
+                            return " " + rep
+                    }
+                    return rep
+                })
+            }
+        }
+    }
+    return word
 }
 
 export async function lookupFuri(jp: string | undefined, highlight?: string) {
@@ -31,7 +54,13 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
             position_length_encoding: "utf16"
         })
     })
-    const json = await res.json()
+    const json = await res.json() as JpdbParseResponse
+    return tokensToFuri(jp, json.tokens, highlight)
+}
+
+// only needs first 3 indices of tokens
+// token indices must be relative to jp
+export function tokensToFuri(jp: string, tokens: JpdbToken[], highlight?: string) {
     const highlightStart = highlight !== undefined && jp.indexOf(highlight)
     const highlightLength = highlight?.length
     const highlightEnd = highlightStart !== false && highlightLength && (highlightStart + highlightLength)
@@ -58,14 +87,13 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
         }
     }
     let o = ""
-    for (const token of json.tokens) {
+    for (const token of tokens) {
         const [position, length, furi] = token
         // sometimes tokens just get skipped in json.tokens. This pushes any skipped tokens. Frequently saw with jp comma
         pushMain(position - i)
         if (furi === null) {
             pushMain(length)
-        }
-        else {
+        } else {
             for (const part of furi) {
                 if (!Array.isArray(part)) {
                     pushMain(part.length)

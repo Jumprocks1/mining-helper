@@ -17,7 +17,7 @@ export type JpdbVocabulary = [
 export type JpdbToken = [
     start: number,
     length: number,
-    reading: (string | [string, string])[] | null,
+    reading: ([string, string] | string)[] | null,
     vocab_index: number
 ]
 

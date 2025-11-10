@@ -12,6 +12,7 @@ import { applyReplacementsTo, getReplacements } from "../views/RegexReplacements
 import { JpdbParseSubtitles } from "../jpdb/JpdbParseText"
 import RecommendedMiningModal from "./RecommendedMiningModal"
 import { RegisterPageContext } from "../framework/PageContext"
+import { getCharacterIndex } from "../utils/CharacterHighlighter"
 
 let currentTime = 0
 
@@ -215,16 +216,47 @@ document.addEventListener("DOMContentLoaded", () => {
                 const selected = getSelection()
                 if (selected) {
                     const anchor = selected.anchorNode?.parentElement as HTMLElement
-                    const entry = anchor?.closest<HTMLElement>(".subtitle-entry")?.subtitleEntry
-                    if (entry) {
+                    const htmlSubtitles = anchor.closest<HTMLElement>(".subtitles")
+                    const htmlEntry = htmlSubtitles?.closest<HTMLElement>(".subtitle-entry")
+                    const entry = htmlEntry?.subtitleEntry
+                    if (htmlSubtitles && entry) {
+                        let startIndex: number | undefined
+                        let endIndex: number | undefined
+                        // can only get these indices if the start/end for selection is in same entry
+                        if (selected.focusNode && selected.focusNode.parentElement?.closest<HTMLElement>(".subtitles") === htmlSubtitles) {
+                            startIndex = getCharacterIndex(htmlSubtitles, selected.anchorNode!, selected.anchorOffset)
+                            endIndex = getCharacterIndex(htmlSubtitles, selected.focusNode!, selected.focusOffset)
+                            if (startIndex > endIndex) {
+                                const temp = startIndex
+                                startIndex = endIndex
+                                endIndex = temp
+                            }
+                        }
                         miningModal = MiningModal({
                             word: selected.toString(), entry, mpv: webSocket,
-                            entries: loadedSubtitles.main!.subtitles.processedEntries,
+                            subtitles: loadedSubtitles.main!.subtitles,
+                            startIndex,
+                            endIndex,
                             onClose: () => miningModal = undefined
                         })
                         miningModal.Open()
+                        webSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
+                        // Could use this to query, but really not needed
+                        // webSocket.RequestIfOpen(`ipc-request:["get_property", "sub-visibility"]`)
+                        webSocket.SendIfOpen(`ipc:set sub-visibility yes`)
                     }
                 }
+            }
+        } else if (ev.key === "t") {
+            if (loadedSubtitles.main) JpdbParseSubtitles(loadedSubtitles.main.subtitles)
+        } else if (ev.key === "y") {
+            const subs = loadedSubtitles.main?.subtitles
+            if (subs) {
+                (async () => {
+                    if (!subs.jpdbParse)
+                        await JpdbParseSubtitles(subs)
+                    RecommendedMiningModal(subs)
+                })()
             }
         }
     })

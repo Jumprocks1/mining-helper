@@ -1,3 +1,4 @@
+import { JpdbVocabulary } from "../jpdb/JpdbParseText"
 import { urlToArrayBuffer } from "./util"
 
 let audioContext: AudioContext | undefined = undefined
@@ -40,4 +41,19 @@ export async function playAudio(name: string, audio: PlayableAudio) {
     playing[name] = source
     source.onended = () => delete playing[name]
     source.start()
+}
+
+export async function tryGetAudioBytes(vocab: JpdbVocabulary) {
+    const kanji = vocab[0]
+    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes-kanji:${kanji}` })
+    if (!audioBytes.ok) return
+    const buffer = await audioBytes.arrayBuffer()
+    return buffer
+}
+export async function tryPlayAudio(vocab: JpdbVocabulary) {
+    const kanji = vocab[0]
+    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes-kanji:${kanji}` })
+    if (!audioBytes.ok) return
+    const buffer = await audioBytes.arrayBuffer()
+    await playAudio(kanji, buffer)
 }

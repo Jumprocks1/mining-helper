@@ -1,11 +1,13 @@
+import { JpdbToken } from "../jpdb/JpdbParseText"
+import { getTokenFor } from "../subtitles/SubtitleUtil"
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
-import { playAudio } from "../utils/Audio"
+import { playAudio, tryGetAudioBytes } from "../utils/Audio"
 import { Children } from "../utils/createElement"
 import { getOrCreatePendingCard, saveCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
-import { formatTimestamp, SubtitleEntry } from "../utils/srt"
+import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
 import UserError from "../utils/UserError"
-import { jpdbEntryUrl, lookupFuri } from "../utils/util"
+import { furiFromToken, furiToReading, jpdbEntryUrl, lookupFuri, tokensToFuri } from "../utils/util"
 import { applyRegexTo } from "../views/RegexReplacements"
 import AudioButton from "./AudioButton"
 import IconButton from "./basic/IconButton"
@@ -18,21 +20,48 @@ import { Modal } from "./Modal"
 interface Props {
     word: string
     onClose: () => void
-    entry: SubtitleEntry
-    entries: SubtitleEntry[] // for finding adjacent entries as needed
+    token?: JpdbToken
+    entry: SubtitleEntryWithCharacterOffset
+    subtitles: Subtitles // for finding adjacent entries and vocab lookups
     mpv?: MpvWebSocket
+    startIndex?: number // index inside of entry.text, not always available
+    endIndex?: number
 }
 
 export default (props: Props) => {
-    const { word } = props
+    let word = props.word
+    const { entry, mpv, subtitles, startIndex, endIndex } = props
+    const jpdb = subtitles.jpdbParse
+    let token: JpdbToken | undefined = undefined
+
+    if (jpdb && startIndex !== undefined && endIndex !== undefined) {
+        token = getTokenFor(subtitles, startIndex + entry.characterOffset, endIndex + entry.characterOffset)
+        if (token) {
+            const start = token[0] - entry.characterOffset
+            word = entry.text.substring(start, start + token[1])
+        }
+    }
+
     async function getSentenceCeInnerHTML(entry: SubtitleEntry) {
         // don't remember why I don't do the space replacement with regex
         return (await applyRegexTo(entry.text, true)).replace("　", " ").replaceAll(word, "<b>" + word + "</b>")
     }
 
     async function body(inner: HTMLElement) {
-        const { word, entry, mpv } = props
+        const entries = subtitles.processedEntries
+
         const card = await getOrCreatePendingCard(word, true)
+
+        if (jpdb && token) {
+            const vocab = jpdb.vocabulary[token[3]]
+            card.kanji = vocab[0]
+            card.meaning = vocab[3][0]
+            card.audioBytes = await tryGetAudioBytes(vocab)
+            if (!card.furigana)
+                card.furigana = furiFromToken(vocab[0], token)
+        }
+
+
         const kanji = card.kanji // this can be different if word is a verb
 
         async function save() {
@@ -45,6 +74,8 @@ export default (props: Props) => {
             if (!meaning) throw new UserError("Meaning missing")
             card.meaning = meaning
 
+            // could load this from tokens, but it's tricky since user can modify it
+            // this is fine for now
             card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, word)
             card.jpSentenceKanji = card.jpSentenceKanji.replace(word, "<b>" + word + "</b>")
 
@@ -76,7 +107,7 @@ export default (props: Props) => {
         } else {
             add("Meaning", <a target="_blank" rel="noopener noreferrer" href={jpdbEntryUrl(kanji)}>N/A</a>)
         }
-        let firstEntryIndex = props.entries.indexOf(entry)
+        let firstEntryIndex = entries.indexOf(entry)
         let lastEntryIndex = firstEntryIndex // not exclusive, unlike most things
 
         let startTime = entry.startTime
@@ -86,16 +117,16 @@ export default (props: Props) => {
             Sentence
             {firstEntryIndex !== -1 && <UpDownButtons onClick={async (_, down) => {
                 if (down) {
-                    if (lastEntryIndex === props.entries.length - 1) return
+                    if (lastEntryIndex === entries.length - 1) return
                     lastEntryIndex += 1
-                    sentenceCE.innerHTML += "\n" + await getSentenceCeInnerHTML(props.entries[lastEntryIndex])
+                    sentenceCE.innerHTML += "\n" + await getSentenceCeInnerHTML(entries[lastEntryIndex])
                 } else {
                     if (firstEntryIndex === 0) return
                     firstEntryIndex -= 1
-                    sentenceCE.innerHTML = await getSentenceCeInnerHTML(props.entries[firstEntryIndex]) + "\n" + sentenceCE.innerHTML
+                    sentenceCE.innerHTML = await getSentenceCeInnerHTML(entries[firstEntryIndex]) + "\n" + sentenceCE.innerHTML
                 }
-                startTime = props.entries[firstEntryIndex].startTime
-                endTime = props.entries[lastEntryIndex].endTime
+                startTime = entries[firstEntryIndex].startTime
+                endTime = entries[lastEntryIndex].endTime
                 updateTimeField()
                 await loadMpvAudio()
             }} />}

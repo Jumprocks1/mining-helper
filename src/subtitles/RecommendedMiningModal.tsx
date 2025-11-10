@@ -4,19 +4,11 @@ import UpDownButtons from "../components/basic/UpDownButtons";
 import Loader from "../components/Loader";
 import { OpenModal } from "../components/Modal";
 import { IgnoreVid, loadIgnoreList } from "../jpdb/IgnoreList";
-import { getVocabState, JpdbVocabulary, VocabState } from "../jpdb/JpdbParseText";
-import { playAudio } from "../utils/Audio";
+import { getVocabState, VocabState } from "../jpdb/JpdbParseText";
+import { tryPlayAudio } from "../utils/Audio";
 import { SubtitleEntry, Subtitles } from "../utils/srt";
 import { seekToNextEntry } from "./subtitles";
 // TODO ^ this import is really dangerous
-
-async function tryPlayAudio(vocab: JpdbVocabulary) {
-    const kanji = vocab[0]
-    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes-kanji:${kanji}` })
-    if (!audioBytes.ok) return
-    const buffer = await audioBytes.arrayBuffer()
-    await playAudio(kanji, buffer)
-}
 
 export default (subtitles: Subtitles) => {
     const jpdb = subtitles.jpdbParse
