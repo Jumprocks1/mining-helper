@@ -1,6 +1,6 @@
 import { getAnkiWords, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList"
 import { Popover } from "../components/basic/Popover"
-import { getVocabState, getVocabStateAndNote, JpdbParseResponse, JpdbVocabulary, VocabState } from "../jpdb/JpdbParseText"
+import { getVocabState, getVocabStateAndNote, JpdbParseResponse, JpdbToken, JpdbVocabulary, VocabState } from "../jpdb/JpdbParseText"
 import { getCharacterIndex, getHoveredCharacterIndex, getTextNodeAtIndex } from "../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
 import { oldCreateElement } from "../utils/util"
@@ -10,6 +10,8 @@ declare global {
         subtitleEntry?: SubtitleEntryWithCharacterOffset
     }
 }
+
+type HoverState = { token: JpdbToken, rect: DOMRect }
 
 export default class SubtitleViewer {
     Node: HTMLElement
@@ -68,11 +70,11 @@ export default class SubtitleViewer {
         getAnkiWords()
     }
 
-    LoadedHoverRect: DOMRect | undefined
-    UpdateHoverBox(rect: DOMRect | undefined, vocab: JpdbVocabulary | undefined) {
-        if (this.LoadedHoverRect === rect) return
-        this.LoadedHoverRect = rect
-        if (!rect) {
+    LoadedHoverState: HoverState | undefined
+    UpdateHoverBox(hoverState: HoverState | undefined, vocab: JpdbVocabulary | undefined) {
+        if (this.LoadedHoverState?.token === hoverState?.token) return
+        this.LoadedHoverState = hoverState
+        if (!hoverState) {
             this.hoverRectangle.classList.add("hide")
             return
         }
@@ -94,21 +96,21 @@ export default class SubtitleViewer {
                 this.hoverRectangle.classList.add("ignore")
         }
 
-        this.hoverRectangle.style.width = rect.width + "px"
-        this.hoverRectangle.style.height = rect.height + "px"
-        this.hoverRectangle.style.top = rect.top - parentRect.top + "px"
-        this.hoverRectangle.style.left = rect.left - parentRect.left + "px"
+        this.hoverRectangle.style.width = hoverState.rect.width + "px"
+        this.hoverRectangle.style.height = hoverState.rect.height + "px"
+        this.hoverRectangle.style.top = hoverState.rect.top - parentRect.top + "px"
+        this.hoverRectangle.style.left = hoverState.rect.left - parentRect.left + "px"
     }
 
     LoadedPopoverVocab: JpdbVocabulary | undefined
 
-    SetHoverState(rect: DOMRect | undefined, vocab: JpdbVocabulary | undefined, shift: boolean) {
-        this.UpdateHoverBox(rect, vocab)
+    SetHoverState(hoverState: HoverState | undefined, vocab: JpdbVocabulary | undefined, shift: boolean) {
+        this.UpdateHoverBox(hoverState, vocab)
         if (!shift && vocab && vocab !== this.LoadedPopoverVocab) vocab = undefined
         if (this.LoadedPopoverVocab === vocab) return
         this.LoadedPopoverVocab = vocab
 
-        if (vocab && rect) {
+        if (vocab && hoverState) {
             if (!this.popover) {
                 this.popover = new Popover({
                     side: "below",
@@ -133,10 +135,14 @@ export default class SubtitleViewer {
                     {i + 1}. {e}
                 </div>)}
             </>)
-            this.popover.Show(rect.left - parentRect.left, rect.bottom - parentRect.top)
+            this.popover.Show(hoverState.rect.left - parentRect.left, hoverState.rect.bottom - parentRect.top)
         } else {
             this.popover?.Hide()
         }
+    }
+
+    GetHoveredToken() {
+        return this.LoadedHoverState?.token
     }
 
     UpdateHoverInfo(x: number, y: number, shift: boolean) {
@@ -169,7 +175,7 @@ export default class SubtitleViewer {
             const end = getTextNodeAtIndex(subtitles, token[0] - entry.characterOffset + token[1])
             range.setEnd(end[0], end[1])
             const rect = range.getBoundingClientRect()
-            this.SetHoverState(rect, jpdb.vocabulary[token[3]], shift)
+            this.SetHoverState({ token, rect }, jpdb.vocabulary[token[3]], shift)
         } else {
             this.SetHoverState(undefined, undefined, shift)
         }
