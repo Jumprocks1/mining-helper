@@ -213,6 +213,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (miningModal) {
                 miningModal.Close()
             } else {
+                // TODO if selection is collapsed, we should prioritze the hover element in the SubtitleViewer
+                // the hover token is easily gettable, but we'd have to rework most of the code below here
                 const selected = getSelection()
                 if (selected) {
                     const anchor = selected.anchorNode?.parentElement as HTMLElement
