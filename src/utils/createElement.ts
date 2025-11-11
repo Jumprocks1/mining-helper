@@ -11,7 +11,7 @@ type FC = (props: Record<string, any>) => JSX.Element
 export function appendChild(el: ParentNode, child: Children) {
     if (Array.isArray(child)) {
         for (let i = 0; i < child.length; i++) appendChild(el, child[i])
-    } else if (typeof child === "object") {
+    } else if (typeof child === "object" && child !== null) {
         if ("Node" in child)
             el.append(child.Node)
         else

@@ -31,7 +31,7 @@ interface Props {
 let englishFailed = false
 
 async function tryLoadEnglish(subtitles: Subtitles, mpv: MpvWebSocket | undefined) {
-    if (subtitles.translated || !mpv) return
+    if (subtitles.translated || !mpv) return subtitles.translated
     try {
         const subs = await mpv.RequestIfOpen("english-subs")
         if (typeof subs === "string") throw new Error()
@@ -137,8 +137,9 @@ export default (props: Props) => {
                     lastEntryIndex += 1
                     const newEntry = entries[lastEntryIndex]
                     if (subtitles.translated) {
-                        sentenceMeaningCE.textContent += "\n" +
-                            getSubsInRange(subtitles.translated.originalEntries, newEntry.startTime, newEntry.endTime)
+                        sentenceMeaningCE.textContent =
+                            (sentenceMeaningCE.textContent + "\n" +
+                                getSubsInRange(subtitles.translated.originalEntries, newEntry.startTime, newEntry.endTime)).trim()
                     }
                     sentenceCE.innerHTML += "\n" + await getSentenceCeInnerHTML(newEntry)
                 } else {
@@ -147,8 +148,8 @@ export default (props: Props) => {
                     const newEntry = entries[firstEntryIndex]
                     if (subtitles.translated) {
                         sentenceMeaningCE.textContent =
-                            getSubsInRange(subtitles.translated.originalEntries, newEntry.startTime, newEntry.endTime)
-                            + "\n" + sentenceMeaningCE.textContent
+                            (getSubsInRange(subtitles.translated.originalEntries, newEntry.startTime, newEntry.endTime)
+                                + "\n" + sentenceMeaningCE.textContent).trim()
                     }
                     sentenceCE.innerHTML = await getSentenceCeInnerHTML(newEntry) + "\n" + sentenceCE.innerHTML
                 }

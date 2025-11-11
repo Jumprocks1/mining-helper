@@ -7,7 +7,7 @@ import { isIgnoredSync } from "./IgnoreList";
 export type JpdbVocabulary = [
     spelling: string,
     reading: string,
-    frequency_rank: number,
+    frequency_rank: number | null,
     meanings: string[],
     parts_of_speech: string[],
     vid: number,

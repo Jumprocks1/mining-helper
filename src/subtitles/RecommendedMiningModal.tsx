@@ -18,7 +18,7 @@ export default (subtitles: Subtitles) => {
         const body = <></>
         await getAnkiWords()
         await loadIgnoreList()
-        const sorted = jpdb.vocabulary.toSorted((a, b) => a[2] - b[2])
+        const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
         for (let i = 0; i < sorted.length; i++) {
             if (body.childElementCount >= 50) break
             const vocab = sorted[i]
@@ -34,7 +34,7 @@ export default (subtitles: Subtitles) => {
                     await IgnoreVid(vocab[5])
                     row.remove()
                 }} />
-                {vocab[2]}
+                {vocab[2] ?? "N/A"}
                 <UpDownButtons onClick={(_, down) => {
                     const options: SubtitleEntry[] = []
                     for (const entry of subtitles.processedEntries) {
