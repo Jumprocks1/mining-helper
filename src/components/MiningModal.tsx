@@ -1,11 +1,11 @@
 import { JpdbToken } from "../jpdb/JpdbParseText"
-import { getTokenFor } from "../subtitles/SubtitleUtil"
+import { getSubsInRange, getTokenFor } from "../subtitles/SubtitleUtil"
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
 import { playAudio, tryGetAudioBytes } from "../utils/Audio"
 import { Children } from "../utils/createElement"
 import { getOrCreatePendingCard, saveCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
-import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
+import { formatTimestamp, parseSrt, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
 import UserError from "../utils/UserError"
 import { furiFromToken, furiToReading, jpdbEntryUrl, lookupFuri, tokensToFuri } from "../utils/util"
 import { applyRegexTo } from "../views/RegexReplacements"
@@ -26,6 +26,21 @@ interface Props {
     mpv?: MpvWebSocket
     startIndex?: number // index inside of entry.text, not always available
     endIndex?: number
+}
+
+let englishFailed = false
+
+async function tryLoadEnglish(subtitles: Subtitles, mpv: MpvWebSocket | undefined) {
+    if (subtitles.translated || !mpv) return
+    try {
+        const subs = await mpv.RequestIfOpen("english-subs")
+        if (typeof subs === "string") throw new Error()
+        const decoded = new TextDecoder().decode(subs)
+        return subtitles.translated = await parseSrt(decoded)
+    } catch (e) {
+        englishFailed = true;
+        console.error("Failed to load translated subs: " + e)
+    }
 }
 
 export default (props: Props) => {
@@ -70,9 +85,6 @@ export default (props: Props) => {
 
         async function save() {
             card.jpSentenceKanji = sentenceCE.innerText.replace("\n", " ");
-            // TODO pull from eng subs. Choose subs that have >50% overlap with the JP sub (based on their own durations)
-            // TODO allow setting english manually for now, don't worry about pulling from subs
-            card.enSentence = undefined
 
             const meaning = meaningCE.innerText
             if (!meaning) throw new UserError("Meaning missing")
@@ -84,8 +96,7 @@ export default (props: Props) => {
             card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, word)
             card.jpSentenceKanji = card.jpSentenceKanji.replace(word, "<b>" + word + "</b>")
 
-            const sentenceMeaning = sentenceMeaningCE.textContent
-            if (sentenceMeaning) card.enSentence = sentenceMeaning
+            card.enSentence = sentenceMeaningCE.textContent
 
             await saveToAnkiAndRemove(card, "mining-modal")
             modal.Close()
@@ -124,11 +135,22 @@ export default (props: Props) => {
                 if (down) {
                     if (lastEntryIndex === entries.length - 1) return
                     lastEntryIndex += 1
-                    sentenceCE.innerHTML += "\n" + await getSentenceCeInnerHTML(entries[lastEntryIndex])
+                    const newEntry = entries[lastEntryIndex]
+                    if (subtitles.translated) {
+                        sentenceMeaningCE.textContent += "\n" +
+                            getSubsInRange(subtitles.translated.originalEntries, newEntry.startTime, newEntry.endTime)
+                    }
+                    sentenceCE.innerHTML += "\n" + await getSentenceCeInnerHTML(newEntry)
                 } else {
                     if (firstEntryIndex === 0) return
                     firstEntryIndex -= 1
-                    sentenceCE.innerHTML = await getSentenceCeInnerHTML(entries[firstEntryIndex]) + "\n" + sentenceCE.innerHTML
+                    const newEntry = entries[firstEntryIndex]
+                    if (subtitles.translated) {
+                        sentenceMeaningCE.textContent =
+                            getSubsInRange(subtitles.translated.originalEntries, newEntry.startTime, newEntry.endTime)
+                            + "\n" + sentenceMeaningCE.textContent
+                    }
+                    sentenceCE.innerHTML = await getSentenceCeInnerHTML(newEntry) + "\n" + sentenceCE.innerHTML
                 }
                 startTime = entries[firstEntryIndex].startTime
                 endTime = entries[lastEntryIndex].endTime
@@ -142,10 +164,9 @@ export default (props: Props) => {
             <label>Sentence Meaning</label>
             <div className="field-value">
                 <Loader load={async () => {
-                    let english = subtitles.translated
-                    if (!english) {
-                        // TODO pull from mpv
-                        // english = 
+                    const english = await tryLoadEnglish(subtitles, mpv)
+                    if (english) {
+                        sentenceMeaningCE.textContent = getSubsInRange(english.originalEntries, startTime, endTime)
                     }
                     return sentenceMeaningCE
                 }} />

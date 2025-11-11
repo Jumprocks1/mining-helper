@@ -27,6 +27,7 @@ export interface Subtitles {
     name?: string
     hash?: number
     jpdbParse?: JpdbParseResponse
+    translated?: Subtitles
 }
 
 // https://stackoverflow.com/a/7616484/11435204
