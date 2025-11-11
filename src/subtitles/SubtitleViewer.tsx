@@ -48,7 +48,7 @@ export default class SubtitleViewer {
         let y: number | undefined = undefined
         document.addEventListener("keydown", ev => {
             if (this.subtitles.jpdbParse) {
-                if (this.popover?.Visible) return
+                if (this.popover?.Visible && !ev.shiftKey) return
                 if (x !== undefined && y !== undefined)
                     this.UpdateHoverInfo(x, y, ev.shiftKey)
             }
@@ -58,7 +58,7 @@ export default class SubtitleViewer {
             x = ev.clientX
             y = ev.clientY
             if (this.subtitles.jpdbParse) {
-                if (this.popover) {
+                if (this.popover && !ev.shiftKey) {
                     if (this.popover.Node.contains(ev.target as HTMLElement)) return
                 }
                 this.UpdateHoverInfo(x, y, ev.shiftKey)
