@@ -1,4 +1,5 @@
 import { JpdbParseResponse } from "../jpdb/JpdbParseText"
+import StorageCache from "./StorageCache"
 
 export interface SubtitleEntry {
     id: number
@@ -59,6 +60,8 @@ export function formatTimestamp(timestamp: number, showMs: false | 1 | 2 | 3 = f
     }
 }
 
+export const OffsetCache = new StorageCache({ prefix: "offset_", maxEntries: 100, minimumAvailableBytes: 500_000 });
+
 function parseTimestamp(timestamp: string) {
     timestamp = timestamp.replace(".", ",").trim()
     const [hours, minutes, partialSeconds] = timestamp.split(":")
@@ -71,9 +74,9 @@ export async function parseSrt(srt: string): Promise<Subtitles> {
     const entries: SubtitleEntry[] = []
     const o: Subtitles = { source: "srt", originalEntries: entries, processedEntries: [], hash: hash(srt) }
 
-    // TODO this would be nicer in session storage, but that is currently limited to card keys
-    const offsets = (await chrome.storage.local.get({ recentOffsets: {} })).recentOffsets
-    if (o.hash && offsets[o.hash]) o.offset = offsets[o.hash]
+    if (o.hash !== undefined) {
+        o.offset = await OffsetCache.Get(o.hash)
+    }
 
     let pendingEntry: Partial<SubtitleEntry> | undefined = undefined
 

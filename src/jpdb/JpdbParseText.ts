@@ -3,6 +3,7 @@ import { delay, getJpdbApiKey } from "../utils/util";
 import "../utils/CharacterHighlighter";
 import { getAnkiWordsSetSync, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
 import { isIgnoredSync } from "./IgnoreList";
+import StorageCache from "../utils/StorageCache";
 
 export type JpdbVocabulary = [
     spelling: string,
@@ -101,58 +102,11 @@ export async function JpdbParseSubtitles(subtitles: Subtitles) {
     return res
 }
 
-const minimumAvailable = 1_000_000 // want at least 1 MB spare
-const maxEntries = 20
 
-interface CacheInfo {
-    key: string // excludes prefix since it's stored in cacheInfoKey
-    time: number
-}
-
-const cachePrefix = "jpdb_cache_"
-const cacheInfoKey = cachePrefix + "cacheInfo"
-
-async function cacheCleanNoSave() {
-    const quota = chrome.storage.local.QUOTA_BYTES
-    const cacheInfo = (await chrome.storage.local.get({ [cacheInfoKey]: [] }))[cacheInfoKey] as CacheInfo[]
-    cacheInfo.sort((a, b) => b.time - a.time)
-    while ((quota - await chrome.storage.local.getBytesInUse()) < minimumAvailable || cacheInfo.length > maxEntries) {
-        const pop = cacheInfo.pop()
-        if (!pop) break
-        await chrome.storage.local.remove(cachePrefix + pop.key)
-    }
-    return cacheInfo
-}
-
-async function cacheStore(key: string, value: any) {
-    const cacheInfo = await cacheCleanNoSave()
-    let found = false
-    for (let i = 0; i < cacheInfo.length; i++) {
-        if (cacheInfo[i].key === key) {
-            cacheInfo[i].time = Date.now()
-            found = true
-        }
-    }
-    if (!found) cacheInfo.push({ key, time: Date.now() })
-    await chrome.storage.local.set({ [cachePrefix + key]: value, [cacheInfoKey]: cacheInfo })
-}
-
-async function cacheValue<T>(key: string, get: () => Promise<T>, forceRefresh?: boolean): Promise<T> {
-    const cacheKey = cachePrefix + key
-    if (forceRefresh) {
-        const value = await get()
-        cacheStore(key, value)
-        return value
-    }
-    const found = (await chrome.storage.local.get(cacheKey))[cacheKey] as T | undefined
-    if (!found) {
-        const value = await get()
-        cacheStore(key, value)
-        return value
-    } else {
-        return found
-    }
-}
+export const JpdbCache = new StorageCache({
+    prefix: "jpdb_cache_",
+    maxEntries: 20
+})
 
 // had this fail at 5981 characters
 // seems inconsistent, might exclude certain characters or something
@@ -161,7 +115,7 @@ const maxParseCharacters = 5000
 // measured ~150kB per episode
 export default async function JpdbParseText(s: string[]) {
     const fullJoin = s.join("\n")
-    const value = await cacheValue("jpdb_" + hash(fullJoin), async () => {
+    const value = await JpdbCache.Get("jpdb_" + hash(fullJoin), async () => {
         const finalRes: JpdbParseResponse = { tokens: [], vocabulary: [] }
         let start = 0 // line number start of next request
         let responseOffset = 0 // character count to add to token indexes after response

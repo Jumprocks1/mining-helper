@@ -2,10 +2,12 @@ import NumberField from "../components/basic/NumberField"
 import Loader from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
+import { JpdbCache } from "../jpdb/JpdbParseText"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 
 interface FieldProps<T> {
     key: { [K in SettingsKeys]: AllSettings[K] extends T ? K : never }[SettingsKeys]
+    name: string
 }
 
 // resets on page load
@@ -52,27 +54,22 @@ export function triggerSettingChanged<K extends SettingsKeys>(key: K, v: AllSett
 }
 
 async function ClearCache() {
-    const keys = await chrome.storage.local.getKeys()
-    for (const key of keys) {
-        if (key.startsWith("jpdb_cache_")) {
-            await chrome.storage.local.remove(key)
-        }
-    }
+    await JpdbCache.Clear();
 }
 
 export default () => {
     async function numberField(props: FieldProps<number>) {
         const defaultValue = getSetting(props.key)
         return <div className="setting-row field">
-            <label htmlFor="offset">Offset</label>
-            <NumberField defaultValue={defaultValue} onChange={v => setSetting("offset", v)} showPlus />
+            <label>{props.name}</label>
+            <NumberField defaultValue={defaultValue} onChange={v => setSetting(props.key, v)} showPlus />
         </div>
     }
 
     const body = <Loader load={async () => {
         return <div className="list">
             <button className="list-button" onclick={RegexReplacements}>Regex replacements</button>
-            {await numberField({ key: "offset" })}
+            {await numberField({ key: "offset", name: "Offset" })}
             <LoadingButton className="list-button" onClick={ClearCache}>Clear Cache</LoadingButton>
             <LoadingButton className="list-button" onClick={async () => console.log(await chrome.storage.local.get())}>
                 Log Storage

@@ -1,4 +1,4 @@
-import { parseSrt, Subtitles, formatTimestamp, SubtitleEntryWithCharacterOffset, SubtitleEntry } from "../utils/srt"
+import { parseSrt, Subtitles, formatTimestamp, SubtitleEntryWithCharacterOffset, SubtitleEntry, OffsetCache } from "../utils/srt"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import MhHeader from "../components/MhHeader"
 import { seedPage } from "../components/util"
@@ -74,8 +74,8 @@ async function loadSubtitles(subtitles: Subtitles, main: boolean) {
     const container = document.getElementById("subtitle-container")
     if (!container) return
 
-    if (subtitles.hash) {
-        chrome.storage.local.set({ recentOffsets: { [subtitles.hash]: offset } })
+    if (subtitles.hash !== undefined) {
+        OffsetCache.Store(subtitles.hash, offset)
     }
 
 
