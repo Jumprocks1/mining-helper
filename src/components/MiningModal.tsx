@@ -129,6 +129,12 @@ export default (props: Props) => {
         let startTime = entry.startTime
         let endTime = entry.endTime
 
+        let uneditedMeaningCE = ""
+        function setMeaningCE(s: string, onlyIfUnchanged: boolean) {
+            if (onlyIfUnchanged && uneditedMeaningCE !== sentenceMeaningCE.textContent) return
+            sentenceMeaningCE.textContent = uneditedMeaningCE = s
+        }
+
         add(<>
             Sentence
             {firstEntryIndex !== -1 && <UpDownButtons onClick={async (_, down) => {
@@ -136,25 +142,17 @@ export default (props: Props) => {
                     if (lastEntryIndex === entries.length - 1) return
                     lastEntryIndex += 1
                     const newEntry = entries[lastEntryIndex]
-                    if (subtitles.translated) {
-                        sentenceMeaningCE.textContent =
-                            (sentenceMeaningCE.textContent + "\n" +
-                                getSubsInRange(subtitles.translated.originalEntries, newEntry.startTime, newEntry.endTime)).trim()
-                    }
                     sentenceCE.innerHTML += "\n" + await getSentenceCeInnerHTML(newEntry)
                 } else {
                     if (firstEntryIndex === 0) return
                     firstEntryIndex -= 1
                     const newEntry = entries[firstEntryIndex]
-                    if (subtitles.translated) {
-                        sentenceMeaningCE.textContent =
-                            (getSubsInRange(subtitles.translated.originalEntries, newEntry.startTime, newEntry.endTime)
-                                + "\n" + sentenceMeaningCE.textContent).trim()
-                    }
                     sentenceCE.innerHTML = await getSentenceCeInnerHTML(newEntry) + "\n" + sentenceCE.innerHTML
                 }
                 startTime = entries[firstEntryIndex].startTime
                 endTime = entries[lastEntryIndex].endTime
+                if (subtitles.translated)
+                    setMeaningCE(getSubsInRange(subtitles.translated.originalEntries, startTime, endTime), true)
                 updateTimeField()
                 await loadMpvAudio()
             }} />}
@@ -167,7 +165,7 @@ export default (props: Props) => {
                 <Loader load={async () => {
                     const english = await tryLoadEnglish(subtitles, mpv)
                     if (english) {
-                        sentenceMeaningCE.textContent = getSubsInRange(english.originalEntries, startTime, endTime)
+                        setMeaningCE(getSubsInRange(english.originalEntries, startTime, endTime), false)
                     }
                     return sentenceMeaningCE
                 }} />
