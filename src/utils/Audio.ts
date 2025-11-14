@@ -7,7 +7,11 @@ let playing: Record<string, AudioBufferSourceNode> = {}
 
 function stopAll() {
     for (const key in playing) {
-        playing[key].stop()
+        const audio = playing[key]
+        audio.stop()
+        // @ts-expect-error
+        audio.onended?.()
+        audio.onended = null
         delete playing[key]
     }
 }
@@ -26,8 +30,7 @@ export async function resolveAudio(audio: PlayableAudio): Promise<ArrayBuffer | 
     return await loadedAudio;
 }
 
-export async function playAudio(name: string, audio: PlayableAudio) {
-    if (playing[name]) return
+export async function playAudio(name: string, audio: PlayableAudio, offset: number = 0) {
     const bytes = await resolveAudio(audio)
     if (!bytes) return
     audioContext ??= new AudioContext()
@@ -40,7 +43,7 @@ export async function playAudio(name: string, audio: PlayableAudio) {
 
     playing[name] = source
     source.onended = () => delete playing[name]
-    source.start()
+    source.start(0, offset)
 }
 
 export async function tryGetAudioBytes(vocab: JpdbVocabulary) {

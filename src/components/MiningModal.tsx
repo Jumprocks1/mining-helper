@@ -204,25 +204,28 @@ export default (props: Props) => {
             const eo = endOffset
             mpvPromise = mpv.RequestIfOpen(`mpv-audio:${startTime + so}-${endTime + eo}`)
             const loadedButton = mpvPromise.then(sentenceAudio => {
-                if (typeof sentenceAudio !== "string") {
+                if (typeof sentenceAudio === "string") return "Failed to load"
                     const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)
                     card.sentenceAudioBytes = buffer
                     card.sentenceAudioLocalFile = `${card.kanji}_ex_mpv.ogg`
                     card.sentenceIndex = "mpv"
                     loadedOffsets = [so, eo]
-                    return <IconButton className="play-icon" icon="play_arrow" onClick={async () => {
+                    const click = async (ev: PointerEvent) => {
                         if (!loadedOffsets) return
                         if (startOffset !== loadedOffsets[0] || endOffset !== loadedOffsets[1]) {
-                            const el = await loadMpvAudio()
-                            if (el instanceof HTMLElement) el.click()
+                        const reloaded = await loadMpvAudio()
+                        if (typeof reloaded === "object") reloaded.click(ev)
+                    } else {
+                        const startAt = ev.ctrlKey ? Math.max(0, (endTime + eo - (startTime + so) - 1000) / 1000) : undefined
+                        playAudio(kanji + "_ex", buffer, startAt)
                         }
-                        else
-                            playAudio(kanji + "_ex", buffer)
                     }
-                    } />
-                } else return "Failed to load"
+                    return {
+                        button: <IconButton className="play-icon" icon="play_arrow" onClick={click} />,
+                        click
+                    }
             })
-            playButtonPlaceholder.replaceChildren(Loader({ load: loadedButton }))
+            playButtonPlaceholder.replaceChildren(Loader({ load: loadedButton.then(e => typeof e === "string" ? e : e.button) }))
             return loadedButton
         }
         loadMpvAudio()
