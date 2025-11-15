@@ -46,6 +46,7 @@ function activeFields(card: CardData) {
         ["Sentence"]: card.jpSentenceKanji,
         ["Sentence Meaning"]: card.enSentence,
         ["Sentence Furigana"]: card.jpSentenceFuri,
+        ["Jpdb Vid"]: card.vid?.toString()
     }
     const fields: Record<string, string> = {}
     for (const key in tryFields) {
