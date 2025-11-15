@@ -17,6 +17,13 @@ interface TemporarySettings {
 
 interface LocalSettings {
     regexReplacements: ReplacementEntry[]
+    // don't use undefined here, doesn't play well with chrome storage `get`
+    ankiConnectKey: string | null
+}
+
+const defaultLocalSettings: LocalSettings = {
+    regexReplacements: [],
+    ankiConnectKey: null
 }
 
 const temporarySettings: TemporarySettings = {
@@ -32,9 +39,13 @@ export function onSettingChange<K extends SettingsKeys>(key: K, listener: (v: Al
     listeners.push({ key, listener })
 }
 
-export function getSetting<K extends SettingsKeys>(key: K): AllSettings[K] {
+export function getSetting<K extends keyof TemporarySettings>(key: K): TemporarySettings[K];
+export function getSetting<K extends keyof LocalSettings>(key: K): Promise<LocalSettings[K]>;
+export function getSetting<K extends SettingsKeys>(key: K): AllSettings[K] | Promise<AllSettings[K]> {
     if (key in temporarySettings)
         return temporarySettings[key as keyof TemporarySettings] as AllSettings[K]
+    if (key in defaultLocalSettings)
+        return chrome.storage.local.get({ [key]: defaultLocalSettings[key as keyof LocalSettings] }).then(e => e[key])
     throw new Error()
 }
 export function setSetting<K extends SettingsKeys>(key: K, v: AllSettings[K]) {

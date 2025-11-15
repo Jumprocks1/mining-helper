@@ -75,7 +75,7 @@ button {
                 position: absolute;
                 left: calc(100% + variables.$s1);
                 top: 0;
-                bottom: 0;
+                min-height: 100%;
                 display: flex;
                 align-items: center;
             }

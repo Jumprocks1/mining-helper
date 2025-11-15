@@ -1,5 +1,8 @@
 import LoadingButton from "../components/LoadingButton"
 import AnkiConnect from "../utils/AnkiConnect"
+import AddIcons from "../utils/AddIcons"
+
+AddIcons()
 
 export enum UnicodeCharacterType {
     Kana,

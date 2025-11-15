@@ -1,3 +1,6 @@
+import { getSetting } from "../views/SettingsModal"
+import UserError from "./UserError"
+
 export default class AnkiConnect {
 
     targetDeck = "Kaishi 1.5k"
@@ -8,16 +11,23 @@ export default class AnkiConnect {
     }
 
     async callAny(action: string, params: any, version = 6) {
+        const key = await getSetting("ankiConnectKey")
+        const body = {
+            action,
+            version,
+            params
+        } as any
+        if (key) body.key = key
         const res = await fetch("http://127.0.0.1:8765", {
             method: "POST",
-            body: JSON.stringify({
-                action,
-                version,
-                params
-            })
+            body: JSON.stringify(body)
         })
         const json = await res.json()
-        if (json.error) throw new Error(json.error)
+        if (json.error) {
+            if (json.error === "valid api key must be provided")
+                throw new UserError("AnkiConnect requires an API key.\nSet this in the settings.")
+            throw new UserError(json.error)
+        }
         return json.result
     }
     async call<K extends keyof AnkiConnectActionMap>(action: K, params: AnkiConnectActionMap[K]["params"], version = 6):
