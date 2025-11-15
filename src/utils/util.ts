@@ -134,6 +134,8 @@ export interface CardData {
 
     sentenceIndex?: string
     meaningIndex?: string
+
+    vid?: number // jpdb
 }
 
 export function furiToReading(s: string | undefined) {

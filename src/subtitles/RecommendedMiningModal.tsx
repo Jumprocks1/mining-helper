@@ -7,7 +7,9 @@ import { OpenModal } from "../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../jpdb/IgnoreList";
 import { getVocabState, VocabState } from "../jpdb/JpdbParseText";
 import { tryPlayAudio } from "../utils/Audio";
+import { ClearEventHandler, RegisterEventHandler } from "../utils/Events";
 import { SubtitleEntry, Subtitles } from "../utils/srt";
+import { CardData } from "../utils/util";
 import { seekToNextEntry } from "./subtitles";
 // TODO ^ this import is really dangerous
 
@@ -18,10 +20,13 @@ export default (subtitles: Subtitles) => {
     let showIgnored = false
     let showKana = false
 
+    let loadedRows: Record<number, HTMLElement> | undefined = undefined
+
     const load = async () => {
         const body = <></>
         await getAnkiWords()
         await loadIgnoreList()
+        loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
         for (let i = 0; i < sorted.length; i++) {
             if (body.childElementCount >= 50) break
@@ -76,6 +81,7 @@ export default (subtitles: Subtitles) => {
             </div>
             if (state === VocabState.Ignored) row.classList.add("ignored")
             if (state === VocabState.Kana) row.classList.add("kana")
+            loadedRows[vocab[5]] = row
             body.append(row)
         }
         return body
@@ -83,9 +89,16 @@ export default (subtitles: Subtitles) => {
 
     const body = <div />
     const reload = () => {
+        loadedRows = undefined
         body.replaceChildren(<Loader load={load} />)
     }
     reload()
+
+    function mineHandler(card: CardData) {
+        if (loadedRows && card.vid !== undefined && loadedRows[card.vid]) {
+            loadedRows[card.vid].classList.add("known")
+        }
+    }
 
 
     const res = OpenModal({
@@ -104,7 +117,9 @@ export default (subtitles: Subtitles) => {
             {body}
         </>,
         id: "recommended-mining-modal",
-        allowMinimize: true
+        allowMinimize: true,
+        onClose: () => ClearEventHandler("vocab-mined", mineHandler)
     })
+    RegisterEventHandler("vocab-mined", mineHandler)
     return res
 } 

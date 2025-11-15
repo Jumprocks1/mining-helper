@@ -1,5 +1,6 @@
 import { addAnkiWord } from "../anki/CardList"
 import AnkiConnect, { MediaAdd } from "./AnkiConnect"
+import { TriggerEvent } from "./Events";
 import UserError from "./UserError";
 import { CardData, furiToReading } from "./util"
 
@@ -25,6 +26,8 @@ export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal
     if (cardId)
         await anki.call("guiSelectCard", { card: cardId })
     await chrome.storage.session.remove(card.kanji)
+
+    TriggerEvent("vocab-mined", card)
 }
 
 export async function updateInAnkiAndRemove(card: CardData) {

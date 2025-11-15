@@ -1,4 +1,4 @@
-import { JpdbToken } from "../jpdb/JpdbParseText"
+import { JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText"
 import { getSubsInRange, getTokenFor } from "../subtitles/SubtitleUtil"
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
 import { playAudio, tryGetAudioBytes } from "../utils/Audio"
@@ -67,8 +67,10 @@ export default (props: Props) => {
 
         const card = await getOrCreatePendingCard(word, true)
 
+        let vocab: JpdbVocabulary | undefined
+
         if (jpdb && token) {
-            const vocab = jpdb.vocabulary[token[3]]
+            vocab = jpdb.vocabulary[token[3]]
             card.kanji = vocab[0]
             card.meaning = vocab[3][0]
             // prefer better audio over jpdb audio
@@ -89,6 +91,7 @@ export default (props: Props) => {
             const meaning = meaningCE.innerText
             if (!meaning) throw new UserError("Meaning missing")
             if (!card.audioBytes) throw new UserError("Missing word audio")
+            if (vocab) card.vid = vocab[5]
             card.meaning = meaning
 
             // could load this from tokens, but it's tricky since user can modify it
