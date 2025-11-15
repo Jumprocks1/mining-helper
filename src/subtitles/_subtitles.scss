@@ -140,6 +140,10 @@
     }
 
     #recommended-mining-modal {
+        .filters {
+            display: flex;
+            gap: $s1 * 3;
+        }
         .vocab-row {
             display: flex;
             align-items: center;

@@ -98,7 +98,9 @@ a {
 
 input {
     display: block;
-    width: 100%;
+    &:not([type="checkbox"]) {
+        width: 100%;
+    }
     font-size: inherit;
     color: inherit;
     outline: none;

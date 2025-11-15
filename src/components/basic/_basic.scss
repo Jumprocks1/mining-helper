@@ -17,6 +17,19 @@
     }
 }
 
+.checkbox-field {
+    display: flex;
+    align-items: stretch;
+    gap: $s1;
+    user-select: none;
+    color: $label;
+    padding: $s1;
+    input {
+        width: 1em;
+        accent-color: $blue;
+    }
+}
+
 .popover {
     .header {
         font-size: 1.2em;
