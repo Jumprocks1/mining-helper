@@ -160,6 +160,11 @@
                     pointer-events: none;
                 }
             }
+            &.ignored, &.kana {
+                .frequency {
+                    color: $ignored;
+                }
+            }
         }
     }
 }

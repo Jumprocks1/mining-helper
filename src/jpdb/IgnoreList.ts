@@ -18,6 +18,16 @@ export async function IgnoreVid(vid: number) {
     if (localIgnoreSet) localIgnoreSet.add(vid)
 }
 
+export async function UnIgnoreVid(vid: number) {
+    const list = await loadIgnoreList(true)
+    const index = list.indexOf(vid)
+    if (index >= 0) {
+        list.splice(index, 1)
+        await chrome.storage.local.set({ ignoreList: list })
+        if (localIgnoreSet) localIgnoreSet.delete(vid)
+    }
+}
+
 function getIgnoreSetSync() {
     if (!localIgnoreList) return
     return localIgnoreSet ??= new Set(localIgnoreList)

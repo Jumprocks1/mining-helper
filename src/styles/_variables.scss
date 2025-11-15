@@ -33,6 +33,9 @@ $label: color.mix(#FFFFFF, $brightBlue, 70%);
 $s1: 0.2em;
 $fontColor: #FFF;
 
+$known: $brightGreen;
+$ignored: $brightYellow;
+
 @mixin vertical-scroll {
     overflow-y: auto;
     scrollbar-color: rgba(0, 0, 0, 0.5) transparent;

@@ -15,6 +15,8 @@ export class Popover extends Component {
         super()
 
         this.Node.style.position = props.position
+
+        // TODO should probably listen for escape key
     }
 
     SetContent(children: Children) {
@@ -34,5 +36,9 @@ export class Popover extends Component {
 
     get Visible() {
         return !this.Node.classList.contains("hide")
+    }
+
+    Remove() {
+        this.Node.remove()
     }
 }
