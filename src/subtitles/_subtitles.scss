@@ -143,6 +143,9 @@
         .filters {
             display: flex;
             gap: $s1 * 3;
+            label:has(#show-ignored:checked, #show-kana:checked) {
+                color: $ignored;
+            }
         }
         .vocab-row {
             display: flex;
