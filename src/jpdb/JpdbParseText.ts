@@ -41,7 +41,7 @@ export enum VocabState {
 export function getVocabState(vocab: JpdbVocabulary): VocabState {
     return getVocabStateAndNote(vocab)[0]
 }
-export function getVocabStateAndNote(vocab: JpdbVocabulary): [VocabState, any] {
+export function getVocabStateAndNote(vocab: JpdbVocabulary, skipIgnoreCheck = false): [VocabState, any] {
     const knownWords = getAnkiWordsSync()
     const knownWordsSet = getAnkiWordsSetSync()
     const word = vocab[0]
@@ -52,7 +52,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary): [VocabState, any] {
             if (knownWordsSet.has(spelling))
                 return [VocabState.AltSpelling, spelling]
     }
-    if (isIgnoredSync(vocab[5])) return [VocabState.Ignored, undefined]
+    if (!skipIgnoreCheck && isIgnoredSync(vocab[5])) return [VocabState.Ignored, undefined]
     if (vocab[4].includes("prt"))
         return [VocabState.Particle, undefined]
     let kanji = false

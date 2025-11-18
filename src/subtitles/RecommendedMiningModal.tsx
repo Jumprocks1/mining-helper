@@ -5,7 +5,7 @@ import UpDownButtons from "../components/basic/UpDownButtons";
 import Loader from "../components/Loader";
 import { OpenModal } from "../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../jpdb/IgnoreList";
-import { getVocabState, VocabState } from "../jpdb/JpdbParseText";
+import { getVocabState, getVocabStateAndNote, VocabState } from "../jpdb/JpdbParseText";
 import { tryPlayAudio } from "../utils/Audio";
 import { ClearEventHandler, RegisterEventHandler } from "../utils/Events";
 import { SubtitleEntry, Subtitles } from "../utils/srt";
@@ -31,7 +31,15 @@ export default (subtitles: Subtitles) => {
         for (let i = 0; i < sorted.length; i++) {
             if (body.childElementCount >= 50) break
             const vocab = sorted[i]
-            const state = getVocabState(vocab)
+            let state = getVocabState(vocab)
+            let ignored = state === VocabState.Ignored
+
+            if (showIgnored && state === VocabState.Ignored) {
+                const newState = getVocabStateAndNote(vocab, true)[0]
+                if (newState === VocabState.Kana)
+                    state = newState
+            }
+
             if (state !== VocabState.New) {
                 if (state === VocabState.Ignored) { if (!showIgnored) continue }
                 else if (state === VocabState.Kana) { if (!showKana) continue }
@@ -42,7 +50,6 @@ export default (subtitles: Subtitles) => {
                 const v = jpdb.vocabulary[token[3]]
                 if (v === vocab) tokenUsages.push(token[0])
             }
-            let ignored = state === VocabState.Ignored
             const makeDeleteButton = () => <IconButton icon={ignored ? "restore_from_trash" : "delete"}
                 title={ignored ? "Restore" : "Ignore"}
                 onClick={async () => {
