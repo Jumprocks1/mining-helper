@@ -5,7 +5,7 @@ import UpDownButtons from "../components/basic/UpDownButtons";
 import Loader from "../components/Loader";
 import { OpenModal } from "../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../jpdb/IgnoreList";
-import { getVocabState, getVocabStateAndNote, VocabState } from "../jpdb/JpdbParseText";
+import { getVocabState, getVocabStateAndNote, JpdbToken, VocabState } from "../jpdb/JpdbParseText";
 import { tryPlayAudio } from "../utils/Audio";
 import { ClearEventHandler, RegisterEventHandler } from "../utils/Events";
 import { SubtitleEntry, Subtitles } from "../utils/srt";
@@ -19,6 +19,7 @@ export default (subtitles: Subtitles) => {
 
     let showIgnored = false
     let showKana = false
+    let n1 = false
 
     let loadedRows: Record<number, HTMLElement> | undefined = undefined
 
@@ -26,6 +27,38 @@ export default (subtitles: Subtitles) => {
         const body = <></>
         await getAnkiWords()
         await loadIgnoreList()
+
+
+        const n1Ids = n1 && new Map<number, number[]>()
+        if (n1Ids) {
+            for (const entry of subtitles.processedEntries) {
+                let unknown: JpdbToken | undefined
+                const end = entry.characterOffset + entry.text.length
+                let tokenCount = 0
+                for (const token of jpdb.tokens) {
+                    if (token[0] >= entry.characterOffset && token[0] < end) {
+                        tokenCount += 1
+                        const state = getVocabState(jpdb.vocabulary[token[3]])
+                        if (state === VocabState.New || (showKana && state === VocabState.Kana)) {
+                            if (unknown === undefined) {
+                                unknown = token
+                            } else {
+                                unknown = undefined
+                                break
+                            }
+                        }
+                    }
+                }
+                // ignore entries with <3 tokens
+                if (unknown !== undefined && tokenCount >= 3) {
+                    const vid = jpdb.vocabulary[unknown[3]][5]
+                    const existing = n1Ids.get(vid)
+                    if (existing) existing.push(unknown[0])
+                    else n1Ids.set(vid, [unknown[0]])
+                }
+            }
+        }
+
         loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
         for (let i = 0; i < sorted.length; i++) {
@@ -45,10 +78,17 @@ export default (subtitles: Subtitles) => {
                 else if (state === VocabState.Kana) { if (!showKana) continue }
                 else continue
             }
-            const tokenUsages: number[] = []
-            for (const token of jpdb.tokens) {
-                const v = jpdb.vocabulary[token[3]]
-                if (v === vocab) tokenUsages.push(token[0])
+            let tokenUsages: number[]
+            if (n1Ids) {
+                const found = n1Ids.get(vocab[5])
+                if (!found) continue
+                tokenUsages = found
+            } else {
+                tokenUsages = []
+                for (const token of jpdb.tokens) {
+                    const v = jpdb.vocabulary[token[3]]
+                    if (v === vocab) tokenUsages.push(token[0])
+                }
             }
             const makeDeleteButton = () => <IconButton icon={ignored ? "restore_from_trash" : "delete"}
                 title={ignored ? "Restore" : "Ignore"}
@@ -118,6 +158,10 @@ export default (subtitles: Subtitles) => {
                 }} />
                 <CheckboxField label="Kana" id="show-kana" onChange={v => {
                     showKana = v
+                    reload()
+                }} />
+                <CheckboxField label="N+1" id="show-n1" onChange={v => {
+                    n1 = v
                     reload()
                 }} />
             </div>
