@@ -1,6 +1,7 @@
 import { getAnkiWordsSetSync, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
+import { Subtitles } from "../utils/srt";
 import { isIgnoredSync } from "./IgnoreList";
-import { JpdbVocabulary } from "./JpdbParseText";
+import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "./JpdbParseText";
 
 
 export enum VocabState {
@@ -64,4 +65,36 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, skipIgnoreCheck = fa
         }
     }
     return [VocabState.New, undefined]
+}
+
+
+export function getN1Tokens(subtitles: Subtitles, jpdb: JpdbParseResponse, kanaUnknown = false) {
+    const res = new Map<number, number[]>()
+    for (const entry of subtitles.processedEntries) {
+        let unknown: JpdbToken | undefined
+        const end = entry.characterOffset + entry.text.length
+        let tokenCount = 0
+        for (const token of jpdb.tokens) {
+            if (token[0] >= entry.characterOffset && token[0] < end) {
+                tokenCount += 1
+                const state = getVocabState(jpdb.vocabulary[token[3]])
+                if (state === VocabState.New || (kanaUnknown && state === VocabState.Kana)) {
+                    if (unknown === undefined) {
+                        unknown = token
+                    } else {
+                        unknown = undefined
+                        break
+                    }
+                }
+            }
+        }
+        // ignore entries with <3 tokens
+        if (unknown !== undefined && tokenCount >= 3) {
+            const vid = jpdb.vocabulary[unknown[3]][5]
+            const existing = res.get(vid)
+            if (existing) existing.push(unknown[0])
+            else res.set(vid, [unknown[0]])
+        }
+    }
+    return res
 }

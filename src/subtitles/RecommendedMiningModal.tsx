@@ -5,8 +5,7 @@ import UpDownButtons from "../components/basic/UpDownButtons";
 import Loader from "../components/Loader";
 import { OpenModal } from "../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../jpdb/IgnoreList";
-import { JpdbToken } from "../jpdb/JpdbParseText";
-import { getVocabState, getVocabStateAndNote, VocabState } from "../jpdb/JpdbState";
+import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState } from "../jpdb/JpdbState";
 import { tryPlayAudio } from "../utils/Audio";
 import { ClearEventHandler, RegisterEventHandler } from "../utils/Events";
 import { SubtitleEntry, Subtitles } from "../utils/srt";
@@ -30,35 +29,7 @@ export default (subtitles: Subtitles) => {
         await loadIgnoreList()
 
 
-        const n1Ids = n1 && new Map<number, number[]>()
-        if (n1Ids) {
-            for (const entry of subtitles.processedEntries) {
-                let unknown: JpdbToken | undefined
-                const end = entry.characterOffset + entry.text.length
-                let tokenCount = 0
-                for (const token of jpdb.tokens) {
-                    if (token[0] >= entry.characterOffset && token[0] < end) {
-                        tokenCount += 1
-                        const state = getVocabState(jpdb.vocabulary[token[3]])
-                        if (state === VocabState.New || (showKana && state === VocabState.Kana)) {
-                            if (unknown === undefined) {
-                                unknown = token
-                            } else {
-                                unknown = undefined
-                                break
-                            }
-                        }
-                    }
-                }
-                // ignore entries with <3 tokens
-                if (unknown !== undefined && tokenCount >= 3) {
-                    const vid = jpdb.vocabulary[unknown[3]][5]
-                    const existing = n1Ids.get(vid)
-                    if (existing) existing.push(unknown[0])
-                    else n1Ids.set(vid, [unknown[0]])
-                }
-            }
-        }
+        const n1Ids = n1 && getN1Tokens(subtitles, jpdb, showKana)
 
         loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
