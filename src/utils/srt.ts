@@ -91,11 +91,11 @@ export async function parseSrt(srt: string): Promise<Subtitles> {
     const lines = srt.split("\n");
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim()
-        if (!line) { closePending(); continue; }
 
         // these few lines feel invalid to me, but .srt for HxH ep 6 had lines that needed this
         // sometimes there are empty subtitle entries with no new line after them, this handles that (sketchily)
         // downside is it would crash if the ~nth subtitle entry was "n"
+        // there were also some .srt files with no empty lines, so this was the only way
         if (pendingEntry && pendingEntry.id && parseInt(line) === pendingEntry.id + 1) {
             closePending();
             pendingEntry = { id: parseInt(line) }
