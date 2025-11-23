@@ -43,12 +43,31 @@ onSettingChange("offset", async offset => {
         }
     }
 })
-onSettingChange("regexReplacements", async _ => {
+async function reloadSubs() {
     const subs = loadedSubtitles.main?.subtitles
     if (subs) await loadSubtitles(subs, true)
-})
+}
+onSettingChange("regexReplacements", reloadSubs)
+onSettingChange("skipChapterRegex", reloadSubs)
 
 async function loadSubtitles(subtitles: Subtitles, main: boolean) {
+    const skip: [start: number, end?: number][] = []
+    if (mpvWebSocket) {
+        const skipChapterRegex = await getSetting("skipChapterRegex")
+        if (skipChapterRegex) {
+            const regex = new RegExp(skipChapterRegex)
+            // bit inefficient but probably good
+            const resp = await mpvWebSocket.RequestIfOpen(`ipc-request:["get_property", "chapter-list"]`)
+            if (typeof resp === "string") {
+                const parsed = JSON.parse(resp) as { title: string, time: number }[]
+                for (let i = 0; i < parsed.length; i++) {
+                    const chapter = parsed[i]
+                    if (regex.test(chapter.title))
+                        skip.push([chapter.time * 1000, i === parsed.length - 1 ? undefined : parsed[i + 1].time * 1000])
+                }
+            }
+        }
+    }
 
     const offset = subtitles.offset ?? 0
     setSetting("offset", offset)
@@ -59,6 +78,16 @@ async function loadSubtitles(subtitles: Subtitles, main: boolean) {
     for (const entry of subtitles.originalEntries) {
         const text = applyReplacementsTo(replacements, entry.text, false)
         if (!text) continue
+        if (skip.length > 0) {
+            let shouldSkip = false
+            for (const e of skip) {
+                if (entry.startTime >= e[0] && (e[1] === undefined || entry.startTime < e[1])) {
+                    shouldSkip = true
+                    break
+                }
+            }
+            if (shouldSkip) continue
+        }
         const p = {
             ...entry,
             startTime: entry.startTime + offset,

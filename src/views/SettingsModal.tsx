@@ -19,11 +19,13 @@ interface LocalSettings {
     regexReplacements: ReplacementEntry[]
     // don't use undefined here, doesn't play well with chrome storage `get`
     ankiConnectKey: string | null
+    skipChapterRegex: string
 }
 
 const defaultLocalSettings: LocalSettings = {
     regexReplacements: [],
-    ankiConnectKey: null
+    ankiConnectKey: null,
+    skipChapterRegex: ""
 }
 
 const temporarySettings: TemporarySettings = {
@@ -48,11 +50,14 @@ export function getSetting<K extends SettingsKeys>(key: K): AllSettings[K] | Pro
         return chrome.storage.local.get({ [key]: defaultLocalSettings[key as keyof LocalSettings] }).then(e => e[key])
     throw new Error()
 }
-export function setSetting<K extends SettingsKeys>(key: K, v: AllSettings[K]) {
+export async function setSetting<K extends SettingsKeys>(key: K, v: AllSettings[K]) {
     if (key in temporarySettings) {
         if (temporarySettings[key as keyof TemporarySettings] as AllSettings[K] === v) return
         // @ts-expect-error
         temporarySettings[key] = v
+        triggerSettingChanged(key, v)
+    } else if (key in defaultLocalSettings) {
+        await chrome.storage.local.set({ [key]: v })
         triggerSettingChanged(key, v)
     }
     else throw new Error()
@@ -78,14 +83,23 @@ export default () => {
     }
 
     const body = <Loader load={async () => {
-        return <div className="list">
+        return <>
             <button className="list-button" onclick={RegexReplacements}>Regex replacements</button>
             {await numberField({ key: "offset", name: "Offset" })}
-            <LoadingButton className="list-button" onClick={ClearCache}>Clear Cache</LoadingButton>
-            <LoadingButton className="list-button" onClick={async () => console.log(await chrome.storage.local.get())}>
-                Log Storage
-            </LoadingButton>
-        </div>
+            <div className="setting-row field">
+                <label htmlFor="chapter-regex">Ignore Chapters (Regex)</label>
+                <input id="chapter-regex" defaultValue={await getSetting("skipChapterRegex")} onchange={async e => {
+                    const input = e.target as HTMLInputElement
+                    return setSetting("skipChapterRegex", input.value)
+                }} />
+            </div>
+            <div className="footer-buttons">
+                <LoadingButton className="list-button" onClick={ClearCache}>Clear Cache</LoadingButton>
+                <LoadingButton className="list-button" onClick={async () => console.log(await chrome.storage.local.get())}>
+                    Log Storage
+                </LoadingButton>
+            </div>
+        </>
     }} />
 
     return OpenModal({
