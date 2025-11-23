@@ -134,7 +134,9 @@ export default (props: Props) => {
 
         let uneditedMeaningCE = ""
         function setMeaningCE(s: string, onlyIfUnchanged: boolean) {
-            if (onlyIfUnchanged && uneditedMeaningCE !== sentenceMeaningCE.textContent) return
+            if (onlyIfUnchanged &&
+                (uneditedMeaningCE !== sentenceMeaningCE.textContent
+                    && sentenceMeaningCE.textContent.trim() !== "")) return
             sentenceMeaningCE.textContent = uneditedMeaningCE = s
         }
 
