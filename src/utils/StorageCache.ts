@@ -59,7 +59,7 @@ export default class StorageCache {
     }
 
     async Get<T>(key: string | number, get: () => Promise<T>, forceRefresh?: boolean): Promise<T>;
-    async Get<T>(key: string | number): Promise<T | undefined>;
+    async Get<T>(key: string | number, get?: () => Promise<T>, forceRefresh?: boolean): Promise<T | undefined>;
     async Get<T>(key: string | number, get?: () => Promise<T>, forceRefresh?: boolean): Promise<T | undefined> {
         const cacheKey = this.Prefix + key
         if (forceRefresh) {

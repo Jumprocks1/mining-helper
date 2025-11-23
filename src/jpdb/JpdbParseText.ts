@@ -24,15 +24,15 @@ export interface JpdbParseResponse {
     vocabulary: JpdbVocabulary[]
 }
 
-export async function JpdbParseSubtitles(subtitles: Subtitles) {
+export async function JpdbParseSubtitles(subtitles: Subtitles, cacheOnly?: true) {
     // can't do replacements since then the indices won't map properly
     // const replacements = await getReplacements()
     // we would have to do some advanced replacements to get this to work
     // const lines = subtitles.processedEntries
     //     .map(e => applyReplacementsTo(replacements, e.text, true))
     const lines = subtitles.processedEntries.map(e => e.text)
-    const res = await JpdbParseText(lines)
-    subtitles.jpdbParse = res
+    const res = await JpdbParseText(lines, cacheOnly)
+    if (res) subtitles.jpdbParse = res
     return res
 }
 
@@ -47,86 +47,86 @@ export const JpdbCache = new StorageCache({
 const maxParseCharacters = 5000
 
 // measured ~150kB per episode
-export default async function JpdbParseText(s: string[]) {
-    const fullJoin = s.join("\n")
-    const value = await JpdbCache.Get("jpdb_" + hash(fullJoin), async () => {
-        const finalRes: JpdbParseResponse = { tokens: [], vocabulary: [] }
-        let start = 0 // line number start of next request
-        let responseOffset = 0 // character count to add to token indexes after response
-        let sentCount = 0 // how many requests we've hit jpdb with
-        while (start < s.length) {
-            let end = start;
-            let len = -1; // -1 since first line doesn't have a \n
-            while (end < s.length) {
-                if (len + s[end].length + 1 > maxParseCharacters) break
-                len += s[end].length + 1
-                end += 1;
-            }
-            console.log(`Fetching ${start}-${end} / ${s.length} lines, ${len} / ${fullJoin.length} characters`)
-            const text = s.slice(start, end).join("\n")
-            const res = await fetch("https://jpdb.io/api/v1/parse", {
-                method: "POST",
-                headers: {
-                    Authorization: `Bearer ${await getJpdbApiKey()}`,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    text,
-                    token_fields: [
-                        "position",
-                        "length",
-                        "furigana",
-                        "vocabulary_index"
-                    ],
-                    vocabulary_fields: [
-                        "spelling",
-                        "reading",
-                        "frequency_rank",
-                        "meanings",
-                        "part_of_speech",
-                        "vid",
-                        "alt_spellings"
-                    ],
-                    position_length_encoding: "utf16"
-                })
+async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
+    const finalRes: JpdbParseResponse = { tokens: [], vocabulary: [] }
+    let start = 0 // line number start of next request
+    let responseOffset = 0 // character count to add to token indexes after response
+    let sentCount = 0 // how many requests we've hit jpdb with
+    while (start < s.length) {
+        let end = start;
+        let len = -1; // -1 since first line doesn't have a \n
+        while (end < s.length) {
+            if (len + s[end].length + 1 > maxParseCharacters) break
+            len += s[end].length + 1
+            end += 1;
+        }
+        console.log(`Fetching ${start}-${end} / ${s.length} lines, ${len} / ${fullJoin.length} characters`)
+        const text = s.slice(start, end).join("\n")
+        const res = await fetch("https://jpdb.io/api/v1/parse", {
+            method: "POST",
+            headers: {
+                Authorization: `Bearer ${await getJpdbApiKey()}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                text,
+                token_fields: [
+                    "position",
+                    "length",
+                    "furigana",
+                    "vocabulary_index"
+                ],
+                vocabulary_fields: [
+                    "spelling",
+                    "reading",
+                    "frequency_rank",
+                    "meanings",
+                    "part_of_speech",
+                    "vid",
+                    "alt_spellings"
+                ],
+                position_length_encoding: "utf16"
             })
-            const json = await res.json() as JpdbParseResponse
-            for (const token of json.tokens) {
-                token[0] += responseOffset
-                token[3] += finalRes.vocabulary.length
-                finalRes.tokens.push(token)
-            }
-            for (const vocab of json.vocabulary) {
-                // TODO could dedup these if needed
-                finalRes.vocabulary.push(vocab)
-            }
-            sentCount += 1
-            responseOffset += text.length + 1 // +1 because the merged text will have another \n
-            start = end
-            // not sure if needed, I accidentally sent like 20 in a row before without issue
-            // anime are usually ~1-1.3 requests, so most of the time this will never trigger
-            if (start < s.length && sentCount >= 2) await delay(2000)
+        })
+        const json = await res.json() as JpdbParseResponse
+        for (const token of json.tokens) {
+            token[0] += responseOffset
+            token[3] += finalRes.vocabulary.length
+            finalRes.tokens.push(token)
         }
-        const vocabMapping = new Map<number, number>()
-        const indexMapping = new Map<number, number>()
-        const dedupedVocab = []
-        const dupedVocab = finalRes.vocabulary
-        for (let i = 0; i < dupedVocab.length; i++) {
-            const id = dupedVocab[i][5]
-            const existing = vocabMapping.get(id)
-            if (existing !== undefined) {
-                indexMapping.set(i, existing)
-            } else {
-                indexMapping.set(i, dedupedVocab.length)
-                vocabMapping.set(id, dedupedVocab.length)
-                dedupedVocab.push(dupedVocab[i])
-            }
+        for (const vocab of json.vocabulary) {
+            // TODO could dedup these if needed
+            finalRes.vocabulary.push(vocab)
         }
-        finalRes.vocabulary = dedupedVocab
-        for (const token of finalRes.tokens)
-            token[3] = indexMapping.get(token[3])!
-        return finalRes
-    })
-    console.log(value)
-    return value as JpdbParseResponse
+        sentCount += 1
+        responseOffset += text.length + 1 // +1 because the merged text will have another \n
+        start = end
+        // not sure if needed, I accidentally sent like 20 in a row before without issue
+        // anime are usually ~1-1.3 requests, so most of the time this will never trigger
+        if (start < s.length && sentCount >= 2) await delay(2000)
+    }
+    const vocabMapping = new Map<number, number>()
+    const indexMapping = new Map<number, number>()
+    const dedupedVocab = []
+    const dupedVocab = finalRes.vocabulary
+    for (let i = 0; i < dupedVocab.length; i++) {
+        const id = dupedVocab[i][5]
+        const existing = vocabMapping.get(id)
+        if (existing !== undefined) {
+            indexMapping.set(i, existing)
+        } else {
+            indexMapping.set(i, dedupedVocab.length)
+            vocabMapping.set(id, dedupedVocab.length)
+            dedupedVocab.push(dupedVocab[i])
+        }
+    }
+    finalRes.vocabulary = dedupedVocab
+    for (const token of finalRes.tokens)
+        token[3] = indexMapping.get(token[3])!
+    return finalRes
+}
+
+export default async function JpdbParseText(s: string[], cacheOnly?: true) {
+    const fullJoin = s.join("\n")
+    return await JpdbCache.Get("jpdb_" + hash(fullJoin), cacheOnly ? undefined : () => JpdbParseTextNoCache(s, fullJoin))
 }

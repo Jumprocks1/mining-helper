@@ -43,7 +43,7 @@ onSettingChange("offset", async offset => {
         }
     }
 })
-onSettingChange("regexReplacements", async offset => {
+onSettingChange("regexReplacements", async _ => {
     const subs = loadedSubtitles.main?.subtitles
     if (subs) await loadSubtitles(subs, true)
 })
@@ -88,6 +88,7 @@ async function loadSubtitles(subtitles: Subtitles, main: boolean) {
     if (main) {
         loadedSubtitles.main = viewer
         viewer.JumpTo(viewer.LatestEntry(currentTime))
+        JpdbParseSubtitles(loadedSubtitles.main.subtitles, true)
     }
     else loadedSubtitles.secondary.push(viewer)
 }
