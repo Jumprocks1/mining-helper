@@ -44,7 +44,7 @@ export default class MpvWebSocket {
     }
 
     Uri: string;
-    constructor(uri: string = "ws://127.0.0.1:412/") {
+    constructor(uri: string = "ws://127.0.0.1:4012/") {
         this.Uri = uri
     }
 
