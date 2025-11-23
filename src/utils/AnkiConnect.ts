@@ -18,10 +18,15 @@ export default class AnkiConnect {
             params
         } as any
         if (key) body.key = key
-        const res = await fetch("http://127.0.0.1:8765", {
-            method: "POST",
-            body: JSON.stringify(body)
-        })
+        let res: Response
+        try {
+            res = await fetch("http://127.0.0.1:8765", {
+                method: "POST",
+                body: JSON.stringify(body)
+            })
+        } catch (e) {
+            throw new UserError("Failed to connect to Anki\n" + e)
+        }
         const json = await res.json()
         if (json.error) {
             if (json.error === "valid api key must be provided")
