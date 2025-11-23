@@ -17,9 +17,7 @@ type HoverState = { token: JpdbToken, rect: DOMRect }
 export default class SubtitleViewer {
     Node: HTMLElement
     subtitles: Subtitles
-    main: boolean
     pointer: HTMLElement = <div className="pointer">-&gt;</div>
-    static readonly MAIN_ID = "main-subtitles";
 
     hoverRectangle: HTMLElement = <div className="hover-rectangle" />
     popover: Popover | undefined
@@ -27,14 +25,12 @@ export default class SubtitleViewer {
     // use to block scrolling when selecting
     MouseDown = false
 
-    constructor(subtitles: Subtitles, main: boolean) {
-        this.main = main
+    constructor(subtitles: Subtitles) {
         this.Node = <div className="subtitle-viewer">
             {this.pointer}
             <div className="inner"></div>
             {this.hoverRectangle}
         </div>
-        if (main) this.Node.id = SubtitleViewer.MAIN_ID
         this.subtitles = subtitles
         this.updateBlock()
 
@@ -250,7 +246,7 @@ export default class SubtitleViewer {
         }
 
         // technically can break if mouse up doesn't fire, but it's pretty solid
-        const allowScroll = this.main && !this.MouseDown
+        const allowScroll = !this.MouseDown
 
         // this is pretty inefficient
         for (const entry of this.subtitles.processedEntries) {

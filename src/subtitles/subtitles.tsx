@@ -22,35 +22,31 @@ function updateTime(timestamp: number) {
     if (timeElement)
         timeElement.textContent = formatTimestamp(currentTime)
 
-    loadedSubtitles.main?.UpdateHighlighting(currentTime)
-    loadedSubtitles.secondary.forEach(e => e.UpdateHighlighting(currentTime))
+    loadedSubtitles?.UpdateHighlighting(currentTime)
 }
 // TODO there's probably a much easier way to do this now
 // @ts-expect-error
 window.updateTime = updateTime
 
-const loadedSubtitles: {
-    main?: SubtitleViewer
-    secondary: SubtitleViewer[]
-} = { secondary: [] }
+let loadedSubtitles: SubtitleViewer | undefined
 
 onSettingChange("offset", async offset => {
-    const subs = loadedSubtitles.main?.subtitles
+    const subs = loadedSubtitles?.subtitles
     if (subs) {
         if (subs.offset ?? 0 !== offset) {
             subs.offset = offset
-            await loadSubtitles(subs, true)
+            await loadSubtitles(subs)
         }
     }
 })
 async function reloadSubs() {
-    const subs = loadedSubtitles.main?.subtitles
-    if (subs) await loadSubtitles(subs, true)
+    const subs = loadedSubtitles?.subtitles
+    if (subs) await loadSubtitles(subs)
 }
 onSettingChange("regexReplacements", reloadSubs)
 onSettingChange("skipChapterRegex", reloadSubs)
 
-async function loadSubtitles(subtitles: Subtitles, main: boolean) {
+async function loadSubtitles(subtitles: Subtitles) {
     const skip: [start: number, end?: number][] = []
     if (mpvWebSocket) {
         const skipChapterRegex = await getSetting("skipChapterRegex")
@@ -108,18 +104,15 @@ async function loadSubtitles(subtitles: Subtitles, main: boolean) {
     }
 
 
-    if (main) loadedSubtitles.main?.Node.remove()
+    loadedSubtitles?.Node.remove()
 
-    const viewer = new SubtitleViewer(subtitles, main)
+    const viewer = new SubtitleViewer(subtitles)
     container.append(viewer.Node)
     viewer.UpdateHighlighting(currentTime)
 
-    if (main) {
-        loadedSubtitles.main = viewer
-        viewer.JumpTo(viewer.LatestEntry(currentTime))
-        JpdbParseSubtitles(loadedSubtitles.main.subtitles, true)
-    }
-    else loadedSubtitles.secondary.push(viewer)
+    loadedSubtitles = viewer
+    viewer.JumpTo(viewer.LatestEntry(currentTime))
+    JpdbParseSubtitles(loadedSubtitles.subtitles, true)
 }
 async function handleWebSocketData(webSocket: MpvWebSocket, command: string | Blob) {
     if (typeof command === "string") {
@@ -141,7 +134,7 @@ async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string
         updateTime(parseFloat(commandData as string))
     } else if (commandName === "raw-sub-file") {
         const decoded = new TextDecoder().decode(commandData as Uint8Array)
-        await loadSubtitles(await parseSrt(decoded), true)
+        await loadSubtitles(await parseSrt(decoded))
     } else if (commandName === "response") {
         await webSocket.HandleResponse(commandData)
     }
@@ -196,7 +189,7 @@ document.addEventListener("DOMContentLoaded", () => {
     RegisterPageContext({
         name: "Subtitles",
         getMinimizeTarget: () => {
-            const main = loadedSubtitles.main?.Node
+            const main = loadedSubtitles?.Node
             if (!main) return
             const mainRect = main.getBoundingClientRect()
             const headerRect = header.getBoundingClientRect()
@@ -217,7 +210,7 @@ document.addEventListener("DOMContentLoaded", () => {
         connectionDot.title = "WebSocket connected"
         connectionDot.classList.add("connected")
         connectionDot.classList.remove("disconnected")
-        if (!loadedSubtitles.main)
+        if (!loadedSubtitles)
             webSocket.SendIfOpen("jp-subs");
     }
     webSocket.onClose = () => {
@@ -233,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (disallowGlobalInput(ev)) return
         if (handleKeypress(ev)) return
         if (ev.key === "h") {
-            loadedSubtitles.main?.HighlightAnkiWords()
+            loadedSubtitles?.HighlightAnkiWords()
         } else if (ev.key === "v") {
             webSocket.SendIfOpen("ipc:cycle sub-visibility");
         } else if (ev.key === " ") {
@@ -266,7 +259,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         }
                         miningModal = MiningModal({
                             word: selected.toString(), entry, mpv: webSocket,
-                            subtitles: loadedSubtitles.main!.subtitles,
+                            subtitles: loadedSubtitles!.subtitles,
                             startIndex,
                             endIndex,
                             onClose: () => miningModal = undefined
@@ -280,9 +273,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
         } else if (ev.key === "t") {
-            if (loadedSubtitles.main) JpdbParseSubtitles(loadedSubtitles.main.subtitles)
+            if (loadedSubtitles) JpdbParseSubtitles(loadedSubtitles.subtitles)
         } else if (ev.key === "y") {
-            const subs = loadedSubtitles.main?.subtitles
+            const subs = loadedSubtitles?.subtitles
             if (subs) {
                 (async () => {
                     if (!subs.jpdbParse)
@@ -295,7 +288,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     document.addEventListener("keydown", ev => {
         if (disallowGlobalInput(ev)) return
-        const subs = loadedSubtitles.main
+        const subs = loadedSubtitles
         if (subs) {
             if (ev.key === "ArrowUp") {
                 seekToNextEntry(subs.subtitles.processedEntries, true)
@@ -324,7 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!entry) return
                 const time = entry.startTime
                 if (ev.ctrlKey) {
-                    const subs = loadedSubtitles.main?.subtitles
+                    const subs = loadedSubtitles?.subtitles
                     setSetting("offset", (subs?.offset ?? 0) + currentTime - entry.startTime)
                 } else {
                     if (webSocket.Open) webSocket.SendIfOpen(`ipc:seek ${time / 1000} absolute`)
@@ -352,7 +345,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 reader.onload = async e => {
                     const target = e.target
                     if (target && typeof target.result === "string") {
-                        await loadSubtitles(await parseSrt(target.result), true)
+                        await loadSubtitles(await parseSrt(target.result))
                     }
                 }
                 reader.readAsText(file)
