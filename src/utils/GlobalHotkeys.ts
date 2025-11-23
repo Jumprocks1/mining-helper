@@ -47,6 +47,15 @@ export function handleKeypress(ev: KeyboardEvent) {
     return false
 }
 
+function isJapanese(s: string) {
+    for (let i = 0; i < s.length; i++) {
+        const type = unicodeType(s[i])
+        if (type === UnicodeCharacterType.Kana || type === UnicodeCharacterType.Kanji)
+            return true
+    }
+    return false
+}
+
 export function disallowGlobalInput(ev: KeyboardEvent) {
     const targetElement = ev.target as HTMLElement | null
     if (targetElement) {
@@ -55,7 +64,10 @@ export function disallowGlobalInput(ev: KeyboardEvent) {
         // super sketchy, but we want to allow lookups if we have something highlighted
         // to make this less sketchy, I think we would add this logic to the global handler
         // the global handler would make the decsion if we were allowed to trigger or not
-        if ((ev.key === "d" || ev.key === "s" || ev.key === "j") && hasSelection) return false
+        if ((ev.key === "d" || ev.key === "s" || ev.key === "j") && hasSelection) {
+            if (isJapanese(selection.toString()))
+                return false
+        }
         if (targetElement.nodeName === "INPUT" || targetElement.isContentEditable)
             return true
     }
