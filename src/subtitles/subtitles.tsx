@@ -35,13 +35,16 @@ onSettingChange("offset", async offset => {
     if (subs) {
         if (subs.offset ?? 0 !== offset) {
             subs.offset = offset
-            await loadSubtitles(subs)
+            reloadSubs()
         }
     }
 })
 async function reloadSubs() {
     const subs = loadedSubtitles?.subtitles
-    if (subs) await loadSubtitles(subs)
+    if (subs) {
+        subs.jpdbParse = undefined // these get reloaded from cache if possible
+        await loadSubtitles(subs)
+    }
 }
 onSettingChange("regexReplacements", reloadSubs)
 onSettingChange("skipChapterRegex", reloadSubs)
