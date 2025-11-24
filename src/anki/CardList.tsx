@@ -1,6 +1,7 @@
 import LoadingButton from "../components/LoadingButton"
 import AnkiConnect from "../utils/AnkiConnect"
 import AddIcons from "../utils/AddIcons"
+import { TrimKana } from "../jpdb/JpdbState"
 
 AddIcons()
 
@@ -12,10 +13,10 @@ export enum UnicodeCharacterType {
     Other
 }
 
-export function unicodeType(c: string): UnicodeCharacterType {
+export function unicodeType(c: string, i = 0): UnicodeCharacterType {
     // https://stackoverflow.com/a/15034560/11435204
     // const code = c.code
-    const unicode = c.charCodeAt(0)
+    const unicode = c.charCodeAt(i)
     if (unicode >= 0x3000 && unicode <= 0x303f)
         return UnicodeCharacterType.Punctuation
     if (unicode >= 0x3040 && unicode <= 0x309f)
@@ -32,10 +33,25 @@ export function unicodeType(c: string): UnicodeCharacterType {
 // cache
 let localAnkiWords: string[] | undefined
 let localAnkiWordsSet: Set<string> | undefined
+let localAnkiWordsKanaTrimMap: Map<string, string> | undefined
 
 export function getAnkiWordsSetSync() {
     if (!localAnkiWords) return
     return localAnkiWordsSet ??= new Set(localAnkiWords)
+}
+
+export function getAnkiWordsKanaTrimMapSync() {
+    if (!localAnkiWords) return
+    if (!localAnkiWordsKanaTrimMap) {
+        localAnkiWordsKanaTrimMap ??= new Map()
+        for (const word of localAnkiWords) {
+            const trimmed = TrimKana(word)
+            if (trimmed === "") continue
+            // this will overwrite some, that's fine
+            localAnkiWordsKanaTrimMap.set(trimmed, word)
+        }
+    }
+    return localAnkiWordsKanaTrimMap
 }
 
 export function getAnkiWordsSync() { return localAnkiWords }

@@ -1,7 +1,12 @@
-import { getAnkiWordsSetSync, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
+import { getAnkiWordsKanaTrimMapSync, getAnkiWordsSetSync, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
 import { Subtitles } from "../utils/srt";
 import { isIgnoredSync } from "./IgnoreList";
 import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "./JpdbParseText";
+
+export interface VocabStateConfig {
+    skipIgnoreCheck?: boolean
+    trimKana?: boolean
+}
 
 
 export enum VocabState {
@@ -14,11 +19,29 @@ export enum VocabState {
     Ignored
 }
 
-// somewhat expensive (profiler says otherwise though)
-export function getVocabState(vocab: JpdbVocabulary): VocabState {
-    return getVocabStateAndNote(vocab)[0]
+export function TrimKana(s: string) {
+    let firstKanji = -1;
+    let lastKanji = -1;
+    for (let i = 0; i < s.length; i++) {
+        const state = unicodeType(s, i)
+        if (state === UnicodeCharacterType.Kanji) {
+            if (firstKanji === -1) firstKanji = i
+            lastKanji = i
+        }
+    }
+    if (firstKanji === -1) return ""
+    return s.substring(firstKanji, lastKanji + 1)
 }
-export function getVocabStateAndNote(vocab: JpdbVocabulary, skipIgnoreCheck = false): [VocabState, any] {
+
+// somewhat expensive (profiler says otherwise though)
+export function getVocabState(vocab: JpdbVocabulary, config: VocabStateConfig = {}): VocabState {
+    return getVocabStateAndNote(vocab, config)[0]
+}
+// ideally I think this would return a more complex state since multiple states often apply
+// this is mainly relevant for the ignored state, we basically want to reorder the priority sometimes
+export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateConfig = {}): [VocabState, any] {
+    const { skipIgnoreCheck, trimKana } = config
+
     const knownWords = getAnkiWordsSync()
     const knownWordsSet = getAnkiWordsSetSync()
     const word = vocab[0]
@@ -34,7 +57,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, skipIgnoreCheck = fa
         return [VocabState.Particle, undefined]
     let kanji = false
     for (let i = 0; i < word.length; i++) {
-        const unicode = unicodeType(word[i])
+        const unicode = unicodeType(word, i)
         if (unicode === UnicodeCharacterType.Kanji)
             kanji = true;
     }
@@ -61,6 +84,16 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, skipIgnoreCheck = fa
                         unicodeType(knownWord[0]) !== UnicodeCharacterType.Kanji)
                         return [VocabState.Similar, knownWord]
                 }
+            }
+        }
+    }
+    if (trimKana) {
+        const ankiTrimmedKana = getAnkiWordsKanaTrimMapSync()
+        if (ankiTrimmedKana) {
+            const trimmed = TrimKana(word)
+            const found = ankiTrimmedKana.get(trimmed)
+            if (found) {
+                return [VocabState.Similar, found]
             }
         }
     }

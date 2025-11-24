@@ -5,7 +5,7 @@ import UpDownButtons from "../components/basic/UpDownButtons";
 import Loader from "../components/Loader";
 import { OpenModal } from "../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../jpdb/IgnoreList";
-import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState } from "../jpdb/JpdbState";
+import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../jpdb/JpdbState";
 import { tryPlayAudio } from "../utils/Audio";
 import { ClearEventHandler, RegisterEventHandler } from "../utils/Events";
 import { SubtitleEntry, Subtitles } from "../utils/srt";
@@ -20,6 +20,7 @@ export default (subtitles: Subtitles) => {
     let showIgnored = false
     let showKana = false
     let n1 = false
+    let trimKana = false
 
     let loadedRows: Record<number, HTMLElement> | undefined = undefined
 
@@ -28,6 +29,9 @@ export default (subtitles: Subtitles) => {
         await getAnkiWords()
         await loadIgnoreList()
 
+        const stateConfig: VocabStateConfig = {
+            trimKana
+        }
 
         const n1Ids = n1 && getN1Tokens(subtitles, jpdb, showKana)
 
@@ -36,11 +40,14 @@ export default (subtitles: Subtitles) => {
         for (let i = 0; i < sorted.length; i++) {
             if (body.childElementCount >= 50) break
             const vocab = sorted[i]
-            let state = getVocabState(vocab)
+            let state = getVocabState(vocab, stateConfig)
             let ignored = state === VocabState.Ignored
 
             if (showIgnored && state === VocabState.Ignored) {
-                const newState = getVocabStateAndNote(vocab, true)[0]
+                const newState = getVocabStateAndNote(vocab, {
+                    ...stateConfig,
+                    skipIgnoreCheck: true
+                })[0]
                 if (newState === VocabState.Kana)
                     state = newState
             }
@@ -134,6 +141,10 @@ export default (subtitles: Subtitles) => {
                 }} />
                 <CheckboxField label="N+1" id="show-n1" onChange={v => {
                     n1 = v
+                    reload()
+                }} />
+                <CheckboxField label="Kana Trim" id="trim-kana" onChange={v => {
+                    trimKana = v
                     reload()
                 }} />
             </div>

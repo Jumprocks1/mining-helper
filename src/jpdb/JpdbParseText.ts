@@ -1,6 +1,7 @@
 import { hash, Subtitles } from "../utils/srt";
 import { delay, getJpdbApiKey } from "../utils/util";
 import StorageCache from "../utils/StorageCache";
+import { loadIgnoreList } from "./IgnoreList";
 
 export type JpdbVocabulary = [
     spelling: string,
@@ -32,6 +33,7 @@ export async function JpdbParseSubtitles(subtitles: Subtitles, cacheOnly?: true)
     //     .map(e => applyReplacementsTo(replacements, e.text, true))
     const lines = subtitles.processedEntries.map(e => e.text)
     const res = await JpdbParseText(lines, cacheOnly)
+    loadIgnoreList() // hover stuff requires this, if it's already loaded this doesn't do anything
     if (res) subtitles.jpdbParse = res
     return res
 }
