@@ -6,6 +6,7 @@ import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "./JpdbParseText";
 export interface VocabStateConfig {
     skipIgnoreCheck?: boolean
     trimKana?: boolean
+    kanaUnknown?: boolean
 }
 
 
@@ -101,7 +102,8 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
 }
 
 
-export function getN1Tokens(subtitles: Subtitles, jpdb: JpdbParseResponse, kanaUnknown = false) {
+export function getN1Tokens(subtitles: Subtitles, jpdb: JpdbParseResponse, config: VocabStateConfig) {
+    const { kanaUnknown } = config
     const res = new Map<number, number[]>()
     for (const entry of subtitles.processedEntries) {
         let unknown: JpdbToken | undefined
@@ -110,7 +112,7 @@ export function getN1Tokens(subtitles: Subtitles, jpdb: JpdbParseResponse, kanaU
         for (const token of jpdb.tokens) {
             if (token[0] >= entry.characterOffset && token[0] < end) {
                 tokenCount += 1
-                const state = getVocabState(jpdb.vocabulary[token[3]])
+                const state = getVocabState(jpdb.vocabulary[token[3]], config)
                 if (state === VocabState.New || (kanaUnknown && state === VocabState.Kana)) {
                     if (unknown === undefined) {
                         unknown = token

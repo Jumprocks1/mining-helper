@@ -30,10 +30,11 @@ export default (subtitles: Subtitles) => {
         await loadIgnoreList()
 
         const stateConfig: VocabStateConfig = {
-            trimKana
+            trimKana,
+            kanaUnknown: showKana
         }
 
-        const n1Ids = n1 && getN1Tokens(subtitles, jpdb, showKana)
+        const n1Ids = n1 && getN1Tokens(subtitles, jpdb, stateConfig)
 
         loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
