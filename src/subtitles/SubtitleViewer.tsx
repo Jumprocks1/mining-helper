@@ -84,7 +84,7 @@ export default class SubtitleViewer {
         const parentRect = parent.getBoundingClientRect()
 
         if (vocab) {
-            const state = getVocabState(vocab)
+            const state = getVocabState(vocab, { trimKana: true })
             if (state === VocabState.Known)
                 this.hoverRectangle.classList.add("known")
             else if (state === VocabState.Similar || state === VocabState.AltSpelling)
@@ -117,7 +117,7 @@ export default class SubtitleViewer {
             }
             const parent = this.popover.Node.parentElement!
             const parentRect = parent.getBoundingClientRect()
-            const [vocabState, vocabNote] = getVocabStateAndNote(vocab)
+            const [vocabState, vocabNote] = getVocabStateAndNote(vocab, { trimKana: true })
             const vocabStateString = VocabState[vocabState].toLowerCase()
 
             this.popover.SetContent(<>
