@@ -57,3 +57,16 @@ export function getTextNodeAtIndex(parent: HTMLElement, offset: number) {
     }
     throw new Error("Node not found in parent")
 }
+
+export function setSelection(parent: HTMLElement | null | undefined, start: number, end: number) {
+    if (!parent) return
+    const selection = window.getSelection()
+    if (!selection) return
+    const range = document.createRange()
+    const startNode = getTextNodeAtIndex(parent, start)
+    range.setStart(startNode[0], startNode[1])
+    const endNode = getTextNodeAtIndex(parent, end)
+    range.setEnd(endNode[0], endNode[1])
+    selection.removeAllRanges()
+    selection.addRange(range)
+}

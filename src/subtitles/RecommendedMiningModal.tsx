@@ -7,8 +7,9 @@ import { OpenModal } from "../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../jpdb/IgnoreList";
 import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../jpdb/JpdbState";
 import { tryPlayAudio } from "../utils/Audio";
+import { setSelection } from "../utils/CharacterHighlighter";
 import { ClearEventHandler, RegisterEventHandler } from "../utils/Events";
-import { SubtitleEntry, Subtitles } from "../utils/srt";
+import { SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt";
 import { CardData } from "../utils/util";
 import { seekToNextEntry } from "./subtitles";
 // TODO ^ this import is really dangerous
@@ -90,16 +91,24 @@ export default (subtitles: Subtitles) => {
                 {deleteButton}
                 <span className="frequency">{vocab[2] ?? "N/A"}</span>
                 <UpDownButtons onClick={(_, down) => {
-                    const options: SubtitleEntry[] = []
+                    const options: [sub: SubtitleEntryWithCharacterOffset, token: number][] = []
                     for (const entry of subtitles.processedEntries) {
                         const end = entry.characterOffset + entry.text.length
                         for (const token of tokenUsages) {
                             if (entry.characterOffset <= token && token < end) {
-                                options.push(entry)
+                                options.push([entry, token])
                             }
                         }
                     }
-                    seekToNextEntry(options, !down)
+                    const index = seekToNextEntry(options.map(e => e[0]), !down)
+                    if (index !== undefined) {
+                        const [entry, tokenStart] = options[index]
+                        // this is lame
+                        const token = jpdb.tokens.find(e => e[0] === tokenStart)
+                        if (!token) return
+                        const node = entry.node?.querySelector<HTMLDivElement>(".subtitles")
+                        setSelection(node, tokenStart - entry.characterOffset, tokenStart + token[1] - entry.characterOffset)
+                    }
                 }}>
                     <span className="usage-count">{tokenUsages.length}</span>
                 </UpDownButtons>
