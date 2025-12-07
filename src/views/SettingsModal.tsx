@@ -73,6 +73,7 @@ async function ClearCache() {
     await JpdbCache.Clear();
 }
 
+// TODO this modal should be split into extension settings vs subtitle page settings
 export default () => {
     async function numberField(props: FieldProps<number>) {
         const defaultValue = getSetting(props.key)
@@ -95,7 +96,11 @@ export default () => {
             </div>
             <div className="footer-buttons">
                 <LoadingButton className="list-button" onClick={ClearCache}>Clear Cache</LoadingButton>
-                <LoadingButton className="list-button" onClick={async () => console.log(await chrome.storage.local.get())}>
+                <LoadingButton className="list-button" onClick={async () => {
+                    const used = await chrome.storage.local.getBytesInUse()
+                    console.log(`Using ${used} bytes (${Math.round(used / chrome.storage.local.QUOTA_BYTES * 100)}%)`)
+                    console.log(await chrome.storage.local.get())
+                }}>
                     Log Storage
                 </LoadingButton>
             </div>
