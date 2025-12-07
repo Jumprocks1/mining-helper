@@ -5,6 +5,7 @@ let added = false
 // https://fonts.google.com/icons
 // must be alphabetical
 export const MaterialIcons = [
+    "add",
     "close",
     "delete",
     "error",

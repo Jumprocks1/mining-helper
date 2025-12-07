@@ -22,5 +22,22 @@
     label {
         display: flex;
         align-items: center;
+
+        .menu-button {
+            font-size: 1em;
+        }
+    }
+
+    .audio-entry-option {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        // couldn't get *:hover to work here, not sure why. !important didn't fix it
+        &:hover:not(:has(button:hover)) {
+            background: #FFFFFF20;
+        }
+        &:not(:last-child) {
+            border-bottom: 1px solid #FFFFFF80;
+        }
     }
 }

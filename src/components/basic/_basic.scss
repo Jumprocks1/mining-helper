@@ -37,8 +37,20 @@
     }
     font-size: 0.75em;
     padding: 0.2em;
+    color: $fontColor; // chrome resets color without this
     background-color: $background0;
     border: $border0;
+    // dropdown menus are usually small/tighter
+    &.menu {
+        padding: 0;
+    }
+}
+
+.popover[popover] {
+    margin: 0;
+    inset: auto;
+    top: calc(anchor(bottom));
+    left: calc(anchor(left));
 }
 
 .up-down-buttons {

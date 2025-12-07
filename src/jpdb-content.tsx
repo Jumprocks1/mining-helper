@@ -3,7 +3,7 @@ import { disallowGlobalInput, handleKeypress, keyPressedWithText } from "./utils
 import { CardData, furiToReading } from "./utils/util"
 import "./utils/createElement"
 import { mutatePendingCard } from "./utils/MiningUtil"
-import { getAudioOptionsFromKanji } from "./utils/Audio"
+import { getAudio, getAudioOptionsFromKanji } from "./utils/Audio"
 
 const meaningCss = ".subsection-meanings .description"
 const sentenceCss = ".subsection-examples .used-in:has(.en)"
@@ -105,13 +105,6 @@ async function getAudioOptions(vocab?: HTMLElement | null) {
     if (!wordRuby) return
     const [kanji, furi] = kanjiAndFurigana(wordRuby)
     return getAudioOptionsFromKanji(kanji, furiToReading(furi))
-}
-
-async function getAudio(entry?: AudioEntry) {
-    if (!entry) return
-    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes:${entry.ID}` })
-    if (!audioBytes.ok) return
-    return await audioBytes.arrayBuffer()
 }
 
 async function getFirstAudio(kanji: string, reading?: string) {

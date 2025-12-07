@@ -17,7 +17,7 @@ function stopAll() {
 }
 
 type PlayableAudioBase = Uint8Array<ArrayBuffer> | ArrayBuffer | undefined
-export type PlayableAudio = PlayableAudioBase | Promise<PlayableAudioBase> | (() => PlayableAudioBase) | string
+export type PlayableAudio = PlayableAudioBase | Promise<PlayableAudioBase> | (() => PlayableAudioBase | Promise<PlayableAudioBase>) | string
 
 export async function resolveAudio(audio: PlayableAudio): Promise<ArrayBuffer | undefined> {
     let loadedAudio = audio
@@ -73,4 +73,11 @@ export async function getAudioOptionsFromKanji(kanji: string, reading?: string) 
     if (reading) body += ":" + reading
     const audioOptions = await fetch("http://127.0.0.1:8080", { method: "POST", body })
     return await audioOptions.json() as AudioEntry[]
+}
+
+export async function getAudio(entry?: AudioEntry) {
+    if (!entry) return
+    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes:${entry.ID}` })
+    if (!audioBytes.ok) return
+    return await audioBytes.arrayBuffer()
 }

@@ -1,7 +1,7 @@
 import { JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText"
 import { getSubsInRange, getTokenFor } from "../subtitles/SubtitleUtil"
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
-import { playAudio, tryGetAudioBytes } from "../utils/Audio"
+import { getAudio, getAudioOptionsFromKanji, playAudio, tryGetAudioBytes } from "../utils/Audio"
 import { Children } from "../utils/createElement"
 import { getOrCreatePendingCard, saveCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
@@ -10,6 +10,7 @@ import UserError from "../utils/UserError"
 import { furiFromToken, furiToReading, jpdbEntryUrl, lookupFuri, tokensToFuri } from "../utils/util"
 import { applyRegexTo } from "../views/RegexReplacements"
 import AudioButton from "./AudioButton"
+import { HtmlPopover } from "./basic/HtmlPopover"
 import IconButton from "./basic/IconButton"
 import NumberField from "./basic/NumberField"
 import UpDownButtons from "./basic/UpDownButtons"
@@ -119,7 +120,37 @@ export default (props: Props) => {
         sentenceCE.innerHTML = await getSentenceCeInnerHTML(entry);
         add("Kanji", kanji)
         add("Reading", card.furigana ?? "N/A")
-        add("Word Audio", card.audioBytes ? AudioButton({ audio: card.audioBytes, name: kanji }) : "N/A")
+
+        const menuPopover = new HtmlPopover({
+            className: "menu",
+            hydrate: async () => {
+                const options = await getAudioOptionsFromKanji(kanji, furiToReading(card.furigana))
+                return options.map(e => <div className="audio-entry-option"
+                    onclick={async ev => {
+                        if (ev.target !== ev.currentTarget) return
+                        const audio = await getAudio(e)
+                        if (!audio) return
+                        card.audioBytes = audio
+                        playAudio(kanji, card.audioBytes)
+                        menuPopover.Close()
+                    }}>
+                    <AudioButton name={kanji} audio={() => getAudio(e)} />
+                    {e.Source}
+                </div>)
+            }
+        })
+        const menuButton = <IconButton icon="menu" /> as HTMLButtonElement
+        menuButton.popoverTargetElement = menuPopover.Node
+        menuButton.popoverTargetAction = "toggle"
+
+        labeled.push(<div className="field">
+            <label>Word Audio{menuButton}</label>
+            {menuPopover}
+            <div className="field-value">
+                {AudioButton({ audio: () => card.audioBytes, name: kanji })}
+            </div>
+        </div>)
+
         if (card.meaning) {
             meaningCE.innerText = card.meaning
             add("Meaning", meaningCE)
