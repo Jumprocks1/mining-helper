@@ -60,3 +60,17 @@ export async function tryPlayAudio(vocab: JpdbVocabulary) {
     const buffer = await audioBytes.arrayBuffer()
     await playAudio(kanji, buffer)
 }
+
+export interface AudioEntry {
+    Source: string
+    File: string
+    Reading: string
+    ID: number
+}
+
+export async function getAudioOptionsFromKanji(kanji: string, reading?: string) {
+    let body = `lookup-audio:${kanji}`
+    if (reading) body += ":" + reading
+    const audioOptions = await fetch("http://127.0.0.1:8080", { method: "POST", body })
+    return await audioOptions.json() as AudioEntry[]
+}

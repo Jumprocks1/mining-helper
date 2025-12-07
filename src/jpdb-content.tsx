@@ -1,8 +1,9 @@
 import { getAnkiWords } from "./anki/CardList"
 import { disallowGlobalInput, handleKeypress, keyPressedWithText } from "./utils/GlobalHotkeys"
-import { CardData } from "./utils/util"
+import { CardData, furiToReading } from "./utils/util"
 import "./utils/createElement"
 import { mutatePendingCard } from "./utils/MiningUtil"
+import { getAudioOptionsFromKanji } from "./utils/Audio"
 
 const meaningCss = ".subsection-meanings .description"
 const sentenceCss = ".subsection-examples .used-in:has(.en)"
@@ -102,14 +103,8 @@ async function getAudioOptions(vocab?: HTMLElement | null) {
     if (!vocab) return
     const wordRuby = vocab.querySelector<HTMLElement>(".spelling ruby.v")
     if (!wordRuby) return
-    const [kanji,] = kanjiAndFurigana(wordRuby)
-    return getAudioOptionsFromKanji(kanji)
-}
-
-// todo filter more based on reading too, since many kanji have multiple readings
-async function getAudioOptionsFromKanji(kanji: string) {
-    const audioOptions = await fetch("http://127.0.0.1:8080", { method: "POST", body: `lookup-audio:${kanji}` })
-    return await audioOptions.json() as AudioEntry[]
+    const [kanji, furi] = kanjiAndFurigana(wordRuby)
+    return getAudioOptionsFromKanji(kanji, furiToReading(furi))
 }
 
 async function getAudio(entry?: AudioEntry) {
@@ -119,8 +114,8 @@ async function getAudio(entry?: AudioEntry) {
     return await audioBytes.arrayBuffer()
 }
 
-async function getFirstAudio(kanji: string) {
-    const options = await getAudioOptionsFromKanji(kanji)
+async function getFirstAudio(kanji: string, reading?: string) {
+    const options = await getAudioOptionsFromKanji(kanji, reading)
     if (options.length > 0) {
         const buffer = await getAudio(options[0])
         if (buffer) {
@@ -293,7 +288,7 @@ async function storeCard(clicked: HTMLElement) {
         let jpdbAudio = undefined
 
         if (!card.audioBytes) {
-            const firstAudio = await getFirstAudio(kanji)
+            const firstAudio = await getFirstAudio(kanji, furiToReading(furigana))
             if (firstAudio) {
                 card.audioLocalFile = `${kanji}_${firstAudio[0].Source}.mp3`
                 card.audioBytes = firstAudio[1]

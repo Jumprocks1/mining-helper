@@ -1,3 +1,4 @@
+import { UnicodeCharacterType, unicodeType } from "../anki/CardList";
 import { JpdbParseResponse, JpdbToken } from "../jpdb/JpdbParseText";
 
 let _apiKey: string | undefined = undefined
@@ -138,16 +139,21 @@ export interface CardData {
     vid?: number // jpdb
 }
 
+// feels pretty sketchy but I think it's fine?
 export function furiToReading(s: string | undefined) {
     if (!s) return s
-    // TODO this will have issues with compound kanji
     let o = ""
+    let nonKanji = 0
     for (let i = 0; i < s.length; i++) {
         const c = s[i]
         if (c === "[")
-            o = o.substring(0, o.length - 1)
-        else if (c !== "]")
-            o += c
+            o = o.substring(0, nonKanji)
+        else if (c !== "]") {
+            if (c !== " ")
+                o += c
+            if (unicodeType(s, i) !== UnicodeCharacterType.Kanji)
+                nonKanji = o.length
+        }
     }
     return o
 }
