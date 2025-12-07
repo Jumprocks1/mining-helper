@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default ({ icon, onClick, className, title }: Props) => {
-    const res = <span className="icon-button material-symbols-outlined">{icon}</span>
+    const res = <button className="icon-button material-symbols-outlined">{icon}</button>
     if (onClick) res.addEventListener("click", onClick)
 
     if (className) res.classList.add(className)

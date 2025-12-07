@@ -165,15 +165,23 @@ div#result {
 }
 
 .icon-button {
+    // gets rid of button styles
+    background: none;
+    border: none;
+    margin: 0;
+    color: inherit;
+
     cursor: pointer;
     user-select: none;
     padding: variables.$s1;
     border-radius: 30%;
     &:hover {
         background: rgba(255, 255, 255, 10%);
+        border: none;
     }
     &:active {
         background: rgba(255, 255, 255, 20%);
+        border: none;
     }
 }
 
