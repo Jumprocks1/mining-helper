@@ -2,11 +2,17 @@
 
 @mixin LoadingCircle {
     aspect-ratio: 1;
-    border-radius: 50%;
-    border: 4px solid variables.$brightBlue;
-    animation:
-        l20-1 1s infinite linear alternate,
-        l20-2 2s infinite linear;
+    overflow: hidden;
+    &::before {
+        content: "";
+        height: 100%;
+        display: block;
+        border-radius: 50%;
+        border: 4px solid variables.$brightBlue;
+        animation:
+            l20-1 1s infinite linear alternate,
+            l20-2 2s infinite linear;
+    }
 
     @keyframes l20-1 {
         0% {
