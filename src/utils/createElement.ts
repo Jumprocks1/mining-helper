@@ -3,10 +3,16 @@ import HotReload from "./HotReload";
 HotReload() // Idk where else to put this oh well
 
 type NormalChild = string | Node
-type SingleChild = NormalChild | { Node: NormalChild } | boolean | undefined
+type SingleChild = NormalChild | { Node: NormalChild } | false | undefined
 export type Children = SingleChild | Children[] | (() => Children)
 
 type FC = (props: Record<string, any>) => JSX.Element
+
+export function replaceWith(el: ChildNode, child: Children) {
+    const fragment = createFragment()
+    appendChild(fragment, child)
+    el.replaceWith(fragment)
+}
 
 export function appendChild(el: ParentNode, child: Children) {
     if (Array.isArray(child)) {
