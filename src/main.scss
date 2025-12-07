@@ -175,7 +175,7 @@ div#result {
     user-select: none;
     padding: variables.$s1;
     border-radius: 30%;
-    &:hover {
+    &:hover, &:focus {
         background: rgba(255, 255, 255, 10%);
         border: none;
     }

@@ -149,27 +149,31 @@ function seekToSubtitle(entry: SubtitleEntry) {
     mpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
 }
 
+function getNextEntryIndex(entries: SubtitleEntry[], backwards: boolean) {
+    if (backwards) {
+        for (let i = 1; i < entries.length; i++) {
+            if (entries[i].endTime > currentTime) {
+                return i - 1
+            }
+        }
+        return 0
+    } else {
+        for (let i = 0; i < entries.length; i++) {
+            if (entries[i].startTime > currentTime) {
+                return i
+            }
+        }
+        return entries.length - 1
+    }
+}
+
 export function seekToNextEntry(entries: SubtitleEntry[], backwards: boolean) {
     // TODO add epsilon
     // const epsilon = 200 // ms
     if (!mpvWebSocket) return
-    if (backwards) {
-        for (let i = 1; i < entries.length; i++) {
-            if (entries[i].endTime > currentTime) {
-                seekToSubtitle(entries[i - 1])
-                return
-            }
-        }
-        seekToSubtitle(entries[0])
-    } else {
-        for (let i = 0; i < entries.length; i++) {
-            if (entries[i].startTime > currentTime) {
-                seekToSubtitle(entries[i])
-                return
-            }
-        }
-        seekToSubtitle(entries[entries.length - 1])
-    }
+    const index = getNextEntryIndex(entries, backwards)
+    seekToSubtitle(entries[index])
+    return index
 }
 
 document.addEventListener("DOMContentLoaded", () => {

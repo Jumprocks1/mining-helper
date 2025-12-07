@@ -68,7 +68,7 @@ export function disallowGlobalInput(ev: KeyboardEvent) {
             if (isJapanese(selection.toString()))
                 return false
         }
-        if (targetElement.nodeName === "INPUT" || targetElement.isContentEditable)
+        if (targetElement.nodeName === "INPUT" || targetElement.isContentEditable || targetElement.nodeName === "BUTTON")
             return true
     }
 }
