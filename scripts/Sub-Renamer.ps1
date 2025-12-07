@@ -1,4 +1,4 @@
-param($Target = ".")
+param($Target = ".", [switch]$Force, [switch]$WhatIf)
 
 $dir = Get-Item $Target
 
@@ -12,13 +12,19 @@ if ($videos.Count -eq 0) {
 
 if ($subs.Count -ne $videos.Count) {
     Write-Error "Different video ($($videos.Count)) vs sub ($($subs.Count)) count"
-    exit 1
+    if (!$Force) {
+        exit 1
+    }
 }
 
-for ($i = 0; $i -lt $subs.Count; $i++) {
+$c = [Math]::min($subs.Count, $videos.Count)
+
+for ($i = 0; $i -lt $c; $i++) {
     $video = $videos[$i]
     $sub = $subs[$i]
     $newName = $video.BaseName + $sub.Extension
     echo "$($sub.Name) => $newName"
-    Rename-Item -LiteralPath $sub $newName
+    if (!$WhatIf) {
+        Rename-Item -LiteralPath $sub $newName
+    }
 }
