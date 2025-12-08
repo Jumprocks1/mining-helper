@@ -287,7 +287,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 (async () => {
                     if (!subs.jpdbParse)
                         await JpdbParseSubtitles(subs)
-                    RecommendedMiningModal(subs)
+                    RecommendedMiningModal(subs)?.Minimize()
                 })()
             }
         }

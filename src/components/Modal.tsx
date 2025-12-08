@@ -35,6 +35,9 @@ export class Modal extends Component {
 
     OnClose: () => void
 
+    IsMinimized = false;
+    MinimizeButton?: HTMLElement
+
     constructor(props: Props) {
         super()
         this.OnClose = props.onClose
@@ -56,24 +59,13 @@ export class Modal extends Component {
         else
             body.append(innerBody)
 
-        let minimizeButton: HTMLElement | undefined
         if (props.allowMinimize) {
-            let minimize = true
-            minimizeButton = <IconButton icon="minimize" onClick={() => {
-                if (minimize) {
-                    const rect = GetCurrentPageContext()?.getMinimizeTarget?.()
-                    if (rect) {
-                        minimizeButton!.textContent = "maximize"
-                        minimize = false
-                        res.classList.add("minimized")
-                        res.style.left = rect.x + "px"
-                        res.style.top = rect.y + "px"
-                        res.style.width = rect.width + "px"
-                        res.style.height = rect.height + "px"
-                    }
+            this.MinimizeButton = <IconButton icon="minimize" onClick={() => {
+                if (!this.IsMinimized) {
+                    this.Minimize()
                 } else {
-                    minimizeButton!.textContent = "minimize"
-                    minimize = true
+                    this.MinimizeButton!.textContent = "minimize"
+                    this.IsMinimized = false
                     res.classList.remove("minimized")
                     res.style.removeProperty("left")
                     res.style.removeProperty("top")
@@ -86,7 +78,7 @@ export class Modal extends Component {
         const inner = <div className="inner-modal">
             <div className="header">
                 <div>{props.header}</div>
-                {minimizeButton}
+                {this.MinimizeButton}
                 {closeButton}
             </div>
             {body}
@@ -126,6 +118,20 @@ export class Modal extends Component {
         this.IsOpen = true
         OpenModals.push(this)
         document.body.append(this.Node)
+    }
+
+    Minimize() {
+        if (this.IsMinimized) return
+        const rect = GetCurrentPageContext()?.getMinimizeTarget?.()
+        if (rect) {
+            if (this.MinimizeButton) this.MinimizeButton.textContent = "maximize"
+            this.IsMinimized = true
+            this.Node.classList.add("minimized")
+            this.Node.style.left = rect.x + "px"
+            this.Node.style.top = rect.y + "px"
+            this.Node.style.width = rect.width + "px"
+            this.Node.style.height = rect.height + "px"
+        }
     }
 }
 
