@@ -19,14 +19,19 @@
 
 .checkbox-field {
     display: flex;
-    align-items: stretch;
+    align-items: center;
     gap: $s1;
     user-select: none;
     color: $label;
     padding: $s1;
     input {
         width: 1em;
+        height: 1em;
         accent-color: $blue;
+        &:focus {
+            outline: 2px solid $blue;
+            outline-offset: 2px;
+        }
     }
 }
 
