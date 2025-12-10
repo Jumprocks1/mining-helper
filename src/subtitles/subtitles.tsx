@@ -15,6 +15,7 @@ import { RegisterPageContext } from "../framework/PageContext"
 import { getCharacterIndex } from "../utils/CharacterHighlighter"
 
 let currentTime = 0
+let currentFilename: string | undefined
 
 function updateTime(timestamp: number) {
     currentTime = timestamp
@@ -140,6 +141,10 @@ async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string
         await loadSubtitles(await parseSrt(decoded))
     } else if (commandName === "response") {
         await webSocket.HandleResponse(commandData)
+    } else if (commandName === "current-file") {
+        if (typeof commandData === "string") {
+            currentFilename = commandData
+        }
     }
 }
 

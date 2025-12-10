@@ -32,7 +32,7 @@ interface Props {
 let englishFailed = false
 
 async function tryLoadEnglish(subtitles: Subtitles, mpv: MpvWebSocket | undefined) {
-    if (subtitles.translated || !mpv) return subtitles.translated
+    if (subtitles.translated || !mpv || englishFailed) return subtitles.translated
     try {
         const subs = await mpv.RequestIfOpen("english-subs")
         if (typeof subs === "string") throw new Error()
