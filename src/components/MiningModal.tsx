@@ -266,7 +266,8 @@ export default (props: Props) => {
         }
         loadMpvAudio()
 
-        inner.append(<div className="footer">
+        // I don't like this
+        modal.Node.querySelector(".inner-modal")!.append(<div className="footer">
             <LoadingButton onClick={save} loading={mpvPromise}>Save</LoadingButton>
         </div>)
         return labeled
