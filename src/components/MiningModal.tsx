@@ -117,7 +117,7 @@ export default (props: Props) => {
         const labeled: HTMLElement[] = []
         function add(label: Children, el: Children) {
             labeled.push(<div className="field">
-                <label>{label}</label>
+                <div className="label">{label}</div>
                 <div className="field-value">{el}</div>
             </div>)
         }
@@ -152,7 +152,7 @@ export default (props: Props) => {
         menuButton.popoverTargetAction = "toggle"
 
         labeled.push(<div className="field">
-            <label>Word Audio{menuButton}</label>
+            <div className="label">Word Audio{menuButton}</div>
             {menuPopover}
             <div className="field-value">
                 {AudioButton({ audio: () => card.audioBytes, name: kanji })}
@@ -249,25 +249,25 @@ export default (props: Props) => {
             mpvPromise = mpv.RequestIfOpen(`mpv-audio:${startTime + so}-${endTime + eo}`)
             const loadedButton = mpvPromise.then(sentenceAudio => {
                 if (typeof sentenceAudio === "string") return "Failed to load"
-                    const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)
-                    card.sentenceAudioBytes = buffer
-                    card.sentenceAudioLocalFile = `${card.kanji}_ex_mpv.ogg`
-                    card.sentenceIndex = "mpv"
-                    loadedOffsets = [so, eo]
-                    const click = async (ev: PointerEvent) => {
-                        if (!loadedOffsets) return
-                        if (startOffset !== loadedOffsets[0] || endOffset !== loadedOffsets[1]) {
+                const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)
+                card.sentenceAudioBytes = buffer
+                card.sentenceAudioLocalFile = `${card.kanji}_ex_mpv.ogg`
+                card.sentenceIndex = "mpv"
+                loadedOffsets = [so, eo]
+                const click = async (ev: PointerEvent) => {
+                    if (!loadedOffsets) return
+                    if (startOffset !== loadedOffsets[0] || endOffset !== loadedOffsets[1]) {
                         const reloaded = await loadMpvAudio()
                         if (typeof reloaded === "object") reloaded.click(ev)
                     } else {
                         const startAt = ev.ctrlKey ? Math.max(0, (endTime + eo - (startTime + so) - 1000) / 1000) : undefined
                         playAudio(kanji + "_ex", buffer, startAt)
-                        }
                     }
-                    return {
-                        button: <IconButton className="play-icon" icon="play_arrow" onClick={click} />,
-                        click
-                    }
+                }
+                return {
+                    button: <IconButton className="play-icon" icon="play_arrow" onClick={click} />,
+                    click
+                }
             })
             playButtonPlaceholder.replaceChildren(Loader({ load: loadedButton.then(e => typeof e === "string" ? e : e.button) }))
             return loadedButton
