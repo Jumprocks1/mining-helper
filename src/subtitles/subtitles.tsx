@@ -166,7 +166,7 @@ function getNextEntryIndex(entries: SubtitleEntry[], backwards: boolean) {
                 return i - 1
             }
         }
-        return 0
+        return entries.length - 1
     } else {
         for (let i = 0; i < entries.length; i++) {
             if (entries[i].startTime > currentTime) {
