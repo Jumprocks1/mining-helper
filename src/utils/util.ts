@@ -137,6 +137,7 @@ export interface CardData {
     meaningIndex?: string
 
     vid?: number // jpdb
+    source?: string // filename + time (in seconds)
 }
 
 // feels pretty sketchy but I think it's fine?

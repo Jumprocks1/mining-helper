@@ -14,8 +14,13 @@ import RecommendedMiningModal from "./RecommendedMiningModal"
 import { RegisterPageContext } from "../framework/PageContext"
 import { getCharacterIndex } from "../utils/CharacterHighlighter"
 
+export interface SubtitlesPage {
+    currentFilename?: string
+}
+
+const page: SubtitlesPage = {}
+
 let currentTime = 0
-let currentFilename: string | undefined
 
 function updateTime(timestamp: number) {
     currentTime = timestamp
@@ -143,7 +148,7 @@ async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string
         await webSocket.HandleResponse(commandData)
     } else if (commandName === "current-file") {
         if (typeof commandData === "string") {
-            currentFilename = commandData
+            page.currentFilename = commandData
         }
     }
 }
@@ -274,7 +279,8 @@ document.addEventListener("DOMContentLoaded", () => {
                             subtitles: loadedSubtitles!.subtitles,
                             startIndex,
                             endIndex,
-                            onClose: () => miningModal = undefined
+                            onClose: () => miningModal = undefined,
+                            subtitlesPage: page
                         })
                         miningModal.Open()
                         webSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)

@@ -1,4 +1,5 @@
 import { JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText"
+import type { SubtitlesPage } from "../subtitles/subtitles"
 import { getSubsInRange, getTokenFor } from "../subtitles/SubtitleUtil"
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
 import { getAudio, getAudioOptionsFromKanji, playAudio, tryGetAudioBytes } from "../utils/Audio"
@@ -27,6 +28,7 @@ interface Props {
     mpv?: MpvWebSocket
     startIndex?: number // index inside of entry.text, not always available
     endIndex?: number
+    subtitlesPage: SubtitlesPage
 }
 
 let englishFailed = false
@@ -63,7 +65,7 @@ export default (props: Props) => {
         return (await applyRegexTo(entry.text, true)).replace("　", " ").replaceAll(word, "<b>" + word + "</b>")
     }
 
-    async function body(inner: HTMLElement) {
+    async function body() {
         const entries = subtitles.processedEntries
 
         const card = await getOrCreatePendingCard(word, true)
@@ -101,6 +103,12 @@ export default (props: Props) => {
             card.jpSentenceKanji = card.jpSentenceKanji.replace(word, "<b>" + word + "</b>")
 
             card.enSentence = sentenceMeaningCE.textContent
+
+            const file = props.subtitlesPage.currentFilename
+            if (file) {
+                const slash = Math.max(file.lastIndexOf("/"), file.lastIndexOf("\\"))
+                card.source = file.substring(slash + 1) + "/t/" + (startTime + startOffset) / 1000
+            }
 
             await saveToAnkiAndRemove(card, "mining-modal")
             modal.Close()
