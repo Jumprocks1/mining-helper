@@ -147,30 +147,34 @@
                 color: $ignored;
             }
         }
-        .vocab-row {
-            display: flex;
+        .row-container {
+            display: grid;
+            grid-template-columns: repeat(5, auto);
+            column-gap: $s1;
             align-items: center;
-            gap: $s1;
-            .up-down-buttons {
-                margin-right: -$s1; // remove gap
-                position: relative;
-                .usage-count {
-                    font-size: 0.6em;
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    pointer-events: none;
+            .vocab-row {
+                display: contents; // I kinda hate this, but table wasn't great either
+                .up-down-buttons {
+                    margin-right: -$s1; // remove gap
+                    position: relative;
+                    .usage-count {
+                        font-size: 0.6em;
+                        position: absolute;
+                        top: 50%;
+                        left: 50%;
+                        transform: translate(-50%, -50%);
+                        pointer-events: none;
+                    }
                 }
-            }
-            &.ignored, &.kana {
-                .frequency {
-                    color: $ignored;
+                &.ignored, &.kana {
+                    .frequency {
+                        color: $ignored;
+                    }
                 }
-            }
-            &.known {
-                .frequency {
-                    color: $known;
+                &.known {
+                    .frequency {
+                        color: $known;
+                    }
                 }
             }
         }

@@ -3,7 +3,7 @@ interface Props {
     checked?: boolean
     onChange: (e: boolean) => void
     label?: string
-    id: string
+    id?: string
 }
 
 export default (props: Props) => {

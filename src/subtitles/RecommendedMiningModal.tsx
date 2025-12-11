@@ -5,6 +5,7 @@ import UpDownButtons from "../components/basic/UpDownButtons";
 import Loader from "../components/Loader";
 import { OpenModal } from "../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../jpdb/IgnoreList";
+import { JpdbVocabulary } from "../jpdb/JpdbParseText";
 import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../jpdb/JpdbState";
 import { tryPlayAudio } from "../utils/Audio";
 import { setSelection } from "../utils/CharacterHighlighter";
@@ -22,6 +23,7 @@ export default (subtitles: Subtitles) => {
     let showKana = false
     let n1 = false
     let trimKana = false
+    let chronological = false
 
     let loadedRows: Record<number, HTMLElement> | undefined = undefined
 
@@ -39,6 +41,7 @@ export default (subtitles: Subtitles) => {
 
         loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
+        const pendingRows: [JpdbVocabulary, HTMLElement][] = []
         for (let i = 0; i < sorted.length; i++) {
             if (body.childElementCount >= 50) break
             const vocab = sorted[i]
@@ -118,12 +121,30 @@ export default (subtitles: Subtitles) => {
             if (state === VocabState.Ignored) row.classList.add("ignored")
             if (state === VocabState.Kana) row.classList.add("kana")
             loadedRows[vocab[5]] = row
-            body.append(row)
+            pendingRows.push([vocab, row])
+        }
+        if (chronological) {
+            const pendingWithIndex = pendingRows.map(e => {
+                const firstIndex = jpdb.tokens.findIndex(t => jpdb.vocabulary[t[3]] === e[0])
+                return [firstIndex, e[1]] as [number, HTMLElement]
+            })
+            pendingWithIndex.sort((a, b) => {
+                if (a[0] > b[0]) return 1
+                else if (a[0] < b[0]) return -1
+                else return 0
+            })
+            for (const [_, row] of pendingWithIndex) {
+                body.append(row)
+            }
+        } else {
+            for (const [_, row] of pendingRows) {
+                body.append(row)
+            }
         }
         return body
     }
 
-    const body = <div />
+    const body = <div className="row-container" />
     const reload = () => {
         loadedRows = undefined
         body.replaceChildren(<Loader load={load} />)
@@ -155,6 +176,10 @@ export default (subtitles: Subtitles) => {
                 }} />
                 <CheckboxField label="Kana Trim" id="trim-kana" onChange={v => {
                     trimKana = v
+                    reload()
+                }} />
+                <CheckboxField label="Chronological" onChange={v => {
+                    chronological = v
                     reload()
                 }} />
             </div>
