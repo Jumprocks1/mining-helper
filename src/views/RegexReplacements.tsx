@@ -5,7 +5,7 @@ import { OpenModal } from "../components/Modal"
 import { triggerSettingChanged } from "./SettingsModal"
 
 export interface ReplacementEntry {
-    match: string
+    match: string | RegExp
     replace: string
     early?: boolean
 }
@@ -42,7 +42,7 @@ export default () => {
         updateButton()
 
         const node = <div className="row">
-            <input className="regex-match" value={entry.match} />
+            <input className="regex-match" value={entry.match.toString()} />
             <input className="regex-replace" value={entry.replace} />
             {toggleButton}
             <IconButton icon="close" onClick={() => {

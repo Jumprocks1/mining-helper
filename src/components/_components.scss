@@ -7,6 +7,24 @@
         gap: $s1;
     }
 
+    .header {
+        position: relative;
+        .source {
+            max-width: 50%;
+            font-size: 0.45em;
+            position: absolute;
+            right: $s1;
+            top: 0;
+            white-space: nowrap;
+            display: block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            &::before {
+                content: "From "
+            }
+        }
+    }
+
     .field {
         div[contentEditable="plaintext-only"] {
             padding-left: $s1 * 0.5;

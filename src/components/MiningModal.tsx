@@ -9,7 +9,7 @@ import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, parseSrt, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
 import UserError from "../utils/UserError"
 import { furiFromToken, furiToReading, jpdbEntryUrl, lookupFuri, tokensToFuri } from "../utils/util"
-import { applyRegexTo } from "../views/RegexReplacements"
+import { applyRegexTo, applyReplacementsTo, ReplacementEntry } from "../views/RegexReplacements"
 import AudioButton from "./AudioButton"
 import { HtmlPopover } from "./basic/HtmlPopover"
 import IconButton from "./basic/IconButton"
@@ -46,6 +46,34 @@ async function tryLoadEnglish(subtitles: Subtitles, mpv: MpvWebSocket | undefine
     }
 }
 
+function cleanSource(source: string | undefined) {
+    if (source === undefined) return
+    // TODO this should be configurable
+    const replacements: ReplacementEntry[] = [
+        {
+            match: /\.1080p\.BluRay\.10-Bit\.Dual-Audio\.FLAC5\.1\.x265-YURASUKA/g,
+            replace: ""
+        },
+        {
+            match: /\.mkv$/g,
+            replace: ""
+        },
+        {
+            match: /\./g,
+            replace: " "
+        }
+    ]
+    // TODO super bad passing in `true` here
+    return applyReplacementsTo(replacements, source, true)
+}
+
+function filenameFromPath(path: string | undefined) {
+    if (path) {
+        const slash = Math.max(path.lastIndexOf("/"), path.lastIndexOf("\\"))
+        return path.substring(slash + 1)
+    }
+}
+
 export default (props: Props) => {
     let word = props.word
     const { entry, mpv, subtitles, startIndex, endIndex } = props
@@ -64,6 +92,8 @@ export default (props: Props) => {
         // don't remember why I don't do the space replacement with regex
         return (await applyRegexTo(entry.text, true)).replace("　", " ").replaceAll(word, "<b>" + word + "</b>")
     }
+
+    const sourceFile = cleanSource(filenameFromPath(props.subtitlesPage.currentFilename))
 
     async function body() {
         const entries = subtitles.processedEntries
@@ -104,11 +134,7 @@ export default (props: Props) => {
 
             card.enSentence = sentenceMeaningCE.textContent
 
-            const file = props.subtitlesPage.currentFilename
-            if (file) {
-                const slash = Math.max(file.lastIndexOf("/"), file.lastIndexOf("\\"))
-                card.source = file.substring(slash + 1) + "/t/" + (startTime + startOffset) / 1000
-            }
+            if (sourceFile) card.source = sourceFile + "/t/" + (startTime + startOffset) / 1000
 
             await saveToAnkiAndRemove(card, "mining-modal")
             modal.Close()
@@ -283,7 +309,7 @@ export default (props: Props) => {
 
     const modal = new Modal({
         body,
-        header: <div>Mining <b>{word}</b></div>,
+        header: <><span>Mining <b>{word}</b></span>{sourceFile && <span className="source">{sourceFile}</span>}</>,
         onClose: props.onClose,
         id: "mining-modal"
     });
