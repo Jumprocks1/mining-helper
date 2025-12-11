@@ -33,25 +33,25 @@ export function unicodeType(c: string, i = 0): UnicodeCharacterType {
 // cache
 let localAnkiWords: string[] | undefined
 let localAnkiWordsSet: Set<string> | undefined
-let localAnkiWordsKanaTrimMap: Map<string, string> | undefined
+let localAnkiWordsTrimKanaMap: Map<string, string> | undefined
 
 export function getAnkiWordsSetSync() {
     if (!localAnkiWords) return
     return localAnkiWordsSet ??= new Set(localAnkiWords)
 }
 
-export function getAnkiWordsKanaTrimMapSync() {
+export function getAnkiWordsTrimKanaMapSync() {
     if (!localAnkiWords) return
-    if (!localAnkiWordsKanaTrimMap) {
-        localAnkiWordsKanaTrimMap ??= new Map()
+    if (!localAnkiWordsTrimKanaMap) {
+        localAnkiWordsTrimKanaMap ??= new Map()
         for (const word of localAnkiWords) {
             const trimmed = TrimKana(word)
             if (trimmed === "") continue
             // this will overwrite some, that's fine
-            localAnkiWordsKanaTrimMap.set(trimmed, word)
+            localAnkiWordsTrimKanaMap.set(trimmed, word)
         }
     }
-    return localAnkiWordsKanaTrimMap
+    return localAnkiWordsTrimKanaMap
 }
 
 export function getAnkiWordsSync() { return localAnkiWords }

@@ -1,4 +1,4 @@
-import { getAnkiWordsKanaTrimMapSync, getAnkiWordsSetSync, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
+import { getAnkiWordsTrimKanaMapSync, getAnkiWordsSetSync, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
 import { Subtitles } from "../utils/srt";
 import { isIgnoredSync } from "./IgnoreList";
 import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "./JpdbParseText";
@@ -89,7 +89,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
         }
     }
     if (trimKana) {
-        const ankiTrimmedKana = getAnkiWordsKanaTrimMapSync()
+        const ankiTrimmedKana = getAnkiWordsTrimKanaMapSync()
         if (ankiTrimmedKana) {
             const trimmed = TrimKana(word)
             const found = ankiTrimmedKana.get(trimmed)

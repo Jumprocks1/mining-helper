@@ -113,3 +113,7 @@ input {
 .hide {
     display: none;
 }
+
+label, .label {
+    color: variables.$label;
+}

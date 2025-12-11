@@ -1,29 +1,34 @@
 import { getAnkiWords } from "../anki/CardList";
 import CheckboxField from "../components/basic/CheckboxField";
 import IconButton from "../components/basic/IconButton";
+import NumberField from "../components/basic/NumberField";
 import UpDownButtons from "../components/basic/UpDownButtons";
 import Loader from "../components/Loader";
 import { OpenModal } from "../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../jpdb/IgnoreList";
-import { JpdbVocabulary } from "../jpdb/JpdbParseText";
+import { JpdbParseSubtitles, JpdbVocabulary } from "../jpdb/JpdbParseText";
 import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../jpdb/JpdbState";
 import { tryPlayAudio } from "../utils/Audio";
 import { setSelection } from "../utils/CharacterHighlighter";
 import { ClearEventHandler, RegisterEventHandler } from "../utils/Events";
 import { SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt";
 import { CardData } from "../utils/util";
+import { getSetting, setSetting } from "../views/SettingsModal";
 import { seekToNextEntry } from "./subtitles";
 // TODO ^ this import is really dangerous
 
-export default (subtitles: Subtitles) => {
+export default async (subtitles: Subtitles) => {
+    if (!subtitles.jpdbParse) await JpdbParseSubtitles(subtitles);
     const jpdb = subtitles.jpdbParse
     if (!jpdb) return
 
     let showIgnored = false
     let showKana = false
     let n1 = false
-    let trimKana = false
-    let chronological = false
+    const pending = [getSetting("miningTrimKana"), getSetting("miningChronological"), getSetting("miningMaxFrequency")] as const
+    let trimKana = await pending[0]
+    let chronological = await pending[1]
+    let maxFrequency = await pending[2]
 
     let loadedRows: Record<number, HTMLElement> | undefined = undefined
 
@@ -41,6 +46,7 @@ export default (subtitles: Subtitles) => {
 
         loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
+            .filter(e => (e[2] ?? Number.MAX_SAFE_INTEGER) < maxFrequency)
         const pendingRows: [JpdbVocabulary, HTMLElement][] = []
         for (let i = 0; i < sorted.length; i++) {
             if (body.childElementCount >= 50) break
@@ -162,24 +168,31 @@ export default (subtitles: Subtitles) => {
         header: "Recommended Vocab",
         body: <>
             <div className="filters">
-                <CheckboxField label="Ignored" id="show-ignored" onChange={v => {
+                <CheckboxField label="Ignored" onChange={v => {
                     showIgnored = v
                     reload()
                 }} />
-                <CheckboxField label="Kana" id="show-kana" onChange={v => {
+                <CheckboxField label="Kana" onChange={v => {
                     showKana = v
                     reload()
                 }} />
-                <CheckboxField label="N+1" id="show-n1" onChange={v => {
+                <CheckboxField label="N+1" onChange={v => {
                     n1 = v
                     reload()
                 }} />
-                <CheckboxField label="Kana Trim" id="trim-kana" onChange={v => {
+                <CheckboxField label="Trim Kana" checked={trimKana} onChange={v => {
                     trimKana = v
+                    setSetting("miningTrimKana", v)
                     reload()
                 }} />
-                <CheckboxField label="Chronological" onChange={v => {
+                <CheckboxField label="Chronological" checked={chronological} onChange={v => {
                     chronological = v
+                    setSetting("miningChronological", v)
+                    reload()
+                }} />
+                <NumberField label="Max Frequency" defaultValue={maxFrequency} baseChange={1000} onChange={v => {
+                    maxFrequency = v
+                    setSetting("miningMaxFrequency", v)
                     reload()
                 }} />
             </div>

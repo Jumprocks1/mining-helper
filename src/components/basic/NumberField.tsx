@@ -6,6 +6,7 @@ interface Props {
     onChange: (e: number) => void
     label?: string
     showPlus?: true
+    baseChange?: number
 }
 
 export default (props: Props) => {
@@ -22,7 +23,7 @@ export default (props: Props) => {
         props.onChange(v)
     }
     function handleEv(ev: MouseEvent, negative: boolean) {
-        let mult = -10
+        let mult = props.baseChange ?? 10
         if (ev.ctrlKey) mult *= 10
         if (ev.shiftKey) mult /= 10
         setValue(value + (negative ? -1 : 1) * mult)
@@ -40,7 +41,7 @@ export default (props: Props) => {
     res.addEventListener("wheel", ev => {
         const dir = ev.deltaY > 0 ? 1 : ev.deltaY < 0 ? -1 : 0
         if (dir !== 0) {
-            handleEv(ev, dir < 0)
+            handleEv(ev, dir > 0)
         }
     })
 

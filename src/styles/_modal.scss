@@ -46,7 +46,6 @@
                 // <label> has some awkward side effects, so sometimes we use <div className="label">
                 label, .label {
                     font-size: 0.7em;
-                    color: variables.$label;
                 }
                 .field-value {
                     margin-left: 0.6em;

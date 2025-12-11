@@ -9,6 +9,10 @@ interface FieldProps<T> {
     key: { [K in SettingsKeys]: AllSettings[K] extends T ? K : never }[SettingsKeys]
     name: string
 }
+interface TemporaryFieldProps<T> {
+    key: { [K in keyof TemporarySettings]: TemporarySettings[K] extends T ? K : never }[keyof TemporarySettings]
+    name: string
+}
 
 // resets on page load
 interface TemporarySettings {
@@ -20,12 +24,19 @@ interface LocalSettings {
     // don't use undefined here, doesn't play well with chrome storage `get`
     ankiConnectKey: string | null
     skipChapterRegex: string
+
+    miningMaxFrequency: number
+    miningTrimKana: boolean
+    miningChronological: boolean
 }
 
 const defaultLocalSettings: LocalSettings = {
     regexReplacements: [],
     ankiConnectKey: null,
-    skipChapterRegex: ""
+    skipChapterRegex: "",
+    miningMaxFrequency: 50_000,
+    miningTrimKana: true,
+    miningChronological: false
 }
 
 const temporarySettings: TemporarySettings = {
@@ -75,7 +86,7 @@ async function ClearCache() {
 
 // TODO this modal should be split into extension settings vs subtitle page settings
 export default () => {
-    async function numberField(props: FieldProps<number>) {
+    async function numberField(props: TemporaryFieldProps<number>) {
         const defaultValue = getSetting(props.key)
         return <div className="setting-row field">
             <label>{props.name}</label>
