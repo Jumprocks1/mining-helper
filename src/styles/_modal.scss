@@ -22,7 +22,8 @@
         background: variables.$background1;
     }
     .inner-modal {
-        min-width: 30em;
+        min-width: min(30em, 100%);
+        max-width: 100%;
         background-color: variables.$background0;
         border: variables.$border0;
         b {

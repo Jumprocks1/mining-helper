@@ -142,6 +142,7 @@
     #recommended-mining-modal {
         .filters {
             display: flex;
+            flex-wrap: wrap;
             gap: $s1 * 3;
             label:has(#show-ignored:checked, #show-kana:checked) {
                 color: $ignored;
