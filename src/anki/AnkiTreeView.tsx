@@ -4,9 +4,17 @@ import AnkiConnect, { AnkiNote } from "../utils/AnkiConnect"
 
 interface GroupingInfo<T> {
     key: (e: T) => string | number
-    name?: (key: string | number, values: T[]) => string // not used yet
+    name?: (key: string | number, values: T[]) => string
+    hide?: (key: string | number, values: T[]) => boolean
     sortBy?: (key: string | number, values: T[]) => number
     disabled?: true
+}
+
+function cleanSource(source: string) {
+    if (!source) return "No source"
+    const slash = source.indexOf("/")
+    if (slash >= 0) source = source.substring(0, slash)
+    return source
 }
 
 export default () => {
@@ -40,7 +48,7 @@ export default () => {
             },
             {
                 key: e => {
-                    if (e.noteId - lastTimeGroup > 60 * 60 * 1_000)
+                    if (e.noteId - lastTimeGroup > 30 * 60 * 1_000)
                         currentTimeGroup = new Date(e.noteId).toLocaleString()
                     lastTimeGroup = e.noteId
                     return currentTimeGroup
@@ -49,22 +57,13 @@ export default () => {
             },
             {
                 key: e => {
-                    let source = e.fields.Source.value
-                    if (!source) return "No source"
-                    const slash = source.indexOf("/")
-                    if (slash >= 0) source = source.substring(0, slash)
+                    const source = cleanSource(e.fields.Source.value)
                     const epRegex = /\s+S\d{1,2}E\d{1,3}$/g
                     return source.replaceAll(epRegex, "")
                 }
             },
             {
-                key: e => {
-                    const source = e.fields.Source.value
-                    if (!source) return "No source"
-                    const slash = source.indexOf("/")
-                    if (slash >= 0) return source.substring(0, slash)
-                    return source
-                }
+                key: e => cleanSource(e.fields.Source.value)
             }
         ]
         groupings = groupings.filter(e => !e.disabled)
@@ -87,8 +86,9 @@ export default () => {
             const res: HTMLDetailsElement[] = []
             for (const key of keys) {
                 const group = groups.get(key)!
+                if (info.hide && info.hide(key, group)) continue
                 const d = <details className="node">
-                    <summary>{group.length} - {key}</summary>
+                    <summary>{group.length} - {info.name ? info.name(key, group) : key}</summary>
                 </details> as HTMLDetailsElement
                 if (i === groupings.length - 1) {
                     for (const note of group) {
