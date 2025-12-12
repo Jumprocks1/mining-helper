@@ -36,8 +36,7 @@ export default () => {
                 key: e => {
                     const date = new Date(e.noteId)
                     return date.toISOString().substring(0, 7)
-                },
-                disabled: true
+                }
             },
             {
                 key: e => {
@@ -72,10 +71,14 @@ export default () => {
             const info = groupings[i]
             const groups: Map<string | number, AnkiNote[]> = new Map()
             const keys = []
+            let maxLength = 0
             for (const note of notes) {
                 const key = info.key(note)
                 const group = groups.get(key)
-                if (group) group.push(note)
+                if (group) {
+                    group.push(note)
+                    if (group.length > maxLength) maxLength = group.length
+                }
                 else {
                     groups.set(key, [note])
                     keys.push(key)
@@ -83,12 +86,16 @@ export default () => {
             }
             const sortBy = info.sortBy
             if (sortBy) keys.sort((a, b) => sortBy(a, groups.get(a)!) - sortBy(b, groups.get(b)!))
+            const formatLength = maxLength.toString().length // eww
             const res: HTMLDetailsElement[] = []
             for (const key of keys) {
                 const group = groups.get(key)!
                 if (info.hide && info.hide(key, group)) continue
                 const d = <details className="node">
-                    <summary>{group.length} - {info.name ? info.name(key, group) : key}</summary>
+                    <summary>
+                        <span className="count">{group.length.toString().padEnd(formatLength, " ")}</span>
+                        {" - "}{info.name ? info.name(key, group) : key}
+                    </summary>
                 </details> as HTMLDetailsElement
                 if (i === groupings.length - 1) {
                     for (const note of group) {
