@@ -58,8 +58,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         const query = searchInput.value
 
         await mutatePendingCard(query, true, async card => {
-            const kanji = card.kanji
-
             card.jpSentenceKanji = entry.jap
             card.enSentence = entry.eng
 
@@ -69,6 +67,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, query)
             card.jpSentenceKanji = card.jpSentenceKanji.replace(query, "<b>" + query + "</b>")
+
+            card.source = "SS"
         })
     }
 
