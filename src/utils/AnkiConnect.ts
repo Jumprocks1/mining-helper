@@ -3,6 +3,7 @@ import UserError from "./UserError"
 
 export default class AnkiConnect {
 
+    // TODO configure
     targetDeck = "Kaishi 1.5k"
     targetModel = "Kaishi 1.5k"
 
@@ -39,6 +40,11 @@ export default class AnkiConnect {
         Promise<AnkiConnectActionMap[K]["returns"]> {
         return this.callAny(action, params, version)
     }
+}
+
+export interface AnkiNote {
+    noteId: number, // aka created on
+    fields: { Word: { value: string }, Source: { value: string } }
 }
 
 interface AnkiConnectActionMap {
@@ -83,7 +89,7 @@ interface AnkiConnectActionMap {
         }, returns: number[]
     },
     findCards: { params: { query: string }, returns: number[] },
-    notesInfo: { params: { query: string }, returns: { noteId: number, fields: { Word: { value: string } } }[] },
+    notesInfo: { params: { query: string }, returns: AnkiNote[] },
     guiSelectCard: { params: { card: number }, returns: boolean },
     multi: { params: { actions: [] }, returns: any },
     findNotes: { params: { query: string }, returns: number[] }

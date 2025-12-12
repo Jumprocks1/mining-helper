@@ -1,3 +1,5 @@
+@use "../styles/variables" as *;
+
 #anki-page {
     .card-list {
         .flex-row {
@@ -7,6 +9,50 @@
         }
         .unique-sets {
             white-space: pre;
+        }
+    }
+
+
+    .tree {
+        display: inline-block;
+
+        summary {
+            display: block;
+            cursor: pointer;
+            &:focus-visible {
+                outline: 1px dotted $outline;
+            }
+        }
+
+        $indent: 16px;
+        $spacing: 4px;
+        $border: 2px;
+
+        // this is so sketchy lol
+        .node>.node {
+            padding-left: $indent * 0.5 + $spacing;
+            margin-left: $indent * 0.5;
+
+            border-left: $border solid white;
+            &:last-child {
+                border-color: transparent;
+            }
+            div, summary {
+                position: relative;
+                &::before {
+                    content: '';
+                    display: block;
+                    position: absolute;
+                    left: -$border;
+                    width: $indent * 0.5;
+                    height: 50%;
+                    border-left: $border solid white;
+                    border-bottom: $border solid white;
+                }
+            }
+            summary::before {
+                left: -$indent * 0.5 - $border - $spacing;
+            }
         }
     }
 }

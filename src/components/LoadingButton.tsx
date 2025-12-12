@@ -46,7 +46,7 @@ export default class LoadingButton extends Component {
     }
 
     constructor(props: {
-        onClick: () => Promise<void> | void,
+        onClick: () => Promise<unknown> | void,
         // Will show as loading initially until loading promise finishes
         loading?: Promise<any>
         className?: string

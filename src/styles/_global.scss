@@ -24,6 +24,9 @@ button {
     &:active {
         background: rgba(255, 255, 255, 20%);
     }
+    &:focus-visible {
+        outline: 1px dotted variables.$outline;
+    }
     &.loading {
         color: color.scale(variables.$fontColor, $alpha: -50%);
         cursor: progress;

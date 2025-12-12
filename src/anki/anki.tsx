@@ -1,5 +1,6 @@
 import MhHeader from "../components/MhHeader"
 import { seedPage } from "../components/util"
+import AnkiTreeView from "./AnkiTreeView"
 import CardList from "./CardList"
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -7,6 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
         MhHeader(),
         <div id="body-container">
             {CardList()}
+            {AnkiTreeView()}
         </div>
     ])
 })
