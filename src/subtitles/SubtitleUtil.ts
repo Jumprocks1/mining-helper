@@ -26,5 +26,6 @@ export function getSubsInRange(entries: SubtitleEntry[], start: number, end: num
     o = o.replaceAll(/<[^>]*>/g, "") // close enough
     // fansubs have some adorable comments in these
     o = o.replaceAll(/\{[^}]*\}/g, "")
-    return o.trim()
+    // dedup lines, Set should preserve order
+    return [...new Set(o.split("\n"))].join("\n")
 }

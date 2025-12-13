@@ -6,7 +6,7 @@ interface GroupingInfo<T> {
     key: (e: T) => string | number
     name?: (key: string | number, values: T[]) => string
     hide?: (key: string | number, values: T[]) => boolean
-    sortBy?: (key: string | number, values: T[]) => number
+    sortBy?: (key: string | number, values: T[]) => string | number
     disabled?: true
 }
 
@@ -36,7 +36,8 @@ export default () => {
                 key: e => {
                     const date = new Date(e.noteId)
                     return date.toISOString().substring(0, 7)
-                }
+                },
+                disabled: true
             },
             {
                 key: e => {
@@ -47,23 +48,24 @@ export default () => {
             },
             {
                 key: e => {
-                    if (e.noteId - lastTimeGroup > 30 * 60 * 1_000)
-                        currentTimeGroup = new Date(e.noteId).toLocaleString()
-                    lastTimeGroup = e.noteId
-                    return currentTimeGroup
-                },
-                disabled: true
-            },
-            {
-                key: e => {
                     const source = cleanSource(e.fields.Source.value)
-                    const epRegex = /\s+S\d{1,2}E\d{1,3}$/g
+                    const epRegex = /\s*\-?\s+S\d{1,2}E\d{1,3}$/g
                     return source.replaceAll(epRegex, "")
                 }
             },
             {
                 key: e => cleanSource(e.fields.Source.value)
-            }
+            },
+            {
+                key: e => {
+                    if (e.noteId - lastTimeGroup > 30 * 60 * 1_000)
+                        currentTimeGroup = new Date(e.noteId).toLocaleString()
+                    lastTimeGroup = e.noteId
+                    return currentTimeGroup
+                },
+                sortBy: e => e,
+                disabled: true
+            },
         ]
         groupings = groupings.filter(e => !e.disabled)
         const res = <div className="tree" />
@@ -72,6 +74,7 @@ export default () => {
             const groups: Map<string | number, AnkiNote[]> = new Map()
             const keys = []
             let maxLength = 0
+            lastTimeGroup = 0
             for (const note of notes) {
                 const key = info.key(note)
                 const group = groups.get(key)
@@ -85,7 +88,11 @@ export default () => {
                 }
             }
             const sortBy = info.sortBy
-            if (sortBy) keys.sort((a, b) => sortBy(a, groups.get(a)!) - sortBy(b, groups.get(b)!))
+            if (sortBy) keys.sort((a, b) => {
+                const aS = sortBy(a, groups.get(a)!)
+                const bS = sortBy(b, groups.get(b)!)
+                return aS > bS ? 1 : bS > aS ? - 1 : 0
+            })
             const formatLength = maxLength.toString().length // eww
             const res: HTMLDetailsElement[] = []
             for (const key of keys) {
