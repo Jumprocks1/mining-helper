@@ -79,6 +79,8 @@ async function loadSubtitles(subtitles: Subtitles) {
     const replacements = await getReplacements()
     const res: SubtitleEntryWithCharacterOffset[] = []
 
+    let previous: SubtitleEntryWithCharacterOffset | undefined
+
     let characterOffset = 0
     for (const entry of subtitles.originalEntries) {
         const text = applyReplacementsTo(replacements, entry.text, false)
@@ -100,6 +102,12 @@ async function loadSubtitles(subtitles: Subtitles) {
             text,
             characterOffset
         } satisfies SubtitleEntryWithCharacterOffset
+        if (previous && previous.text === p.text) {
+            previous.startTime = Math.min(previous.startTime, p.startTime)
+            previous.endTime = Math.max(previous.endTime, p.endTime)
+            continue
+        }
+        previous = p
         res.push(p)
         characterOffset += p.text.length + 1 // +1 for \n when joining lines for jpdb
     }

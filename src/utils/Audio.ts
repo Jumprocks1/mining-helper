@@ -55,7 +55,7 @@ export async function tryGetAudioBytes(vocab: JpdbVocabulary) {
 }
 export async function tryPlayAudio(vocab: JpdbVocabulary) {
     const kanji = vocab[0]
-    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes-kanji:${kanji}` })
+    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes-kanji:${kanji}:${vocab[1]}` })
     if (!audioBytes.ok) return
     const buffer = await audioBytes.arrayBuffer()
     await playAudio(kanji, buffer)
