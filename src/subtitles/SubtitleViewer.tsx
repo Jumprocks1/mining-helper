@@ -2,9 +2,9 @@ import { getAnkiWords, UnicodeCharacterType, unicodeType } from "../anki/CardLis
 import { Popover } from "../components/basic/Popover"
 import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText"
 import { getVocabState, getVocabStateAndNote, VocabState } from "../jpdb/JpdbState"
-import { getCharacterIndex, getHoveredCharacterIndex, getTextNodeAtIndex } from "../utils/CharacterHighlighter"
+import { getCharacterIndex, getHoveredCharacterIndex, getSelectionRange } from "../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
-import { oldCreateElement } from "../utils/util"
+import { furiFromToken, furiToRuby, oldCreateElement } from "../utils/util"
 
 declare global {
     interface HTMLElement {
@@ -120,14 +120,16 @@ export default class SubtitleViewer {
             const [vocabState, vocabNote] = getVocabStateAndNote(vocab, { trimKana: true })
             const vocabStateString = VocabState[vocabState].toLowerCase()
 
+            const ruby = furiToRuby(furiFromToken(vocab[0], hoverState.token))
+
             this.popover.SetContent(<>
-                <div className="header">{vocab[0]}
+                <div className="header">
+                    {ruby}
                     <span className={"vocab-state " + vocabStateString}>
                         {vocabStateString}{vocabNote ? <> - {vocabNote}</> : undefined}
                     </span>
                     <span className="frequency">{vocab[2]}</span>
                 </div>
-                <div className="reading">{vocab[1]}</div>
                 {vocab[3].map((e, i) => <div>
                     {i + 1}. {e}
                 </div>)}
@@ -136,10 +138,6 @@ export default class SubtitleViewer {
         } else {
             this.popover?.Hide()
         }
-    }
-
-    GetHoveredToken() {
-        return this.LoadedHoverState?.token
     }
 
     UpdateHoverInfo(x: number, y: number, shift: boolean) {
@@ -166,11 +164,8 @@ export default class SubtitleViewer {
             }
         }
         if (token) {
-            const range = document.createRange()
-            const start = getTextNodeAtIndex(subtitles, token[0] - entry.characterOffset)
-            range.setStart(start[0], start[1])
-            const end = getTextNodeAtIndex(subtitles, token[0] - entry.characterOffset + token[1])
-            range.setEnd(end[0], end[1])
+            const start = token[0] - entry.characterOffset
+            const range = getSelectionRange(subtitles, start, start + token[1])
             const rect = range.getBoundingClientRect()
             this.SetHoverState({ token, rect }, jpdb.vocabulary[token[3]], shift)
         } else {

@@ -37,6 +37,49 @@ export function furiFromToken(word: string, token: JpdbToken) {
     return word
 }
 
+// usually used with furiFromToken
+export function furiToRuby(furi: string) {
+    const o = document.createElement("span")
+    o.className = "ruby-group"
+    let pendingRuby: HTMLElement | undefined
+    let pendingBase = ""
+    let pendingReading = ""
+    let insideReading = false
+    function pushPending() {
+        if (pendingBase) {
+            if (insideReading) {
+                pendingRuby ??= document.createElement("ruby")
+                pendingRuby.append(pendingBase)
+                const rt = document.createElement("rt")
+                rt.textContent = pendingReading
+                pendingRuby.append(rt)
+            } else {
+                if (pendingRuby) {
+                    o.append(pendingRuby)
+                    pendingRuby = undefined
+                }
+                o.append(pendingBase)
+            }
+        }
+        pendingBase = ""
+        pendingReading = ""
+        insideReading = false
+    }
+    for (let i = 0; i < furi.length; i++) {
+        const c = furi[i]
+        if (c === "[") insideReading = true
+        else if (c === "]" || c === " ") pushPending()
+        else if (insideReading) pendingReading += c
+        else pendingBase += c
+    }
+    pushPending()
+    if (pendingRuby) {
+        o.append(pendingRuby)
+        pendingRuby = undefined
+    }
+    return o
+}
+
 export async function lookupFuri(jp: string | undefined, highlight?: string) {
     if (!jp) return jp
     const res = await fetch("https://jpdb.io/api/v1/parse", {
