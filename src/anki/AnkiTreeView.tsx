@@ -118,7 +118,7 @@ export default () => {
         }
         res.appendChild(<details open className="node">
             <summary>Anki Cards</summary>
-            {renderGroup(notes, 0)}
+            {renderGroup(notes.reverse(), 0)}
         </details>)
         return res
     }
