@@ -7,3 +7,17 @@ export function seedPage(id: string, children: Children) {
     body.replaceChildren()
     appendChild(body, children)
 }
+
+export interface BaseComponentProps {
+    className?: string
+    tooltip?: string
+    title?: string
+}
+
+export function applyBaseComponentProps(node: HTMLElement, props: BaseComponentProps) {
+    if (props.className) node.classList.add(props.className)
+    if (props.tooltip) node.dataset.tooltip = props.tooltip
+    if (props.title) node.title = props.title
+
+    return node
+}

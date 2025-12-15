@@ -75,6 +75,7 @@ body {
 }
 
 @mixin tooltip {
+    font-size: 1rem;
     font-family: variables.$fontFamily;
     display: none;
     max-width: 280px;
@@ -95,11 +96,11 @@ body {
 }
 
 .tooltip {
-    @include tooltip
+    @include tooltip;
 }
 
 /* *:hover doesn't work for some reason */
-span:hover>.tooltip {
+span:hover:not(.error)>.tooltip {
     display: block;
 }
 
@@ -110,16 +111,12 @@ span:hover>.tooltip {
 
 [data-tooltip] {
     position: relative;
-    &:before {
+    &:hover:not(.errored):before {
+        @include tooltip;
+        display: block;
         content: attr(data-tooltip);
 
-        pointer-events: none;
-
-        @include tooltip
-    }
-
-    &:hover:before {
-        display: block;
+        pointer-events: none; // prevent firing parent events (hover/click)
     }
 }
 

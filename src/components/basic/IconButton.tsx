@@ -27,7 +27,5 @@ export default ({ icon, onClick, className, title, tooltip }: Props) => {
 
     if (title) res.title = title
 
-    if (tooltip) res.dataset["tooltip"] = tooltip
-
     return res
 }

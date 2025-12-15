@@ -1,5 +1,12 @@
+import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 import { userErrorMessage } from "../utils/UserError";
 import { Component } from "./Component"
+
+interface Props extends BaseComponentProps {
+    onClick: () => Promise<unknown> | void,
+    // Will show as loading initially until loading promise finishes
+    loading?: Promise<any>
+}
 
 // Also catches errors nicely
 export default class LoadingButton extends Component {
@@ -45,16 +52,11 @@ export default class LoadingButton extends Component {
         }
     }
 
-    constructor(props: {
-        onClick: () => Promise<unknown> | void,
-        // Will show as loading initially until loading promise finishes
-        loading?: Promise<any>
-        className?: string
-    }) {
+    constructor(props: Props) {
         super()
 
         this.Node = <button />
-        if (props.className) this.Node.classList.add(props.className)
+        applyBaseComponentProps(this.Node, props)
 
         this.Node.addEventListener("click", () => {
             if (this.Loading || this.Disabled) return
