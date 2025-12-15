@@ -1,7 +1,7 @@
 import { parseSrt, Subtitles, formatTimestamp, SubtitleEntryWithCharacterOffset, SubtitleEntry, OffsetCache } from "../utils/srt"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import MhHeader from "../components/MhHeader"
-import { seedPage } from "../components/util"
+import { seedPage } from "../framework/util"
 import SubtitleViewer from "./SubtitleViewer"
 import { disallowGlobalInput, handleKeypress } from "../utils/GlobalHotkeys"
 import MiningModal from "../components/MiningModal"

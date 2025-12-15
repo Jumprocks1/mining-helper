@@ -1,4 +1,4 @@
-import { appendChild, Children } from "../../utils/createElement";
+import { appendChild, type Children } from "../../framework/createElement";
 import { Component } from "../Component";
 import Loader from "../Loader";
 

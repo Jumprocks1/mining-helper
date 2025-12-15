@@ -1,4 +1,4 @@
-import { Children, replaceWith } from "../utils/createElement"
+import { type Children, replaceWith } from "../framework/createElement"
 
 export type DOMable = Node | string | Node[] | string[]
 export type Loadable = Promise<DOMable | Children> | (() => Promise<DOMable> | HTMLElement) | HTMLElement

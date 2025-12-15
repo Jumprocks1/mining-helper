@@ -1,5 +1,5 @@
 import MhHeader from "./components/MhHeader"
-import { seedPage } from "./components/util"
+import { seedPage } from "./framework/util"
 import { saveToAnkiAndRemove, updateInAnkiAndRemove } from "./utils/AnkiUtil"
 import { CardData, oldCreateElement, furiToReading } from "./utils/util"
 

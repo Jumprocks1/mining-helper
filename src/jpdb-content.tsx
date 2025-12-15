@@ -1,7 +1,7 @@
 import { getAnkiWords } from "./anki/CardList"
 import { disallowGlobalInput, handleKeypress, keyPressedWithText } from "./utils/GlobalHotkeys"
 import { CardData, furiToReading } from "./utils/util"
-import "./utils/createElement"
+import "./framework/createElement"
 import { mutatePendingCard } from "./utils/MiningUtil"
 import { getAudio, getAudioOptionsFromKanji } from "./utils/Audio"
 

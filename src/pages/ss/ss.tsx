@@ -1,6 +1,6 @@
 import IconButton from "../../components/basic/IconButton"
 import MhHeader from "../../components/MhHeader"
-import { seedPage } from "../../components/util"
+import { seedPage } from "../../framework/util"
 import AddIcons from "../../utils/AddIcons"
 import { playAudio } from "../../utils/Audio"
 import { mutatePendingCard } from "../../utils/MiningUtil"

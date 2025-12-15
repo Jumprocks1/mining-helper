@@ -1,5 +1,5 @@
 import MhHeader from "../components/MhHeader"
-import { seedPage } from "../components/util"
+import { seedPage } from "../framework/util"
 import AnkiTreeView from "./AnkiTreeView"
 import CardList from "./CardList"
 
