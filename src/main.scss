@@ -199,6 +199,7 @@ div#result {
         content: attr(data-tooltip);
         top: 100%;
         display: none;
+        font-family: variables.$fontFamily;
 
         /* ideally this would be max-width, but it behaves all weird with absolute pos inside inline element */
         width: 280px;
