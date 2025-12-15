@@ -10,9 +10,10 @@ interface Props {
     // TODO we could make these like a "standard props" that we can apply generally to any component/node
     onClick?: (ev: PointerEvent) => void
     className?: string // extras
+    tooltip?: string
 }
 
-export default ({ icon, onClick, className, title }: Props) => {
+export default ({ icon, onClick, className, title, tooltip }: Props) => {
     const res = <button className="icon-button material-symbols-outlined">{icon}</button>
     if (onClick)
         res.addEventListener("click", ev => {
@@ -25,6 +26,8 @@ export default ({ icon, onClick, className, title }: Props) => {
     else res.classList.add(icon + "-button")
 
     if (title) res.title = title
+
+    if (tooltip) res.dataset["tooltip"] = tooltip
 
     return res
 }

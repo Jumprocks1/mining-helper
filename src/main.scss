@@ -74,19 +74,28 @@ body {
     }
 }
 
-.tooltip {
+@mixin tooltip {
+    font-family: variables.$fontFamily;
     display: none;
-    /* ideally this would be max-width, but it behaves all weird with absolute pos inside inline element */
-    width: 280px;
+    max-width: 280px;
+    width: max-content;
+    position: absolute;
+    top: 100%;
 
-    top: 20px;
     background-color: #222;
     border: 1px solid rgba(255, 255, 255, 50%);
     text-align: left;
     border-radius: 3px;
     padding: 5px;
-    position: absolute;
     z-index: 1;
+
+    &:hover {
+        display: block;
+    }
+}
+
+.tooltip {
+    @include tooltip
 }
 
 /* *:hover doesn't work for some reason */
@@ -99,8 +108,19 @@ span:hover>.tooltip {
 }
 
 
-.tooltip:hover {
-    display: block;
+[data-tooltip] {
+    position: relative;
+    &:before {
+        content: attr(data-tooltip);
+
+        pointer-events: none;
+
+        @include tooltip
+    }
+
+    &:hover:before {
+        display: block;
+    }
 }
 
 .meaning-index,
@@ -191,33 +211,6 @@ div#result {
 
 .flex-spacer {
     flex-grow: 1;
-}
-
-[data-tooltip] {
-    position: relative;
-    &:before {
-        content: attr(data-tooltip);
-        top: 100%;
-        display: none;
-        font-family: variables.$fontFamily;
-
-        /* ideally this would be max-width, but it behaves all weird with absolute pos inside inline element */
-        width: 280px;
-
-        pointer-events: none;
-
-        background-color: #222;
-        border: 1px solid rgba(255, 255, 255, 50%);
-        text-align: left;
-        border-radius: 3px;
-        padding: 5px;
-        position: absolute;
-        z-index: 1;
-    }
-
-    &:hover:before {
-        display: block;
-    }
 }
 
 .material-symbols-outlined {
