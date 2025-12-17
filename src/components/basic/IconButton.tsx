@@ -1,8 +1,9 @@
+import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util"
 import AddIcons, { MaterialIcons } from "../../utils/AddIcons"
 
 AddIcons()
 
-interface Props {
+interface Props extends BaseComponentProps {
     icon: (typeof MaterialIcons)[number]
 
     title?: string
@@ -13,7 +14,7 @@ interface Props {
     tooltip?: string
 }
 
-export default ({ icon, onClick, className, title, tooltip }: Props) => {
+export default ({ icon, onClick, ...other }: Props) => {
     const res = <button className="icon-button material-symbols-outlined">{icon}</button>
     if (onClick)
         res.addEventListener("click", ev => {
@@ -22,10 +23,8 @@ export default ({ icon, onClick, className, title, tooltip }: Props) => {
             res.blur()
         })
 
-    if (className) res.classList.add(className)
-    else res.classList.add(icon + "-button")
-
-    if (title) res.title = title
+    other.className ??= icon + "-button"
+    applyBaseComponentProps(res, other)
 
     return res
 }

@@ -69,6 +69,7 @@ button {
         }
         &:hover {
             &::after {
+                // TODO could probably use tooltip mixin here
                 content: attr(data-error);
                 font-size: 1rem;
                 white-space: pre;
