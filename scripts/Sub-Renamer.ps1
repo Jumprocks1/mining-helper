@@ -3,7 +3,13 @@ param($Target = ".", [switch]$Force, [switch]$WhatIf)
 $dir = Get-Item $Target
 
 $videos = gci -LiteralPath $dir -Recurse *.mkv | sort Name
-$subs = gci -LiteralPath $dir -Recurse *.srt | sort Name
+$videoBaseNames = $videos.BaseName
+$subs = gci -LiteralPath $dir -Recurse |? {$_.Extension -in ".srt",".ass"} | sort Name
+$subsBaseNames = $subs.BaseName
+
+# ignore files that already have the correct name
+$subs = $subs |? {$_.BaseName -notin $videoBaseNames}
+$videos = $videos |? {$_.BaseName -notin $subsBaseNames}
 
 if ($videos.Count -eq 0) {
     Write-Error "No videos found"
