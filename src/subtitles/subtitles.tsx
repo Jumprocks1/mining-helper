@@ -149,9 +149,6 @@ async function handleWebSocketData(webSocket: MpvWebSocket, command: string | Bl
 async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string, commandData: string | Uint8Array<ArrayBuffer>) {
     if (commandName === "time" || commandName === "t") {
         updateTime(parseFloat(commandData as string))
-    } else if (commandName === "raw-sub-file") {
-        const decoded = new TextDecoder().decode(commandData as Uint8Array)
-        await loadSubtitles(await parseSrt(decoded))
     } else if (commandName === "response") {
         await webSocket.HandleResponse(commandData)
     } else if (commandName === "current-file") {
@@ -231,12 +228,16 @@ document.addEventListener("DOMContentLoaded", () => {
         connectionDot.title = "WebSocket connecting"
         connectionDot.classList.remove(...connectionDot.classList);
     }
-    webSocket.onOpen = () => {
+    webSocket.onOpen = async () => {
         connectionDot.title = "WebSocket connected"
         connectionDot.classList.add("connected")
         connectionDot.classList.remove("disconnected")
-        if (!loadedSubtitles)
-            webSocket.SendIfOpen("jp-subs");
+        if (!loadedSubtitles) {
+            const subs = await webSocket.RequestIfOpen("jp-subs")
+            if (typeof subs === "string") throw new Error()
+            const decoded = new TextDecoder().decode(subs)
+            await loadSubtitles(await parseSrt(decoded))
+        }
     }
     webSocket.onClose = () => {
         connectionDot.title = "WebSocket disconnected\nClick to retry"
