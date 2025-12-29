@@ -4,12 +4,12 @@ import { getSubsInRange, getTokenFor } from "../subtitles/SubtitleUtil"
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
 import { getAudio, getAudioOptionsFromKanji, playAudio, tryGetAudioBytes } from "../utils/Audio"
 import { type Children } from "../framework/createElement"
-import { getOrCreatePendingCard, saveCard } from "../utils/MiningUtil"
+import { getOrCreatePendingCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, parseSrt, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
 import UserError from "../utils/UserError"
-import { furiFromToken, furiToReading, jpdbEntryUrl, lookupFuri, tokensToFuri } from "../utils/util"
-import { applyRegexTo, applyReplacementsTo, ReplacementEntry } from "../views/RegexReplacements"
+import { cleanSource, furiFromToken, furiToReading, jpdbEntryUrl, lookupFuri, tokensToFuri } from "../utils/util"
+import { applyRegexTo } from "../views/RegexReplacements"
 import AudioButton from "./AudioButton"
 import { HtmlPopover } from "./basic/HtmlPopover"
 import IconButton from "./basic/IconButton"
@@ -46,26 +46,6 @@ async function tryLoadEnglish(subtitles: Subtitles, mpv: MpvWebSocket | undefine
     }
 }
 
-function cleanSource(source: string | undefined) {
-    if (source === undefined) return
-    // TODO this should be configurable
-    const replacements: ReplacementEntry[] = [
-        {
-            match: /\.1080p\.BluRay\.10-Bit\.Dual-Audio\.FLAC5\.1\.x265-YURASUKA/g,
-            replace: ""
-        },
-        {
-            match: /\.mkv$/g,
-            replace: ""
-        },
-        {
-            match: /\./g,
-            replace: " "
-        }
-    ]
-    // TODO super bad passing in `true` here
-    return applyReplacementsTo(replacements, source, true)
-}
 
 function filenameFromPath(path: string | undefined) {
     if (path) {

@@ -1,4 +1,4 @@
-import { getSetting, ServerAddress } from "../views/SettingsModal"
+import { getSetting } from "../views/SettingsModal"
 
 export default class MpvWebSocket {
     Connection: WebSocket | undefined
@@ -29,7 +29,8 @@ export default class MpvWebSocket {
         this._openPromise ??= new Promise<void>(e => this._openPromiseResolve = e)
         console.log("Connecting WebSocket")
         const apiKey = await getSetting("serverApiKey")
-        this.Connection = new WebSocket(this.Uri, apiKey ? [apiKey] : undefined);
+        const uri = this.Uri ?? `ws://${await getSetting("serverAddress")}`
+        this.Connection = new WebSocket(uri, apiKey ? [apiKey] : undefined);
 
         this.Connection.onopen = () => {
             this._openPromiseResolve?.()
@@ -46,9 +47,9 @@ export default class MpvWebSocket {
         return this._openPromise
     }
 
-    Uri: string;
+    Uri: string | undefined; // undefined => load from settings
     constructor(uri?: string) {
-        this.Uri = uri ?? `ws://${ServerAddress}`
+        this.Uri = uri
     }
 
     public async OpenAndSend(message: string) {

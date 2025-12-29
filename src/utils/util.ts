@@ -1,5 +1,6 @@
 import { UnicodeCharacterType, unicodeType } from "../anki/CardList";
 import { JpdbParseResponse, JpdbToken } from "../jpdb/JpdbParseText";
+import { applyReplacementsTo, ReplacementEntry } from "../views/RegexReplacements";
 
 let _apiKey: string | undefined = undefined
 export function getJpdbApiKey() {
@@ -250,4 +251,46 @@ export async function urlToArrayBuffer(url: string | undefined) {
 // don't use for real code, useful for testing though
 export function delay(delay: number) {
     return new Promise<void>(resolve => setTimeout(() => resolve(), delay))
+}
+
+// source as in "Anime Title - S__E__ - Episode Title" or similar
+export function cleanSource(source: string | undefined) {
+    if (source === undefined) return
+    // TODO this should be configurable
+    const replacements: ReplacementEntry[] = [
+        {
+            match: /\.1080p\.BluRay.+$/g,
+            replace: ""
+        },
+        {
+            match: /\.mkv$/g,
+            replace: ""
+        },
+        {
+            match: /\./g,
+            replace: " "
+        },
+        {
+            match: /\[.+?\]/g,
+            replace: ""
+        },
+        {
+            match: /\(.+?\)/g,
+            replace: ""
+        },
+        {
+            match: /\s+/g,
+            replace: " "
+        },
+        {
+            match: /^\s+|\s+$/g,
+            replace: ""
+        },
+        {
+            match: /(?<= \- S\d+E\d+) - .+/g,
+            replace: ""
+        }
+    ]
+    // TODO super bad passing in `true` here
+    return applyReplacementsTo(replacements, source, true)
 }
