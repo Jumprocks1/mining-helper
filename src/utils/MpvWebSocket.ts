@@ -1,3 +1,5 @@
+import { getSetting, ServerAddress } from "../views/SettingsModal"
+
 export default class MpvWebSocket {
     Connection: WebSocket | undefined
 
@@ -19,14 +21,15 @@ export default class MpvWebSocket {
     _openPromise: Promise<void> | undefined
     _openPromiseResolve: (() => void) | undefined
     // will also reconnect if needed
-    public Connect() {
+    public async Connect() {
         if (this.Connection) {
             if (this.Connecting || this.Open) return this._openPromise!
             this.Connection.close();
         }
         this._openPromise ??= new Promise<void>(e => this._openPromiseResolve = e)
         console.log("Connecting WebSocket")
-        this.Connection = new WebSocket(this.Uri);
+        const apiKey = await getSetting("serverApiKey")
+        this.Connection = new WebSocket(this.Uri, apiKey ? [apiKey] : undefined);
 
         this.Connection.onopen = () => {
             this._openPromiseResolve?.()
@@ -44,8 +47,8 @@ export default class MpvWebSocket {
     }
 
     Uri: string;
-    constructor(uri: string = "ws://127.0.0.1:4012/") {
-        this.Uri = uri
+    constructor(uri?: string) {
+        this.Uri = uri ?? `ws://${ServerAddress}`
     }
 
     public async OpenAndSend(message: string) {

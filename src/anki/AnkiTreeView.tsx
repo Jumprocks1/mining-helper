@@ -49,7 +49,7 @@ export default () => {
             {
                 key: e => {
                     const source = cleanSource(e.fields.Source.value)
-                    const epRegex = /\s*\-?\s+S\d{1,2}E\d{1,3}$/g
+                    const epRegex = /\s*\-?\s+S\d{1,2}E\d{1,3}$|\s*\-\s*\d{1,3}$/g
                     return source.replaceAll(epRegex, "")
                 }
             },

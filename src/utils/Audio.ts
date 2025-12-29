@@ -1,4 +1,5 @@
 import { JpdbVocabulary } from "../jpdb/JpdbParseText"
+import { getSetting } from "../views/SettingsModal"
 import { urlToArrayBuffer } from "./util"
 
 let audioContext: AudioContext | undefined = undefined
@@ -46,19 +47,26 @@ export async function playAudio(name: string, audio: PlayableAudio, offset: numb
     source.start(0, offset)
 }
 
+
+async function post(body: string) {
+    const apiKey = await getSetting("serverApiKey")
+    const headers: HeadersInit = {}
+    if (apiKey) headers["X-Api-Key"] = apiKey
+    const serverAddress = await getSetting("serverAddress")
+    const httpServer = `http://${serverAddress}`
+    return await fetch(httpServer, {
+        method: "POST", body, headers
+    })
+}
+
 export async function tryGetAudioBytes(vocab: JpdbVocabulary) {
     const kanji = vocab[0]
-    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes-kanji:${kanji}` })
+    const audioBytes = await post(`audio-bytes-kanji:${kanji}:${vocab[1]}`)
     if (!audioBytes.ok) return
-    const buffer = await audioBytes.arrayBuffer()
-    return buffer
+    return audioBytes.arrayBuffer()
 }
 export async function tryPlayAudio(vocab: JpdbVocabulary) {
-    const kanji = vocab[0]
-    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes-kanji:${kanji}:${vocab[1]}` })
-    if (!audioBytes.ok) return
-    const buffer = await audioBytes.arrayBuffer()
-    await playAudio(kanji, buffer)
+    await playAudio(vocab[0], tryGetAudioBytes(vocab))
 }
 
 export interface AudioEntry {
@@ -71,13 +79,13 @@ export interface AudioEntry {
 export async function getAudioOptionsFromKanji(kanji: string, reading?: string) {
     let body = `lookup-audio:${kanji}`
     if (reading) body += ":" + reading
-    const audioOptions = await fetch("http://127.0.0.1:8080", { method: "POST", body })
+    const audioOptions = await post(body)
     return await audioOptions.json() as AudioEntry[]
 }
 
 export async function getAudio(entry?: AudioEntry) {
     if (!entry) return
-    const audioBytes = await fetch("http://127.0.0.1:8080", { method: "POST", body: `audio-bytes:${entry.ID}` })
+    const audioBytes = await post(`audio-bytes:${entry.ID}`)
     if (!audioBytes.ok) return
     return await audioBytes.arrayBuffer()
 }

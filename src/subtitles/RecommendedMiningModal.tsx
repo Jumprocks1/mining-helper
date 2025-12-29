@@ -49,7 +49,7 @@ export default async (subtitles: Subtitles) => {
             .filter(e => (e[2] ?? Number.MAX_SAFE_INTEGER) < maxFrequency)
         const pendingRows: [JpdbVocabulary, HTMLElement][] = []
         for (let i = 0; i < sorted.length; i++) {
-            if (body.childElementCount >= 50) break
+            if (pendingRows.length >= 50) break
             const vocab = sorted[i]
             let state = getVocabState(vocab, stateConfig)
             let ignored = state === VocabState.Ignored

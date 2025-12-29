@@ -28,11 +28,15 @@ interface LocalSettings {
     miningMaxFrequency: number
     miningTrimKana: boolean
     miningChronological: boolean
+    serverApiKey: string | null
+    serverAddress: string
 }
 
 const defaultLocalSettings: LocalSettings = {
     regexReplacements: [],
     ankiConnectKey: null,
+    serverApiKey: null,
+    serverAddress: "127.0.0.1:4012",
     skipChapterRegex: "",
     miningMaxFrequency: 50_000,
     miningTrimKana: true,
