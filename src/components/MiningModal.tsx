@@ -240,8 +240,8 @@ export default (props: Props) => {
             <label>Time</label>
             <div className="field-value">
                 {timeField}
-                <NumberField onChange={v => startOffset = v} defaultValue={startOffset} label="Start" showPlus />
-                <NumberField onChange={v => endOffset = v} defaultValue={endOffset} label="End" showPlus />
+                <NumberField onChange={v => startOffset = v} defaultValue={startOffset} label="Start" baseChange={100} showPlus />
+                <NumberField onChange={v => endOffset = v} defaultValue={endOffset} label="End" baseChange={100} showPlus />
                 {playButtonPlaceholder}
             </div>
         </div>)
