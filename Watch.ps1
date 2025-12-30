@@ -2,7 +2,7 @@ param(
     [switch]$HotReloadCss
 )
 
-$sass = Start-Process cmd "/c sass --embed-source-map --watch src/main.scss:dist/main.css" -NoNewWindow -PassThru
+$sass = Start-Process cmd "/c sass --embed-source-map --source-map-urls=absolute --watch src/main.scss:dist/main.css" -NoNewWindow -PassThru
 $esbuild = Start-Process node esbuild.mjs -NoNewWindow -PassThru
 
 try {
