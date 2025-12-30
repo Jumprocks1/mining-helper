@@ -8,5 +8,5 @@ export default class UserError extends Error {
 export function userErrorMessage(e: unknown) {
     if (e instanceof UserError) return e.message
 
-    return "Unknown error occured"
+    return String(e)
 }

@@ -50,11 +50,35 @@
 .loader {
     width: 30px;
     aspect-ratio: 1;
-    overflow: hidden;
-    &::before {
-        content: "";
-        height: 100%;
-        display: block;
-        @include LoadingCircle
+    &[data-error]::before {
+        content: "error";
+        color: variables.$error;
+        @include variables.MaterialIcon();
+        font-size: 30px;
+    }
+    position: relative;
+    &[data-error]:hover::after {
+        // TODO could probably use tooltip mixin here
+        content: attr(data-error);
+        font-size: 1rem;
+        white-space: pre;
+        border: variables.$border0;
+        padding: variables.$s1;
+        background: variables.$background0;
+        position: absolute;
+        left: calc(100% + variables.$s1);
+        top: 0;
+        min-height: 100%;
+        display: flex;
+        align-items: center;
+    }
+    &:not([data-error]) {
+        overflow: hidden;
+        &::before {
+            content: "";
+            height: 100%;
+            display: block;
+            @include LoadingCircle
+        }
     }
 }

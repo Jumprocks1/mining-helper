@@ -17,11 +17,11 @@ button {
     position: relative;
     color: variables.$fontColor;
 
-    &:hover {
+    &:hover:not(.disabled):not(.loading) {
         background: rgba(255, 255, 255, 10%);
         border: 1px solid #FFFFFF80;
     }
-    &:active {
+    &:active:not(.disabled):not(.loading) {
         background: rgba(255, 255, 255, 20%);
     }
     &:focus-visible {
@@ -48,24 +48,13 @@ button {
     &.errored {
         position: relative;
         &::before {
-            color: variables.$brightRed;
+            color: variables.$error;
             content: "error";
             position: absolute;
             right: 0;
             top: 0;
-
-            // not sure how to clean this up - should probably make a mixin?
-            user-select: none;
-            font-family: 'Material Symbols Outlined';
-            font-weight: normal;
-            font-style: normal;
+            @include variables.MaterialIcon();
             font-size: 16px;
-            line-height: 1;
-            letter-spacing: normal;
-            text-transform: none;
-            font-feature-settings: 'liga';
-            -webkit-font-feature-settings: 'liga';
-            -webkit-font-smoothing: antialiased;
         }
         &:hover {
             &::after {
