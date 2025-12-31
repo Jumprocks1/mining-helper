@@ -114,6 +114,7 @@ export async function parseSrt(srt: string): Promise<Subtitles> {
             else pendingEntry.text += "\n" + line
         }
     }
+    closePending()
 
     // might need to apply this after regex for consistency...
     const dedup = true
