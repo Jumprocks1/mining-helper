@@ -3,6 +3,7 @@ import { getSetting } from "../views/SettingsModal"
 import { urlToArrayBuffer } from "./util"
 
 let audioContext: AudioContext | undefined = undefined
+let gainNode: GainNode | undefined = undefined
 let playing: Record<string, AudioBufferSourceNode> = {}
 
 
@@ -35,15 +36,23 @@ export async function playAudio(name: string, audio: PlayableAudio, offset: numb
     const bytes = await resolveAudio(audio)
     if (!bytes) return
     audioContext ??= new AudioContext()
+    if (gainNode === undefined) {
+        gainNode = audioContext.createGain()
+        gainNode.connect(audioContext.destination)
+    }
+    gainNode.gain.value = await getSetting("volume")
     const source = audioContext.createBufferSource();
     // audio thread needs a copy of the buffer, so we have to slice
     source.buffer = await audioContext.decodeAudioData(bytes.slice(0));
-    source.connect(audioContext.destination);
+    source.connect(gainNode);
 
     stopAll()
 
     playing[name] = source
-    source.onended = () => delete playing[name]
+    source.onended = () => {
+        source.disconnect()
+        delete playing[name]
+    }
     source.start(0, offset)
 }
 

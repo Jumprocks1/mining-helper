@@ -29,7 +29,8 @@ interface LocalSettings {
     miningTrimKana: boolean
     miningChronological: boolean
     serverApiKey: string | null
-    serverAddress: string
+    serverAddress: string,
+    volume: number
 }
 
 const defaultLocalSettings: LocalSettings = {
@@ -40,7 +41,8 @@ const defaultLocalSettings: LocalSettings = {
     skipChapterRegex: "",
     miningMaxFrequency: 50_000,
     miningTrimKana: true,
-    miningChronological: false
+    miningChronological: false,
+    volume: 1
 }
 
 const temporarySettings: TemporarySettings = {
@@ -88,6 +90,15 @@ async function ClearCache() {
     await JpdbCache.Clear();
 }
 
+function inputToVolume(input: number) {
+    // technically should do some logarithms and stuff here, but this is fine
+    input /= 100
+    return Math.pow(input, 2)
+}
+function volumeToInput(volume: number) {
+    return Math.pow(volume, 1 / 2) * 100
+}
+
 // TODO this modal should be split into extension settings vs subtitle page settings
 export default () => {
     async function numberField(props: TemporaryFieldProps<number>) {
@@ -99,6 +110,15 @@ export default () => {
     }
 
     const body = <Loader load={async () => {
+        let inputVolume = volumeToInput(await getSetting("volume"))
+        const volumeInput = <input defaultValue={inputVolume.toString()}
+            type="range" min="0" max="100" onchange={async e => {
+                const input = e.target as HTMLInputElement
+                inputVolume = input.valueAsNumber
+                volumeInput.dataset.tooltip = `${inputVolume}%`
+                return setSetting("volume", inputToVolume(input.valueAsNumber))
+            }} />
+        volumeInput.dataset.tooltip = `${inputVolume}%`
         return <>
             <button className="list-button" onclick={RegexReplacements}>Regex replacements</button>
             {await numberField({ key: "offset", name: "Offset" })}
@@ -108,6 +128,10 @@ export default () => {
                     const input = e.target as HTMLInputElement
                     return setSetting("skipChapterRegex", input.value)
                 }} />
+            </div>
+            <div className="setting-row field">
+                <label>Volume</label>
+                {volumeInput}
             </div>
             <div className="footer-buttons">
                 <LoadingButton className="list-button" onClick={ClearCache}>Clear Cache</LoadingButton>
