@@ -42,7 +42,7 @@ const defaultLocalSettings: LocalSettings = {
     miningMaxFrequency: 50_000,
     miningTrimKana: true,
     miningChronological: false,
-    volume: 1
+    volume: 0.6
 }
 
 const temporarySettings: TemporarySettings = {
@@ -96,7 +96,7 @@ function inputToVolume(input: number) {
     return Math.pow(input, 2)
 }
 function volumeToInput(volume: number) {
-    return Math.pow(volume, 1 / 2) * 100
+    return Math.round(Math.pow(volume, 1 / 2) * 100)
 }
 
 // TODO this modal should be split into extension settings vs subtitle page settings
