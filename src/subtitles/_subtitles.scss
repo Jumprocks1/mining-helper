@@ -46,6 +46,7 @@
             align-items: stretch;
             .timestamp {
                 cursor: pointer;
+                user-select: none;
                 align-items: center;
                 display: flex;
                 font-family: monospace;

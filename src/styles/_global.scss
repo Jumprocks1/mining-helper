@@ -118,3 +118,8 @@ input[type="range"] {
 label, .label {
     color: variables.$label;
 }
+
+ruby rt {
+    user-select: none;
+    opacity: 0.8;
+}

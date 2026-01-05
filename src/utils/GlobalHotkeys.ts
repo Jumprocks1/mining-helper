@@ -41,10 +41,20 @@ export function keyPressedWithText(ev: KeyboardEvent, text: string) {
 export function handleKeypress(ev: KeyboardEvent) {
     const sel = getSelection()
     if (sel && !sel.isCollapsed) {
-        if (keyPressedWithText(ev, sel.toString())) return true
+        if (keyPressedWithText(ev, getCleanSelectionString(sel)))
+            return true
     }
 
     return false
+}
+
+function getCleanSelectionString(sel: Selection) {
+    if (sel.rangeCount === 0) return ""
+    const range = sel.getRangeAt(0)
+    // feels pretty silly to clone the whole thing, but it works fine and is fast
+    const clone = range.cloneContents()
+    clone.querySelectorAll("rt").forEach(rt => rt.remove())
+    return clone.textContent
 }
 
 function isJapanese(s: string) {

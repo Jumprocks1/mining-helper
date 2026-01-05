@@ -6,6 +6,10 @@
         align-items: center;
     }
 
+    #word-field .field-value>span {
+        font-size: 1.5em;
+    }
+
     .header {
         position: relative;
         .source {

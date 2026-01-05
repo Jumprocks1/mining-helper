@@ -8,7 +8,7 @@ import { getOrCreatePendingCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, parseSrt, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
 import UserError from "../utils/UserError"
-import { cleanSource, furiFromToken, furiToReading, jpdbEntryUrl, lookupFuri, tokensToFuri } from "../utils/util"
+import { cleanSource, furiFromToken, furiToReading, furiToRuby, jpdbEntryUrl, lookupFuri } from "../utils/util"
 import { applyRegexTo } from "../views/RegexReplacements"
 import AudioButton from "./AudioButton"
 import { HtmlPopover } from "./basic/HtmlPopover"
@@ -133,8 +133,11 @@ export default (props: Props) => {
         const sentenceCE = <div contentEditable="plaintext-only" />
 
         sentenceCE.innerHTML = await getSentenceCeInnerHTML(entry);
-        add("Kanji", kanji)
-        add("Reading", card.furigana ?? "N/A")
+
+        labeled.push(<div className="field" id="word-field">
+            <div className="label">Word</div>
+            <div className="field-value"><span>{card.furigana ? furiToRuby(card.furigana) : card.kanji}</span></div>
+        </div>)
 
         const menuPopover = new HtmlPopover({
             className: "menu",
