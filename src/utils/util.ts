@@ -20,20 +20,30 @@ export function jpdbEntryUrl(word: string) {
 // token will not necessarily match word, mainly with verb conjugations
 // This might have some issues, but I can't think of any, so will leave it until we find some
 export function furiFromToken(word: string, token: JpdbToken) {
+    // Some of the sketchiness is to fix words with 2 of the same kanji (生き生き)
     if (Array.isArray(token[2])) {
+        let o = ""
+        let i = 0
+        // this requires the replacements to be in the correct order, some can be skipped safely
         for (const reading of token[2]) {
             if (Array.isArray(reading)) {
-                word = word.replaceAll(reading[0], (_, offset) => {
-                    const rep = reading[0] + "[" + reading[1] + "]"
-                    if (offset > 0) {
-                        const prev = word[offset - 1]
+
+                const match = word.indexOf(reading[0], i)
+                if (match >= 0) {
+                    o += word.substring(i, match)
+                    let rep = reading[0] + "[" + reading[1] + "]"
+                    if (o.length > 0) {
+                        const prev = o[o.length - 1]
                         if (prev !== "]" && prev !== " " && prev !== ">")
-                            return " " + rep
+                            rep = " " + rep
                     }
-                    return rep
-                })
+                    o += rep
+                    i = match + reading[0].length
+                }
             }
         }
+        o += word.substring(i)
+        return o
     }
     return word
 }
