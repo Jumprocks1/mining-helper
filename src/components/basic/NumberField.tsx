@@ -1,4 +1,5 @@
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util"
+import Effects from "../../utils/Effects"
 import { setSetting, type SettingsKey } from "../../views/SettingsModal"
 import UpDownButtons from "./UpDownButtons"
 
@@ -70,6 +71,7 @@ export default (props: Props) => {
                     else
                         props.storeDefault?.(defaultValue)
                 }
+                Effects.flash(res)
             }
         } else if (e.key === "-" || (e.key >= "0" && e.key <= "9")) {
             pendingValue += e.key
