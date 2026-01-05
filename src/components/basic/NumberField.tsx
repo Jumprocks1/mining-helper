@@ -1,4 +1,5 @@
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util"
+import { setSetting, type SettingsKey } from "../../views/SettingsModal"
 import UpDownButtons from "./UpDownButtons"
 
 interface Props extends BaseComponentProps {
@@ -8,10 +9,12 @@ interface Props extends BaseComponentProps {
     showPlus?: true
     baseChange?: number
     units?: string
+    storeDefault?: ((e: number) => void) | SettingsKey
 }
 
 export default (props: Props) => {
-    const defaultValue = props.defaultValue ?? 0
+    let defaultValue = props.defaultValue ?? 0
+
     let pendingValue = "" // when typing
     let value = defaultValue
     function updateInnerText() {
@@ -57,6 +60,17 @@ export default (props: Props) => {
     function onKeyDown(e: KeyboardEvent) {
         if (e.key === "r") {
             setValue(defaultValue)
+        } else if (e.key === "d") {
+            commitPending()
+            if (defaultValue !== value) {
+                defaultValue = value
+                if (props.storeDefault) {
+                    if (typeof props.storeDefault === "string")
+                        setSetting(props.storeDefault, defaultValue)
+                    else
+                        props.storeDefault?.(defaultValue)
+                }
+            }
         } else if (e.key === "-" || (e.key >= "0" && e.key <= "9")) {
             pendingValue += e.key
             display.innerText = pendingValue

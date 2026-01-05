@@ -49,24 +49,24 @@ const temporarySettings: TemporarySettings = {
 }
 
 type AllSettings = LocalSettings & TemporarySettings
-type SettingsKeys = keyof TemporarySettings | keyof LocalSettings
+export type SettingsKey = keyof TemporarySettings | keyof LocalSettings
 
 const listeners: { key: string, listener: (v: any) => void }[] = []
 
-export function onSettingChange<K extends SettingsKeys>(key: K, listener: (v: AllSettings[K]) => void) {
+export function onSettingChange<K extends SettingsKey>(key: K, listener: (v: AllSettings[K]) => void) {
     listeners.push({ key, listener })
 }
 
 export function getSetting<K extends keyof TemporarySettings>(key: K): TemporarySettings[K];
 export function getSetting<K extends keyof LocalSettings>(key: K): Promise<LocalSettings[K]>;
-export function getSetting<K extends SettingsKeys>(key: K): AllSettings[K] | Promise<AllSettings[K]> {
+export function getSetting<K extends SettingsKey>(key: K): AllSettings[K] | Promise<AllSettings[K]> {
     if (key in temporarySettings)
         return temporarySettings[key as keyof TemporarySettings] as AllSettings[K]
     if (key in defaultLocalSettings)
         return chrome.storage.local.get({ [key]: defaultLocalSettings[key as keyof LocalSettings] }).then(e => e[key])
     throw new Error()
 }
-export async function setSetting<K extends SettingsKeys>(key: K, v: AllSettings[K]) {
+export async function setSetting<K extends SettingsKey>(key: K, v: AllSettings[K]) {
     if (key in temporarySettings) {
         if (temporarySettings[key as keyof TemporarySettings] as AllSettings[K] === v) return
         // @ts-expect-error
@@ -78,7 +78,7 @@ export async function setSetting<K extends SettingsKeys>(key: K, v: AllSettings[
     }
     else throw new Error()
 }
-export function triggerSettingChanged<K extends SettingsKeys>(key: K, v: AllSettings[K]) {
+export function triggerSettingChanged<K extends SettingsKey>(key: K, v: AllSettings[K]) {
     for (const listener of listeners) {
         if (listener.key === key)
             listener.listener(v)
