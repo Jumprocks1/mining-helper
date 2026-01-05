@@ -40,8 +40,6 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
     ])
 
-    const popup = new URLSearchParams(location.search).get("p") !== null
-    if (popup) document.body.classList.add("popup")
     async function refresh() {
         const cardsObject = await chrome.storage.session.get()
         const cards: CardData[] = []
@@ -101,14 +99,4 @@ document.addEventListener("DOMContentLoaded", () => {
         cardContainer.replaceChildren(...newChildren)
     }
     refresh()
-
-    if (popup) {
-        document.addEventListener("click", ev => {
-            const target = ev.target as HTMLAnchorElement | null
-            if (target && target.matches("#mh-header a.button")) {
-                chrome.tabs.create({ url: chrome.runtime.getURL(target.getAttribute("href")!) });
-                ev.preventDefault()
-            }
-        })
-    }
 })

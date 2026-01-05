@@ -16,24 +16,12 @@ body {
     color: variables.$fontColor;
     padding: 0;
 
-    &.popup {
-        #body-container {
-            padding: 6px 6px 100px 6px;
-            width: 500px;
-        }
-        #mh-header {
-            padding: 0 0;
-        }
+    font-size: 24px;
+    #body-container {
+        padding: 16px;
     }
-
-    &:not(.popup) {
-        font-size: 24px;
-        #body-container {
-            padding: 16px;
-        }
-        #fullscreen-button {
-            display: none;
-        }
+    #fullscreen-button {
+        display: none;
     }
 }
 

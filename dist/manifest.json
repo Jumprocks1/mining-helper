@@ -3,9 +3,7 @@
   "$schema": "https://json.schemastore.org/chrome-manifest",
   "version": "1.0",
   "manifest_version": 3,
-  "action": {
-    "default_popup": "popup.html?p"
-  },
+  "action": {},
   "declarative_net_request": {
     "rule_resources": [
       {
@@ -20,7 +18,8 @@
   },
   "permissions": [
     "storage",
-    "declarativeNetRequestWithHostAccess"
+    "declarativeNetRequestWithHostAccess",
+    "tabs"
   ],
   "host_permissions": [
     "https://receptomanijalogi.web.app/*"

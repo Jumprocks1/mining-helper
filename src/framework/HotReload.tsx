@@ -1,6 +1,3 @@
-// TODO don't connect when in popup - add environment variable or something to check
-// maybe esbuild variable like process.env.targetfile or I just add some js specifically for the popup.html page
-
 let ran = false
 
 declare var process: { env: { NODE_ENV: string } }
