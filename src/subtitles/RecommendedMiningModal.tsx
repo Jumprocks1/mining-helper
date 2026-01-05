@@ -47,7 +47,7 @@ export default async (subtitles: Subtitles) => {
         loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
             .filter(e => (e[2] ?? Number.MAX_SAFE_INTEGER) < maxFrequency)
-        const pendingRows: [JpdbVocabulary, HTMLElement][] = []
+        const pendingRows: [JpdbVocabulary, HTMLElement, firstUsagePosition: number][] = []
         for (let i = 0; i < sorted.length; i++) {
             if (pendingRows.length >= 50) break
             const vocab = sorted[i]
@@ -127,25 +127,11 @@ export default async (subtitles: Subtitles) => {
             if (state === VocabState.Ignored) row.classList.add("ignored")
             if (state === VocabState.Kana) row.classList.add("kana")
             loadedRows[vocab[5]] = row
-            pendingRows.push([vocab, row])
+            pendingRows.push([vocab, row, tokenUsages[0]])
         }
-        if (chronological) {
-            const pendingWithIndex = pendingRows.map(e => {
-                const firstIndex = jpdb.tokens.findIndex(t => jpdb.vocabulary[t[3]] === e[0])
-                return [firstIndex, e[1]] as [number, HTMLElement]
-            })
-            pendingWithIndex.sort((a, b) => {
-                if (a[0] > b[0]) return 1
-                else if (a[0] < b[0]) return -1
-                else return 0
-            })
-            for (const [_, row] of pendingWithIndex) {
-                body.append(row)
-            }
-        } else {
-            for (const [_, row] of pendingRows) {
-                body.append(row)
-            }
+        if (chronological) pendingRows.sort((a, b) => a[2] - b[2])
+        for (const [_, row] of pendingRows) {
+            body.append(row)
         }
         return body
     }
