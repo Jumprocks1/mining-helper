@@ -6,6 +6,9 @@ using System.Text;
 
 namespace HotReload;
 
+// This server is awful and should just be replaced with the one inside HttpListener
+// Pretty sure I didn't know HttpListener had WS support when I made this
+
 // https://developer.mozilla.org/en-US/docs/Web/API/WebSockets_API/Writing_WebSocket_server
 public class WebSocketServer : IDisposable
 {
