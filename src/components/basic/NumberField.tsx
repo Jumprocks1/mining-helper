@@ -1,12 +1,13 @@
-import IconButton from "./IconButton"
+import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util"
 import UpDownButtons from "./UpDownButtons"
 
-interface Props {
+interface Props extends BaseComponentProps {
     defaultValue?: number
     onChange: (e: number) => void
     label?: string
     showPlus?: true
     baseChange?: number
+    units?: string
 }
 
 export default (props: Props) => {
@@ -15,7 +16,9 @@ export default (props: Props) => {
     let value = defaultValue
     function updateInnerText() {
         pendingValue = ""
-        display.innerText = props.showPlus && value >= 0 ? "+" + value : value.toString()
+        let text = props.showPlus && value >= 0 ? "+" + value : value.toString()
+        if (props.units) text += props.units
+        display.innerText = text
     }
     function setValue(v: number) {
         value = v
@@ -69,5 +72,7 @@ export default (props: Props) => {
         document.removeEventListener("keydown", onKeyDown)
         commitPending()
     })
+
+    applyBaseComponentProps(res, props)
     return res
 }

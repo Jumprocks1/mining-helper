@@ -44,7 +44,7 @@
             white-space: pre-wrap;
             .field {
                 // <label> has some awkward side effects, so sometimes we use <div className="label">
-                label, .label {
+                >label, >.label {
                     font-size: 0.7em;
                 }
                 .field-value {

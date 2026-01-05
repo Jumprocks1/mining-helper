@@ -6,4 +6,9 @@
         display: flex;
         gap: $s1;
     }
+
+    #mining-offset-row {
+        display: flex;
+        flex-direction: row;
+    }
 }

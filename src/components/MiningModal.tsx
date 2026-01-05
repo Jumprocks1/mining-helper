@@ -18,6 +18,7 @@ import UpDownButtons from "./basic/UpDownButtons"
 import Loader from "./Loader"
 import LoadingButton from "./LoadingButton"
 import { Modal } from "./Modal"
+import { getSetting } from "../views/SettingsModal"
 
 interface Props {
     word: string
@@ -223,8 +224,8 @@ export default (props: Props) => {
         </div>)
 
 
-        let startOffset = 0
-        let endOffset = 0
+        let startOffset = await getSetting("defaultStartOffset")
+        let endOffset = await getSetting("defaultEndOffset")
         let loadedOffsets: [number, number] | undefined = undefined
 
         const playButtonPlaceholder = <div></div>

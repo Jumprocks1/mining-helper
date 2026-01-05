@@ -5,18 +5,11 @@ import { OpenModal } from "../components/Modal"
 import { JpdbCache } from "../jpdb/JpdbParseText"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 
-interface FieldProps<T> {
-    key: { [K in SettingsKeys]: AllSettings[K] extends T ? K : never }[SettingsKeys]
-    name: string
-}
-interface TemporaryFieldProps<T> {
-    key: { [K in keyof TemporarySettings]: TemporarySettings[K] extends T ? K : never }[keyof TemporarySettings]
-    name: string
-}
+type Milliseconds = number
 
 // resets on page load
 interface TemporarySettings {
-    offset: number
+    offset: Milliseconds
 }
 
 interface LocalSettings {
@@ -31,6 +24,10 @@ interface LocalSettings {
     serverApiKey: string | null
     serverAddress: string,
     volume: number
+
+    // ms
+    defaultStartOffset: Milliseconds
+    defaultEndOffset: Milliseconds
 }
 
 const defaultLocalSettings: LocalSettings = {
@@ -42,7 +39,9 @@ const defaultLocalSettings: LocalSettings = {
     miningMaxFrequency: 50_000,
     miningTrimKana: true,
     miningChronological: false,
-    volume: 0.6
+    volume: 0.6,
+    defaultStartOffset: 0,
+    defaultEndOffset: 100
 }
 
 const temporarySettings: TemporarySettings = {
@@ -101,14 +100,6 @@ function volumeToInput(volume: number) {
 
 // TODO this modal should be split into extension settings vs subtitle page settings
 export default () => {
-    async function numberField(props: TemporaryFieldProps<number>) {
-        const defaultValue = getSetting(props.key)
-        return <div className="setting-row field">
-            <label>{props.name}</label>
-            <NumberField defaultValue={defaultValue} onChange={v => setSetting(props.key, v)} showPlus />
-        </div>
-    }
-
     const body = <Loader load={async () => {
         let inputVolume = volumeToInput(await getSetting("volume"))
         const volumeInput = <input defaultValue={inputVolume.toString()}
@@ -121,17 +112,32 @@ export default () => {
         volumeInput.dataset.tooltip = `${inputVolume}%`
         return <>
             <button className="list-button" onclick={RegexReplacements}>Regex replacements</button>
-            {await numberField({ key: "offset", name: "Offset" })}
-            <div className="setting-row field">
+            <div className="field">
+                <label>Offset</label>
+                <NumberField showPlus units="ms" id="offset-field"
+                    defaultValue={getSetting("offset")} onChange={v => setSetting("offset", v)} />
+            </div>
+            <div className="field">
                 <label htmlFor="chapter-regex">Ignore Chapters (Regex)</label>
                 <input id="chapter-regex" defaultValue={await getSetting("skipChapterRegex")} onchange={async e => {
                     const input = e.target as HTMLInputElement
                     return setSetting("skipChapterRegex", input.value)
                 }} />
             </div>
-            <div className="setting-row field">
+            <div className="field">
                 <label>Volume</label>
                 {volumeInput}
+            </div>
+            <div className="field">
+                <label>Default Mining Offsets</label>
+                <div id="mining-offset-row">
+                    <NumberField label="Start" baseChange={100} showPlus
+                        onChange={v => setSetting("defaultStartOffset", v)} defaultValue={await getSetting("defaultStartOffset")}
+                        units="ms" />
+                    <NumberField label="End" baseChange={100} showPlus
+                        onChange={v => setSetting("defaultEndOffset", v)} defaultValue={await getSetting("defaultEndOffset")}
+                        units="ms" />
+                </div>
             </div>
             <div className="footer-buttons">
                 <LoadingButton className="list-button" onClick={ClearCache}>Clear Cache</LoadingButton>
