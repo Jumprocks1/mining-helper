@@ -11,6 +11,10 @@
 @use "views/settings";
 @use "sass:color";
 
+html {
+    font-size: 24px;
+}
+
 body {
     background-color: variables.$background1;
     color: variables.$fontColor;
