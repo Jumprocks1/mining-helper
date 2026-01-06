@@ -1,4 +1,4 @@
-import { SubtitleEntry, Subtitles } from "../utils/srt";
+import { SubtitleEntry, Subtitles } from "../../utils/srt";
 
 // returns undefiend if start and end aren't in the same token
 export function getTokenFor(subtitles: Subtitles, startIndex: number, endIndex: number) {

@@ -1,10 +1,10 @@
-import { getAnkiWords, UnicodeCharacterType, unicodeType } from "../anki/CardList"
-import { Popover } from "../components/basic/Popover"
-import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText"
-import { getVocabState, getVocabStateAndNote, VocabState } from "../jpdb/JpdbState"
-import { getCharacterIndex, getHoveredCharacterIndex, getSelectionRange } from "../utils/CharacterHighlighter"
-import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
-import { furiFromToken, furiToRuby, oldCreateElement } from "../utils/util"
+import { getAnkiWords, UnicodeCharacterType, unicodeType } from "../../anki/CardList"
+import { Popover } from "../../components/basic/Popover"
+import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText"
+import { getVocabState, getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState"
+import { getCharacterIndex, getHoveredCharacterIndex, getSelectionRange } from "../../utils/CharacterHighlighter"
+import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt"
+import { furiFromToken, furiToRuby, oldCreateElement } from "../../utils/util"
 
 declare global {
     interface HTMLElement {

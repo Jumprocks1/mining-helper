@@ -6,7 +6,7 @@ const context = await esbuild.context({
         "./src/anki/anki.tsx",
         "./src/jpdb-inject.ts",
         "./src/jpdb-content.tsx",
-        "./src/subtitles/subtitles.tsx",
+        "./src/pages/subtitles/subtitles.tsx",
         "./src/pages/ss/ss.tsx"
     ],
     bundle: true,

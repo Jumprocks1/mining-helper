@@ -1,19 +1,19 @@
-import { getAnkiWords } from "../anki/CardList";
-import CheckboxField from "../components/basic/CheckboxField";
-import IconButton from "../components/basic/IconButton";
-import NumberField from "../components/basic/NumberField";
-import UpDownButtons from "../components/basic/UpDownButtons";
-import Loader from "../components/Loader";
-import { OpenModal } from "../components/Modal";
-import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../jpdb/IgnoreList";
-import { JpdbParseSubtitles, JpdbVocabulary } from "../jpdb/JpdbParseText";
-import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../jpdb/JpdbState";
-import { tryPlayAudio } from "../utils/Audio";
-import { setSelection } from "../utils/CharacterHighlighter";
-import { ClearEventHandler, RegisterEventHandler } from "../utils/Events";
-import { SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt";
-import { CardData } from "../utils/util";
-import { getSetting, setSetting } from "../views/SettingsModal";
+import { getAnkiWords } from "../../anki/CardList";
+import CheckboxField from "../../components/basic/CheckboxField";
+import IconButton from "../../components/basic/IconButton";
+import NumberField from "../../components/basic/NumberField";
+import UpDownButtons from "../../components/basic/UpDownButtons";
+import Loader from "../../components/Loader";
+import { OpenModal } from "../../components/Modal";
+import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../../jpdb/IgnoreList";
+import { JpdbParseSubtitles, JpdbVocabulary } from "../../jpdb/JpdbParseText";
+import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../../jpdb/JpdbState";
+import { tryPlayAudio } from "../../utils/Audio";
+import { setSelection } from "../../utils/CharacterHighlighter";
+import { ClearEventHandler, RegisterEventHandler } from "../../utils/Events";
+import { SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt";
+import { CardData } from "../../utils/util";
+import { getSetting, setSetting } from "../../views/SettingsModal";
 import { seekToNextEntry } from "./subtitles";
 // TODO ^ this import is really dangerous
 
