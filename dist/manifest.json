@@ -30,16 +30,6 @@
         "https://jpdb.io/*"
       ],
       "js": [
-        "js/jpdb-inject.js"
-      ],
-      "world": "MAIN",
-      "run_at": "document_start"
-    },
-    {
-      "matches": [
-        "https://jpdb.io/*"
-      ],
-      "js": [
         "js/jpdb-content.js"
       ],
       "run_at": "document_idle"

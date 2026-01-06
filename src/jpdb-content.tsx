@@ -3,22 +3,9 @@ import { disallowGlobalInput, handleKeypress, keyPressedWithText } from "./utils
 import { CardData, furiToReading } from "./utils/util"
 import "./framework/createElement"
 import { mutatePendingCard } from "./utils/MiningUtil"
-import { getAudio, getAudioOptionsFromKanji } from "./utils/Audio"
-
-const meaningCss = ".subsection-meanings .description"
-const sentenceCss = ".subsection-examples .used-in:has(.en)"
+import { getAudio, getAudioOptionsFromKanji, playAudio } from "./utils/Audio"
 
 const style = `
-${meaningCss}:hover:not(.selected),
-    ${sentenceCss}:hover:not(.selected) {
-    background-color: oklch(0.7012 0.1888 143.23 / 15%);
-    cursor: pointer;
-}
-${meaningCss}.selected,
-    ${sentenceCss}.selected {
-    background-color: oklch(0.7012 0.1888 22.97 / 15%);
-}
-
 .vocabulary:has(.tag:is(.blacklisted, .known, .overdue)) .primary-spelling > .spelling > div
 {
     background: oklch(54.017% 0.13237 263.851 / 0.30);
@@ -57,34 +44,9 @@ ${meaningCss}.selected,
 
 const target = document.head || document.documentElement
 
-const pendingAudioRequests: { [key in number]: (value: any) => void } = {}
-document.addEventListener("fetch-audio-response", ev => {
-    const customEv = ev as CustomEvent
-    pendingAudioRequests[customEv.detail.requestId](customEv.detail.audios)
-})
-let requestId = 0
-async function requestAudio(audios: string[]): Promise<ArrayBuffer[]> {
-    const myId = requestId++
-    return await new Promise(res => {
-        pendingAudioRequests[myId] = res
-        document.dispatchEvent(new CustomEvent("fetch-audio", {
-            detail: { audios, requestId: myId }
-        }))
-    })
-}
-
 const css = document.createElement("style")
 css.innerHTML = style
 target.prepend(css)
-
-let audioContext
-async function playAudio(arrayBuffer: ArrayBuffer) {
-    audioContext ??= new AudioContext();
-    const source = audioContext.createBufferSource();
-    source.buffer = await audioContext.decodeAudioData(arrayBuffer);
-    source.connect(audioContext.destination);
-    source.start();
-}
 
 interface AudioEntry {
     Source: string
@@ -93,28 +55,12 @@ interface AudioEntry {
     ID: number
 }
 
-function select(css: string, node: HTMLElement | undefined | null) {
-    const all = document.querySelectorAll(css)
-    for (const e of all) e.classList.remove("selected")
-    if (node) node.classList.add("selected")
-}
-
 async function getAudioOptions(vocab?: HTMLElement | null) {
     if (!vocab) return
     const wordRuby = vocab.querySelector<HTMLElement>(".spelling ruby.v")
     if (!wordRuby) return
     const [kanji, furi] = kanjiAndFurigana(wordRuby)
     return getAudioOptionsFromKanji(kanji, furiToReading(furi))
-}
-
-async function getFirstAudio(kanji: string, reading?: string) {
-    const options = await getAudioOptionsFromKanji(kanji, reading)
-    if (options.length > 0) {
-        const buffer = await getAudio(options[0])
-        if (buffer) {
-            return [options[0], buffer] as const
-        }
-    }
 }
 
 async function afterLoad() {
@@ -128,14 +74,6 @@ async function afterLoad() {
                 vocab.classList.add("has-anki-card")
                 const target = vocab.querySelector<HTMLElement>(".primary-spelling > .spelling > div")
                 if (target) target.title = "Already has Anki card with this exact word field"
-            }
-            const res = await chrome.storage.session.get(kanji)
-            const stored: CardData = res[kanji]
-            if (stored) {
-                if (stored.meaningIndex && stored.meaningIndex.startsWith("jpdb_"))
-                    select(meaningCss, document.querySelectorAll<HTMLElement>(meaningCss).item(parseInt(stored.meaningIndex.substring(5))))
-                if (stored.sentenceIndex && stored.sentenceIndex.startsWith("jpdb_"))
-                    select(sentenceCss, document.querySelectorAll<HTMLElement>(sentenceCss).item(parseInt(stored.sentenceIndex.substring(5))))
             }
         }
     }
@@ -180,7 +118,7 @@ async function afterLoad() {
                     const audioBytes = await getAudio(entry)
                     if (audioBytes) {
                         // slice so we still have access to arrayBuffer, otherwise audio thread steals it
-                        await playAudio(audioBytes.slice(0))
+                        await playAudio("jpdb", audioBytes.slice(0))
                         if (!vocab) return
                         const wordRuby = vocab.querySelector<HTMLElement>(".spelling ruby.v")
                         if (!wordRuby) return
@@ -250,115 +188,7 @@ function kanjiAndFurigana(node: ChildNode, o = ["", ""]) {
 afterLoad()
 document.addEventListener("virtual-refresh", afterLoad)
 
-let latestWord: string | undefined = undefined
-
-async function storeCard(clicked: HTMLElement) {
-    const sentenceElement = document.querySelector<HTMLElement>(sentenceCss + ".selected") ?? document.querySelector(sentenceCss)
-    select(sentenceCss, sentenceElement)
-
-    const vocab = clicked.closest(".vocabulary")
-
-    if (!vocab) return
-
-    const wordRuby = vocab.querySelector(".spelling ruby.v")
-    if (!wordRuby) return
-
-    const [kanji, furigana] = kanjiAndFurigana(wordRuby)
-    latestWord = kanji
-
-
-    await mutatePendingCard(kanji, false, async card => {
-        card.furigana = furigana
-
-        const meaningElement = vocab.querySelector<HTMLElement>(meaningCss + ".selected") ?? vocab.querySelector<HTMLElement>(meaningCss)
-        if (meaningElement) {
-            select(meaningCss, meaningElement)
-            let description = meaningElement.childNodes[0].textContent?.replace(/^\d+\./, "").trim()
-            if (description) card.meaning = description;
-            card.meaningIndex = "jpdb_" + [...document.querySelectorAll(meaningCss)].indexOf(meaningElement);
-        }
-
-        let jpdbAudio = undefined
-
-        if (!card.audioBytes) {
-            const firstAudio = await getFirstAudio(kanji, furiToReading(furigana))
-            if (firstAudio) {
-                card.audioLocalFile = `${kanji}_${firstAudio[0].Source}.mp3`
-                card.audioBytes = firstAudio[1]
-            } else {
-                const wordAudioAnchor = vocab.querySelector<HTMLElement>("*[data-audio].vocabulary-audio")
-                if (wordAudioAnchor) {
-                    jpdbAudio = wordAudioAnchor.dataset.audio!.split(",")[0]
-                    const audioLocalFile = `${kanji}_${jpdbAudio.replace("/", "_")}.ogg`
-                    card.audioLocalFile = audioLocalFile
-                }
-            }
-        }
-
-
-        let sentenceAudio = undefined
-
-        if (sentenceElement) {
-            const jpEl = sentenceElement.querySelector("div.jp");
-            if (jpEl) {
-                const jpSentence = kanjiAndFurigana(jpEl)
-                card.jpSentenceKanji = jpSentence[0]
-                card.jpSentenceFuri = jpSentence[1]
-            }
-            card.enSentence = sentenceElement.querySelector("div.en")?.textContent
-            card.sentenceIndex = "jpdb_" + [...document.querySelectorAll(sentenceCss)].indexOf(sentenceElement)
-
-            const sentenceAudioAnchor = sentenceElement.parentElement?.querySelector<HTMLElement>("*[data-audio].example-audio")
-            if (sentenceAudioAnchor) {
-                sentenceAudio = sentenceAudioAnchor.dataset.audio!.split(",")[0]
-                card.sentenceAudioLocalFile = `${kanji}_ex_${sentenceAudio.replace("/", "_")}.ogg`
-            }
-        }
-
-        if (sentenceAudio && jpdbAudio) {
-            const [audioBytes, sentenceAudioBytes] = await requestAudio([jpdbAudio, sentenceAudio])
-            card.audioBytes = audioBytes
-            card.sentenceAudioBytes = sentenceAudioBytes
-        } else if (jpdbAudio) {
-            const [audioBytes,] = await requestAudio([jpdbAudio,])
-            card.audioBytes = audioBytes
-        }
-    })
-}
-
-document.addEventListener("click", ev => {
-    const clicked = ev.target as HTMLElement | null
-    if (clicked) {
-        const check = (css: string) => {
-            const found = clicked.closest<HTMLElement>(css)
-            if (found) {
-                select(css, found)
-                // don't prevent default since selecting/copying is nice
-                return found
-            }
-        }
-        const found = check(meaningCss) || check(sentenceCss)
-        if (found)
-            storeCard(found)
-    }
-})
-
 document.addEventListener("keypress", ev => {
     if (disallowGlobalInput(ev)) return
     if (handleKeypress(ev)) return
-
-    let target = latestWord
-    if (!target) {
-        const meaning = document.querySelector<HTMLElement>(meaningCss + ".selected") ?? document.querySelector<HTMLElement>(meaningCss)
-        const vocab = meaning?.closest(".vocabulary")
-        if (vocab) {
-            const wordRuby = vocab.querySelector(".spelling ruby.v")
-            if (wordRuby) {
-                const [kanji,] = kanjiAndFurigana(wordRuby)
-                if (kanji)
-                    target = kanji
-            }
-        }
-    }
-    if (target && keyPressedWithText(ev, target)) return
 })

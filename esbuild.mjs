@@ -4,7 +4,6 @@ const context = await esbuild.context({
     entryPoints: [
         "./src/popup.tsx",
         "./src/anki/anki.tsx",
-        "./src/jpdb-inject.ts",
         "./src/jpdb-content.tsx",
         "./src/pages/subtitles/subtitles.tsx",
         "./src/pages/ss/ss.tsx"
