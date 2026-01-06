@@ -67,7 +67,7 @@ body {
 }
 
 @mixin tooltip {
-    font-size: 1rem;
+    font-size: variables.$tooltipFontSize;
     font-family: variables.$fontFamily;
     display: none;
     max-width: 280px;

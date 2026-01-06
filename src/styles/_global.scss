@@ -60,7 +60,7 @@ button {
             &::after {
                 // TODO could probably use tooltip mixin here
                 content: attr(data-error);
-                font-size: 1rem;
+                font-size: variables.$tooltipFontSize;
                 white-space: pre;
                 border: variables.$border0;
                 padding: variables.$s1;
