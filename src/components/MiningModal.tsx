@@ -1,6 +1,6 @@
 import { JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText"
-import type { SubtitlesPage } from "../subtitles/subtitles"
-import { getSubsInRange, getTokenFor } from "../subtitles/SubtitleUtil"
+import type { SubtitlesPage } from "../pages/subtitles/subtitles"
+import { getSubsInRange, getTokenFor } from "../pages/subtitles/SubtitleUtil"
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
 import { getAudio, getAudioOptionsFromKanji, playAudio, tryGetAudioBytes } from "../utils/Audio"
 import { type Children } from "../framework/createElement"
@@ -9,7 +9,6 @@ import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, parseSrt, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
 import UserError from "../utils/UserError"
 import { cleanSource, furiFromToken, furiToReading, furiToRuby, jpdbEntryUrl, lookupFuri } from "../utils/util"
-import { applyRegexTo } from "../views/RegexReplacements"
 import AudioButton from "./AudioButton"
 import { HtmlPopover } from "./basic/HtmlPopover"
 import IconButton from "./basic/IconButton"
@@ -69,9 +68,8 @@ export default (props: Props) => {
         }
     }
 
-    async function getSentenceCeInnerHTML(entry: SubtitleEntry) {
-        // don't remember why I don't do the space replacement with regex
-        return (await applyRegexTo(entry.text, true)).replace("　", " ").replaceAll(word, "<b>" + word + "</b>")
+    function highlightWord(text: string) {
+        return text.replaceAll(word, "<b>" + word + "</b>")
     }
 
     const sourceFile = cleanSource(filenameFromPath(props.subtitlesPage.currentFilename))
@@ -100,7 +98,7 @@ export default (props: Props) => {
         const kanji = card.kanji // this can be different if word is a verb
 
         async function save() {
-            card.jpSentenceKanji = sentenceCE.innerText.replace("\n", " ");
+            card.jpSentenceKanji = sentenceCE.innerText.replaceAll("\n", " ");
 
             const meaning = meaningCE.innerText
             if (!meaning) throw new UserError("Meaning missing")
@@ -111,7 +109,7 @@ export default (props: Props) => {
             // could load this from tokens, but it's tricky since user can modify it
             // this is fine for now
             card.jpSentenceFuri = await lookupFuri(card.jpSentenceKanji, word)
-            card.jpSentenceKanji = card.jpSentenceKanji.replace(word, "<b>" + word + "</b>")
+            card.jpSentenceKanji = highlightWord(card.jpSentenceKanji)
 
             card.enSentence = sentenceMeaningCE.textContent
 
@@ -132,7 +130,7 @@ export default (props: Props) => {
         const meaningCE = <div contentEditable="plaintext-only" />
         const sentenceCE = <div contentEditable="plaintext-only" />
 
-        sentenceCE.innerHTML = await getSentenceCeInnerHTML(entry);
+        sentenceCE.innerHTML = highlightWord(entry.text)
 
         labeled.push(<div className="field" id="word-field">
             <div className="label">Word</div>
@@ -196,12 +194,12 @@ export default (props: Props) => {
                     if (lastEntryIndex === entries.length - 1) return
                     lastEntryIndex += 1
                     const newEntry = entries[lastEntryIndex]
-                    sentenceCE.innerHTML += "\n" + await getSentenceCeInnerHTML(newEntry)
+                    sentenceCE.innerHTML += "\n" + highlightWord(newEntry.text)
                 } else {
                     if (firstEntryIndex === 0) return
                     firstEntryIndex -= 1
                     const newEntry = entries[firstEntryIndex]
-                    sentenceCE.innerHTML = await getSentenceCeInnerHTML(newEntry) + "\n" + sentenceCE.innerHTML
+                    sentenceCE.innerHTML = highlightWord(newEntry.text) + "\n" + sentenceCE.innerHTML
                 }
                 startTime = entries[firstEntryIndex].startTime
                 endTime = entries[lastEntryIndex].endTime

@@ -301,6 +301,5 @@ export function cleanSource(source: string | undefined) {
             replace: ""
         }
     ]
-    // TODO super bad passing in `true` here
-    return applyReplacementsTo(replacements, source, true)
+    return applyReplacementsTo(replacements, source)
 }
