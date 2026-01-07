@@ -6,6 +6,9 @@ import { JpdbCache } from "../jpdb/JpdbParseText"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 
 type Milliseconds = number
+type KeysOfType<T, V> = {
+    [K in keyof T]: T[K] extends V ? K : never
+}[keyof T]
 
 // resets on page load
 interface TemporarySettings {
@@ -14,16 +17,19 @@ interface TemporarySettings {
 
 interface LocalSettings {
     regexReplacements: ReplacementEntry[]
-    // don't use undefined here, doesn't play well with chrome storage `get`
-    ankiConnectKey: string | null
     skipChapterRegex: string
 
     miningMaxFrequency: number
     miningMaxRecommendedCount: number
     miningTrimKana: boolean
     miningChronological: boolean
-    serverApiKey: string | null
-    serverAddress: string,
+
+    serverAddress: string
+    serverApiKey: string
+    jpdbApiKey: string
+    ankiConnectAddress: string
+    ankiConnectApiKey: string
+
     volume: number
 
     // ms
@@ -33,9 +39,13 @@ interface LocalSettings {
 
 const defaultLocalSettings: LocalSettings = {
     regexReplacements: [],
-    ankiConnectKey: null,
-    serverApiKey: null,
+
     serverAddress: "127.0.0.1:4012",
+    serverApiKey: "",
+    jpdbApiKey: "",
+    ankiConnectAddress: "http://127.0.0.1:8765",
+    ankiConnectApiKey: "",
+
     skipChapterRegex: "",
     miningMaxRecommendedCount: 50,
     miningMaxFrequency: 20_000,
@@ -112,6 +122,14 @@ export default () => {
                 return setSetting("volume", inputToVolume(input.valueAsNumber))
             }} />
         volumeInput.dataset.tooltip = `${inputVolume}%`
+
+        async function stringField(key: KeysOfType<LocalSettings, string>, label: string, type?: string) {
+            return <div className="field">
+                <label>{label}</label>
+                <input type={type} defaultValue={await getSetting(key)} onchange={e => setSetting(key, (e.target as HTMLInputElement).value)} />
+            </div>
+        }
+
         return <>
             <button className="list-button" onclick={RegexReplacements}>Regex replacements</button>
             <div className="field">
@@ -119,13 +137,7 @@ export default () => {
                 <NumberField showPlus units="ms" id="offset-field"
                     defaultValue={getSetting("offset")} onChange={v => setSetting("offset", v)} />
             </div>
-            <div className="field">
-                <label htmlFor="chapter-regex">Ignore Chapters (Regex)</label>
-                <input id="chapter-regex" defaultValue={await getSetting("skipChapterRegex")} onchange={async e => {
-                    const input = e.target as HTMLInputElement
-                    return setSetting("skipChapterRegex", input.value)
-                }} />
-            </div>
+            {await stringField("skipChapterRegex", "Ignore Chapters (Regex)")}
             <div className="field">
                 <label>Volume</label>
                 {volumeInput}
@@ -141,6 +153,14 @@ export default () => {
                         units="ms" />
                 </div>
             </div>
+            {await stringField("serverAddress", "mpv/Audio Server Address")}
+            {await stringField("serverApiKey", "Server API Key", "password")}
+
+            {await stringField("jpdbApiKey", "JPDB API Key", "password")}
+
+            {await stringField("ankiConnectAddress", "AnkiConnect Address")}
+            {await stringField("ankiConnectApiKey", "AnkiConnect API Key", "password")}
+
             <div className="footer-buttons">
                 <LoadingButton className="list-button" onClick={ClearCache}>Clear Cache</LoadingButton>
                 <LoadingButton className="list-button" onClick={async () => {

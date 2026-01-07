@@ -1,7 +1,8 @@
 import { hash, Subtitles } from "../utils/srt";
-import { delay, getJpdbApiKey } from "../utils/util";
+import { delay } from "../utils/util";
 import StorageCache from "../utils/StorageCache";
 import { loadIgnoreList } from "./IgnoreList";
+import { getSetting } from "../views/SettingsModal";
 
 export type JpdbVocabulary = [
     spelling: string,
@@ -67,7 +68,7 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
         const res = await fetch("https://jpdb.io/api/v1/parse", {
             method: "POST",
             headers: {
-                Authorization: `Bearer ${await getJpdbApiKey()}`,
+                Authorization: `Bearer ${await getSetting("jpdbApiKey")}`,
                 "Content-Type": "application/json"
             },
             body: JSON.stringify({

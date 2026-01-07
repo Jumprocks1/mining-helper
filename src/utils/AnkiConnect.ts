@@ -12,7 +12,7 @@ export default class AnkiConnect {
     }
 
     async callAny(action: string, params: any, version = 6) {
-        const key = await getSetting("ankiConnectKey")
+        const key = await getSetting("ankiConnectApiKey")
         const body = {
             action,
             version,
@@ -21,7 +21,7 @@ export default class AnkiConnect {
         if (key) body.key = key
         let res: Response
         try {
-            res = await fetch("http://127.0.0.1:8765", {
+            res = await fetch(await getSetting("ankiConnectAddress"), {
                 method: "POST",
                 body: JSON.stringify(body)
             })

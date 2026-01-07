@@ -1,17 +1,7 @@
 import { UnicodeCharacterType, unicodeType } from "../anki/CardList";
 import { JpdbParseResponse, JpdbToken } from "../jpdb/JpdbParseText";
 import { applyReplacementsTo, ReplacementEntry } from "../views/RegexReplacements";
-
-let _apiKey: string | undefined = undefined
-export function getJpdbApiKey() {
-    if (_apiKey) return _apiKey;
-    // TODO need better way of settings
-    // for now, run chrome.storage.local.set({apiKey:"XXX"})
-    return (async function () {
-        _apiKey = (await chrome.storage.local.get("apiKey")).apiKey
-        return _apiKey
-    })()
-}
+import { getSetting } from "../views/SettingsModal";
 
 export function jpdbEntryUrl(word: string) {
     return `https://jpdb.io/search?q=${encodeURIComponent(word)}&lang=english`
@@ -96,7 +86,7 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
     const res = await fetch("https://jpdb.io/api/v1/parse", {
         method: "POST",
         headers: {
-            Authorization: `Bearer ${await getJpdbApiKey()}`,
+            Authorization: `Bearer ${await getSetting("jpdbApiKey")}`,
             "Content-Type": "application/json"
         },
         body: JSON.stringify({
