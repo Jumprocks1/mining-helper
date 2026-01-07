@@ -8,12 +8,16 @@ interface Props extends BaseComponentProps {
     onChange: (e: number) => void
     label?: string
     showPlus?: true
+    min?: number
+    max?: number
     baseChange?: number
     units?: string
     storeDefault?: ((e: number) => void) | SettingsKey
 }
 
 export default (props: Props) => {
+    if (props.min !== undefined && props.max !== undefined && props.min > props.max)
+        throw new Error("Min greater than max")
     let defaultValue = props.defaultValue ?? 0
 
     let pendingValue = "" // when typing
@@ -26,6 +30,10 @@ export default (props: Props) => {
     }
     function setValue(v: number) {
         value = v
+        if (props.max !== undefined && value > props.max)
+            value = props.max
+        if (props.min !== undefined && value < props.min)
+            value = props.min
         updateInnerText()
         props.onChange(v)
     }

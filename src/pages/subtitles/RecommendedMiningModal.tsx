@@ -25,10 +25,11 @@ export default async (subtitles: Subtitles) => {
     let showIgnored = false
     let showKana = false
     let n1 = false
-    const pending = [getSetting("miningTrimKana"), getSetting("miningChronological"), getSetting("miningMaxFrequency")] as const
+    const pending = [getSetting("miningTrimKana"), getSetting("miningChronological"), getSetting("miningMaxFrequency"), getSetting("miningMaxRecommendedCount")] as const
     let trimKana = await pending[0]
     let chronological = await pending[1]
     let maxFrequency = await pending[2]
+    let maxCount = await pending[3]
 
     let loadedRows: Record<number, HTMLElement> | undefined = undefined
 
@@ -49,7 +50,7 @@ export default async (subtitles: Subtitles) => {
             .filter(e => (e[2] ?? Number.MAX_SAFE_INTEGER) < maxFrequency)
         const pendingRows: [JpdbVocabulary, HTMLElement, firstUsagePosition: number][] = []
         for (let i = 0; i < sorted.length; i++) {
-            if (pendingRows.length >= 50) break
+            if (pendingRows.length >= maxCount) break
             const vocab = sorted[i]
             let state = getVocabState(vocab, stateConfig)
             let ignored = state === VocabState.Ignored
@@ -176,9 +177,14 @@ export default async (subtitles: Subtitles) => {
                     setSetting("miningChronological", v)
                     reload()
                 }} />
-                <NumberField label="Max Frequency" defaultValue={maxFrequency} baseChange={1000} onChange={v => {
+                <NumberField label="Max Frequency" min={0} defaultValue={maxFrequency} baseChange={1000} onChange={v => {
                     maxFrequency = v
                     setSetting("miningMaxFrequency", v)
+                    reload()
+                }} />
+                <NumberField label="Max Count" min={0} defaultValue={maxCount} baseChange={10} onChange={v => {
+                    maxCount = v
+                    setSetting("miningMaxRecommendedCount", v)
                     reload()
                 }} />
             </div>

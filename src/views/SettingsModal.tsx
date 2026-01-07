@@ -19,6 +19,7 @@ interface LocalSettings {
     skipChapterRegex: string
 
     miningMaxFrequency: number
+    miningMaxRecommendedCount: number
     miningTrimKana: boolean
     miningChronological: boolean
     serverApiKey: string | null
@@ -36,7 +37,8 @@ const defaultLocalSettings: LocalSettings = {
     serverApiKey: null,
     serverAddress: "127.0.0.1:4012",
     skipChapterRegex: "",
-    miningMaxFrequency: 50_000,
+    miningMaxRecommendedCount: 50,
+    miningMaxFrequency: 20_000,
     miningTrimKana: true,
     miningChronological: false,
     volume: 0.6,
@@ -113,7 +115,7 @@ export default () => {
         return <>
             <button className="list-button" onclick={RegexReplacements}>Regex replacements</button>
             <div className="field">
-                <label>Offset</label>
+                <label>Subtitle Offset</label>
                 <NumberField showPlus units="ms" id="offset-field"
                     defaultValue={getSetting("offset")} onChange={v => setSetting("offset", v)} />
             </div>
