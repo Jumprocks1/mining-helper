@@ -2,7 +2,7 @@ import * as esbuild from 'esbuild'
 
 const context = await esbuild.context({
     entryPoints: [
-        "./src/popup.tsx",
+        "./src/pages/home/home.tsx",
         "./src/anki/anki.tsx",
         "./src/jpdb-content.tsx",
         "./src/pages/subtitles/subtitles.tsx",

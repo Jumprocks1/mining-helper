@@ -1,7 +1,7 @@
-import MhHeader from "./components/MhHeader"
-import { seedPage } from "./framework/util"
-import { saveToAnkiAndRemove, updateInAnkiAndRemove } from "./utils/AnkiUtil"
-import { CardData, oldCreateElement, furiToReading } from "./utils/util"
+import MhHeader from "../../components/MhHeader"
+import { seedPage } from "../../framework/util"
+import { saveToAnkiAndRemove, updateInAnkiAndRemove } from "../../utils/AnkiUtil"
+import { CardData, oldCreateElement, furiToReading } from "../../utils/util"
 
 
 
