@@ -3,7 +3,7 @@ import MpvWebSocket from "../../utils/MpvWebSocket"
 import MhHeader from "../../components/MhHeader"
 import { seedPage } from "../../framework/util"
 import SubtitleViewer from "./SubtitleViewer"
-import { disallowGlobalInput, handleKeypress } from "../../utils/GlobalHotkeys"
+import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
 import MiningModal from "../../components/MiningModal"
 import { Modal } from "../../components/Modal"
 import IconButton from "../../components/basic/IconButton"
@@ -253,17 +253,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     let miningModal: Modal | undefined;
 
-    document.addEventListener("keypress", ev => {
+    document.addEventListener("keydown", ev => {
         if (disallowGlobalInput(ev)) return
-        if (handleKeypress(ev)) return
-        if (ev.key === "h") {
+        if (handleKeyDown(ev)) return
+        const key = ev.key.toLowerCase()
+        if (key === "h") {
             loadedSubtitles?.HighlightAnkiWords()
-        } else if (ev.key === "v") {
+        } else if (key === "v") {
             webSocket.SendIfOpen("ipc:cycle sub-visibility");
-        } else if (ev.key === " ") {
+        } else if (key === " ") {
             webSocket.SendIfOpen("ipc:cycle pause");
             ev.preventDefault()
-        } else if (ev.key === "m") {
+        } else if (key === "m") {
             if (miningModal) {
                 miningModal.Close()
             } else {
@@ -304,9 +305,9 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
             }
-        } else if (ev.key === "t") {
+        } else if (key === "t") {
             if (loadedSubtitles) JpdbParseSubtitles(loadedSubtitles.subtitles)
-        } else if (ev.key === "y") {
+        } else if (key === "y") {
             const subs = loadedSubtitles?.subtitles
             if (subs) {
                 (async () => {

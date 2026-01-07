@@ -1,6 +1,6 @@
 import { getAnkiWords } from "./anki/CardList"
-import { disallowGlobalInput, handleKeypress, keyPressedWithText } from "./utils/GlobalHotkeys"
-import { CardData, furiToReading } from "./utils/util"
+import { disallowGlobalInput, handleKeyDown } from "./utils/GlobalHotkeys"
+import { furiToReading } from "./utils/util"
 import "./framework/createElement"
 import { mutatePendingCard } from "./utils/MiningUtil"
 import { getAudio, getAudioOptionsFromKanji, playAudio } from "./utils/Audio"
@@ -188,7 +188,7 @@ function kanjiAndFurigana(node: ChildNode, o = ["", ""]) {
 afterLoad()
 document.addEventListener("virtual-refresh", afterLoad)
 
-document.addEventListener("keypress", ev => {
+document.addEventListener("keydown", ev => {
     if (disallowGlobalInput(ev)) return
-    if (handleKeypress(ev)) return
+    if (handleKeyDown(ev)) return
 })

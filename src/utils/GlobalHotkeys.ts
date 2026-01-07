@@ -13,13 +13,14 @@ export function openTab(url: string) {
     }
 }
 
-export function keyPressedWithText(ev: KeyboardEvent, text: string) {
+export function keyDownWithText(ev: KeyboardEvent, text: string) {
     if (!text) return
-    if (ev.key === "j") {
+    const key = ev.key.toLowerCase()
+    if (key === "j") {
         openTab(`https://jisho.org/search/${encodeURIComponent(text)}`)
         ev.preventDefault()
         return true
-    } else if (ev.key == "d") {
+    } else if (key == "d") {
         const isSingleKanji = text.length === 1 && unicodeType(text) === UnicodeCharacterType.Kanji
         if (isSingleKanji) {
             openTab(`https://jpdb.io/kanji/${encodeURIComponent(text)}`)
@@ -31,17 +32,17 @@ export function keyPressedWithText(ev: KeyboardEvent, text: string) {
             ev.preventDefault()
             return true
         }
-    } else if (ev.key === "s") {
+    } else if (key === "s") {
         openTab(`ss.html?q=${encodeURIComponent(text)}`)
         ev.preventDefault()
         return true
     }
 }
 
-export function handleKeypress(ev: KeyboardEvent) {
+export function handleKeyDown(ev: KeyboardEvent) {
     const sel = getSelection()
     if (sel && !sel.isCollapsed) {
-        if (keyPressedWithText(ev, getCleanSelectionString(sel)))
+        if (keyDownWithText(ev, getCleanSelectionString(sel)))
             return true
     }
 
@@ -74,7 +75,8 @@ export function disallowGlobalInput(ev: KeyboardEvent) {
         // super sketchy, but we want to allow lookups if we have something highlighted
         // to make this less sketchy, I think we would add this logic to the global handler
         // the global handler would make the decsion if we were allowed to trigger or not
-        if ((ev.key === "d" || ev.key === "s" || ev.key === "j") && hasSelection) {
+        const key = ev.key.toLowerCase()
+        if ((key === "d" || key === "s" || key === "j") && hasSelection) {
             if (isJapanese(selection.toString()))
                 return false
         }

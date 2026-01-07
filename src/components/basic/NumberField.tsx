@@ -81,6 +81,7 @@ export default (props: Props) => {
                 }
                 Effects.flash(res)
             }
+            e.stopPropagation()
         } else if (e.key === "-" || (e.key >= "0" && e.key <= "9")) {
             pendingValue += e.key
             display.innerText = pendingValue
@@ -91,9 +92,9 @@ export default (props: Props) => {
             commitPending()
         }
     }
-    res.addEventListener("mouseenter", () => document.addEventListener("keydown", onKeyDown))
+    res.addEventListener("mouseenter", () => document.addEventListener("keydown", onKeyDown, true))
     res.addEventListener("mouseleave", () => {
-        document.removeEventListener("keydown", onKeyDown)
+        document.removeEventListener("keydown", onKeyDown, true)
         commitPending()
     })
 
