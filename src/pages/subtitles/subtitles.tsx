@@ -30,9 +30,6 @@ function updateTime(timestamp: number) {
 
     loadedSubtitles?.UpdateHighlighting(currentTime)
 }
-// TODO there's probably a much easier way to do this now
-// @ts-expect-error
-window.updateTime = updateTime
 
 let loadedSubtitles: SubtitleViewer | undefined
 
