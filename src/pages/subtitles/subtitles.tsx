@@ -146,6 +146,14 @@ async function handleWebSocketData(webSocket: MpvWebSocket, command: string | Bl
         await handleCommandAndData(webSocket, commandName, bytes.subarray(spl + 1))
     }
 }
+
+async function requestAndLoadSubs(webSocket: MpvWebSocket) {
+    const subs = await webSocket.RequestIfOpen("jp-subs")
+    if (typeof subs === "string") throw new Error()
+    const decoded = new TextDecoder().decode(subs)
+    await loadSubtitles(await parseSrt(decoded))
+}
+
 async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string, commandData: string | Uint8Array<ArrayBuffer>) {
     if (commandName === "time" || commandName === "t") {
         updateTime(parseFloat(commandData as string))
@@ -153,7 +161,10 @@ async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string
         await webSocket.HandleResponse(commandData)
     } else if (commandName === "current-file") {
         if (typeof commandData === "string") {
-            page.currentFilename = commandData
+            if (commandData !== page.currentFilename) {
+                page.currentFilename = commandData
+                if (commandData) await requestAndLoadSubs(webSocket)
+            }
         }
     }
 }
@@ -232,12 +243,6 @@ document.addEventListener("DOMContentLoaded", () => {
         connectionDot.title = "WebSocket connected"
         connectionDot.classList.add("connected")
         connectionDot.classList.remove("disconnected")
-        if (!loadedSubtitles) {
-            const subs = await webSocket.RequestIfOpen("jp-subs")
-            if (typeof subs === "string") throw new Error()
-            const decoded = new TextDecoder().decode(subs)
-            await loadSubtitles(await parseSrt(decoded))
-        }
     }
     webSocket.onClose = () => {
         connectionDot.title = "WebSocket disconnected\nClick to retry"
