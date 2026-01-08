@@ -210,3 +210,11 @@ div#result {
         font-variation-settings: 'FILL' 1;
     }
 }
+
+#home-page {
+    #helpful-links {
+        a {
+            color: color.mix(variables.$fontColor, variables.$brightBlue, 70%)
+        }
+    }
+}
