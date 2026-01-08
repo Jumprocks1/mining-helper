@@ -1,6 +1,6 @@
 import { GetCurrentPageContext } from "../framework/PageContext";
 import IconButton from "./basic/IconButton";
-import { Component } from "./Component";
+import { Component } from "../framework/Component";
 import Loader, { DOMable } from "./Loader";
 
 interface Props {

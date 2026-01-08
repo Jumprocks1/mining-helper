@@ -1,5 +1,5 @@
 import { appendChild, type Children } from "../../framework/createElement";
-import { Component } from "../Component";
+import { Component } from "../../framework/Component";
 
 interface Props {
     side: "below"

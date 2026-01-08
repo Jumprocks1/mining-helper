@@ -1,6 +1,6 @@
 import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 import { userErrorMessage } from "../utils/UserError";
-import { Component } from "./Component"
+import { Component } from "../framework/Component"
 
 interface Props extends BaseComponentProps {
     onClick: () => Promise<unknown> | void,

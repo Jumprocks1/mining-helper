@@ -31,7 +31,7 @@ async function handleErrors(func: () => void | Promise<void>, message = "Success
 const cardContainer = <div id="card-container" />
 
 document.addEventListener("DOMContentLoaded", () => {
-    seedPage("popup-page", [
+    seedPage("home-page", [
         MhHeader(),
         <div id="body-container">
             <h2>Pending Cards</h2>
