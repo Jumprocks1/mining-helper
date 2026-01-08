@@ -57,8 +57,8 @@ export default class MpvWebSocket {
         this.Connection?.send(message)
     }
     public SendIfOpen(message: string) {
-        if (this.Connecting) return // throws exception otherwise
-        this.Connection?.send(message)
+        if (!this.Open) return
+        this.Connection!.send(message)
     }
 
     pendingRequests = new Map<string, (response: Uint8Array<ArrayBuffer> | string) => void>()

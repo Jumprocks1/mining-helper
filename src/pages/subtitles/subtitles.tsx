@@ -54,7 +54,7 @@ onSettingChange("skipChapterRegex", reloadSubs)
 
 async function loadSubtitles(subtitles: Subtitles) {
     const skip: [start: number, end?: number][] = []
-    if (mpvWebSocket) {
+    if (mpvWebSocket?.Open) {
         const skipChapterRegex = await getSetting("skipChapterRegex")
         if (skipChapterRegex) {
             const regex = new RegExp(skipChapterRegex)
@@ -168,8 +168,9 @@ async function handleCommandAndData(webSocket: MpvWebSocket, commandName: string
 
 let mpvWebSocket: MpvWebSocket | undefined
 function seekToSubtitle(entry: SubtitleEntry) {
-    if (!mpvWebSocket) return
-    mpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
+    if (mpvWebSocket?.Open)
+        mpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
+    else updateTime(entry.startTime)
 }
 
 function getNextEntryIndex(entries: SubtitleEntry[], backwards: boolean) {
