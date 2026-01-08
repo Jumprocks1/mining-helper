@@ -9,7 +9,8 @@
         "resolveJsonModule": true,
         "jsx": "react",
         "jsxFactory": "createElement",
-        "jsxFragmentFactory": "createFragment"
+        "jsxFragmentFactory": "createFragment",
+        "noImplicitOverride": true
     },
     "include": [
         "src"
