@@ -18,6 +18,7 @@ interface TemporarySettings {
 interface LocalSettings {
     regexReplacements: ReplacementEntry[]
     skipChapterRegex: string
+    customCss: string
 
     miningMaxFrequency: number
     miningMaxRecommendedCount: number
@@ -47,6 +48,7 @@ const defaultLocalSettings: LocalSettings = {
     ankiConnectApiKey: "",
 
     skipChapterRegex: "",
+    customCss: "",
     miningMaxRecommendedCount: 50,
     miningMaxFrequency: 20_000,
     miningTrimKana: true,
