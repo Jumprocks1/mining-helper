@@ -1,8 +1,8 @@
 import NumberField from "../components/basic/NumberField"
 import Loader from "../components/Loader"
-import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
 import { JpdbCache } from "../jpdb/JpdbParseText"
+import AdvancedSettingsModal from "./AdvancedSettingsModal"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 
 type Milliseconds = number
@@ -97,10 +97,6 @@ export function triggerSettingChanged<K extends SettingsKey>(key: K, v: AllSetti
     }
 }
 
-async function ClearCache() {
-    await JpdbCache.Clear();
-}
-
 function inputToVolume(input: number) {
     // technically should do some logarithms and stuff here, but this is fine
     input /= 100
@@ -131,7 +127,7 @@ export default () => {
         }
 
         return <>
-            <button className="list-button" onclick={RegexReplacements}>Regex replacements</button>
+            <button onclick={RegexReplacements}>Regex replacements</button>
             <div className="field">
                 <label>Subtitle Offset</label>
                 <NumberField showPlus units="ms" id="offset-field"
@@ -162,21 +158,20 @@ export default () => {
             {await stringField("ankiConnectApiKey", "AnkiConnect API Key", "password")}
 
             <div className="footer-buttons">
-                <LoadingButton className="list-button" onClick={ClearCache}>Clear Cache</LoadingButton>
-                <LoadingButton className="list-button" onClick={async () => {
-                    const used = await chrome.storage.local.getBytesInUse()
-                    console.log(`Using ${used} bytes (${Math.round(used / chrome.storage.local.QUOTA_BYTES * 100)}%)`)
-                    console.log(await chrome.storage.local.get())
+                <button onclick={() => {
+                    modal.Close()
+                    AdvancedSettingsModal()
                 }}>
-                    Log Storage
-                </LoadingButton>
+                    Advanced Settings
+                </button>
             </div>
         </>
     }} />
 
-    return OpenModal({
+    const modal = OpenModal({
         header: "Settings",
         body,
         id: "settings-modal"
     })
+    return modal
 }

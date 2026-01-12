@@ -12,3 +12,11 @@
         flex-direction: row;
     }
 }
+
+#advanced-settings-modal {
+    .footer-buttons {
+        padding-top: $s1;
+        display: flex;
+        gap: $s1;
+    }
+}
