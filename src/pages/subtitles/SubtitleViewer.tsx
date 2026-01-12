@@ -25,6 +25,9 @@ export default class SubtitleViewer {
     // use to block scrolling when selecting
     MouseDown = false
 
+    MouseX: number | undefined
+    MouseY: number | undefined
+
     constructor(subtitles: Subtitles) {
         this.Node = <div className="subtitle-viewer">
             {this.pointer}
@@ -41,30 +44,37 @@ export default class SubtitleViewer {
             this.MouseDown = false
         })
 
-        let x: number | undefined = undefined
-        let y: number | undefined = undefined
         document.addEventListener("keydown", ev => {
             if (this.subtitles.jpdbParse) {
-                if (this.popover?.Visible && !ev.shiftKey) return
-                if (x !== undefined && y !== undefined)
-                    this.UpdateHoverInfo(x, y, ev.shiftKey)
+                const showPopover = ev.shiftKey !== this.ShowHoverWithoutShift
+                if (this.popover?.Visible && !showPopover) return
+                this.UpdateHoverInfo(showPopover)
             }
         })
 
         this.Node.addEventListener("mousemove", ev => {
-            x = ev.clientX
-            y = ev.clientY
+            this.MouseX = ev.clientX
+            this.MouseY = ev.clientY
             if (this.subtitles.jpdbParse) {
-                if (this.popover && !ev.shiftKey) {
+                const showPopover = ev.shiftKey !== this.ShowHoverWithoutShift
+                if (this.popover && !showPopover) {
                     if (this.popover.Node.contains(ev.target as HTMLElement)) return
                 }
-                this.UpdateHoverInfo(x, y, ev.shiftKey)
+                this.UpdateHoverInfo(showPopover)
             }
         })
 
         // make sure anki words are loaded for later, this caches the result
         // no harm in calling multiple times if promise isn't resolved yet
         getAnkiWords()
+    }
+
+
+    ShowHoverWithoutShift = false
+    // toggles whether or not shift needs to be held down to show additional information about the hovered word
+    ToggleShift() {
+        this.ShowHoverWithoutShift = !this.ShowHoverWithoutShift
+        this.UpdateHoverInfo(false)
     }
 
     LoadedHoverState: HoverState | undefined
@@ -140,10 +150,10 @@ export default class SubtitleViewer {
         }
     }
 
-    UpdateHoverInfo(x: number, y: number, shift: boolean) {
+    UpdateHoverInfo(shift: boolean) {
         const jpdb = this.subtitles.jpdbParse
-        if (!jpdb) return
-        const res = getHoveredCharacterIndex(x, y)
+        if (!jpdb || !this.MouseX || !this.MouseY) return
+        const res = getHoveredCharacterIndex(this.MouseX, this.MouseY)
         if (!res) {
             this.SetHoverState(undefined, undefined, shift)
             return

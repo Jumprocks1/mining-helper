@@ -257,6 +257,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const key = ev.key.toLowerCase()
         if (key === "h") {
             loadedSubtitles?.HighlightAnkiWords()
+        } else if (key === "i") { // i for info?
+            loadedSubtitles?.ToggleShift()
         } else if (key === "v") {
             webSocket.SendIfOpen("ipc:cycle sub-visibility");
         } else if (key === " ") {
