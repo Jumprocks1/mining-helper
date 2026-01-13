@@ -58,7 +58,7 @@ export default (props: Props) => {
         if (dir !== 0) {
             handleEv(ev, dir > 0)
         }
-    })
+    }, { passive: false }) // we call preventDefault, so can't let the browser run it's own scrolling in parallel
 
     function commitPending() {
         const v = parseInt(pendingValue)
