@@ -11,7 +11,6 @@ import SettingsModal, { getSetting, onSettingChange, setSetting } from "../../vi
 import { applyReplacementsTo, getReplacements } from "../../views/RegexReplacements"
 import { JpdbParseSubtitles } from "../../jpdb/JpdbParseText"
 import RecommendedMiningModal from "./RecommendedMiningModal"
-import { RegisterPageContext } from "../../framework/PageContext"
 import { getCharacterIndex } from "../../utils/CharacterHighlighter"
 
 export interface SubtitlesPage {
@@ -217,18 +216,6 @@ document.addEventListener("DOMContentLoaded", () => {
             {bodyContainer}
         </div>
     </>)
-    RegisterPageContext({
-        name: "Subtitles",
-        getMinimizeTarget: () => {
-            const main = loadedSubtitles?.Node
-            if (!main) return
-            const mainRect = main.getBoundingClientRect()
-            const headerRect = header.getBoundingClientRect()
-            const full = document.body.getBoundingClientRect()
-            const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
-            return rect
-        }
-    })
     let webSocket = new MpvWebSocket()
     mpvWebSocket = webSocket
     webSocket.onMessage = (e) => handleWebSocketData(webSocket, e.data)
@@ -311,7 +298,16 @@ document.addEventListener("DOMContentLoaded", () => {
             const subs = loadedSubtitles?.subtitles
             if (subs) {
                 (async () => {
-                    (await RecommendedMiningModal(subs))?.Minimize()
+                    const modal = await RecommendedMiningModal(subs, () => {
+                        const main = loadedSubtitles?.Node
+                        if (!main) return
+                        const mainRect = main.getBoundingClientRect()
+                        const headerRect = header.getBoundingClientRect()
+                        const full = document.body.getBoundingClientRect()
+                        const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
+                        return rect
+                    })
+                    modal?.Minimize()
                 })()
             }
         }

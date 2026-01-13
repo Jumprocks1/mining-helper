@@ -1,4 +1,3 @@
-import { GetCurrentPageContext } from "../framework/PageContext";
 import IconButton from "./basic/IconButton";
 import { Component } from "../framework/Component";
 import Loader, { DOMable } from "./Loader";
@@ -9,7 +8,7 @@ interface Props {
     onClose: () => void
     id?: string
     body: DOMable | Promise<DOMable> | ((body: HTMLElement) => Promise<DOMable>)
-    allowMinimize?: boolean
+    getMinimizeTarget?: () => DOMRect | undefined // if supplied, allow minimize
 }
 
 const OpenModals: Modal[] = []
@@ -38,6 +37,8 @@ export class Modal extends Component {
     IsMinimized = false;
     MinimizeButton?: HTMLElement
 
+    getMinimizeTarget?: Props["getMinimizeTarget"]
+
     constructor(props: Props) {
         super()
         this.OnClose = props.onClose
@@ -59,7 +60,8 @@ export class Modal extends Component {
         else
             body.append(innerBody)
 
-        if (props.allowMinimize) {
+        if (props.getMinimizeTarget) {
+            this.getMinimizeTarget = props.getMinimizeTarget
             this.MinimizeButton = <IconButton icon="minimize" onClick={() => {
                 if (!this.IsMinimized) {
                     this.Minimize()
@@ -122,7 +124,7 @@ export class Modal extends Component {
 
     Minimize() {
         if (this.IsMinimized) return
-        const rect = GetCurrentPageContext()?.getMinimizeTarget?.()
+        const rect = this.getMinimizeTarget?.()
         if (rect) {
             if (this.MinimizeButton) this.MinimizeButton.textContent = "maximize"
             this.IsMinimized = true

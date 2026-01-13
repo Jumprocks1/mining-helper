@@ -17,7 +17,7 @@ import { getSetting, setSetting } from "../../views/SettingsModal";
 import { seekToNextEntry } from "./subtitles";
 // TODO ^ this import is really dangerous
 
-export default async (subtitles: Subtitles) => {
+export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | undefined) => {
     if (!subtitles.jpdbParse) await JpdbParseSubtitles(subtitles);
     const jpdb = subtitles.jpdbParse
     if (!jpdb) return
@@ -191,7 +191,7 @@ export default async (subtitles: Subtitles) => {
             {body}
         </>,
         id: "recommended-mining-modal",
-        allowMinimize: true,
+        getMinimizeTarget: getMinimizeTarget,
         onClose: () => ClearEventHandler("vocab-mined", mineHandler)
     })
     RegisterEventHandler("vocab-mined", mineHandler)
