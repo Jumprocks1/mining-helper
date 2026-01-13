@@ -1,6 +1,7 @@
 import "../framework/createElement"
 import { appendChild, Children } from "../framework/createElement"
 
+// TODO remove in favor of `loadPage`
 export function seedPage(id: string, children: Children) {
     const body = document.body
     body.id = id

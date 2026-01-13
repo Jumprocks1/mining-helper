@@ -3,7 +3,7 @@ import HotReload from "./HotReload";
 HotReload() // Idk where else to put this oh well
 
 type NormalChild = string | Node
-type SingleChild = NormalChild | { Node: NormalChild } | false | undefined
+type SingleChild = NormalChild | { Node: Children } | false | undefined
 export type Children = SingleChild | Children[] | (() => Children)
 
 type FC = (props: Record<string, any>) => JSX.Element
@@ -19,7 +19,7 @@ export function appendChild(el: ParentNode, child: Children) {
         for (let i = 0; i < child.length; i++) appendChild(el, child[i])
     } else if (typeof child === "object" && child !== null) {
         if ("Node" in child)
-            el.append(child.Node)
+            appendChild(el, child.Node)
         else
             el.append(child);
     } else if (typeof child === "string") {

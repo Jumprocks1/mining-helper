@@ -1,8 +1,8 @@
-import MhHeader from "../../components/MhHeader"
 import { Children } from "../../framework/createElement"
 import { loadPage, Page } from "../../framework/Page"
 import { saveToAnkiAndRemove, updateInAnkiAndRemove } from "../../utils/AnkiUtil"
 import { CardData, oldCreateElement, furiToReading } from "../../utils/util"
+import Layout from "../Layout"
 
 
 document.addEventListener("DOMContentLoaded", () => loadPage(HomePage))
@@ -11,6 +11,8 @@ export default class HomePage extends Page {
     Id = "home-page"
     override Title = "Mining Helper - Home"
     override Node: Children
+    override Layout = Layout
+
     constructor() {
         super()
 
@@ -39,23 +41,20 @@ export default class HomePage extends Page {
 
         const cardContainer = <div id="card-container" />
 
-        this.Node = [
-            MhHeader(),
-            <div id="body-container">
-                <h2>Helpful Links</h2>
-                <ul id="helpful-links">
-                    <li><a href="https://jimaku.cc/">Jimaku</a></li>
-                    <li><a href="https://jpdb.io/">jpdb.io</a></li>
-                    <li><a href="https://jisho.org/">jisho.org</a></li>
-                    <li><a href="https://github.com/Jumprocks1/anki-mining-helper">Site source</a></li>
-                    <li><a href="https://mpv.io/manual/master">mpv manual</a></li>
-                    <li><a href="https://sentencesearch.neocities.org/">Sentence Search</a></li>
-                </ul>
-                <h2>Pending Cards</h2>
-                {cardContainer}
-                {resultDiv}
-            </div>
-        ]
+        this.Node = <>
+            <h2>Helpful Links</h2>
+            <ul id="helpful-links">
+                <li><a href="https://jimaku.cc/">Jimaku</a></li>
+                <li><a href="https://jpdb.io/">jpdb.io</a></li>
+                <li><a href="https://jisho.org/">jisho.org</a></li>
+                <li><a href="https://github.com/Jumprocks1/anki-mining-helper">Site source</a></li>
+                <li><a href="https://mpv.io/manual/master">mpv manual</a></li>
+                <li><a href="https://sentencesearch.neocities.org/">Sentence Search</a></li>
+            </ul>
+            <h2>Pending Cards</h2>
+            {cardContainer}
+            {resultDiv}
+        </>
 
         async function refresh() {
             const cardsObject = await chrome.storage.session.get()

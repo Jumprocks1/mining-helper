@@ -1,5 +1,9 @@
 import { Component } from "./Component";
-import { appendChild } from "./createElement";
+import { appendChild, Children } from "./createElement";
+
+export interface LayoutProps {
+    page: Page
+}
 
 // Page seeding can be done in the constructor like a normal component
 // Output should be assigned to Component.Node
@@ -12,6 +16,8 @@ export abstract class Page extends Component {
 
     }
 
+    // to use a class as a layout, just do ((props) => new Layout(props))
+    Layout: ((layoutProps: LayoutProps) => Children) | undefined
     abstract Id: string // used for limiting styles to 1 page
     Title: string | undefined
 
@@ -27,5 +33,9 @@ export function loadPage(pageClass: new () => Page) {
     document.title = instance.Title ?? "Mining Helper"
     body.id = instance.Id
     body.replaceChildren()
-    appendChild(body, instance.Node)
+    const layout = instance.Layout // TODO allow a default layout here
+    if (layout)
+        appendChild(body, layout({ page: instance }))
+    else
+        appendChild(body, instance.Node)
 }
