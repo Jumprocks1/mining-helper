@@ -14,10 +14,9 @@ import { ClearEventHandler, RegisterEventHandler } from "../../utils/Events";
 import { SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt";
 import { CardData } from "../../utils/util";
 import { getSetting, setSetting } from "../../views/SettingsModal";
-import { seekToNextEntry } from "./subtitles";
-// TODO ^ this import is really dangerous
+import SubtitlesPage from "./subtitles";
 
-export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | undefined) => {
+export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | undefined, subtitlesPage: SubtitlesPage) => {
     if (!subtitles.jpdbParse) await JpdbParseSubtitles(subtitles);
     const jpdb = subtitles.jpdbParse
     if (!jpdb) return
@@ -110,7 +109,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                             }
                         }
                     }
-                    const index = seekToNextEntry(options.map(e => e[0]), !down)
+                    const index = subtitlesPage.seekToNextEntry(options.map(e => e[0]), !down)
                     if (index !== undefined) {
                         const [entry, tokenStart] = options[index]
                         // this is lame

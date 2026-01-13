@@ -7,6 +7,8 @@ export interface LayoutProps {
     children: Children // this isn't always page.Node since it could wrapped in a Loader
 }
 
+export function EmptyLayout(props: LayoutProps) { return props.children }
+
 // Page seeding can be done in the constructor like a normal component
 // Output should be assigned to Component.Node
 export abstract class Page extends Component {
