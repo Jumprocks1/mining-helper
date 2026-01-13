@@ -1,6 +1,12 @@
 import * as esbuild from 'esbuild'
 
-const context = await esbuild.context({
+
+// process.env.NODE_ENV might also work?
+const prod = process.argv.includes('--prod');
+
+
+/** @type {import('esbuild').BuildOptions} */
+const config = {
     entryPoints: [
         "./src/pages/home/home.tsx",
         "./src/anki/anki.tsx",
@@ -9,10 +15,15 @@ const context = await esbuild.context({
         "./src/pages/ss/ss.tsx"
     ],
     bundle: true,
-    // minify: true,
-    sourcemap: process.env.NODE_ENV !== "production" ? "inline" : false,
+    minify: prod,
+    sourcemap: !prod ? "inline" : false,
     outdir: "./dist/js",
-    logLevel: "info"
+    logLevel: "info",
+}
 
-})
-await context.watch();
+if (prod) {
+    await esbuild.build(config)
+} else {
+    const context = await esbuild.context(config)
+    await context.watch();
+}
