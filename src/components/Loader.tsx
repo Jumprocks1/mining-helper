@@ -1,8 +1,8 @@
 import { type Children, replaceWith } from "../framework/createElement"
 import { userErrorMessage } from "../utils/UserError"
 
-export type DOMable = Node | string | Node[] | string[]
-export type Loadable = Promise<DOMable | Children> | (() => Promise<DOMable> | HTMLElement) | HTMLElement
+export type DOMable = Node | string | Node[] | string[] // can probably get rid of this for `Children`
+export type Loadable = Promise<Children> | (() => Promise<Children> | HTMLElement) | HTMLElement
 
 export default ({ load }: { load: Loadable }) => {
     const node = <div className="loader" />

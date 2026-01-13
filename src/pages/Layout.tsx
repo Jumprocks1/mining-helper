@@ -1,9 +1,9 @@
 import MhHeader from "../components/MhHeader"
 import { LayoutProps } from "../framework/Page"
 
-export default ({ page }: LayoutProps) => [
+export default ({ children }: LayoutProps) => [
     MhHeader(),
     <div id="body-container">
-        {page.Node}
+        {children}
     </div>
 ]
