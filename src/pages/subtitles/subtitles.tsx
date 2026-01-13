@@ -31,6 +31,7 @@ export default class SubtitlesPage extends Page {
         {this.SubtitleContainer}
     </div>
     TimeElement = <span id="current-time">00:00</span>
+    MiningModal?: Modal
 
     constructor() {
         super()
@@ -49,7 +50,10 @@ export default class SubtitlesPage extends Page {
 
 
         const header = MhHeader()
-        const connectionDot = <span id="connection-status-dot" />
+        const connectionDot = <span id="connection-status-dot" onclick={ev => {
+            this.MpvWebSocket.Connect();
+            ev.preventDefault();
+        }} />
         this.Node = <>
             {header}
             <div id="outer-body-container">
@@ -78,8 +82,6 @@ export default class SubtitlesPage extends Page {
         }
         this.MpvWebSocket.Connect()
 
-        let miningModal: Modal | undefined;
-
         document.addEventListener("keydown", ev => {
             if (disallowGlobalInput(ev)) return
             if (handleKeyDown(ev)) return
@@ -94,8 +96,8 @@ export default class SubtitlesPage extends Page {
                 this.MpvWebSocket.SendIfOpen("ipc:cycle pause");
                 ev.preventDefault()
             } else if (key === "m") {
-                if (miningModal) {
-                    miningModal.Close()
+                if (this.MiningModal) {
+                    this.MiningModal.Close()
                 } else {
                     // TODO if selection is collapsed, we should prioritze the hover element in the SubtitleViewer
                     // the hover token is easily gettable, but we'd have to rework most of the code below here
@@ -118,15 +120,15 @@ export default class SubtitlesPage extends Page {
                                     endIndex = temp
                                 }
                             }
-                            miningModal = MiningModal({
+                            this.MiningModal = MiningModal({
                                 word: selected.toString(), entry, mpv: this.MpvWebSocket,
                                 subtitles: this.LoadedSubtitles!.subtitles,
                                 startIndex,
                                 endIndex,
-                                onClose: () => miningModal = undefined,
+                                onClose: () => this.MiningModal = undefined,
                                 subtitlesPage: this
                             })
-                            miningModal.Open()
+                            this.MiningModal.Open()
                             this.MpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
                             // Could use this to query, but really not needed
                             // webSocket.RequestIfOpen(`ipc-request:["get_property", "sub-visibility"]`)
@@ -174,28 +176,6 @@ export default class SubtitlesPage extends Page {
                             break
                         }
                     }
-                }
-            }
-        })
-
-        document.addEventListener("click", ev => {
-            const clicked = ev.target as HTMLElement | null
-            if (clicked) {
-                if (clicked.classList.contains("timestamp")) {
-                    const entry = (clicked as any).entry
-                    if (!entry) return
-                    const time = entry.startTime
-                    if (ev.ctrlKey) {
-                        const subs = this.LoadedSubtitles?.subtitles
-                        setSetting("offset", (subs?.offset ?? 0) + this.CurrentTime - entry.startTime)
-                    } else {
-                        if (this.MpvWebSocket.Open) this.MpvWebSocket.SendIfOpen(`ipc:seek ${time / 1000} absolute`)
-                        else this.UpdateTime(time)
-                    }
-                    ev.preventDefault();
-                } else if (clicked.matches("#connection-status-dot.disconnected")) {
-                    this.MpvWebSocket.Connect();
-                    ev.preventDefault();
                 }
             }
         })
@@ -302,7 +282,7 @@ export default class SubtitlesPage extends Page {
 
         this.LoadedSubtitles?.Node.remove()
 
-        const viewer = new SubtitleViewer(subtitles)
+        const viewer = new SubtitleViewer(subtitles, this)
         this.SubtitleContainer.append(viewer.Node)
         viewer.UpdateHighlighting(this.CurrentTime)
 

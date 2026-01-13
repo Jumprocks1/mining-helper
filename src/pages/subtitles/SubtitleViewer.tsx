@@ -5,6 +5,8 @@ import { getVocabState, getVocabStateAndNote, VocabState } from "../../jpdb/Jpdb
 import { getCharacterIndex, getHoveredCharacterIndex, getSelectionRange } from "../../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt"
 import { furiFromToken, furiToRuby, oldCreateElement } from "../../utils/util"
+import { setSetting } from "../../views/SettingsModal"
+import SubtitlesPage from "./subtitles"
 
 declare global {
     interface HTMLElement {
@@ -28,13 +30,31 @@ export default class SubtitleViewer {
     MouseX: number | undefined
     MouseY: number | undefined
 
-    constructor(subtitles: Subtitles) {
+    constructor(subtitles: Subtitles, page: SubtitlesPage) {
         this.Node = <div className="subtitle-viewer">
             {this.pointer}
             <div className="inner"></div>
             {this.hoverRectangle}
         </div>
         this.subtitles = subtitles
+        this.Node.addEventListener("click", ev => {
+            const clicked = ev.target as HTMLElement | null
+            if (clicked) {
+                if (clicked.classList.contains("timestamp")) {
+                    const entry = (clicked as any).entry
+                    if (!entry) return
+                    const time = entry.startTime
+                    if (ev.ctrlKey) {
+                        const subs = this.subtitles
+                        setSetting("offset", (subs?.offset ?? 0) + page.CurrentTime - entry.startTime)
+                    } else {
+                        if (page.MpvWebSocket.Open) page.MpvWebSocket.SendIfOpen(`ipc:seek ${time / 1000} absolute`)
+                        else page.UpdateTime(time)
+                    }
+                    ev.preventDefault();
+                }
+            }
+        })
         this.updateBlock()
 
         this.Node.addEventListener("pointerdown", () => {

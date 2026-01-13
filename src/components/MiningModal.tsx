@@ -72,7 +72,7 @@ export default (props: Props) => {
         return text.replaceAll(word, "<b>" + word + "</b>")
     }
 
-    const sourceFile = cleanSource(filenameFromPath(props.subtitlesPage.currentFilename))
+    const sourceFile = cleanSource(filenameFromPath(props.subtitlesPage.CurrentFilename))
 
     async function body() {
         const entries = subtitles.processedEntries
