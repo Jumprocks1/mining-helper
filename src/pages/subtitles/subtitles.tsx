@@ -22,30 +22,30 @@ export default class SubtitlesPage extends Page {
     override Layout = EmptyLayout // we use an extra body container, so can't use normal layout
     override Title = "Mining Helper - Subtitles"
 
-    currentFilename?: string
-    currentTime = 0
-    loadedSubtitles: SubtitleViewer | undefined
-    mpvWebSocket?: MpvWebSocket
-    subtitleContainer = <div id="subtitle-container" />
-    bodyContainer = <div id="body-container">
-        {this.subtitleContainer}
+    CurrentFilename?: string
+    CurrentTime = 0
+    LoadedSubtitles: SubtitleViewer | undefined
+    readonly MpvWebSocket: MpvWebSocket = new MpvWebSocket()
+    SubtitleContainer = <div id="subtitle-container" />
+    BodyContainer = <div id="body-container">
+        {this.SubtitleContainer}
     </div>
-    timeElement = <span id="current-time">00:00</span>
+    TimeElement = <span id="current-time">00:00</span>
 
     constructor() {
         super()
 
         onSettingChange("offset", async offset => {
-            const subs = this.loadedSubtitles?.subtitles
+            const subs = this.LoadedSubtitles?.subtitles
             if (subs) {
                 if (subs.offset ?? 0 !== offset) {
                     subs.offset = offset
-                    this.reloadSubs()
+                    this.ReloadSubs()
                 }
             }
         })
-        onSettingChange("regexReplacements", this.reloadSubs)
-        onSettingChange("skipChapterRegex", this.reloadSubs)
+        onSettingChange("regexReplacements", this.ReloadSubs)
+        onSettingChange("skipChapterRegex", this.ReloadSubs)
 
 
         const header = MhHeader()
@@ -55,30 +55,28 @@ export default class SubtitlesPage extends Page {
             <div id="outer-body-container">
                 <div id="status-info">
                     <IconButton icon="settings" onClick={() => SettingsModal()} />
-                    {this.timeElement}
+                    {this.TimeElement}
                     {connectionDot}
                 </div>
-                {this.bodyContainer}
+                {this.BodyContainer}
             </div>
         </>
-        let webSocket = new MpvWebSocket()
-        this.mpvWebSocket = webSocket
-        webSocket.onMessage = (e) => this.handleWebSocketData(webSocket, e.data)
-        webSocket.onConnecting = () => {
+        this.MpvWebSocket.onMessage = (e) => this.HandleWebSocketData(this.MpvWebSocket, e.data)
+        this.MpvWebSocket.onConnecting = () => {
             connectionDot.title = "WebSocket connecting"
             connectionDot.classList.remove(...connectionDot.classList);
         }
-        webSocket.onOpen = async () => {
+        this.MpvWebSocket.onOpen = async () => {
             connectionDot.title = "WebSocket connected"
             connectionDot.classList.add("connected")
             connectionDot.classList.remove("disconnected")
         }
-        webSocket.onClose = () => {
+        this.MpvWebSocket.onClose = () => {
             connectionDot.title = "WebSocket disconnected\nClick to retry"
             connectionDot.classList.remove("connected")
             connectionDot.classList.add("disconnected")
         }
-        webSocket.Connect()
+        this.MpvWebSocket.Connect()
 
         let miningModal: Modal | undefined;
 
@@ -87,13 +85,13 @@ export default class SubtitlesPage extends Page {
             if (handleKeyDown(ev)) return
             const key = ev.key.toLowerCase()
             if (key === "h") {
-                this.loadedSubtitles?.HighlightAnkiWords()
+                this.LoadedSubtitles?.HighlightAnkiWords()
             } else if (key === "i") { // i for info?
-                this.loadedSubtitles?.ToggleShift()
+                this.LoadedSubtitles?.ToggleShift()
             } else if (key === "v") {
-                webSocket.SendIfOpen("ipc:cycle sub-visibility");
+                this.MpvWebSocket.SendIfOpen("ipc:cycle sub-visibility");
             } else if (key === " ") {
-                webSocket.SendIfOpen("ipc:cycle pause");
+                this.MpvWebSocket.SendIfOpen("ipc:cycle pause");
                 ev.preventDefault()
             } else if (key === "m") {
                 if (miningModal) {
@@ -121,29 +119,29 @@ export default class SubtitlesPage extends Page {
                                 }
                             }
                             miningModal = MiningModal({
-                                word: selected.toString(), entry, mpv: webSocket,
-                                subtitles: this.loadedSubtitles!.subtitles,
+                                word: selected.toString(), entry, mpv: this.MpvWebSocket,
+                                subtitles: this.LoadedSubtitles!.subtitles,
                                 startIndex,
                                 endIndex,
                                 onClose: () => miningModal = undefined,
                                 subtitlesPage: this
                             })
                             miningModal.Open()
-                            webSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
+                            this.MpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
                             // Could use this to query, but really not needed
                             // webSocket.RequestIfOpen(`ipc-request:["get_property", "sub-visibility"]`)
-                            webSocket.SendIfOpen(`ipc:set sub-visibility yes`)
+                            this.MpvWebSocket.SendIfOpen(`ipc:set sub-visibility yes`)
                         }
                     }
                 }
             } else if (key === "t") {
-                if (this.loadedSubtitles) JpdbParseSubtitles(this.loadedSubtitles.subtitles)
+                if (this.LoadedSubtitles) JpdbParseSubtitles(this.LoadedSubtitles.subtitles)
             } else if (key === "y") {
-                const subs = this.loadedSubtitles?.subtitles
+                const subs = this.LoadedSubtitles?.subtitles
                 if (subs) {
                     (async () => {
                         const modal = await RecommendedMiningModal(subs, () => {
-                            const main = this.loadedSubtitles?.Node
+                            const main = this.LoadedSubtitles?.Node
                             if (!main) return
                             const mainRect = main.getBoundingClientRect()
                             const headerRect = header.getBoundingClientRect()
@@ -159,19 +157,19 @@ export default class SubtitlesPage extends Page {
 
         document.addEventListener("keydown", ev => {
             if (disallowGlobalInput(ev)) return
-            const subs = this.loadedSubtitles
+            const subs = this.LoadedSubtitles
             if (subs) {
                 if (ev.key === "ArrowUp") {
-                    this.seekToNextEntry(subs.subtitles.processedEntries, true)
+                    this.SeekToNextEntry(subs.subtitles.processedEntries, true)
                     ev.preventDefault()
                 } else if (ev.key === "ArrowDown" || ev.key === "ArrowRight") {
-                    this.seekToNextEntry(subs.subtitles.processedEntries, false)
+                    this.SeekToNextEntry(subs.subtitles.processedEntries, false)
                     ev.preventDefault()
                 } else if (ev.key === "ArrowLeft") {
                     const entries = subs.subtitles.processedEntries
                     for (let i = 0; i < entries.length - 1; i++) {
-                        if (entries[i].startTime < this.currentTime && entries[i + 1].startTime > this.currentTime) {
-                            webSocket.SendIfOpen(`ipc:seek ${entries[i].startTime / 1000} absolute`)
+                        if (entries[i].startTime < this.CurrentTime && entries[i + 1].startTime > this.CurrentTime) {
+                            this.MpvWebSocket.SendIfOpen(`ipc:seek ${entries[i].startTime / 1000} absolute`)
                             ev.preventDefault();
                             break
                         }
@@ -188,24 +186,24 @@ export default class SubtitlesPage extends Page {
                     if (!entry) return
                     const time = entry.startTime
                     if (ev.ctrlKey) {
-                        const subs = this.loadedSubtitles?.subtitles
-                        setSetting("offset", (subs?.offset ?? 0) + this.currentTime - entry.startTime)
+                        const subs = this.LoadedSubtitles?.subtitles
+                        setSetting("offset", (subs?.offset ?? 0) + this.CurrentTime - entry.startTime)
                     } else {
-                        if (webSocket.Open) webSocket.SendIfOpen(`ipc:seek ${time / 1000} absolute`)
-                        else this.updateTime(time)
+                        if (this.MpvWebSocket.Open) this.MpvWebSocket.SendIfOpen(`ipc:seek ${time / 1000} absolute`)
+                        else this.UpdateTime(time)
                     }
                     ev.preventDefault();
                 } else if (clicked.matches("#connection-status-dot.disconnected")) {
-                    webSocket.Connect();
+                    this.MpvWebSocket.Connect();
                     ev.preventDefault();
                 }
             }
         })
 
-        this.bodyContainer.addEventListener("dragover", ev => {
+        this.BodyContainer.addEventListener("dragover", ev => {
             ev.preventDefault()
         })
-        this.bodyContainer.addEventListener("drop", ev => {
+        this.BodyContainer.addEventListener("drop", ev => {
             ev.preventDefault()
             const files = ev.dataTransfer?.files
             if (!files) return
@@ -216,7 +214,7 @@ export default class SubtitlesPage extends Page {
                     reader.onload = async e => {
                         const target = e.target
                         if (target && typeof target.result === "string") {
-                            await this.loadSubtitles(await parseSrt(target.result))
+                            await this.LoadSubtitles(await parseSrt(target.result))
                         }
                     }
                     reader.readAsText(file)
@@ -225,28 +223,28 @@ export default class SubtitlesPage extends Page {
         })
     }
 
-    updateTime(timestamp: number) {
-        this.currentTime = timestamp
-        this.timeElement.textContent = formatTimestamp(this.currentTime)
-        this.loadedSubtitles?.UpdateHighlighting(this.currentTime)
+    UpdateTime(timestamp: number) {
+        this.CurrentTime = timestamp
+        this.TimeElement.textContent = formatTimestamp(this.CurrentTime)
+        this.LoadedSubtitles?.UpdateHighlighting(this.CurrentTime)
     }
 
-    async reloadSubs() {
-        const subs = this.loadedSubtitles?.subtitles
+    async ReloadSubs() {
+        const subs = this.LoadedSubtitles?.subtitles
         if (subs) {
             subs.jpdbParse = undefined // these get reloaded from cache if possible
-            await this.loadSubtitles(subs)
+            await this.LoadSubtitles(subs)
         }
     }
 
-    async loadSubtitles(subtitles: Subtitles) {
+    async LoadSubtitles(subtitles: Subtitles) {
         const skip: [start: number, end?: number][] = []
-        if (this.mpvWebSocket?.Open) {
+        if (this.MpvWebSocket?.Open) {
             const skipChapterRegex = await getSetting("skipChapterRegex")
             if (skipChapterRegex) {
                 const regex = new RegExp(skipChapterRegex)
                 // bit inefficient but probably good
-                const resp = await this.mpvWebSocket.RequestIfOpen(`ipc-request:["get_property", "chapter-list"]`)
+                const resp = await this.MpvWebSocket.RequestIfOpen(`ipc-request:["get_property", "chapter-list"]`)
                 if (typeof resp === "string") {
                     const parsed = JSON.parse(resp) as { title: string, time: number }[]
                     for (let i = 0; i < parsed.length; i++) {
@@ -302,80 +300,80 @@ export default class SubtitlesPage extends Page {
         }
 
 
-        this.loadedSubtitles?.Node.remove()
+        this.LoadedSubtitles?.Node.remove()
 
         const viewer = new SubtitleViewer(subtitles)
-        this.subtitleContainer.append(viewer.Node)
-        viewer.UpdateHighlighting(this.currentTime)
+        this.SubtitleContainer.append(viewer.Node)
+        viewer.UpdateHighlighting(this.CurrentTime)
 
-        this.loadedSubtitles = viewer
-        viewer.JumpTo(viewer.LatestEntry(this.currentTime))
-        JpdbParseSubtitles(this.loadedSubtitles.subtitles, true)
+        this.LoadedSubtitles = viewer
+        viewer.JumpTo(viewer.LatestEntry(this.CurrentTime))
+        JpdbParseSubtitles(this.LoadedSubtitles.subtitles, true)
     }
-    async handleWebSocketData(webSocket: MpvWebSocket, command: string | Blob) {
+    async HandleWebSocketData(webSocket: MpvWebSocket, command: string | Blob) {
         if (typeof command === "string") {
             const spl = command.indexOf(":")
             if (spl === -1) { console.error({ command, message: "Missing :" }); return }
             const commandName = command.substring(0, spl);
             const commandValue = command.substring(spl + 1);
-            await this.handleCommandAndData(webSocket, commandName, commandValue)
+            await this.HandleCommandAndData(webSocket, commandName, commandValue)
         } else {
             const bytes = new Uint8Array(await command.arrayBuffer());
             const spl = bytes.indexOf(":".charCodeAt(0))
             if (spl === -1) return
             const commandName = new TextDecoder().decode(bytes.subarray(0, spl));
-            await this.handleCommandAndData(webSocket, commandName, bytes.subarray(spl + 1))
+            await this.HandleCommandAndData(webSocket, commandName, bytes.subarray(spl + 1))
         }
     }
-    async requestAndLoadSubs(webSocket: MpvWebSocket) {
+    async RequestAndLoadSubs(webSocket: MpvWebSocket) {
         const subs = await webSocket.RequestIfOpen("jp-subs")
         if (typeof subs === "string") throw new Error()
         const decoded = new TextDecoder().decode(subs)
-        await this.loadSubtitles(await parseSrt(decoded))
+        await this.LoadSubtitles(await parseSrt(decoded))
     }
-    async handleCommandAndData(webSocket: MpvWebSocket, commandName: string, commandData: string | Uint8Array<ArrayBuffer>) {
+    async HandleCommandAndData(webSocket: MpvWebSocket, commandName: string, commandData: string | Uint8Array<ArrayBuffer>) {
         if (commandName === "time" || commandName === "t") {
-            this.updateTime(parseFloat(commandData as string))
+            this.UpdateTime(parseFloat(commandData as string))
         } else if (commandName === "response") {
             await webSocket.HandleResponse(commandData)
         } else if (commandName === "current-file") {
             if (typeof commandData === "string") {
-                if (commandData !== this.currentFilename) {
-                    this.currentFilename = commandData
-                    if (commandData) await this.requestAndLoadSubs(webSocket)
+                if (commandData !== this.CurrentFilename) {
+                    this.CurrentFilename = commandData
+                    if (commandData) await this.RequestAndLoadSubs(webSocket)
                 }
             }
         }
     }
-    seekToSubtitle(entry: SubtitleEntry) {
-        if (this.mpvWebSocket?.Open)
-            this.mpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
-        else this.updateTime(entry.startTime)
+    SeekToSubtitle(entry: SubtitleEntry) {
+        if (this.MpvWebSocket?.Open)
+            this.MpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
+        else this.UpdateTime(entry.startTime)
     }
 
-    getNextEntryIndex(entries: SubtitleEntry[], backwards: boolean) {
+    GetNextEntryIndex(entries: SubtitleEntry[], backwards: boolean) {
         if (backwards) {
             for (let i = 1; i < entries.length; i++) {
-                if (entries[i].endTime > this.currentTime) {
+                if (entries[i].endTime > this.CurrentTime) {
                     return i - 1
                 }
             }
             return entries.length - 1
         } else {
             for (let i = 0; i < entries.length; i++) {
-                if (entries[i].startTime > this.currentTime) {
+                if (entries[i].startTime > this.CurrentTime) {
                     return i
                 }
             }
             return entries.length - 1
         }
     }
-    seekToNextEntry(entries: SubtitleEntry[], backwards: boolean) {
+    SeekToNextEntry(entries: SubtitleEntry[], backwards: boolean) {
         // TODO add epsilon
         // const epsilon = 200 // ms
-        if (!this.mpvWebSocket) return
-        const index = this.getNextEntryIndex(entries, backwards)
-        this.seekToSubtitle(entries[index])
+        if (!this.MpvWebSocket) return
+        const index = this.GetNextEntryIndex(entries, backwards)
+        this.SeekToSubtitle(entries[index])
         return index
     }
 }

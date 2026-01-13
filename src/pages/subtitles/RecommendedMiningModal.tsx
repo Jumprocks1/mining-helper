@@ -109,7 +109,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                             }
                         }
                     }
-                    const index = subtitlesPage.seekToNextEntry(options.map(e => e[0]), !down)
+                    const index = subtitlesPage.SeekToNextEntry(options.map(e => e[0]), !down)
                     if (index !== undefined) {
                         const [entry, tokenStart] = options[index]
                         // this is lame
