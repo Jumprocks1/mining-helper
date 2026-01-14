@@ -1,6 +1,6 @@
 import Loader from "../components/Loader"
-import "../framework/createElement" // sets window.createElement
-import { appendChild, type Children } from "../framework/createElement"
+import "./createElement" // sets window.createElement
+import { appendChild, type Children } from "./createElement"
 import { LayoutType, type PageComponent } from "./PageComponent"
 
 export interface PageDefinition {

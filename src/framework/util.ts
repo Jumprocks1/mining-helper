@@ -1,5 +1,3 @@
-import "../framework/createElement"
-
 export interface BaseComponentProps {
     className?: string
     id?: string
