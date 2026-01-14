@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Security.Principal;
 
 namespace HotReload;
 
@@ -23,38 +24,40 @@ public static class Program
 
         if (!Directory.Exists(path)) throw new DirectoryNotFoundException($"Folder {path} not found. CWD: {Environment.CurrentDirectory}");
 
-        // I'm sure there's a better/thread safer way to do all this, but I'm pretty sure this will be fine
-        var queuedChanges = new Dictionary<string, int>();
+        var queuedChanges = new Dictionary<string, CancellationTokenSource>();
         using var watcher = new FileSystemWatcher(path) { EnableRaisingEvents = true };
         watcher.Changed += (_, ev) =>
         {
+            var cts = new CancellationTokenSource();
             var path = ev.FullPath;
             lock (queuedChanges)
             {
-                var myI = queuedChanges.TryGetValue(path, out var i) ? i + 1 : 0;
-                queuedChanges[path] = myI;
-                Task.Run(async () =>
+                if (queuedChanges.TryGetValue(path, out var old))
+                    old.Cancel();
+                queuedChanges[path] = cts;
+            }
+            async void debounced()
+            {
+                try
                 {
-                    await Task.Delay(Debounce);
-                    var send = false;
+
+                    await Task.Delay(Debounce, cts.Token);
+                    await server.BroadcastMessage($"changed:{path}");
+                }
+                catch (TaskCanceledException) { return; }
+                finally
+                {
                     lock (queuedChanges)
                     {
-                        if (queuedChanges.TryGetValue(path, out var i) && i == myI)
-                            send = true;
+                        if (queuedChanges.TryGetValue(path, out var current) && current == cts)
+                            queuedChanges.Remove(path);
                     }
-                    if (send)
-                    {
-                        // Console.WriteLine($"changed:{path}");
-                        await server.SendMessage($"changed:{path}");
-                    }
-                });
+                }
             }
+            debounced();
         };
 
-
-        while (true)
-        {
-            await server.Pump();
-        }
+        var cancellationTokenSource = new CancellationTokenSource();
+        await server.StartAsync(cancellationTokenSource.Token);
     }
 }
