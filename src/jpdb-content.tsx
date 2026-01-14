@@ -100,7 +100,6 @@ async function afterLoad() {
             const vocab = goodAudioButton.closest<HTMLElement>(".vocabulary")
             const audioOptions = await getAudioOptions(vocab)
             if (!audioOptions) return
-            console.log(audioOptions)
             menu = <div className="audio-menu">
                 {audioOptions.map(e => {
                     const o = <div className="audio-menu-source">{e.Source}</div>

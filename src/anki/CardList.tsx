@@ -118,7 +118,6 @@ export default () => {
             s += `Unique ${UnicodeCharacterType[setType]}: ${set.size}\n`
         }
         uniqueSets.textContent = s;
-        console.log(sets)
         refresh.Loading = false
     }
 
