@@ -6,17 +6,15 @@ import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
 import MiningModal from "../../components/MiningModal"
 import { Modal } from "../../components/Modal"
 import IconButton from "../../components/basic/IconButton"
-import SettingsModal, { getSetting, onSettingChange, setSetting } from "../../views/SettingsModal"
+import SettingsModal, { getSetting, onSettingChange, removeOnSettingChange, setSetting } from "../../views/SettingsModal"
 import { applyReplacementsTo, getReplacements } from "../../views/RegexReplacements"
 import { JpdbParseSubtitles } from "../../jpdb/JpdbParseText"
 import RecommendedMiningModal from "./RecommendedMiningModal"
 import { getCharacterIndex } from "../../utils/CharacterHighlighter"
-import { EmptyLayout, loadPage, Page } from "../../framework/Page"
+import { EmptyLayout, PageComponent } from "../../framework/PageComponent"
 import { Children } from "../../framework/createElement"
 
-document.addEventListener("DOMContentLoaded", () => loadPage(SubtitlesPage))
-
-export default class SubtitlesPage extends Page {
+export default class SubtitlesPage extends PageComponent {
     Id = "subs-page"
     Node: Children
     override Layout = EmptyLayout // we use an extra body container, so can't use normal layout
@@ -33,29 +31,137 @@ export default class SubtitlesPage extends Page {
     TimeElement = <span id="current-time">00:00</span>
     MiningModal?: Modal
 
+    override Dispose() {
+        removeOnSettingChange("offset", this.OffsetChanged)
+        removeOnSettingChange("regexReplacements", this.ReloadSubs)
+        removeOnSettingChange("skipChapterRegex", this.ReloadSubs)
+        document.removeEventListener("keydown", this.DocumentKeydown)
+        this.MpvWebSocket.Connection?.close()
+    }
+
+    OffsetChanged(offset: number) {
+        const subs = this.LoadedSubtitles?.subtitles
+        if (subs) {
+            if (subs.offset ?? 0 !== offset) {
+                subs.offset = offset
+                this.ReloadSubs()
+            }
+        }
+    }
+
+    DocumentKeydown = (ev: KeyboardEvent) => {
+        this.LoadedSubtitles?.DocumentKeydown(ev)
+        if (disallowGlobalInput(ev)) return
+        if (handleKeyDown(ev)) return
+        const key = ev.key.toLowerCase()
+
+        const subs = this.LoadedSubtitles
+        if (subs) {
+            if (ev.key === "ArrowUp") {
+                this.SeekToNextEntry(subs.subtitles.processedEntries, true)
+                ev.preventDefault()
+            } else if (ev.key === "ArrowDown" || ev.key === "ArrowRight") {
+                this.SeekToNextEntry(subs.subtitles.processedEntries, false)
+                ev.preventDefault()
+            } else if (ev.key === "ArrowLeft") {
+                const entries = subs.subtitles.processedEntries
+                for (let i = 0; i < entries.length - 1; i++) {
+                    if (entries[i].startTime < this.CurrentTime && entries[i + 1].startTime > this.CurrentTime) {
+                        this.MpvWebSocket.SendIfOpen(`ipc:seek ${entries[i].startTime / 1000} absolute`)
+                        ev.preventDefault();
+                        break
+                    }
+                }
+            }
+        }
+
+        if (key === "h") {
+            this.LoadedSubtitles?.HighlightAnkiWords()
+        } else if (key === "i") { // i for info?
+            this.LoadedSubtitles?.ToggleShift()
+        } else if (key === "v") {
+            this.MpvWebSocket.SendIfOpen("ipc:cycle sub-visibility");
+        } else if (key === " ") {
+            this.MpvWebSocket.SendIfOpen("ipc:cycle pause");
+            ev.preventDefault()
+        } else if (key === "m") {
+            if (this.MiningModal) {
+                this.MiningModal.Close()
+            } else {
+                // TODO if selection is collapsed, we should prioritze the hover element in the SubtitleViewer
+                // the hover token is easily gettable, but we'd have to rework most of the code below here
+                const selected = getSelection()
+                if (selected) {
+                    const anchor = selected.anchorNode?.parentElement as HTMLElement
+                    const htmlSubtitles = anchor.closest<HTMLElement>(".subtitles")
+                    const htmlEntry = htmlSubtitles?.closest<HTMLElement>(".subtitle-entry")
+                    const entry = htmlEntry?.subtitleEntry
+                    if (htmlSubtitles && entry) {
+                        let startIndex: number | undefined
+                        let endIndex: number | undefined
+                        // can only get these indices if the start/end for selection is in same entry
+                        if (selected.focusNode && selected.focusNode.parentElement?.closest<HTMLElement>(".subtitles") === htmlSubtitles) {
+                            startIndex = getCharacterIndex(htmlSubtitles, selected.anchorNode!, selected.anchorOffset)
+                            endIndex = getCharacterIndex(htmlSubtitles, selected.focusNode!, selected.focusOffset)
+                            if (startIndex > endIndex) {
+                                const temp = startIndex
+                                startIndex = endIndex
+                                endIndex = temp
+                            }
+                        }
+                        this.MiningModal = MiningModal({
+                            word: selected.toString(), entry, mpv: this.MpvWebSocket,
+                            subtitles: this.LoadedSubtitles!.subtitles,
+                            startIndex,
+                            endIndex,
+                            onClose: () => this.MiningModal = undefined,
+                            subtitlesPage: this
+                        })
+                        this.MiningModal.Open()
+                        this.MpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
+                        // Could use this to query, but really not needed
+                        // webSocket.RequestIfOpen(`ipc-request:["get_property", "sub-visibility"]`)
+                        this.MpvWebSocket.SendIfOpen(`ipc:set sub-visibility yes`)
+                    }
+                }
+            }
+        } else if (key === "t") {
+            if (this.LoadedSubtitles) JpdbParseSubtitles(this.LoadedSubtitles.subtitles)
+        } else if (key === "y") {
+            const subs = this.LoadedSubtitles?.subtitles
+            if (subs) {
+                (async () => {
+                    const modal = await RecommendedMiningModal(subs, () => {
+                        const main = this.LoadedSubtitles?.Node
+                        if (!main) return
+                        const mainRect = main.getBoundingClientRect()
+                        const headerRect = this.Header.getBoundingClientRect()
+                        const full = document.body.getBoundingClientRect()
+                        const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
+                        return rect
+                    }, this)
+                    modal?.Minimize()
+                })()
+            }
+        }
+    }
+
+    Header = MhHeader()
+
     constructor() {
         super()
 
-        onSettingChange("offset", async offset => {
-            const subs = this.LoadedSubtitles?.subtitles
-            if (subs) {
-                if (subs.offset ?? 0 !== offset) {
-                    subs.offset = offset
-                    this.ReloadSubs()
-                }
-            }
-        })
+        onSettingChange("offset", this.OffsetChanged)
         onSettingChange("regexReplacements", this.ReloadSubs)
         onSettingChange("skipChapterRegex", this.ReloadSubs)
 
 
-        const header = MhHeader()
         const connectionDot = <span id="connection-status-dot" onclick={ev => {
             this.MpvWebSocket.Connect();
             ev.preventDefault();
         }} />
         this.Node = <>
-            {header}
+            {this.Header}
             <div id="outer-body-container">
                 <div id="status-info">
                     <IconButton icon="settings" onClick={() => SettingsModal()} />
@@ -82,103 +188,7 @@ export default class SubtitlesPage extends Page {
         }
         this.MpvWebSocket.Connect()
 
-        document.addEventListener("keydown", ev => {
-            if (disallowGlobalInput(ev)) return
-            if (handleKeyDown(ev)) return
-            const key = ev.key.toLowerCase()
-            if (key === "h") {
-                this.LoadedSubtitles?.HighlightAnkiWords()
-            } else if (key === "i") { // i for info?
-                this.LoadedSubtitles?.ToggleShift()
-            } else if (key === "v") {
-                this.MpvWebSocket.SendIfOpen("ipc:cycle sub-visibility");
-            } else if (key === " ") {
-                this.MpvWebSocket.SendIfOpen("ipc:cycle pause");
-                ev.preventDefault()
-            } else if (key === "m") {
-                if (this.MiningModal) {
-                    this.MiningModal.Close()
-                } else {
-                    // TODO if selection is collapsed, we should prioritze the hover element in the SubtitleViewer
-                    // the hover token is easily gettable, but we'd have to rework most of the code below here
-                    const selected = getSelection()
-                    if (selected) {
-                        const anchor = selected.anchorNode?.parentElement as HTMLElement
-                        const htmlSubtitles = anchor.closest<HTMLElement>(".subtitles")
-                        const htmlEntry = htmlSubtitles?.closest<HTMLElement>(".subtitle-entry")
-                        const entry = htmlEntry?.subtitleEntry
-                        if (htmlSubtitles && entry) {
-                            let startIndex: number | undefined
-                            let endIndex: number | undefined
-                            // can only get these indices if the start/end for selection is in same entry
-                            if (selected.focusNode && selected.focusNode.parentElement?.closest<HTMLElement>(".subtitles") === htmlSubtitles) {
-                                startIndex = getCharacterIndex(htmlSubtitles, selected.anchorNode!, selected.anchorOffset)
-                                endIndex = getCharacterIndex(htmlSubtitles, selected.focusNode!, selected.focusOffset)
-                                if (startIndex > endIndex) {
-                                    const temp = startIndex
-                                    startIndex = endIndex
-                                    endIndex = temp
-                                }
-                            }
-                            this.MiningModal = MiningModal({
-                                word: selected.toString(), entry, mpv: this.MpvWebSocket,
-                                subtitles: this.LoadedSubtitles!.subtitles,
-                                startIndex,
-                                endIndex,
-                                onClose: () => this.MiningModal = undefined,
-                                subtitlesPage: this
-                            })
-                            this.MiningModal.Open()
-                            this.MpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
-                            // Could use this to query, but really not needed
-                            // webSocket.RequestIfOpen(`ipc-request:["get_property", "sub-visibility"]`)
-                            this.MpvWebSocket.SendIfOpen(`ipc:set sub-visibility yes`)
-                        }
-                    }
-                }
-            } else if (key === "t") {
-                if (this.LoadedSubtitles) JpdbParseSubtitles(this.LoadedSubtitles.subtitles)
-            } else if (key === "y") {
-                const subs = this.LoadedSubtitles?.subtitles
-                if (subs) {
-                    (async () => {
-                        const modal = await RecommendedMiningModal(subs, () => {
-                            const main = this.LoadedSubtitles?.Node
-                            if (!main) return
-                            const mainRect = main.getBoundingClientRect()
-                            const headerRect = header.getBoundingClientRect()
-                            const full = document.body.getBoundingClientRect()
-                            const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
-                            return rect
-                        }, this)
-                        modal?.Minimize()
-                    })()
-                }
-            }
-        })
-
-        document.addEventListener("keydown", ev => {
-            if (disallowGlobalInput(ev)) return
-            const subs = this.LoadedSubtitles
-            if (subs) {
-                if (ev.key === "ArrowUp") {
-                    this.SeekToNextEntry(subs.subtitles.processedEntries, true)
-                    ev.preventDefault()
-                } else if (ev.key === "ArrowDown" || ev.key === "ArrowRight") {
-                    this.SeekToNextEntry(subs.subtitles.processedEntries, false)
-                    ev.preventDefault()
-                } else if (ev.key === "ArrowLeft") {
-                    const entries = subs.subtitles.processedEntries
-                    for (let i = 0; i < entries.length - 1; i++) {
-                        if (entries[i].startTime < this.CurrentTime && entries[i + 1].startTime > this.CurrentTime) {
-                            this.MpvWebSocket.SendIfOpen(`ipc:seek ${entries[i].startTime / 1000} absolute`)
-                            ev.preventDefault();
-                            break
-                        }
-                    }
-                }
-            }
-        })
+        document.addEventListener("keydown", this.DocumentKeydown)
 
         this.BodyContainer.addEventListener("dragover", ev => {
             ev.preventDefault()

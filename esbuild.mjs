@@ -8,11 +8,8 @@ const prod = process.argv.includes('--prod');
 /** @type {import('esbuild').BuildOptions} */
 const config = {
     entryPoints: [
-        "./src/pages/home/home.tsx",
-        "./src/anki/anki.tsx",
-        "./src/jpdb-content.tsx",
-        "./src/pages/subtitles/subtitles.tsx",
-        "./src/pages/ss/ss.tsx"
+        "./src/pages/spa.ts",
+        "./src/jpdb-content.tsx"
     ],
     bundle: true,
     minify: prod,

@@ -30,6 +30,14 @@ export default class SubtitleViewer {
     MouseX: number | undefined
     MouseY: number | undefined
 
+    DocumentKeydown(ev: KeyboardEvent) {
+        if (this.subtitles.jpdbParse) {
+            const showPopover = ev.shiftKey !== this.ShowHoverWithoutShift
+            if (this.popover?.Visible && !showPopover) return
+            this.UpdateHoverInfo(showPopover)
+        }
+    }
+
     constructor(subtitles: Subtitles, page: SubtitlesPage) {
         this.Node = <div className="subtitle-viewer">
             {this.pointer}
@@ -62,14 +70,6 @@ export default class SubtitleViewer {
         })
         this.Node.addEventListener("pointerup", () => {
             this.MouseDown = false
-        })
-
-        document.addEventListener("keydown", ev => {
-            if (this.subtitles.jpdbParse) {
-                const showPopover = ev.shiftKey !== this.ShowHoverWithoutShift
-                if (this.popover?.Visible && !showPopover) return
-                this.UpdateHoverInfo(showPopover)
-            }
         })
 
         this.Node.addEventListener("mousemove", ev => {

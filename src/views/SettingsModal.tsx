@@ -70,6 +70,13 @@ const listeners: { key: string, listener: (v: any) => void }[] = []
 export function onSettingChange<K extends SettingsKey>(key: K, listener: (v: AllSettings[K]) => void) {
     listeners.push({ key, listener })
 }
+export function removeOnSettingChange<K extends SettingsKey>(key: K, listener: (v: AllSettings[K]) => void) {
+    for (let i = listeners.length - 1; i >= 0; i--) {
+        if (listeners[i].key === key && listeners[i].listener === listener) {
+            listeners.splice(i, 1)
+        }
+    }
+}
 
 export function getSetting<K extends keyof TemporarySettings>(key: K): TemporarySettings[K];
 export function getSetting<K extends keyof LocalSettings>(key: K): Promise<LocalSettings[K]>;

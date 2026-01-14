@@ -1,9 +1,8 @@
 import IconButton from "../../components/basic/IconButton"
-import { loadPage, Page } from "../../framework/Page"
+import { PageComponent } from "../../framework/PageComponent"
 import { playAudio } from "../../utils/Audio"
 import { mutatePendingCard } from "../../utils/MiningUtil"
 import { lookupFuri, urlToArrayBuffer } from "../../utils/util"
-import Layout from "../Layout"
 
 
 interface SsEntry {
@@ -17,11 +16,8 @@ interface SsEntry {
     audioBytes?: Promise<ArrayBuffer | undefined>
 }
 
-document.addEventListener("DOMContentLoaded", () => loadPage(SentenceSearchPage))
-
-export default class SentenceSearchPage extends Page {
+export default class SentenceSearchPage extends PageComponent {
     Id = "ss-page"
-    override Layout = Layout
     override Title = "Mining Helper - Sentences"
 
     SearchInput = <input autocomplete="off" id="search" placeholder="Search..." /> as HTMLInputElement

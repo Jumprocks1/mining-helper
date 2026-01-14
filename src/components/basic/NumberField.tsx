@@ -93,6 +93,7 @@ export default (props: Props) => {
         }
     }
     res.addEventListener("mouseenter", () => document.addEventListener("keydown", onKeyDown, true))
+    // if a modal is closed while hovering a number field, this will leak really badly
     res.addEventListener("mouseleave", () => {
         document.removeEventListener("keydown", onKeyDown, true)
         commitPending()

@@ -1,17 +1,12 @@
 import { Children } from "../../framework/createElement"
-import { loadPage, Page } from "../../framework/Page"
+import { PageComponent } from "../../framework/PageComponent"
 import { saveToAnkiAndRemove, updateInAnkiAndRemove } from "../../utils/AnkiUtil"
 import { CardData, oldCreateElement, furiToReading } from "../../utils/util"
-import Layout from "../Layout"
 
-
-document.addEventListener("DOMContentLoaded", () => loadPage(HomePage))
-
-export default class HomePage extends Page {
+export default class HomePage extends PageComponent {
     Id = "home-page"
     override Title = "Mining Helper - Home"
     override Node: Children
-    override Layout = Layout
 
     constructor() {
         super()

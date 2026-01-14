@@ -1,0 +1,1 @@
+These files shouldn't import anything outside the `framework/` folder
