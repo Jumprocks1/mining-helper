@@ -151,7 +151,9 @@
         }
         .row-container {
             display: grid;
-            grid-template-columns: repeat(5, auto);
+            // 1fr at the end means the last column will grow after all columns have hit their desired size
+            // without the 1fr, the button columns will also grow, which looks bad
+            grid-template-columns: repeat(4, auto) 1fr;
             column-gap: $s1;
             align-items: center;
             .vocab-row {

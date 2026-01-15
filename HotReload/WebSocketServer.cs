@@ -8,7 +8,7 @@ namespace HotReload;
 public class WebSocketServer : IDisposable
 {
     readonly HttpListener listener = new();
-    public const int Port = 413;
+    public const int Port = 4013;
     static readonly string Address = $"http://127.0.0.1:{Port}/";
     public WebSocketServer()
     {

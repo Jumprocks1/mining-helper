@@ -72,7 +72,7 @@ export class HotReloadWebSocket {
     }
 
     Uri: string;
-    constructor(uri: string = "ws://127.0.0.1:413/") {
+    constructor(uri: string = "ws://127.0.0.1:4013/") {
         this.Uri = uri
     }
 }
