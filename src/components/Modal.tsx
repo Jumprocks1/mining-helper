@@ -1,6 +1,7 @@
 import IconButton from "./basic/IconButton";
 import { Component } from "../framework/Component";
 import Loader, { DOMable } from "./Loader";
+import { getPortal } from "./basic/JsPopover";
 
 interface Props {
     header: any
@@ -119,7 +120,7 @@ export class Modal extends Component {
         hookListener()
         this.IsOpen = true
         OpenModals.push(this)
-        document.body.append(this.Node)
+        getPortal().append(this.Node)
     }
 
     Minimize() {

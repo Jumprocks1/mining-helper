@@ -61,3 +61,10 @@ $ignored: $brightYellow;
     -webkit-font-feature-settings: 'liga';
     -webkit-font-smoothing: antialiased;
 }
+
+// values from
+// https://m3.material.io/styles/elevation/tokens
+// Probably should have a better source, but couldn't find
+@mixin shadow2 {
+    box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 3px -2px, rgba(0, 0, 0, 0.14) 0px 3px 4px 0px, rgba(0, 0, 0, 0.12) 0px 1px 8px 0px
+}

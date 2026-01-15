@@ -18,6 +18,7 @@ import Loader from "./Loader"
 import LoadingButton from "./LoadingButton"
 import { Modal } from "./Modal"
 import { getSetting } from "../views/SettingsModal"
+import DropdownMenu from "./DropdownMenu"
 
 interface Props {
     word: string
@@ -169,7 +170,11 @@ export default (props: Props) => {
 
         if (card.meaning) {
             meaningCE.innerText = card.meaning
-            add("Meaning", meaningCE)
+            add(<>Meaning
+                {vocab && vocab[3].length > 1 &&
+                    <DropdownMenu options={vocab[3].map((e, i) => ({ meaning: e, node: `${i + 1}. ${e}` }))}
+                        onSelect={e => meaningCE.innerText = card.meaning = e.meaning} />}
+            </>, meaningCE)
         } else {
             add("Meaning", <a target="_blank" rel="noopener noreferrer" href={jpdbEntryUrl(kanji)}>N/A</a>)
         }

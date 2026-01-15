@@ -218,3 +218,32 @@ div#result {
         }
     }
 }
+
+#popover-portal {
+    z-index: 100;
+    .popover {
+        position: fixed;
+        left: anchor(left);
+        top: anchor(bottom);
+
+        &.menu {
+            @include variables.shadow2;
+        }
+
+        // copied from .audio-entry-option
+        .menu-option {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            padding: variables.$s1 variables.$s1 * 2;
+            max-width: 30em;
+            // couldn't get *:hover to work here, not sure why. !important didn't fix it
+            &:hover:not(:has(button:hover)) {
+                background: #FFFFFF20;
+            }
+            &:not(:last-child) {
+                border-bottom: 1px solid #FFFFFF80;
+            }
+        }
+    }
+}
