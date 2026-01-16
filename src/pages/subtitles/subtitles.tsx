@@ -39,7 +39,7 @@ export default class SubtitlesPage extends PageComponent {
         this.MpvWebSocket.Connection?.close()
     }
 
-    OffsetChanged(offset: number) {
+    OffsetChanged = (offset: number) => {
         const subs = this.LoadedSubtitles?.subtitles
         if (subs) {
             if (subs.offset ?? 0 !== offset) {
@@ -219,7 +219,7 @@ export default class SubtitlesPage extends PageComponent {
         this.LoadedSubtitles?.UpdateHighlighting(this.CurrentTime)
     }
 
-    async ReloadSubs() {
+    ReloadSubs = async () => {
         const subs = this.LoadedSubtitles?.subtitles
         if (subs) {
             subs.jpdbParse = undefined // these get reloaded from cache if possible

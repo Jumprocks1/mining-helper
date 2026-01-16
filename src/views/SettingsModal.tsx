@@ -139,7 +139,7 @@ export default () => {
             <button onclick={RegexReplacements}>Regex replacements</button>
             <div className="field">
                 <label>Subtitle Offset</label>
-                <NumberField showPlus units="ms" id="offset-field"
+                <NumberField showPlus units="ms" id="offset-field" baseChange={100}
                     defaultValue={getSetting("offset")} onChange={v => setSetting("offset", v)} />
             </div>
             {await stringField("skipChapterRegex", "Ignore Chapters (Regex)")}
