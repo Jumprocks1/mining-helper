@@ -84,6 +84,8 @@ export default class SubtitlesPage extends PageComponent {
         } else if (key === " ") {
             this.MpvWebSocket.SendIfOpen("ipc:cycle pause");
             ev.preventDefault()
+        } else if (key === ",") {
+            SettingsModal()
         } else if (key === "m") {
             if (this.MiningModal) {
                 this.MiningModal.Close()

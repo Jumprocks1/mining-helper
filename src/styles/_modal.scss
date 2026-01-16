@@ -16,9 +16,9 @@
     &.minimized {
         padding: 0;
         .inner-modal {
-            min-width: unset;
+            min-width: 100%;
         }
-        // only visible under scrollbar
+        // only visible under scrollbar usually
         background: variables.$background1;
     }
     .inner-modal {
