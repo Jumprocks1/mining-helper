@@ -3,7 +3,7 @@ import { LayoutType } from "../framework/PageComponent"
 
 export default (({ children }) => [
     MhHeader(),
-    <div id="body-container">
+    <main id="body-container">
         {children}
-    </div>
+    </main>
 ]) satisfies LayoutType

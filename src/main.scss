@@ -221,6 +221,9 @@ div#result {
 
 #popover-portal {
     z-index: 100;
+    position: fixed;
+    left: 0;
+    top: 0;
     .popover {
         position: fixed;
         left: anchor(left);

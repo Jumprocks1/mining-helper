@@ -8,7 +8,7 @@ const prod = process.argv.includes('--prod');
 /** @type {import('esbuild').BuildOptions} */
 const config = {
     entryPoints: [
-        "./src/pages/spa.ts",
+        "./src/pages/spa.tsx",
         "./src/jpdb-content.tsx"
     ],
     bundle: true,

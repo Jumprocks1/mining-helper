@@ -123,6 +123,9 @@ export function BindSpaRouter(props: Props) {
         }
         recalculateRoute()
         onRouteChangeListeners.push(recalculateRoute)
+        window.addEventListener("popstate", () => {
+            for (const e of onRouteChangeListeners) e()
+        })
     }
     if (document.readyState !== "loading") init()
     else document.addEventListener("DOMContentLoaded", init)

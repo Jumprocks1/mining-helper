@@ -5,8 +5,12 @@ import pages from "./pages";
 import { debounce } from "../utils/util"
 import { getSetting, onSettingChange } from "../views/SettingsModal"
 
+// we could target body directly, but that has issues since we clear the body on each page load
+// if we store things like the modal portal in the body, they would get removed on navigation
+const pageBody = <div className="page-container" />
+
 BindSpaRouter({
-    target: () => document.body,
+    target: () => pageBody,
     pages,
     routePreference: "html",
     fallbackPage: HomePage,
@@ -37,6 +41,7 @@ function updateCustomCss(css: string) {
 
 // could move this elsewhere, but seems fine for now
 async function onPageLoad() {
+    document.body.append(pageBody)
     onSettingChange("customCss", e => {
         debounce("customCssChanged", 500, () => updateCustomCss(e))
     })

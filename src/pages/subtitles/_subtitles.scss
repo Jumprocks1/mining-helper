@@ -5,12 +5,14 @@
     height: 100%;
     display: flex;
     flex-direction: column;
-    #outer-body-container {
+    #body-container {
         flex: 1 1 0;
         display: flex;
         flex-direction: column;
+        padding: 0;
         position: relative;
-        #body-container {
+        #inner-body-container {
+            padding: 16px;
             flex: 1 1 0;
             @include vertical-scroll;
         }
@@ -140,45 +142,47 @@
         }
     }
 
-    #recommended-mining-modal {
-        .filters {
-            display: flex;
-            flex-wrap: wrap;
-            gap: $s1 * 3;
-            label:has(#show-ignored:checked, #show-kana:checked) {
-                color: $ignored;
-            }
+}
+
+// not inside page id check since it lives in the portal (outside of the page)
+#recommended-mining-modal {
+    .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: $s1 * 3;
+        label:has(#show-ignored:checked, #show-kana:checked) {
+            color: $ignored;
         }
-        .row-container {
-            display: grid;
-            // 1fr at the end means the last column will grow after all columns have hit their desired size
-            // without the 1fr, the button columns will also grow, which looks bad
-            grid-template-columns: repeat(4, auto) 1fr;
-            column-gap: $s1;
-            align-items: center;
-            .vocab-row {
-                display: contents; // I kinda hate this, but table wasn't great either
-                .up-down-buttons {
-                    margin-right: -$s1; // remove gap
-                    position: relative;
-                    .usage-count {
-                        font-size: 0.6em;
-                        position: absolute;
-                        top: 50%;
-                        left: 50%;
-                        transform: translate(-50%, -50%);
-                        pointer-events: none;
-                    }
+    }
+    .row-container {
+        display: grid;
+        // 1fr at the end means the last column will grow after all columns have hit their desired size
+        // without the 1fr, the button columns will also grow, which looks bad
+        grid-template-columns: repeat(4, auto) 1fr;
+        column-gap: $s1;
+        align-items: center;
+        .vocab-row {
+            display: contents; // I kinda hate this, but table wasn't great either
+            .up-down-buttons {
+                margin-right: -$s1; // remove gap
+                position: relative;
+                .usage-count {
+                    font-size: 0.6em;
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    pointer-events: none;
                 }
-                &.ignored, &.kana {
-                    .frequency {
-                        color: $ignored;
-                    }
+            }
+            &.ignored, &.kana {
+                .frequency {
+                    color: $ignored;
                 }
-                &.known {
-                    .frequency {
-                        color: $known;
-                    }
+            }
+            &.known {
+                .frequency {
+                    color: $known;
                 }
             }
         }

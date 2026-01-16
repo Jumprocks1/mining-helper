@@ -11,13 +11,12 @@ import { applyReplacementsTo, getReplacements } from "../../views/RegexReplaceme
 import { JpdbParseSubtitles } from "../../jpdb/JpdbParseText"
 import RecommendedMiningModal from "./RecommendedMiningModal"
 import { getCharacterIndex } from "../../utils/CharacterHighlighter"
-import { EmptyLayout, PageComponent } from "../../framework/PageComponent"
+import { PageComponent } from "../../framework/PageComponent"
 import { Children } from "../../framework/createElement"
 
 export default class SubtitlesPage extends PageComponent {
     Id = "subs-page"
     Node: Children
-    override Layout = EmptyLayout // we use an extra body container, so can't use normal layout
     override Title = "Mining Helper - Subtitles"
 
     CurrentFilename?: string
@@ -25,7 +24,7 @@ export default class SubtitlesPage extends PageComponent {
     LoadedSubtitles: SubtitleViewer | undefined
     readonly MpvWebSocket: MpvWebSocket = new MpvWebSocket()
     SubtitleContainer = <div id="subtitle-container" />
-    BodyContainer = <div id="body-container">
+    InnerBodyContainer = <div id="inner-body-container">
         {this.SubtitleContainer}
     </div>
     TimeElement = <span id="current-time">00:00</span>
@@ -163,15 +162,12 @@ export default class SubtitlesPage extends PageComponent {
             ev.preventDefault();
         }} />
         this.Node = <>
-            {this.Header}
-            <div id="outer-body-container">
-                <div id="status-info">
-                    <IconButton icon="settings" onClick={() => SettingsModal()} />
-                    {this.TimeElement}
-                    {connectionDot}
-                </div>
-                {this.BodyContainer}
+            <div id="status-info">
+                <IconButton icon="settings" onClick={() => SettingsModal()} />
+                {this.TimeElement}
+                {connectionDot}
             </div>
+            {this.InnerBodyContainer}
         </>
         this.MpvWebSocket.onMessage = (e) => this.HandleWebSocketData(this.MpvWebSocket, e.data)
         this.MpvWebSocket.onConnecting = () => {
@@ -192,10 +188,10 @@ export default class SubtitlesPage extends PageComponent {
 
         document.addEventListener("keydown", this.DocumentKeydown)
 
-        this.BodyContainer.addEventListener("dragover", ev => {
+        this.InnerBodyContainer.addEventListener("dragover", ev => {
             ev.preventDefault()
         })
-        this.BodyContainer.addEventListener("drop", ev => {
+        this.InnerBodyContainer.addEventListener("drop", ev => {
             ev.preventDefault()
             const files = ev.dataTransfer?.files
             if (!files) return

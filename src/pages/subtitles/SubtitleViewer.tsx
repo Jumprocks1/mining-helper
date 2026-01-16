@@ -24,6 +24,8 @@ export default class SubtitleViewer {
     hoverRectangle: HTMLElement = <div className="hover-rectangle" />
     popover: Popover | undefined
 
+    Page: SubtitlesPage
+
     // use to block scrolling when selecting
     MouseDown = false
 
@@ -39,6 +41,7 @@ export default class SubtitleViewer {
     }
 
     constructor(subtitles: Subtitles, page: SubtitlesPage) {
+        this.Page = page
         this.Node = <div className="subtitle-viewer">
             {this.pointer}
             <div className="inner"></div>
@@ -227,8 +230,8 @@ export default class SubtitleViewer {
     JumpTo(entry: SubtitleEntry | undefined) {
         if (!entry) return
         const node = entry.node
-        const scroll = document.getElementById("body-container")
-        if (!scroll || !node) return
+        const scroll = this.Page.InnerBodyContainer
+        if (!node) return
         const computedStyle = getComputedStyle(scroll);
         const paddingTop = parseFloat(computedStyle.paddingTop);
         const center = node.offsetTop + node.offsetHeight / 2 + paddingTop;
@@ -248,8 +251,7 @@ export default class SubtitleViewer {
 
 
     UpdateHighlighting(currentTime: number) {
-        const scroll = document.getElementById("body-container")
-        if (!scroll) return
+        const scroll = this.Page.InnerBodyContainer
         for (let i = 0; i < this.subtitles.processedEntries.length; i++) {
             const entry = this.subtitles.processedEntries[i]
             const node = entry.node
