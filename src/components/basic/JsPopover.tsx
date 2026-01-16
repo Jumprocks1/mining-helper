@@ -12,7 +12,10 @@ let portal: HTMLElement | undefined
 let nextId = 0 // used for CSS anchor names
 
 export function getPortal() {
-    if (!portal) document.body.append(portal = <div id="popover-portal" />)
+    portal ??= <div id="popover-portal" />
+    // TODO this gets deleted on page navigations (which are rare within a modal)
+    // causes some weird issues, especially if you open a different modal since the old modal doesn't close on page navigation
+    if (!portal.isConnected) document.body.append(portal)
     return portal
 }
 
