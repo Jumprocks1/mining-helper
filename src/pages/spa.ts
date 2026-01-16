@@ -5,10 +5,6 @@ import pages from "./pages";
 import { debounce } from "../utils/util"
 import { getSetting, onSettingChange } from "../views/SettingsModal"
 
-// TODO still need
-//   good links (without page reloads)
-//   set up disposes
-//   bind to page route change
 BindSpaRouter({
     target: () => document.body,
     pages,
@@ -16,7 +12,8 @@ BindSpaRouter({
     fallbackPage: HomePage,
     fallbackTitle: "Mining Helper",
     fallbackLayout: MainLayout,
-    onInit: onPageLoad
+    onInit: onPageLoad,
+    spaLinks: true
 })
 
 

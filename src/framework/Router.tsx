@@ -23,6 +23,7 @@ interface Props {
     fallbackTitle: string
     fallbackLayout?: LayoutType
     routePreference: "html" | "no-ext"
+    spaLinks: boolean
 }
 
 function getRouteFromLocation() {
@@ -60,17 +61,20 @@ export function BindSpaRouter(props: Props) {
     globalRouterProps = props
     function init() {
         const target = props.target()
-        target.addEventListener("click", ev => {
-            // not sure if this is perfect, will monitor
-            const target = ev.target as HTMLElement
-            if (target && target.tagName === "A") {
-                const anchor = target as HTMLAnchorElement
-                if (anchor.origin === location.origin && anchor.pathname) {
-                    ev.preventDefault()
-                    navigateTo(anchor.pathname)
+        if (props.spaLinks) {
+            target.addEventListener("click", ev => {
+                if (ev.ctrlKey) return // allow browser to handle ctrl click (new tab)
+                // not sure if this is perfect, will monitor
+                const target = ev.target as HTMLElement
+                if (target && target.tagName === "A") {
+                    const anchor = target as HTMLAnchorElement
+                    if (anchor.origin === location.origin && anchor.pathname) {
+                        ev.preventDefault()
+                        navigateTo(anchor.pathname)
+                    }
                 }
-            }
-        })
+            })
+        }
         props.onInit?.()
 
         let currentPage: PageComponent | undefined
