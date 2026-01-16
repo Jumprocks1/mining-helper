@@ -83,6 +83,9 @@ html {
 }
 body {
     font-family: variables.$fontFamily;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
 }
 *, *::after, *::before {
     box-sizing: inherit;

@@ -1,6 +1,5 @@
 import { parseSrt, Subtitles, formatTimestamp, SubtitleEntryWithCharacterOffset, SubtitleEntry, OffsetCache } from "../../utils/srt"
 import MpvWebSocket from "../../utils/MpvWebSocket"
-import MhHeader from "../../components/MhHeader"
 import SubtitleViewer from "./SubtitleViewer"
 import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
 import MiningModal from "../../components/MiningModal"
@@ -135,8 +134,14 @@ export default class SubtitlesPage extends PageComponent {
                     const modal = await RecommendedMiningModal(subs, () => {
                         const main = this.LoadedSubtitles?.Node
                         if (!main) return
+                        // couldn't really think of a nice way to grab this without id
+                        // we could store it as a field in the layout, but we don't even have access to a layout instance here
+                        // even if we did, we can't trust that the layout would be an "instance"
+                        //   (since it could be a simple render function instance)
+                        const header = document.getElementById("mh-header")
+                        if (!header) return
                         const mainRect = main.getBoundingClientRect()
-                        const headerRect = this.Header.getBoundingClientRect()
+                        const headerRect = header.getBoundingClientRect()
                         const full = document.body.getBoundingClientRect()
                         const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
                         return rect
@@ -146,8 +151,6 @@ export default class SubtitlesPage extends PageComponent {
             }
         }
     }
-
-    Header = MhHeader()
 
     constructor() {
         super()

@@ -3,10 +3,12 @@ import "./createElement" // sets window.createElement
 import { appendChild, type Children } from "./createElement"
 import { LayoutType, type PageComponent } from "./PageComponent"
 
+type PageClass = new () => PageComponent
+
 export interface PageDefinition {
     path: string
     pathMatch?: (path: string) => boolean
-    component: new () => PageComponent
+    component: PageClass
 }
 
 export type Pages = {
@@ -19,7 +21,7 @@ interface Props {
     target: () => HTMLElement
     pages: Pages
     onInit?: () => void
-    fallbackPage: new () => PageComponent
+    fallbackPage: PageClass
     fallbackTitle: string
     fallbackLayout?: LayoutType
     routePreference: "html" | "no-ext"
@@ -92,14 +94,14 @@ export function BindSpaRouter(props: Props) {
 
         function recalculateRoute() {
             const route = getRouteFromLocation()
-            const pageComponent = getPageFromRoute(route)
+            const pageClass = getPageFromRoute(route)
             if (currentPage) {
                 // potentially need something like page.RouteUpdated() here
-                if (Object.getPrototypeOf(currentPage) === pageComponent.prototype) return
+                if (Object.getPrototypeOf(currentPage) === pageClass.prototype) return
                 currentPage.Dispose()
             }
 
-            const instance = new pageComponent()
+            const instance = new pageClass()
             currentPage = instance
 
             document.title = instance.Title ?? props.fallbackTitle
