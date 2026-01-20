@@ -2,8 +2,8 @@ import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 import { userErrorMessage } from "../utils/UserError";
 import { Component } from "../framework/Component"
 
-interface Props extends BaseComponentProps {
-    onClick: () => Promise<unknown> | void,
+export interface LoadingButtonProps extends BaseComponentProps {
+    onClick?: (ev: PointerEvent) => Promise<unknown> | void,
     // Will show as loading initially until loading promise finishes
     loading?: Promise<any>
 }
@@ -33,7 +33,7 @@ export default class LoadingButton extends Component {
     get Disabled() { return this._disabled }
 
     waitFor(promise: Promise<any> | void, canRetry: boolean) {
-        if (promise) {
+        if (promise && "then" in promise) {
             this.Loading = true;
             this.Node.classList.add("loading")
             this.Node.classList.remove("errored")
@@ -50,15 +50,16 @@ export default class LoadingButton extends Component {
         }
     }
 
-    constructor(props: Props) {
+    constructor(props: LoadingButtonProps) {
         super()
 
         this.Node = <button />
         applyBaseComponentProps(this.Node, props)
-
-        this.Node.addEventListener("click", () => {
+        this.Node.addEventListener("click", ev => {
             if (this.Loading || this.Disabled) return
-            this.waitFor(props.onClick(), true)
+            if (props.onClick) {
+                this.waitFor(props.onClick(ev), true)
+            }
         })
         this.waitFor(props.loading, false)
     }

@@ -10,12 +10,14 @@ export default ({ load }: { load: Loadable }) => {
         try {
             load = load()
         } catch (e: unknown) {
+            console.error(e)
             node.dataset.error = userErrorMessage(e)
             return node
         }
     }
     if (!("then" in load)) return load
     load.then(e => replaceWith(node, e)).catch(e => {
+        console.error(e)
         node.dataset.error = userErrorMessage(e)
     })
     return node
