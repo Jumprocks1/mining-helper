@@ -1,14 +1,15 @@
 import IconButton from "./basic/IconButton";
 import { Component } from "../framework/Component";
-import Loader, { DOMable } from "./Loader";
+import Loader from "./Loader";
 import { getPortal } from "./basic/JsPopover";
+import { appendChild, Children } from "../framework/createElement";
 
 interface Props {
     header: any
     footer?: any
     onClose: () => void
     id?: string
-    body: DOMable | Promise<DOMable> | ((body: HTMLElement) => Promise<DOMable>)
+    body: Children | Promise<Children> | ((body: HTMLElement) => Promise<Children>)
     getMinimizeTarget?: () => DOMRect | undefined // if supplied, allow minimize
 }
 
@@ -48,18 +49,16 @@ export class Modal extends Component {
 
         const body = <div className="body"></div>
 
-        let innerBody: DOMable
-        if (typeof props.body === "string" || (typeof props.body !== "function" && !("then" in props.body))) {
-            innerBody = props.body
+        let innerBody = props.body
+        if (typeof innerBody === "function")
+            innerBody = innerBody(body)
+
+        if (typeof innerBody === "object" && "then" in innerBody) {
+            innerBody = <Loader load={innerBody} />
         } else {
-            if (typeof props.body === "function")
-                props.body = props.body(body)
-            innerBody = <Loader load={props.body} />
+            innerBody = innerBody
         }
-        if (Array.isArray(innerBody))
-            body.append(...innerBody)
-        else
-            body.append(innerBody)
+        appendChild(body, innerBody)
 
         if (props.getMinimizeTarget) {
             this.getMinimizeTarget = props.getMinimizeTarget
