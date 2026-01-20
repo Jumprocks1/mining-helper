@@ -6,8 +6,9 @@ import { CardData, furiToReading } from "./util"
 
 const anki = new AnkiConnect()
 
+// remove means remove from local storage, which we hardly use anymore
 export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal") {
-    const [fields, audio] = activeFields(card);
+    const [fields, audio, picture] = activeFields(card);
     const tags = ["ext-mined"]
     if (source) tags.push(source)
     const noteId = await anki.call("addNote", {
@@ -16,7 +17,8 @@ export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal
             modelName: anki.targetModel,
             fields,
             audio,
-            tags
+            tags,
+            picture
         }
     })
     await addAnkiWord(card.kanji) // could probably skip awaiting this
@@ -59,7 +61,7 @@ function activeFields(card: CardData) {
         if (bytes && !localFile) throw new UserError("Missing audio file name")
         if (localFile && bytes) {
             audio.push({
-                // @ts-ignore
+                // @ts-expect-error toBase64 is pretty new
                 data: new Uint8Array(bytes).toBase64(),
                 filename: localFile,
                 fields: [field]
@@ -69,7 +71,17 @@ function activeFields(card: CardData) {
     }
     tryAddAudio("Word Audio", card.audioLocalFile, card.audioBytes)
     tryAddAudio("Sentence Audio", card.sentenceAudioLocalFile, card.sentenceAudioBytes)
-    return [fields, audio] as const
+    const picture: MediaAdd[] = []
+    if (card.image) {
+        const filename = card.kanji + "_" + card.vid + "_image.jpg"
+        picture.push({
+            // @ts-expect-error toBase64 is pretty new
+            data: card.image.toBase64(),
+            filename: filename,
+            fields: ["Image"]
+        })
+    }
+    return [fields, audio, picture] as const
 }
 
 async function updateInAnki(card: CardData) {

@@ -176,6 +176,8 @@ export interface CardData {
     enSentence?: string
     audioBytes?: ArrayBuffer
     sentenceAudioBytes?: ArrayBuffer
+    image?: Uint8Array<ArrayBuffer>
+    imageTime?: number;
 
     sentenceIndex?: string
     meaningIndex?: string

@@ -116,6 +116,12 @@ export default (props: Props) => {
 
             if (sourceFile) card.source = sourceFile + "/t/" + (startTime + startOffset) / 1000
 
+            if (card.imageTime && mpv) {
+                const image = await mpv.RequestIfOpen(`image:480:${card.imageTime}`)
+                if (typeof image !== "string")
+                    card.image = image
+            }
+
             await saveToAnkiAndRemove(card, "mining-modal")
             modal.Close()
         }
@@ -289,7 +295,43 @@ export default (props: Props) => {
         }
         loadMpvAudio()
 
+        async function loadImages() {
+            if (!mpv) return
+            imageField.querySelectorAll(".image-container").forEach(e => e.remove())
+            const container = <div className="image-container" />
+            let placeholders: HTMLElement[] = []
+            for (let i = 0; i < 3; i++) {
+                const placeholder = <div className="loading-image" />
+                placeholders.push(placeholder)
+                container.append(placeholder)
+            }
+            imageField.append(container)
+            let i = 0;
+            async function addOption(t: number) {
+                if (!mpv) return
+                // parameter is vertical resolution
+                const image = await mpv.RequestIfOpen(`image:150:${t}`)
+                if (typeof image === "string") return
+                const url = URL.createObjectURL(new Blob([image]))
+                modal.RegisterOnClose(() => URL.revokeObjectURL(url))
+                const img = <img src={url} onclick={() => {
+                    container.querySelectorAll("img").forEach(e => e.classList.remove("selected"))
+                    img.classList.add("selected")
+                    card.imageTime = t
+                }} />
+                placeholders[i++].replaceWith(img)
+            }
+            await addOption(startTime + startOffset)
+            await addOption(Math.round((startTime + startOffset + endTime + endOffset) / 2))
+            await addOption(endTime + endOffset)
+        }
+        const imageField = <div className="field image-field">
+            <div className="label">Image <IconButton icon="add" onClick={loadImages} /></div>
+        </div>
+        labeled.push(imageField)
+
         // I don't like this
+        // only works because we know the modal will be in a loading state already
         modal.Node.querySelector(".inner-modal")!.append(<div className="footer">
             <LoadingButton onClick={save} loading={mpvPromise}>Save</LoadingButton>
         </div>)

@@ -1,3 +1,5 @@
+@use "../styles/loader";
+@use "sass:color";
 @use "../styles/variables" as *;
 
 #mining-modal {
@@ -61,6 +63,46 @@
         }
         &:not(:last-child) {
             border-bottom: 1px solid #FFFFFF80;
+        }
+    }
+
+    .image-field {
+        .image-container {
+            display: flex;
+            align-items: center;
+            gap: $s1;
+            .loading-image {
+                // unfortunately I don't think we have a way to predict the aspect ratio
+                // we could query it, but basically all modern anime are 16:9 anyways
+                // this won't cause many problems, just minor layout shift
+                height: 6.3em;
+                width: 11.2em;
+                border: $dashedBorder0;
+
+                position: relative;
+                cursor: progress;
+                &::after {
+                    content: "";
+                    height: 2em;
+                    inset: 0;
+                    margin: auto;
+                    position: absolute;
+                    @include loader.LoadingCircle
+                }
+            }
+            img {
+                height: 6.3em;
+                width: auto;
+                &.selected {
+                    outline: 3px solid $brightGreen;
+                }
+                &:not(.selected) {
+                    cursor: pointer;
+                }
+                &:hover:not(.selected) {
+                    outline: 3px solid color.change($brightGreen, $alpha: 0.5);
+                }
+            }
         }
     }
 }
