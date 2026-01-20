@@ -41,6 +41,16 @@ export class Modal extends Component {
 
     getMinimizeTarget?: Props["getMinimizeTarget"]
 
+    OnCloseHandlers?: (() => void)[]
+    RegisterOnClose(onClose: () => void) {
+        if (!this.IsOpen) {
+            onClose() // invoke immediately, important for things like disposing memory
+            return
+        }
+        this.OnCloseHandlers ??= []
+        this.OnCloseHandlers.push(onClose)
+    }
+
     constructor(props: Props) {
         super()
         this.OnClose = props.onClose
@@ -99,10 +109,15 @@ export class Modal extends Component {
     }
 
     // bit awkward but should be fine
+    // main reason is so sub-classes can have extra return values in OnClose
     _closeNoOnClose() {
         if (!this.IsOpen) return
         this.IsOpen = false;
         this.Node.remove()
+        if (this.OnCloseHandlers) {
+            this.OnCloseHandlers.forEach(e => e())
+            this.OnCloseHandlers = undefined
+        }
     }
     Close() {
         if (!this.IsOpen) return
