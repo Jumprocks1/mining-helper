@@ -259,16 +259,16 @@ export function cleanSource(source: string | undefined) {
     // TODO this should be configurable
     const replacements: ReplacementEntry[] = [
         {
-            match: /\.1080p\.BluRay.+$/g,
-            replace: ""
-        },
-        {
             match: /\.mkv$/g,
             replace: ""
         },
         {
             match: /\./g,
             replace: " "
+        },
+        {
+            match: / 1080p (BluRay|NF) .+$/g,
+            replace: ""
         },
         {
             match: /\[.+?\]/g,
