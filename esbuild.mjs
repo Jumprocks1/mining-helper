@@ -3,6 +3,7 @@ import * as esbuild from 'esbuild'
 
 // process.env.NODE_ENV might also work?
 const prod = process.argv.includes('--prod');
+const hotReloadCss = process.argv.includes('--hot-reload-css');
 
 
 /** @type {import('esbuild').BuildOptions} */
@@ -16,6 +17,9 @@ const config = {
     sourcemap: !prod ? "inline" : false,
     outdir: "./dist/js",
     logLevel: "info",
+    define: {
+        HOT_RELOAD_CSS: String(hotReloadCss)
+    }
 }
 
 if (prod) {

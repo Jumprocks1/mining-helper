@@ -1,9 +1,9 @@
 let ran = false
 
-declare var process: { env: { NODE_ENV: string } }
+declare var HOT_RELOAD_CSS: boolean | undefined
 
 export default () => {
-    if (process.env.NODE_ENV !== "development" || ran) return
+    if (!HOT_RELOAD_CSS || ran) return
     ran = true
     const webSocket = new HotReloadWebSocket()
     webSocket.onMessage = e => {
@@ -26,7 +26,7 @@ export default () => {
     webSocket.Connect()
 }
 
-export class HotReloadWebSocket {
+class HotReloadWebSocket {
     Connection: WebSocket | undefined
 
     onMessage?: (e: MessageEvent<any>) => void
@@ -53,7 +53,6 @@ export class HotReloadWebSocket {
             this.Connection.close();
         }
         this._openPromise ??= new Promise<void>(e => this._openPromiseResolve = e)
-        console.log("Connecting WebSocket")
         this.Connection = new WebSocket(this.Uri);
 
         this.Connection.onopen = () => {
@@ -61,6 +60,7 @@ export class HotReloadWebSocket {
             this._openPromiseResolve = undefined
             if (this.Connection) this.Connection.onmessage = e => this.onMessage?.(e)
             this.onOpen?.();
+            console.log("🟢 Hot reload CSS connected")
         };
         this.Connection.onclose = () => {
             this._openPromiseResolve = undefined

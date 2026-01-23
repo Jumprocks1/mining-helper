@@ -27,7 +27,7 @@ export default class MpvWebSocket {
             this.Connection.close();
         }
         this._openPromise ??= new Promise<void>(e => this._openPromiseResolve = e)
-        console.log("Connecting WebSocket")
+        console.log("🟡 Connecting mpv WebSocket")
         const apiKey = await getSetting("serverApiKey")
         const uri = this.Uri ?? `ws://${await getSetting("serverAddress")}`
         this.Connection = new WebSocket(uri, apiKey ? [apiKey] : undefined);
