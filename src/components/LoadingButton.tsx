@@ -3,7 +3,7 @@ import { userErrorMessage } from "../utils/UserError";
 import { Component } from "../framework/Component"
 
 export interface LoadingButtonProps extends BaseComponentProps {
-    onClick?: (ev: PointerEvent) => Promise<unknown> | void,
+    onClick?: (ev: PointerEvent) => unknown, // can return promise
     // Will show as loading initially until loading promise finishes
     loading?: Promise<any>
 }
@@ -32,12 +32,12 @@ export default class LoadingButton extends Component {
     }
     get Disabled() { return this._disabled }
 
-    waitFor(promise: Promise<any> | void, canRetry: boolean) {
-        if (promise && "then" in promise) {
+    waitFor(maybePromise: unknown, canRetry: boolean) {
+        if (maybePromise instanceof Promise) {
             this.Loading = true;
             this.Node.classList.add("loading")
             this.Node.classList.remove("errored")
-            promise.catch(error => {
+            maybePromise.catch(error => {
                 console.error({ message: "error in promise", error })
                 const message = userErrorMessage(error)
                 this.Node.classList.add("errored")
