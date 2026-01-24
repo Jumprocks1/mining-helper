@@ -196,19 +196,34 @@ export default class SubtitlesPage extends PageComponent {
         })
         this.InnerBodyContainer.addEventListener("drop", ev => {
             ev.preventDefault()
-            const files = ev.dataTransfer?.files
-            if (!files) return
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i]
-                if (file.name.endsWith(".srt")) {
-                    const reader = new FileReader()
-                    reader.onload = async e => {
-                        const target = e.target
-                        if (target && typeof target.result === "string") {
-                            await this.LoadSubtitles(await parseSrt(target.result))
+            const dt = ev.dataTransfer
+            if (!dt) return
+
+            const files = dt.files
+            if (files && files.length > 0) {
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i]
+                    if (file.name.endsWith(".srt")) {
+                        const reader = new FileReader()
+                        reader.onload = async e => {
+                            const target = e.target
+                            if (target && typeof target.result === "string") {
+                                await this.LoadSubtitles(await parseSrt(target.result))
+                            }
                         }
+                        reader.readAsText(file)
                     }
-                    reader.readAsText(file)
+                }
+            } else {
+                const uri = dt.getData("text/uri-list")
+                if (uri && uri.endsWith(".srt")) {
+                    (async () => {
+                        const resp = await fetch(uri)
+                        if (resp.ok) {
+                            const body = await resp.text()
+                            await this.LoadSubtitles(await parseSrt(body))
+                        }
+                    })()
                 }
             }
         })
