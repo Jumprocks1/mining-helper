@@ -1,8 +1,8 @@
 import NumberField from "../components/basic/NumberField"
 import Loader from "../components/Loader"
 import { OpenModal } from "../components/Modal"
-import { JpdbCache } from "../jpdb/JpdbParseText"
 import AdvancedSettingsModal from "./AdvancedSettingsModal"
+import { AnkiConnectSettingsFields } from "./Fields"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 
 type Milliseconds = number
@@ -114,6 +114,13 @@ function inputToVolume(input: number) {
 function volumeToInput(volume: number) {
     return Math.round(Math.pow(volume, 1 / 2) * 100)
 }
+export async function stringSettingsField(key: KeysOfType<LocalSettings, string>, label: string, type?: string) {
+    return <div className="field">
+        <label>{label}</label>
+        <input type={type} defaultValue={await getSetting(key)}
+            onchange={e => setSetting(key, (e.target as HTMLInputElement).value)} />
+    </div>
+}
 
 // TODO this modal should be split into extension settings vs subtitle page settings
 export default () => {
@@ -128,12 +135,6 @@ export default () => {
             }} />
         volumeInput.dataset.tooltip = `${inputVolume}%`
 
-        async function stringField(key: KeysOfType<LocalSettings, string>, label: string, type?: string) {
-            return <div className="field">
-                <label>{label}</label>
-                <input type={type} defaultValue={await getSetting(key)} onchange={e => setSetting(key, (e.target as HTMLInputElement).value)} />
-            </div>
-        }
 
         return <>
             <button onclick={RegexReplacements}>Regex replacements</button>
@@ -142,7 +143,7 @@ export default () => {
                 <NumberField showPlus units="ms" id="offset-field" baseChange={100}
                     defaultValue={getSetting("offset")} onChange={v => setSetting("offset", v)} />
             </div>
-            {await stringField("skipChapterRegex", "Ignore Chapters (Regex)")}
+            {await stringSettingsField("skipChapterRegex", "Ignore Chapters (Regex)")}
             <div className="field">
                 <label>Volume</label>
                 {volumeInput}
@@ -158,13 +159,12 @@ export default () => {
                         units="ms" />
                 </div>
             </div>
-            {await stringField("serverAddress", "mpv/Audio Server Address")}
-            {await stringField("serverApiKey", "Server API Key", "password")}
+            {await stringSettingsField("serverAddress", "mpv/Audio Server Address")}
+            {await stringSettingsField("serverApiKey", "Server API Key", "password")}
 
-            {await stringField("jpdbApiKey", "JPDB API Key", "password")}
+            {await stringSettingsField("jpdbApiKey", "JPDB API Key", "password")}
 
-            {await stringField("ankiConnectAddress", "AnkiConnect Address")}
-            {await stringField("ankiConnectApiKey", "AnkiConnect API Key", "password")}
+            {await AnkiConnectSettingsFields()}
 
             <div className="footer-buttons">
                 <button onclick={() => {

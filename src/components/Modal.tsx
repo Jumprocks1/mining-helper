@@ -9,7 +9,7 @@ interface Props {
     footer?: any
     onClose: () => void
     id?: string
-    body: Children | Promise<Children> | ((body: HTMLElement) => Promise<Children>)
+    body: Children | Promise<Children> | ((body: HTMLElement) => (Promise<Children> | Children))
     getMinimizeTarget?: () => DOMRect | undefined // if supplied, allow minimize
 }
 
@@ -59,16 +59,12 @@ export class Modal extends Component {
 
         const body = <div className="body"></div>
 
-        let innerBody = props.body
-        if (typeof innerBody === "function")
-            innerBody = innerBody(body)
-
-        if (typeof innerBody === "object" && "then" in innerBody) {
+        let innerBody = typeof props.body === "function" ? props.body(body) : props.body
+        if (innerBody instanceof Promise) {
             innerBody = <Loader load={innerBody} />
-        } else {
-            innerBody = innerBody
         }
-        appendChild(body, innerBody)
+
+        appendChild(body, innerBody as any)
 
         if (props.getMinimizeTarget) {
             this.getMinimizeTarget = props.getMinimizeTarget

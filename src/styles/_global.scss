@@ -17,6 +17,18 @@ button {
     position: relative;
     color: variables.$fontColor;
 
+    &.link-button {
+        text-decoration: underline;
+        padding: 0;
+        user-select: unset;
+        color: variables.$linkColor;
+
+        // without important, you have to add :not link-button,
+        //    but that increases specificity, breaking other things
+        background: none !important;
+        border: none !important;
+    }
+
     &:hover:not(.disabled):not(.loading) {
         background: rgba(255, 255, 255, 10%);
         border: 1px solid #FFFFFF80;
@@ -46,7 +58,6 @@ button {
         cursor: not-allowed;
     }
     &.errored {
-        position: relative;
         &::before {
             color: variables.$error;
             content: "error";

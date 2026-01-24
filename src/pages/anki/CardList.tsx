@@ -1,6 +1,10 @@
 import LoadingButton from "../../components/LoadingButton"
+import { OpenModal } from "../../components/Modal"
+import { TrimKana } from "../../jpdb/JpdbState"
 import AnkiConnect from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
+import { AnkiConnectSettingsFields } from "../../views/Fields"
+import { getSetting } from "../../views/SettingsModal"
 
 // cache
 let localAnkiWords: string[] | undefined
@@ -44,7 +48,7 @@ export async function addAnkiWord(word: string) {
 }
 
 
-export default () => {
+export default async () => {
     const refresh = new LoadingButton({
         onClick: async () => {
             // this returns a ton of info we don't really want right now
@@ -95,7 +99,15 @@ export default () => {
 
     update(false)
 
+    const apiKey = await getSetting("ankiConnectApiKey")
+
     return <div className="card-list">
+        {apiKey && <div className="warning">
+            No AnkiConnect API key set, <button className="link-button" onclick={() => OpenModal({
+                body: AnkiConnectSettingsFields,
+                header: "Configuring AnkiConnect"
+            })}>click here to set one</button>
+        </div>}
         <div className="flex-row">{loadedCount} {refresh}</div>
         {uniqueCharacters}
         {uniqueSets}
