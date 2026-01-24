@@ -1,4 +1,4 @@
-import { getAnkiWords } from "../../anki/CardList";
+import { getAnkiWords } from "../../pages/anki/CardList";
 import CheckboxField from "../../components/basic/CheckboxField";
 import IconButton from "../../components/basic/IconButton";
 import NumberField from "../../components/basic/NumberField";

@@ -1,34 +1,6 @@
-import LoadingButton from "../components/LoadingButton"
-import AnkiConnect from "../utils/AnkiConnect"
-import AddIcons from "../utils/AddIcons"
-import { TrimKana } from "../jpdb/JpdbState"
-
-AddIcons()
-
-export enum UnicodeCharacterType {
-    Kana,
-    Punctuation,
-    Kanji,
-    Number,
-    Other
-}
-
-export function unicodeType(c: string, i = 0): UnicodeCharacterType {
-    // https://stackoverflow.com/a/15034560/11435204
-    // const code = c.code
-    const unicode = c.charCodeAt(i)
-    if (unicode >= 0x3000 && unicode <= 0x303f)
-        return UnicodeCharacterType.Punctuation
-    if (unicode >= 0x3040 && unicode <= 0x309f)
-        return UnicodeCharacterType.Kana // hiragana
-    if (unicode >= 0x30a0 && unicode <= 0x30ff)
-        return UnicodeCharacterType.Kana // katakana
-    if (unicode >= 0x4e00 && unicode <= 0x9faf)
-        return UnicodeCharacterType.Kanji
-    if (unicode >= 0xFF10 && unicode <= 0xFF19)
-        return UnicodeCharacterType.Number
-    return UnicodeCharacterType.Other
-}
+import LoadingButton from "../../components/LoadingButton"
+import AnkiConnect from "../../utils/AnkiConnect"
+import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 
 // cache
 let localAnkiWords: string[] | undefined

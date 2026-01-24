@@ -1,4 +1,4 @@
-import { UnicodeCharacterType, unicodeType } from "../anki/CardList";
+import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { jpdbEntryUrl } from "./util";
 
 export function openTab(url: string) {

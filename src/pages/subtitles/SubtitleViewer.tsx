@@ -1,4 +1,4 @@
-import { getAnkiWords, UnicodeCharacterType, unicodeType } from "../../anki/CardList"
+import { getAnkiWords } from "../../pages/anki/CardList"
 import { Popover } from "../../components/basic/Popover"
 import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText"
 import { getVocabState, getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState"

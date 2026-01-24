@@ -1,4 +1,5 @@
-import { getAnkiWordsTrimKanaMapSync, getAnkiWordsSetSync, getAnkiWordsSync, UnicodeCharacterType, unicodeType } from "../anki/CardList";
+import { getAnkiWordsTrimKanaMapSync, getAnkiWordsSetSync, getAnkiWordsSync } from "../pages/anki/CardList";
+import { UnicodeCharacterType, unicodeType } from "../utils/AnkiUtil";
 import { Subtitles } from "../utils/srt";
 import { isIgnoredSync } from "./IgnoreList";
 import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "./JpdbParseText";

@@ -1,5 +1,5 @@
-import AnkiPage from "../anki/anki";
 import { type Pages } from "../framework/Router";
+import AnkiPage from "./anki/anki";
 import HomePage from "./home/home";
 import SentenceSearchPage from "./ss/ss";
 import SubtitlesPage from "./subtitles/subtitles";

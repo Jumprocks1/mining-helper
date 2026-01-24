@@ -1,4 +1,4 @@
-import { UnicodeCharacterType, unicodeType } from "../anki/CardList";
+import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { JpdbParseResponse, JpdbToken } from "../jpdb/JpdbParseText";
 import { applyReplacementsTo, ReplacementEntry } from "../views/RegexReplacements";
 import { getSetting } from "../views/SettingsModal";

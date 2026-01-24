@@ -1,4 +1,4 @@
-import { getAnkiWords } from "./anki/CardList"
+import { getAnkiWords } from "./pages/anki/CardList"
 import { disallowGlobalInput, handleKeyDown } from "./utils/GlobalHotkeys"
 import { furiToReading } from "./utils/util"
 import "./framework/createElement"

@@ -1,6 +1,6 @@
-import Loader from "../components/Loader"
-import LoadingButton from "../components/LoadingButton"
-import AnkiConnect, { AnkiNote } from "../utils/AnkiConnect"
+import Loader from "../../components/Loader"
+import LoadingButton from "../../components/LoadingButton"
+import AnkiConnect, { AnkiNote } from "../../utils/AnkiConnect"
 
 interface GroupingInfo<T> {
     key: (e: T) => string | number
