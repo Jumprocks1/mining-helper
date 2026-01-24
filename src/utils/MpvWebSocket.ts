@@ -68,7 +68,8 @@ export default class MpvWebSocket {
 
     pendingRequests = new Map<string, (response: Uint8Array<ArrayBuffer> | string) => void>()
     nextRequestId = 1;
-    public async RequestIfOpen(message: string) {
+    public RequestIfOpen(message: string) {
+        if (!this.Open) return
         return new Promise<Uint8Array<ArrayBuffer> | string>(res => {
             const requestId = this.nextRequestId++;
             this.SendIfOpen(`request:${requestId}:${message}`);

@@ -26,7 +26,7 @@ interface Props {
     token?: JpdbToken
     entry: SubtitleEntryWithCharacterOffset
     subtitles: Subtitles // for finding adjacent entries and vocab lookups
-    mpv?: MpvWebSocket
+    mpv: MpvWebSocket
     startIndex?: number // index inside of entry.text, not always available
     endIndex?: number
     subtitlesPage: SubtitlesPage
@@ -57,7 +57,8 @@ function filenameFromPath(path: string | undefined) {
 
 export default (props: Props) => {
     let word = props.word
-    const { entry, mpv, subtitles, startIndex, endIndex } = props
+    const { entry, subtitles, startIndex, endIndex } = props
+    const mpv = props.mpv.Open ? props.mpv : undefined
     const jpdb = subtitles.jpdbParse
     let token: JpdbToken | undefined = undefined
 
@@ -86,13 +87,17 @@ export default (props: Props) => {
             vocab = jpdb.vocabulary[token[3]]
             card.kanji = vocab[0]
             card.meaning = vocab[3][0]
-            // prefer better audio over jpdb audio
-            if (!card.audioLocalFile || card.audioLocalFile.includes("jpdb")) {
+            if (!card.audioLocalFile) {
                 card.audioBytes = await tryGetAudioBytes(vocab)
                 if (card.audioBytes) card.audioLocalFile = `${card.kanji}_auto.mp3`
             }
             if (!card.furigana)
                 card.furigana = furiFromToken(vocab[0], token)
+        } else {
+            if (!card.audioLocalFile) {
+                card.audioBytes = await tryGetAudioBytes(card.kanji)
+                if (card.audioBytes) card.audioLocalFile = `${card.kanji}_auto.mp3`
+            }
         }
 
 
@@ -126,9 +131,17 @@ export default (props: Props) => {
             modal.Close()
         }
 
-        const labeled: HTMLElement[] = []
+        const body: HTMLElement[] = []
+
+        if (!jpdb) {
+            body.push(<div className="warning">jpdb parsing info is not loaded. Meaning and reading will not load.</div>)
+        }
+        if (!mpv) {
+            body.push(<div className="warning">No mpv connection. Audio and sentence translation will not load.</div>)
+        }
+
         function add(label: Children, el: Children) {
-            labeled.push(<div className="field">
+            body.push(<div className="field">
                 <div className="label">{label}</div>
                 <div className="field-value">{el}</div>
             </div>)
@@ -139,7 +152,7 @@ export default (props: Props) => {
 
         sentenceCE.innerHTML = highlightWord(entry.text)
 
-        labeled.push(<div className="field" id="word-field">
+        body.push(<div className="field" id="word-field">
             <div className="label">Word</div>
             <div className="field-value"><span>{card.furigana ? furiToRuby(card.furigana) : card.kanji}</span></div>
         </div>)
@@ -166,7 +179,7 @@ export default (props: Props) => {
         menuButton.popoverTargetElement = menuPopover.Node
         menuButton.popoverTargetAction = "toggle"
 
-        labeled.push(<div className="field">
+        body.push(<div className="field">
             <div className="label">Word Audio{menuButton}</div>
             {menuPopover}
             <div className="field-value">
@@ -222,7 +235,7 @@ export default (props: Props) => {
         </>, sentenceCE)
 
         const sentenceMeaningCE = <div contentEditable="plaintext-only" /> as HTMLDivElement
-        labeled.push(<div className="field">
+        body.push(<div className="field">
             <label>Sentence Meaning</label>
             <div className="field-value">
                 <Loader load={async () => {
@@ -249,7 +262,7 @@ export default (props: Props) => {
             timeField.innerText = timestamp + " + " + (duration / 1000).toFixed(1) + "s"
         }
         updateTimeField()
-        labeled.push(<div className="field time-field">
+        body.push(<div className="field time-field">
             <label>Time</label>
             <div className="field-value">
                 {timeField}
@@ -263,11 +276,12 @@ export default (props: Props) => {
 
         let mpvPromise: Promise<string | Uint8Array<ArrayBuffer>> | undefined = undefined
 
-        async function loadMpvAudio() {
+        function loadMpvAudio() {
             if (!mpv) return
             const so = startOffset
             const eo = endOffset
             mpvPromise = mpv.RequestIfOpen(`mpv-audio:${startTime + so}-${endTime + eo}`)
+            if (!mpvPromise) return
             const loadedButton = mpvPromise.then(sentenceAudio => {
                 if (typeof sentenceAudio === "string") return "Failed to load"
                 const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)
@@ -295,47 +309,49 @@ export default (props: Props) => {
         }
         loadMpvAudio()
 
-        async function loadImages() {
-            if (!mpv) return
-            imageField.querySelectorAll(".image-container").forEach(e => e.remove())
-            const container = <div className="image-container" />
-            let placeholders: HTMLElement[] = []
-            for (let i = 0; i < 3; i++) {
-                const placeholder = <div className="loading-image" />
-                placeholders.push(placeholder)
-                container.append(placeholder)
-            }
-            imageField.append(container)
-            let i = 0;
-            async function addOption(t: number) {
+        if (mpv) {
+            async function loadImages() {
                 if (!mpv) return
-                // parameter is vertical resolution
-                const image = await mpv.RequestIfOpen(`image:150:${t}`)
-                if (typeof image === "string") return
-                const url = URL.createObjectURL(new Blob([image]))
-                modal.RegisterOnClose(() => URL.revokeObjectURL(url))
-                const img = <img src={url} onclick={() => {
-                    container.querySelectorAll("img").forEach(e => e.classList.remove("selected"))
-                    img.classList.add("selected")
-                    card.imageTime = t
-                }} />
-                placeholders[i++].replaceWith(img)
+                imageField.querySelectorAll(".image-container").forEach(e => e.remove())
+                const container = <div className="image-container" />
+                let placeholders: HTMLElement[] = []
+                for (let i = 0; i < 3; i++) {
+                    const placeholder = <div className="loading-image" />
+                    placeholders.push(placeholder)
+                    container.append(placeholder)
+                }
+                imageField.append(container)
+                let i = 0;
+                async function addOption(t: number) {
+                    if (!mpv) return
+                    // parameter is vertical resolution
+                    const image = await mpv.RequestIfOpen(`image:150:${t}`)
+                    if (!image || typeof image === "string") return
+                    const url = URL.createObjectURL(new Blob([image]))
+                    modal.RegisterOnClose(() => URL.revokeObjectURL(url))
+                    const img = <img src={url} onclick={() => {
+                        container.querySelectorAll("img").forEach(e => e.classList.remove("selected"))
+                        img.classList.add("selected")
+                        card.imageTime = t
+                    }} />
+                    placeholders[i++].replaceWith(img)
+                }
+                await addOption(startTime + startOffset)
+                await addOption(Math.round((startTime + startOffset + endTime + endOffset) / 2))
+                await addOption(endTime + endOffset)
             }
-            await addOption(startTime + startOffset)
-            await addOption(Math.round((startTime + startOffset + endTime + endOffset) / 2))
-            await addOption(endTime + endOffset)
+            const imageField = <div className="field image-field">
+                <div className="label">Image <IconButton icon="add" onClick={loadImages} /></div>
+            </div>
+            body.push(imageField)
         }
-        const imageField = <div className="field image-field">
-            <div className="label">Image <IconButton icon="add" onClick={loadImages} /></div>
-        </div>
-        labeled.push(imageField)
 
         // I don't like this
         // only works because we know the modal will be in a loading state already
         modal.Node.querySelector(".inner-modal")!.append(<div className="footer">
             <LoadingButton onClick={save} loading={mpvPromise}>Save</LoadingButton>
         </div>)
-        return labeled
+        return body
     }
 
     const modal = new Modal({

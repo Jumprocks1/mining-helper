@@ -68,11 +68,21 @@ async function post(body: string) {
     })
 }
 
-export async function tryGetAudioBytes(vocab: JpdbVocabulary) {
-    const kanji = vocab[0]
-    const audioBytes = await post(`audio-bytes-kanji:${kanji}:${vocab[1]}`)
-    if (!audioBytes.ok) return
-    return audioBytes.arrayBuffer()
+export async function tryGetAudioBytes(vocab: JpdbVocabulary | string) {
+    try {
+        let audioBytes: Response
+        if (typeof vocab === "string") {
+            audioBytes = await post(`audio-bytes-kanji:${vocab}`)
+        } else {
+            const kanji = vocab[0]
+            audioBytes = await post(`audio-bytes-kanji:${kanji}:${vocab[1]}`)
+        }
+        if (!audioBytes.ok) return
+        return audioBytes.arrayBuffer()
+    } catch (e: unknown) {
+        console.error(e)
+        return
+    }
 }
 export async function tryPlayAudio(vocab: JpdbVocabulary) {
     await playAudio(vocab[0], tryGetAudioBytes(vocab))
