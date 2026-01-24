@@ -5,7 +5,7 @@ export default class MpvWebSocket {
 
     onMessage?: (e: MessageEvent<any>) => void
     onOpen?: () => void
-    onClose?: () => void
+    onClose?: (skipped?: true) => void
     onConnecting?: () => void
     onError: (e: Event) => void = console.error
 
@@ -21,15 +21,20 @@ export default class MpvWebSocket {
     _openPromise: Promise<void> | undefined
     _openPromiseResolve: (() => void) | undefined
     // will also reconnect if needed
-    public async Connect() {
+    public async Connect(initial?: true) {
         if (this.Connection) {
             if (this.Connecting || this.Open) return this._openPromise!
             this.Connection.close();
         }
         this._openPromise ??= new Promise<void>(e => this._openPromiseResolve = e)
-        console.log("🟡 Connecting mpv WebSocket")
         const apiKey = await getSetting("serverApiKey")
         const uri = this.Uri ?? `ws://${await getSetting("serverAddress")}`
+        if (initial && !apiKey) {
+            this._openPromiseResolve = undefined
+            this.onClose?.(true);
+            return
+        }
+        console.log("🟡 Connecting mpv WebSocket")
         this.Connection = new WebSocket(uri, apiKey ? [apiKey] : undefined);
 
         this.Connection.onopen = () => {

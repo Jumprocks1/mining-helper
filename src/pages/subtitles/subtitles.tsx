@@ -177,17 +177,21 @@ export default class SubtitlesPage extends PageComponent {
             connectionDot.title = "WebSocket connecting"
             connectionDot.classList.remove(...connectionDot.classList);
         }
-        this.MpvWebSocket.onOpen = async () => {
+        this.MpvWebSocket.onOpen = () => {
             connectionDot.title = "WebSocket connected"
             connectionDot.classList.add("connected")
             connectionDot.classList.remove("disconnected")
         }
-        this.MpvWebSocket.onClose = () => {
-            connectionDot.title = "WebSocket disconnected\nClick to retry"
+        this.MpvWebSocket.onClose = skipped => {
+            if (skipped) {
+                connectionDot.title = "No API key specified\nClick to try anyways"
+            } else {
+                connectionDot.title = "WebSocket disconnected\nClick to retry"
+            }
             connectionDot.classList.remove("connected")
             connectionDot.classList.add("disconnected")
         }
-        this.MpvWebSocket.Connect()
+        this.MpvWebSocket.Connect(true)
 
         document.addEventListener("keydown", this.DocumentKeydown)
 
