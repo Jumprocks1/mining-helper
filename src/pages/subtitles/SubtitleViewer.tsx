@@ -8,6 +8,7 @@ import { setSetting } from "../../views/SettingsModal"
 import SubtitlesPage from "./subtitles"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import JpHoverTooltip from "./JpHoverTooltip"
+import { onDeath } from "../../framework/Observer"
 
 declare global {
     interface HTMLElement {
@@ -76,7 +77,7 @@ export default class SubtitleViewer {
             this.MouseDown = false
         })
 
-        this.Node.addEventListener("mousemove", ev => {
+        const mousemove = (ev: MouseEvent) => {
             this.MouseX = ev.clientX
             this.MouseY = ev.clientY
             if (this.subtitles.jpdbParse) {
@@ -86,7 +87,9 @@ export default class SubtitleViewer {
                 }
                 this.UpdateHoverInfo(showPopover)
             }
-        })
+        }
+        document.addEventListener("mousemove", mousemove)
+        onDeath(this.Node, () => document.removeEventListener("mousemove", mousemove))
 
         // make sure anki words are loaded for later, this caches the result
         // no harm in calling multiple times if promise isn't resolved yet

@@ -235,7 +235,10 @@ export default class SubtitlesPage extends PageComponent {
 
     UpdateTime(timestamp: number) {
         this.CurrentTime = timestamp
-        this.TimeElement.textContent = formatTimestamp(this.CurrentTime)
+        const text = formatTimestamp(this.CurrentTime)
+        // this saves some DOM node churn
+        if (text !== this.TimeElement.textContent)
+            this.TimeElement.textContent = formatTimestamp(this.CurrentTime)
         this.LoadedSubtitles?.UpdateHighlighting(this.CurrentTime)
     }
 
