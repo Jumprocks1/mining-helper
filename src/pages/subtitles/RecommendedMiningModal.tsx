@@ -175,6 +175,9 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
             popover?.Close()
         }
     }
+    // would be nice to use the same events as SubtitleViewer
+    // would be good to share the hovered character calculation, since I assume it's not super cheap
+    // would add a shared event handler, similar to onDeath
     body.addEventListener("mousemove", updateTooltip)
 
     const reload = () => {

@@ -1,8 +1,8 @@
-
-
 let observer: MutationObserver | undefined
 let awaitingDeath: [node: Node, callback: (node: Node) => void][] = []
 
+// pretty sure this is signficantly cheaper than most other ways of tracking this sort of thing
+// childlist mutations are pretty rare and usually they come in batches, which this already handles as a single event
 export function onDeath(node: Node, callback: (node: Node) => void) {
     if (!observer) {
         observer ??= new MutationObserver(() => {
