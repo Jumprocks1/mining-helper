@@ -2,15 +2,6 @@ import { getSetting } from "../views/SettingsModal"
 import UserError from "./UserError"
 
 export default class AnkiConnect {
-
-    // TODO configure
-    targetDeck = "Kaishi 1.5k"
-    targetModel = "Kaishi 1.5k"
-
-    constructor() {
-
-    }
-
     async callAny(action: string, params: any, version = 6) {
         const key = await getSetting("ankiConnectApiKey")
         const body = {
@@ -50,6 +41,14 @@ export interface AnkiNote {
 interface AnkiConnectActionMap {
     deckNames: {
         params: undefined,
+        returns: string[]
+    },
+    modelNames: {
+        params: undefined,
+        returns: string[]
+    },
+    modelFieldNames: {
+        params: { modelName: string },
         returns: string[]
     },
     storeMediaFile: {

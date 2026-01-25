@@ -16,6 +16,9 @@ button {
     user-select: none;
     position: relative;
     color: variables.$fontColor;
+    display: inline-flex;
+    align-items: center;
+    gap: variables.$s1;
 
     &.link-button {
         text-decoration: underline;
@@ -136,4 +139,28 @@ label, .label {
 ruby rt {
     user-select: none;
     opacity: 0.85;
+}
+
+select {
+    // mostly copied from input styles
+    display: block;
+    font-size: inherit;
+    color: inherit;
+    outline: none;
+    font-family: inherit;
+    background: none;
+    border: variables.$border0;
+    padding: 0 variables.$s1 * 0.5;
+    &:hover, &:focus {
+        background: rgba(255, 255, 255, 10%);
+    }
+
+    option {
+        background: variables.$background0;
+        border: variables.$border0;
+        padding: 0 variables.$s1 * 0.5;
+        &.unset {
+            font-style: italic;
+        }
+    }
 }

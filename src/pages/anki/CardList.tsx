@@ -1,3 +1,4 @@
+import { Icon } from "../../components/basic/IconButton"
 import LoadingButton from "../../components/LoadingButton"
 import { OpenModal } from "../../components/Modal"
 import { TrimKana } from "../../jpdb/JpdbState"
@@ -99,15 +100,30 @@ export default async () => {
 
     update(false)
 
+
+    function openSettings() {
+        OpenModal({
+            className: "settings-modal",
+            body: AnkiConnectSettingsFields,
+            header: "Configuring AnkiConnect"
+        })
+    }
+
     const apiKey = await getSetting("ankiConnectApiKey")
+    let warning: HTMLElement | undefined
+    if (!apiKey) {
+        warning = <div className="warning">
+            No AnkiConnect API key set, <button className="link-button" onclick={openSettings}>click here to set one</button>
+        </div>
+    } else if (!await getSetting("targetAnkiDeck")) {
+        warning = <div className="warning">
+            No target deck set, <button className="link-button" onclick={openSettings}>click here to set one</button>
+        </div>
+    }
 
     return <div className="card-list">
-        {apiKey && <div className="warning">
-            No AnkiConnect API key set, <button className="link-button" onclick={() => OpenModal({
-                body: AnkiConnectSettingsFields,
-                header: "Configuring AnkiConnect"
-            })}>click here to set one</button>
-        </div>}
+        {warning}
+        <button onclick={openSettings}><Icon icon="settings" />Anki Settings</button>
         <div className="flex-row">{loadedCount} {refresh}</div>
         {uniqueCharacters}
         {uniqueSets}

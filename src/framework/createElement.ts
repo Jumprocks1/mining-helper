@@ -58,6 +58,8 @@ export function createElement(element: string | FC,
         }
     } else {
         if (element.prototype && "constructor" in element.prototype) {
+            // note, function will trigger this, ie. `function A() {}`, lambda will not `const A = () => {}`
+            // looks like this is fixable with checking getOwnPropertyDescriptor prototype.writable, but it's fine for now
             // @ts-expect-error
             el = new element(properties ?? {}).Node;
         } else {

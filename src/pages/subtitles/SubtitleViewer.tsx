@@ -7,6 +7,7 @@ import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subti
 import { furiFromToken, furiToRuby, oldCreateElement } from "../../utils/util"
 import { setSetting } from "../../views/SettingsModal"
 import SubtitlesPage from "./subtitles"
+import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 
 declare global {
     interface HTMLElement {

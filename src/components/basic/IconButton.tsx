@@ -1,4 +1,3 @@
-import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util"
 import AddIcons, { MaterialIcons } from "../../utils/AddIcons"
 import LoadingButton, { LoadingButtonProps } from "../LoadingButton"
 
@@ -6,6 +5,17 @@ AddIcons()
 
 interface Props extends LoadingButtonProps {
     icon: (typeof MaterialIcons)[number]
+}
+
+
+interface IconProps {
+    icon: (typeof MaterialIcons)[number]
+}
+export const Icon = (props: IconProps) => {
+    const res = <span>{props.icon}</span>
+    res.classList.add("material-symbols-outlined")
+    res.classList.add("icon")
+    return res
 }
 
 export default (props: Props) => {

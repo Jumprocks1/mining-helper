@@ -28,6 +28,9 @@ interface LocalSettings {
     serverAddress: string
     serverApiKey: string
     jpdbApiKey: string
+
+    targetAnkiDeck: string,
+    targetAnkiModel: string,
     ankiConnectAddress: string
     ankiConnectApiKey: string
 
@@ -44,6 +47,9 @@ const defaultLocalSettings: LocalSettings = {
     serverAddress: "127.0.0.1:4012",
     serverApiKey: "",
     jpdbApiKey: "",
+
+    targetAnkiDeck: "",
+    targetAnkiModel: "",
     ankiConnectAddress: "http://127.0.0.1:8765",
     ankiConnectApiKey: "",
 
@@ -164,9 +170,17 @@ export default () => {
 
             {await stringSettingsField("jpdbApiKey", "JPDB API Key", "password")}
 
-            {await AnkiConnectSettingsFields()}
-
             <div className="footer-buttons">
+                <button onclick={() => {
+                    modal.Close()
+                    OpenModal({
+                        className: "settings-modal",
+                        body: AnkiConnectSettingsFields,
+                        header: "Configuring AnkiConnect"
+                    })
+                }}>
+                    Anki Setup
+                </button>
                 <button onclick={() => {
                     modal.Close()
                     AdvancedSettingsModal()

@@ -1,4 +1,5 @@
 import { addAnkiWord } from "../pages/anki/CardList";
+import { getSetting } from "../views/SettingsModal";
 import AnkiConnect, { MediaAdd } from "./AnkiConnect"
 import { TriggerEvent } from "./Events";
 import UserError from "./UserError";
@@ -13,8 +14,8 @@ export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal
     if (source) tags.push(source)
     const noteId = await anki.call("addNote", {
         note: {
-            deckName: anki.targetDeck,
-            modelName: anki.targetModel,
+            deckName: await getSetting("targetAnkiDeck"),
+            modelName: await getSetting("targetAnkiModel"),
             fields,
             audio,
             tags,

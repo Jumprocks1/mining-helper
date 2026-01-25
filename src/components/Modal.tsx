@@ -3,12 +3,12 @@ import { Component } from "../framework/Component";
 import Loader from "./Loader";
 import { getPortal } from "./basic/JsPopover";
 import { appendChild, Children } from "../framework/createElement";
+import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 
-interface Props {
+interface Props extends BaseComponentProps {
     header: any
     footer?: any
     onClose: () => void
-    id?: string
     body: Children | Promise<Children> | ((body: HTMLElement) => (Promise<Children> | Children))
     getMinimizeTarget?: () => DOMRect | undefined // if supplied, allow minimize
 }
@@ -95,12 +95,12 @@ export class Modal extends Component {
         const res = <div className="modal">
             {inner}
         </div>
-        if (props.id) res.id = props.id
         res.onpointerdown = ev => {
             if (ev.target === res) {
                 this.Close()
             }
         }
+        applyBaseComponentProps(res, props)
         this.Node = res
     }
 

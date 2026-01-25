@@ -13,6 +13,31 @@
     }
 }
 
+#settings-modal, .settings-modal {
+    .body {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: $s1;
+        .field {
+            align-self: stretch;
+        }
+
+        .field-group {
+            align-self: stretch;
+            display: flex;
+            gap: $s1 * 3;
+            >* {
+                flex-basis: 0;
+                flex-grow: 1;
+            }
+            select {
+                width: 100%;
+            }
+        }
+    }
+}
+
 #advanced-settings-modal {
     .footer-buttons {
         padding-top: $s1;
