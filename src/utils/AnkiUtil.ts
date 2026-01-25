@@ -5,14 +5,12 @@ import { TriggerEvent } from "./Events";
 import UserError from "./UserError";
 import { CardData, furiToReading } from "./util"
 
-const anki = new AnkiConnect()
-
 // remove means remove from local storage, which we hardly use anymore
 export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal") {
     const [fields, audio, picture] = activeFields(card);
     const tags = ["ext-mined"]
     if (source) tags.push(source)
-    const noteId = await anki.call("addNote", {
+    const noteId = await AnkiConnect.call("addNote", {
         note: {
             deckName: await getSetting("targetAnkiDeck"),
             modelName: await getSetting("targetAnkiModel"),
@@ -23,11 +21,11 @@ export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal
         }
     })
     await addAnkiWord(card.kanji) // could probably skip awaiting this
-    await anki.call("guiBrowse", { query: "added:1" })
-    const cards = await anki.call("findCards", { query: `nid:${noteId}` })
+    await AnkiConnect.call("guiBrowse", { query: "added:1" })
+    const cards = await AnkiConnect.call("findCards", { query: `nid:${noteId}` })
     const cardId = cards.length > 0 && cards[0]
     if (cardId)
-        await anki.call("guiSelectCard", { card: cardId })
+        await AnkiConnect.call("guiSelectCard", { card: cardId })
     await chrome.storage.session.remove(card.kanji)
 
     TriggerEvent("vocab-mined", card)
@@ -86,7 +84,7 @@ function activeFields(card: CardData) {
 }
 
 async function updateInAnki(card: CardData) {
-    const notes = await anki.call("findNotes", { query: `word:${card.kanji}` })
+    const notes = await AnkiConnect.call("findNotes", { query: `word:${card.kanji}` })
     if (notes.length === 0) throw new Error(`No notes matching ${card.kanji}`)
     if (notes.length > 1) throw new Error(`Multiple notes matching ${card.kanji}`)
     const noteId = notes[0]
@@ -96,18 +94,18 @@ async function updateInAnki(card: CardData) {
     delete fields["Word"]
     delete fields["Word Reading"]
     delete fields["Word Furigana"]
-    await anki.call("updateNote", {
+    await AnkiConnect.call("updateNote", {
         note: {
             id: noteId,
             fields,
             audio
         }
     })
-    await anki.call("guiBrowse", { query: "edited:1" })
-    const cards = await anki.call("findCards", { query: `nid:${noteId}` })
+    await AnkiConnect.call("guiBrowse", { query: "edited:1" })
+    const cards = await AnkiConnect.call("findCards", { query: `nid:${noteId}` })
     const cardId = cards.length > 0 && cards[0]
     if (cardId)
-        await anki.call("guiSelectCard", { card: cardId })
+        await AnkiConnect.call("guiSelectCard", { card: cardId })
 }
 
 

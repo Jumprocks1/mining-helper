@@ -3,14 +3,13 @@ import AnkiConnect from "../utils/AnkiConnect";
 import { getSetting, setSetting, stringSettingsField } from "./SettingsModal";
 
 export const AnkiConnectSettingsFields = async () => {
-    const anki = new AnkiConnect()
     // JSX doesn't work with this component
     // TODO need to add more of these
     // Eventually they need to save to a shared object
     const fieldSelect = Select({
         defaultValue: "",
         includeEmpty: true,
-        loadOptions: async () => anki.call("modelFieldNames", { modelName: await getSetting("targetAnkiModel") })
+        loadOptions: async () => AnkiConnect.call("modelFieldNames", { modelName: await getSetting("targetAnkiModel") })
     })
     // TODO this needs to be converted to a modal, since that's the only place we use it
     // Needs a button for checking everything. Check:
@@ -27,7 +26,7 @@ export const AnkiConnectSettingsFields = async () => {
                 <label>Taget Deck</label>
                 {Select({
                     defaultValue: await getSetting("targetAnkiDeck"),
-                    loadOptions: () => anki.call("deckNames", undefined),
+                    loadOptions: () => AnkiConnect.call("deckNames", undefined),
                     onChange: v => setSetting("targetAnkiDeck", v)
                 })}
             </div>
@@ -35,7 +34,7 @@ export const AnkiConnectSettingsFields = async () => {
                 <label>Target Model</label>
                 {Select({
                     defaultValue: await getSetting("targetAnkiModel"),
-                    loadOptions: () => anki.call("modelNames", undefined),
+                    loadOptions: () => AnkiConnect.call("modelNames", undefined),
                     onChange: v => {
                         setSetting("targetAnkiModel", v)
                         fieldSelect.Reset?.()

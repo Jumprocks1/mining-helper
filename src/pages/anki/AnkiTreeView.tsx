@@ -26,8 +26,7 @@ export default () => {
         return promise
     }
     const innerLoad = async () => {
-        const anki = new AnkiConnect()
-        const notes = await anki.call("notesInfo", { query: "" })
+        const notes = await AnkiConnect.call("notesInfo", { query: "" })
         const final = (e: AnkiNote) => e.fields.Word.value
         let currentTimeGroup = "N/A"
         let lastTimeGroup = 0

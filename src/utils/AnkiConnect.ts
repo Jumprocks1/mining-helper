@@ -1,7 +1,7 @@
 import { getSetting } from "../views/SettingsModal"
 import UserError from "./UserError"
 
-export default class AnkiConnect {
+export default {
     async callAny(action: string, params: any, version = 6) {
         const key = await getSetting("ankiConnectApiKey")
         const body = {
@@ -26,7 +26,7 @@ export default class AnkiConnect {
             throw new UserError(json.error)
         }
         return json.result
-    }
+    },
     async call<K extends keyof AnkiConnectActionMap>(action: K, params: AnkiConnectActionMap[K]["params"], version = 6):
         Promise<AnkiConnectActionMap[K]["returns"]> {
         return this.callAny(action, params, version)

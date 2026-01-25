@@ -42,7 +42,7 @@ export function getVocabState(vocab: JpdbVocabulary, config: VocabStateConfig = 
 }
 // ideally I think this would return a more complex state since multiple states often apply
 // this is mainly relevant for the ignored state, we basically want to reorder the priority sometimes
-export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateConfig = {}): [VocabState, Children] {
+export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateConfig = {}): [VocabState, string | undefined] {
     const { skipIgnoreCheck, trimKana } = config
 
     const knownWords = getAnkiWordsSync()

@@ -25,6 +25,9 @@ button {
         padding: 0;
         user-select: unset;
         color: variables.$linkColor;
+        &.uncolored {
+            color: inherit;
+        }
 
         // without important, you have to add :not link-button,
         //    but that increases specificity, breaking other things
