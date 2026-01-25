@@ -38,7 +38,7 @@ async function tryLoadEnglish(subtitles: Subtitles, mpv: MpvWebSocket | undefine
     if (subtitles.translated || !mpv || englishFailed) return subtitles.translated
     try {
         const subs = await mpv.RequestIfOpen("english-subs")
-        if (typeof subs === "string") throw new Error()
+        if (typeof subs === "string") throw new Error(subs)
         const decoded = new TextDecoder().decode(subs)
         return subtitles.translated = await parseSubtitles(decoded)
     } catch (e) {
