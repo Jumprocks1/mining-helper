@@ -10,3 +10,7 @@ export function userErrorMessage(e: unknown) {
 
     return String(e)
 }
+
+export function ErrorDisplay(e: string) {
+    return <div className="error-text-display">{e}</div>
+}

@@ -12,6 +12,7 @@ import RecommendedMiningModal from "./RecommendedMiningModal"
 import { getCharacterIndex } from "../../utils/CharacterHighlighter"
 import { PageComponent } from "../../framework/PageComponent"
 import { Children } from "../../framework/createElement"
+import { ErrorDisplay } from "../../utils/UserError"
 
 export default class SubtitlesPage extends PageComponent {
     Id = "subs-page"
@@ -211,8 +212,9 @@ export default class SubtitlesPage extends PageComponent {
                         const reader = new FileReader()
                         reader.onload = async e => {
                             const target = e.target
-                            if (target && typeof target.result === "string") {
-                                await this.LoadSubtitles(await parseSubtitles(target.result, file.name))
+                            const res = target?.result
+                            if (typeof res === "string") {
+                                await this.LoadSubtitles(() => parseSubtitles(res, file.name))
                             }
                         }
                         reader.readAsText(file)
@@ -221,13 +223,12 @@ export default class SubtitlesPage extends PageComponent {
             } else {
                 const uri = dt.getData("text/uri-list")
                 if (uri && (uri.endsWith(".srt") || uri.endsWith(".ass"))) {
-                    (async () => {
+                    this.LoadSubtitles(async () => {
                         const resp = await fetch(uri)
-                        if (resp.ok) {
-                            const body = await resp.text()
-                            await this.LoadSubtitles(await parseSubtitles(body, uri))
-                        }
-                    })()
+                        if (!resp.ok) throw new Error(`Failed to fetch ${uri}\nStatus: ${resp.status}`)
+                        const body = await resp.text()
+                        return parseSubtitles(body, uri)
+                    })
                 }
             }
         })
@@ -246,11 +247,18 @@ export default class SubtitlesPage extends PageComponent {
         const subs = this.LoadedSubtitles?.subtitles
         if (subs) {
             subs.jpdbParse = undefined // these get reloaded from cache if possible
-            await this.LoadSubtitles(subs)
+            await this.LoadSubtitles(() => subs)
         }
     }
 
-    async LoadSubtitles(subtitles: Subtitles) {
+    async LoadSubtitles(getSubs: () => (Promise<Subtitles> | Subtitles)) {
+        let subtitles: Subtitles
+        try {
+            subtitles = await getSubs()
+        } catch (e: unknown) {
+            this.SubtitleContainer.replaceChildren(ErrorDisplay(`Failed to load subs.\n${String(e)}`))
+            return
+        }
         const skip: [start: number, end?: number][] = []
         if (this.MpvWebSocket?.Open) {
             const skipChapterRegex = await getSetting("skipChapterRegex")
@@ -316,7 +324,7 @@ export default class SubtitlesPage extends PageComponent {
         this.LoadedSubtitles?.Node.remove()
 
         const viewer = new SubtitleViewer(subtitles, this)
-        this.SubtitleContainer.append(viewer.Node)
+        this.SubtitleContainer.replaceChildren(viewer.Node)
         viewer.UpdateHighlighting(this.CurrentTime)
 
         this.LoadedSubtitles = viewer
@@ -339,10 +347,12 @@ export default class SubtitlesPage extends PageComponent {
         }
     }
     async RequestAndLoadSubs(webSocket: MpvWebSocket) {
-        const subs = await webSocket.RequestIfOpen("jp-subs")
-        if (typeof subs === "string") throw new Error()
-        const decoded = new TextDecoder().decode(subs)
-        await this.LoadSubtitles(await parseSubtitles(decoded))
+        await this.LoadSubtitles(async () => {
+            const subs = await webSocket.RequestIfOpen("jp-subs")
+            if (typeof subs === "string") throw new Error()
+            const decoded = new TextDecoder().decode(subs)
+            return parseSubtitles(decoded)
+        })
     }
     async HandleCommandAndData(webSocket: MpvWebSocket, commandName: string, commandData: string | Uint8Array<ArrayBuffer>) {
         if (commandName === "time" || commandName === "t") {

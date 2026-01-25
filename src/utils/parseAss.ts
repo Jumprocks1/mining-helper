@@ -12,7 +12,7 @@ export async function parseAss(ass: string): Promise<Subtitles> {
     let category = ""
     let dialogueFormat: string[] = ["Layer", "Start", "End", "Style", "Name", "MarginL", "MarginR", "MarvinV", "Effect", "Text"]
     let indices = new Map<string, number>()
-    dialogueFormat.forEach(indices.set)
+    dialogueFormat.forEach((e, i) => indices.set(e, i))
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim()
         if (line.startsWith("[")) {
@@ -22,14 +22,15 @@ export async function parseAss(ass: string): Promise<Subtitles> {
         if (line.startsWith("Format:")) {
             dialogueFormat = line.substring("Format:".length).split(",").map(e => e.trim())
             indices.clear()
-            dialogueFormat.forEach(indices.set)
+            dialogueFormat.forEach((e, i) => indices.set(e, i))
         } else if (line.startsWith("Dialogue:")) {
-            const spl = line.split(",", indices.get("Text"))
+            const spl = line.split(",")
             entries.push({
                 startTime: parseTimestamp(spl[indices.get("Start")!]),
                 endTime: parseTimestamp(spl[indices.get("End")!]),
-                text: spl[indices.get("Text")!]
-                    .replace(/\\N/g, "\n"),
+                // would prefer to limit the split instead of join, but limit isn't like c# string split
+                text: spl.splice(indices.get("Text")!).join(",")
+                    .replace(/\s*\\N\s*/g, "\n"),
                 originalIndex: undefined as any // gets set later
             })
         }

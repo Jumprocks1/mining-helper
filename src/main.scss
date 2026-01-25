@@ -263,3 +263,8 @@ div#result {
 .warning {
     color: variables.$warning;
 }
+.error-text-display {
+    color: variables.$error;
+    white-space: pre-wrap;
+    font-family: monospace;
+}

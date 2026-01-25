@@ -8,6 +8,7 @@ export default () => {
     const webSocket = new HotReloadWebSocket()
     webSocket.onMessage = e => {
         const message = e.data as string
+        // the split limits here are probably not correct
         const spl = message.split(":", 2)
         if (spl[0] === "changed") {
             const path = spl[1].replaceAll("\\", "/")
