@@ -25,7 +25,7 @@ declare global {
 }
 
 export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | undefined, subtitlesPage: SubtitlesPage) => {
-    if (!subtitles.jpdbParse) await JpdbParseSubtitles(subtitles);
+    if (!subtitles.jpdbParse) await subtitlesPage.TryJpdbParse();
     const jpdb = subtitles.jpdbParse
     if (!jpdb) return
 

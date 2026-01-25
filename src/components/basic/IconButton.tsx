@@ -18,7 +18,9 @@ export const Icon = (props: IconProps) => {
     return res
 }
 
-export default (props: Props) => {
+export default (props: Props) => IconButtonClass(props).Node
+
+export const IconButtonClass = (props: Props) => {
     const res = new LoadingButton({
         ...props, onClick: ev => {
             // don't hold focus after click, mainly annoying when pressing spacebar (global pause/unpause)
@@ -30,5 +32,5 @@ export default (props: Props) => {
     res.Node.classList.add("material-symbols-outlined")
     res.Node.classList.add(props.icon + "-button")
     res.Node.append(props.icon)
-    return res.Node
+    return res
 }

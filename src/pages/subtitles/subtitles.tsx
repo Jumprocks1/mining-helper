@@ -4,10 +4,10 @@ import SubtitleViewer from "./SubtitleViewer"
 import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
 import MiningModal from "../../components/MiningModal"
 import { Modal } from "../../components/Modal"
-import IconButton from "../../components/basic/IconButton"
+import IconButton, { IconButtonClass } from "../../components/basic/IconButton"
 import SettingsModal, { getSetting, onSettingChange, removeOnSettingChange, setSetting } from "../../views/SettingsModal"
 import { applyReplacementsTo, getReplacements } from "../../views/RegexReplacements"
-import { JpdbParseSubtitles } from "../../jpdb/JpdbParseText"
+import { JpdbParseResponse, JpdbParseSubtitles } from "../../jpdb/JpdbParseText"
 import RecommendedMiningModal from "./RecommendedMiningModal"
 import { getCharacterIndex } from "../../utils/CharacterHighlighter"
 import { PageComponent } from "../../framework/PageComponent"
@@ -41,7 +41,7 @@ export default class SubtitlesPage extends PageComponent {
     OffsetChanged = (offset: number) => {
         const subs = this.LoadedSubtitles?.subtitles
         if (subs) {
-            if (subs.offset ?? 0 !== offset) {
+            if ((subs.offset ?? 0) !== offset) {
                 subs.offset = offset
                 this.ReloadSubs()
             }
@@ -127,7 +127,7 @@ export default class SubtitlesPage extends PageComponent {
                 }
             }
         } else if (key === "t") {
-            if (this.LoadedSubtitles) JpdbParseSubtitles(this.LoadedSubtitles.subtitles)
+            this.TryJpdbParse()
         } else if (key === "y") {
             const subs = this.LoadedSubtitles?.subtitles
             if (subs) {
@@ -153,6 +153,27 @@ export default class SubtitlesPage extends PageComponent {
         }
     }
 
+    JpdbParsePromise?: Promise<JpdbParseResponse | undefined>
+    async TryJpdbParse() {
+        if (this.LoadedSubtitles) {
+            if (!this.JpdbParsePromise) {
+                this.JpdbLoadButton.Loading = true
+                this.JpdbParsePromise = JpdbParseSubtitles(this.LoadedSubtitles.subtitles)
+                    .then(e => {
+                        this.JpdbLoadButton.Disabled = true
+                        return e
+                    })
+                    .finally(() => {
+                        this.JpdbLoadButton.Loading = false
+                        this.JpdbParsePromise = undefined
+                    })
+            }
+        }
+        return this.JpdbParsePromise
+    }
+
+    JpdbLoadButton = IconButtonClass({ icon: "document_search", onClick: () => this.TryJpdbParse() })
+
     constructor() {
         super()
 
@@ -167,6 +188,7 @@ export default class SubtitlesPage extends PageComponent {
         }} />
         this.Node = <>
             <div id="status-info">
+                {this.JpdbLoadButton}
                 <IconButton icon="settings" onClick={() => SettingsModal()} />
                 {this.TimeElement}
                 {connectionDot}
@@ -278,7 +300,6 @@ export default class SubtitlesPage extends PageComponent {
         }
 
         const offset = subtitles.offset ?? 0
-        setSetting("offset", offset)
         const replacements = await getReplacements()
         const res: SubtitleEntryWithCharacterOffset[] = []
 
@@ -330,6 +351,8 @@ export default class SubtitlesPage extends PageComponent {
         this.LoadedSubtitles = viewer
         viewer.JumpTo(viewer.LatestEntry(this.CurrentTime))
         JpdbParseSubtitles(this.LoadedSubtitles.subtitles, true)
+            .then(() => this.JpdbLoadButton.Disabled = Boolean(subtitles.jpdbParse))
+        setSetting("offset", offset) // set at the end to avoid triggering event handlers
     }
     async HandleWebSocketData(webSocket: MpvWebSocket, command: string | Blob) {
         if (typeof command === "string") {

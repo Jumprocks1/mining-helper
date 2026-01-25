@@ -8,6 +8,7 @@ export const MaterialIcons = [
     "add",
     "close",
     "delete",
+    "document_search",
     "error",
     "maximize",
     "menu",
