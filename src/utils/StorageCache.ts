@@ -65,6 +65,9 @@ export default class StorageCache {
         if (forceRefresh) {
             if (!get) throw new Error()
             const value = await get()
+            // not awaiting this can technically lead to some bad behavior,
+            //   spamming the cache can still result in 2 request if it's sent during this.Store
+            // not relevant with local storage, so going to leave it for now
             this.Store(key, value)
             return value
         }
@@ -72,7 +75,7 @@ export default class StorageCache {
         if (!found) {
             if (get === undefined) return undefined
             const value = await get()
-            this.Store(key, value)
+            this.Store(key, value) // not awaited
             return value
         } else {
             return found
