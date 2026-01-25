@@ -1,8 +1,9 @@
 import { JpdbParseResponse } from "../jpdb/JpdbParseText"
+import { parseAss } from "./parseAss"
 import StorageCache from "./StorageCache"
 
 export interface SubtitleEntry {
-    id: number
+    id?: number
     // index in originalEntries only
     // does not necessarily match processedEntries
     originalIndex: number
@@ -23,7 +24,7 @@ export interface Subtitles {
     offset?: number
     originalEntries: SubtitleEntry[]
     processedEntries: SubtitleEntryWithCharacterOffset[]
-    source: "srt"
+    source: "srt" | "ass"
     language?: "eng" | "jp"
     name?: string
     hash?: number
@@ -62,12 +63,28 @@ export function formatTimestamp(timestamp: number, showMs: false | 1 | 2 | 3 = f
 
 export const OffsetCache = new StorageCache({ prefix: "offset_", maxEntries: 100, minimumAvailableBytes: 500_000 });
 
-function parseTimestamp(timestamp: string) {
+export function parseTimestamp(timestamp: string) {
     timestamp = timestamp.replace(".", ",").trim()
     const [hours, minutes, partialSeconds] = timestamp.split(":")
     const [seconds, partialS] = partialSeconds.split(",")
     const milliseconds = parseInt(partialS) * Math.pow(10, 3 - partialS.length)
     return ((parseInt(hours) * 60 + parseInt(minutes)) * 60 + parseInt(seconds)) * 1000 + milliseconds
+}
+
+export function parseSubtitles(subtitles: string, filename?: string) {
+    if (filename) {
+        if (filename.endsWith(".srt")) return parseSrt(subtitles)
+        if (filename.endsWith(".ass")) return parseAss(subtitles)
+    }
+    // should be good enough for now
+    const start = subtitles[0]
+    if (start >= "0" && start <= "9") {
+        return parseSrt(subtitles)
+    } else if (start === "[") {
+        return parseAss(subtitles)
+    } else {
+        throw new Error(`Unknown subtitle file format, starts with "${start}"`)
+    }
 }
 
 export async function parseSrt(srt: string): Promise<Subtitles> {
@@ -115,22 +132,21 @@ export async function parseSrt(srt: string): Promise<Subtitles> {
         }
     }
     closePending()
+    cleanSubtitleEntries(entries)
 
-    // might need to apply this after regex for consistency...
-    const dedup = true
-    if (dedup) {
-        for (let i = entries.length - 1; i > 0; i--) {
-            const previous = entries[i - 1]
-            if (previous.text === entries[i].text) {
-                previous.startTime = Math.min(previous.startTime, entries[i].startTime)
-                previous.endTime = Math.max(previous.endTime, entries[i].endTime)
-                entries.splice(i, 1)
-            }
+    return o
+}
+
+export function cleanSubtitleEntries(entries: SubtitleEntry[]) {
+    for (let i = entries.length - 1; i > 0; i--) {
+        const previous = entries[i - 1]
+        if (previous.text === entries[i].text) {
+            previous.startTime = Math.min(previous.startTime, entries[i].startTime)
+            previous.endTime = Math.max(previous.endTime, entries[i].endTime)
+            entries.splice(i, 1)
         }
     }
     for (let i = 0; i < entries.length; i++) {
         entries[i].originalIndex = i
     }
-
-    return o
 }

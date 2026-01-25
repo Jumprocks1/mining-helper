@@ -1,4 +1,4 @@
-import { parseSrt, Subtitles, formatTimestamp, SubtitleEntryWithCharacterOffset, SubtitleEntry, OffsetCache } from "../../utils/srt"
+import { Subtitles, formatTimestamp, SubtitleEntryWithCharacterOffset, SubtitleEntry, OffsetCache, parseSubtitles } from "../../utils/srt"
 import MpvWebSocket from "../../utils/MpvWebSocket"
 import SubtitleViewer from "./SubtitleViewer"
 import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
@@ -207,12 +207,12 @@ export default class SubtitlesPage extends PageComponent {
             if (files && files.length > 0) {
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i]
-                    if (file.name.endsWith(".srt")) {
+                    if (file.name.endsWith(".srt") || file.name.endsWith(".ass")) {
                         const reader = new FileReader()
                         reader.onload = async e => {
                             const target = e.target
                             if (target && typeof target.result === "string") {
-                                await this.LoadSubtitles(await parseSrt(target.result))
+                                await this.LoadSubtitles(await parseSubtitles(target.result, file.name))
                             }
                         }
                         reader.readAsText(file)
@@ -220,12 +220,12 @@ export default class SubtitlesPage extends PageComponent {
                 }
             } else {
                 const uri = dt.getData("text/uri-list")
-                if (uri && uri.endsWith(".srt")) {
+                if (uri && (uri.endsWith(".srt") || uri.endsWith(".ass"))) {
                     (async () => {
                         const resp = await fetch(uri)
                         if (resp.ok) {
                             const body = await resp.text()
-                            await this.LoadSubtitles(await parseSrt(body))
+                            await this.LoadSubtitles(await parseSubtitles(body, uri))
                         }
                     })()
                 }
@@ -342,7 +342,7 @@ export default class SubtitlesPage extends PageComponent {
         const subs = await webSocket.RequestIfOpen("jp-subs")
         if (typeof subs === "string") throw new Error()
         const decoded = new TextDecoder().decode(subs)
-        await this.LoadSubtitles(await parseSrt(decoded))
+        await this.LoadSubtitles(await parseSubtitles(decoded))
     }
     async HandleCommandAndData(webSocket: MpvWebSocket, commandName: string, commandData: string | Uint8Array<ArrayBuffer>) {
         if (commandName === "time" || commandName === "t") {

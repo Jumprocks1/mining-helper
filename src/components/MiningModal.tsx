@@ -6,7 +6,7 @@ import { getAudio, getAudioOptionsFromKanji, playAudio, tryGetAudioBytes } from 
 import { replaceChildren, type Children } from "../framework/createElement"
 import { getOrCreatePendingCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
-import { formatTimestamp, parseSrt, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
+import { formatTimestamp, parseSubtitles, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
 import UserError from "../utils/UserError"
 import { cleanSource, furiFromToken, furiToReading, furiToRuby, jpdbEntryUrl, lookupFuri } from "../utils/util"
 import AudioButton from "./AudioButton"
@@ -40,7 +40,7 @@ async function tryLoadEnglish(subtitles: Subtitles, mpv: MpvWebSocket | undefine
         const subs = await mpv.RequestIfOpen("english-subs")
         if (typeof subs === "string") throw new Error()
         const decoded = new TextDecoder().decode(subs)
-        return subtitles.translated = await parseSrt(decoded)
+        return subtitles.translated = await parseSubtitles(decoded)
     } catch (e) {
         englishFailed = true;
         console.error("Failed to load translated subs: " + e)
