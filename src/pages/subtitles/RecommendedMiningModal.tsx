@@ -6,7 +6,7 @@ import UpDownButtons from "../../components/basic/UpDownButtons";
 import Loader from "../../components/Loader";
 import { OpenModal } from "../../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../../jpdb/IgnoreList";
-import { JpdbParseSubtitles, JpdbVocabulary } from "../../jpdb/JpdbParseText";
+import { JpdbParseSubtitles, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../../jpdb/JpdbState";
 import { tryPlayAudio } from "../../utils/Audio";
 import { setSelection } from "../../utils/CharacterHighlighter";
@@ -15,6 +15,14 @@ import { SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt";
 import { CardData } from "../../utils/util";
 import { getSetting, setSetting } from "../../views/SettingsModal";
 import SubtitlesPage from "./subtitles";
+import JpHoverTooltip from "./JpHoverTooltip";
+
+
+declare global {
+    interface HTMLElement {
+        vocabInfo?: [vocab: JpdbVocabulary, token: JpdbToken]
+    }
+}
 
 export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | undefined, subtitlesPage: SubtitlesPage) => {
     if (!subtitles.jpdbParse) await JpdbParseSubtitles(subtitles);
@@ -31,6 +39,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
     let maxCount = await pending[3]
 
     let loadedRows: Record<number, HTMLElement> | undefined = undefined
+    const body = <div className="row-container" />
 
     const load = async () => {
         const body = <></>
@@ -68,6 +77,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                 else if (state === VocabState.Kana) { if (!showKana) continue }
                 else continue
             }
+            let firstToken: JpdbToken | undefined // needed for furigana parsing on tooltip
             let tokenUsages: number[]
             if (n1Ids) {
                 const found = n1Ids.get(vocab[5])
@@ -77,7 +87,10 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                 tokenUsages = []
                 for (const token of jpdb.tokens) {
                     const v = jpdb.vocabulary[token[3]]
-                    if (v === vocab) tokenUsages.push(token[0])
+                    if (v === vocab) {
+                        firstToken ??= token
+                        tokenUsages.push(token[0])
+                    }
                 }
             }
             const makeDeleteButton = () => <IconButton icon={ignored ? "restore_from_trash" : "delete"}
@@ -122,8 +135,9 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                     <span className="usage-count">{tokenUsages.length}</span>
                 </UpDownButtons>
                 <IconButton icon="play_arrow" onClick={() => tryPlayAudio(vocab)} />
-                <span>{vocab[0]} - {vocab[3][0]}</span>
+                <span><span className="vocab-kanji">{vocab[0]}</span> - {vocab[3][0]}</span>
             </div>
+            if (firstToken) row.vocabInfo = [vocab, firstToken] // for tooltip
             if (state === VocabState.Ignored) row.classList.add("ignored")
             if (state === VocabState.Kana) row.classList.add("kana")
             loadedRows[vocab[5]] = row
@@ -136,7 +150,33 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
         return body
     }
 
-    const body = <div className="row-container" />
+    // this isn't as good as the main subtitle body tooltip
+    // but it's pretty close, good for now
+    let popover: JpHoverTooltip | undefined
+    let loadedVocab: [JpdbVocabulary, JpdbToken] | undefined
+    function updateTooltip(ev: MouseEvent) {
+        const showPopover = ev.shiftKey
+        if (popover && !showPopover) {
+            if (popover.Node.contains(ev.target as HTMLElement)) return
+        }
+        if (showPopover) {
+            const target = ev.target as HTMLElement
+            if (target.classList.contains("vocab-kanji")) {
+                const vocabInfo = target.closest<HTMLElement>(".vocab-row")?.vocabInfo
+                if (vocabInfo) {
+                    if (loadedVocab === vocabInfo) return
+                    loadedVocab = vocabInfo
+                    popover ??= new JpHoverTooltip()
+                    popover.Target(target, vocabInfo[0], vocabInfo[1])
+                }
+            }
+        } else {
+            loadedVocab = undefined
+            popover?.Close()
+        }
+    }
+    body.addEventListener("mousemove", updateTooltip)
+
     const reload = () => {
         loadedRows = undefined
         body.replaceChildren(<Loader load={load} />)

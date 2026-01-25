@@ -1,3 +1,4 @@
+import { Children } from "../framework/createElement";
 import { getAnkiWordsTrimKanaMapSync, getAnkiWordsSetSync, getAnkiWordsSync } from "../pages/anki/CardList";
 import { UnicodeCharacterType, unicodeType } from "../utils/AnkiUtil";
 import { Subtitles } from "../utils/srt";
@@ -41,7 +42,7 @@ export function getVocabState(vocab: JpdbVocabulary, config: VocabStateConfig = 
 }
 // ideally I think this would return a more complex state since multiple states often apply
 // this is mainly relevant for the ignored state, we basically want to reorder the priority sometimes
-export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateConfig = {}): [VocabState, any] {
+export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateConfig = {}): [VocabState, Children] {
     const { skipIgnoreCheck, trimKana } = config
 
     const knownWords = getAnkiWordsSync()

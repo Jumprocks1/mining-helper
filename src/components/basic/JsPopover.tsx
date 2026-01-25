@@ -28,17 +28,22 @@ export class JsPopover extends Component {
     Hydrated = false
     IsOpen = false
     Hydrate?: () => Promise<Children> | Children
-    Anchor?: HTMLElement
+
+    private _anchor?: HTMLElement
+    public get Anchor() { return this._anchor }
+    public set Anchor(anchor: HTMLElement | undefined) {
+        this._anchor = anchor
+        if (anchor) {
+            let anchorName = anchor.style.getPropertyValue("anchor-name")
+            if (!anchorName) anchor.style.setProperty("anchor-name", anchorName = `--js-popover-${nextId++}`)
+            this.Node.style.setProperty("position-anchor", anchorName)
+        }
+    }
 
     constructor(props: Props) {
         super()
         this.Hydrate = props.hydrate
         this.Anchor = props.anchor
-        if (this.Anchor) {
-            let anchorName = this.Anchor.style.getPropertyValue("anchor-name")
-            if (!anchorName) this.Anchor.style.setProperty("anchor-name", anchorName = `--js-popover-${nextId++}`)
-            this.Node.style.setProperty("position-anchor", anchorName)
-        }
         applyBaseComponentProps(this.Node, props)
     }
 
@@ -52,8 +57,8 @@ export class JsPopover extends Component {
     }
     Update() {
         if (!this.IsOpen) return
-        if (!this.Anchor) return // fullscreen modals won't have an anchor
-        if (!this.Anchor.isConnected) {
+        if (!this._anchor) return // fullscreen modals won't have an anchor
+        if (!this._anchor.isConnected) {
             this.Close()
             return
         }

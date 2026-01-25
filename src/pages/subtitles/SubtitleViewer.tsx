@@ -1,13 +1,13 @@
 import { getAnkiWords } from "../../pages/anki/CardList"
 import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText"
-import { getVocabState, getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState"
+import { getVocabState, VocabState } from "../../jpdb/JpdbState"
 import { getCharacterIndex, getHoveredCharacterIndex, getSelectionRange } from "../../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt"
-import { furiFromToken, furiToRuby, oldCreateElement } from "../../utils/util"
+import { oldCreateElement } from "../../utils/util"
 import { setSetting } from "../../views/SettingsModal"
 import SubtitlesPage from "./subtitles"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
-import { JsPopover } from "../../components/basic/JsPopover"
+import JpHoverTooltip from "./JpHoverTooltip"
 
 declare global {
     interface HTMLElement {
@@ -23,7 +23,7 @@ export default class SubtitleViewer {
     pointer: HTMLElement = <div className="pointer">-&gt;</div>
 
     hoverRectangle: HTMLElement = <div className="hover-rectangle" />
-    popover: JsPopover | undefined
+    popover: JpHoverTooltip | undefined
 
     Page: SubtitlesPage
 
@@ -142,35 +142,8 @@ export default class SubtitleViewer {
         this.LoadedPopoverVocab = vocab
 
         if (vocab && hoverState) {
-            if (!this.popover) {
-                this.popover = new JsPopover({
-                    anchor: this.Node,
-                    id: "jp-hover-tooltip"
-                })
-            }
-            const parentRect = this.Node.getBoundingClientRect()
-            const [vocabState, vocabNote] = getVocabStateAndNote(vocab, { trimKana: true })
-            const vocabStateString = VocabState[vocabState].toLowerCase()
-
-            const ruby = furiToRuby(furiFromToken(vocab[0], hoverState.token))
-
-            this.popover.SetContent(<>
-                <div className="header">
-                    {ruby}
-                    <span className={"vocab-state " + vocabStateString}>
-                        {vocabStateString}{vocabNote ? <> - {vocabNote}</> : undefined}
-                    </span>
-                    <span className="frequency">{vocab[2]}</span>
-                </div>
-                {vocab[3].map((e, i) => <div>
-                    {i + 1}. {e}
-                </div>)}
-            </>)
-            this.popover.Open()
-            const x = hoverState.rect.left - parentRect.left
-            const y = hoverState.rect.bottom - parentRect.top
-            this.popover.Node.style.left = `calc(anchor(left) + ${x}px)`
-            this.popover.Node.style.top = `calc(anchor(top) + ${y}px)`
+            this.popover ??= new JpHoverTooltip(this.Node)
+            this.popover.TargetRect(hoverState.rect, vocab, hoverState.token)
         } else {
             this.popover?.Close()
         }
