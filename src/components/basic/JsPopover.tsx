@@ -1,10 +1,10 @@
-import { appendChild, type Children } from "../../framework/createElement";
+import { replaceChildren, type Children } from "../../framework/createElement";
 import { Component } from "../../framework/Component";
-import Loader from "../Loader";
+import { Load, LoadableChildren } from "../Loader";
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util";
 
 interface Props extends BaseComponentProps {
-    hydrate: () => Promise<Children> | Children
+    hydrate?: () => Promise<Children> | Children
     anchor?: HTMLElement
 }
 
@@ -27,7 +27,7 @@ export class JsPopover extends Component {
 
     Hydrated = false
     IsOpen = false
-    Hydrate: () => Promise<Children> | Children
+    Hydrate?: () => Promise<Children> | Children
     Anchor?: HTMLElement
 
     constructor(props: Props) {
@@ -42,9 +42,8 @@ export class JsPopover extends Component {
         applyBaseComponentProps(this.Node, props)
     }
 
-    SetContent(children: Children) {
-        this.Node.replaceChildren()
-        appendChild(this.Node, children)
+    SetContent(children: LoadableChildren) {
+        replaceChildren(this.Node, Load(children))
     }
 
     Toggle() {
@@ -77,14 +76,9 @@ export class JsPopover extends Component {
         }
         getPortal().append(this.Node)
 
-        if (this.Hydrated) return
+        if (this.Hydrated || !this.Hydrate) return
         this.Hydrated = true
-        const hydrate = this.Hydrate()
-        if (hydrate instanceof Promise) {
-            this.SetContent(<Loader load={hydrate} />)
-        } else {
-            this.SetContent(hydrate)
-        }
+        this.SetContent(this.Hydrate)
     }
     Close() {
         if (!this.IsOpen) return

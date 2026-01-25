@@ -3,7 +3,7 @@ import SubtitlesPage from "../pages/subtitles/subtitles"
 import { getSubsInRange, getTokenFor } from "../pages/subtitles/SubtitleUtil"
 import { saveToAnkiAndRemove } from "../utils/AnkiUtil"
 import { getAudio, getAudioOptionsFromKanji, playAudio, tryGetAudioBytes } from "../utils/Audio"
-import { type Children } from "../framework/createElement"
+import { replaceChildren, type Children } from "../framework/createElement"
 import { getOrCreatePendingCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, parseSrt, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
@@ -14,7 +14,7 @@ import { HtmlPopover } from "./basic/HtmlPopover"
 import IconButton from "./basic/IconButton"
 import NumberField from "./basic/NumberField"
 import UpDownButtons from "./basic/UpDownButtons"
-import Loader from "./Loader"
+import Loader, { Load } from "./Loader"
 import LoadingButton from "./LoadingButton"
 import { Modal } from "./Modal"
 import { getSetting } from "../views/SettingsModal"
@@ -304,7 +304,7 @@ export default (props: Props) => {
                     click
                 }
             })
-            playButtonPlaceholder.replaceChildren(Loader({ load: loadedButton.then(e => typeof e === "string" ? e : e.button) }))
+            replaceChildren(playButtonPlaceholder, Load(loadedButton.then(e => typeof e === "string" ? e : e.button)))
             return loadedButton
         }
         loadMpvAudio()

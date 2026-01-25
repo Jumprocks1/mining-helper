@@ -14,6 +14,11 @@ export function replaceWith(el: ChildNode, child: Children) {
     el.replaceWith(fragment)
 }
 
+export function replaceChildren(el: ParentNode, child: Children) {
+    el.replaceChildren()
+    appendChild(el, child)
+}
+
 export function appendChild(el: ParentNode, child: Children) {
     if (Array.isArray(child)) {
         for (let i = 0; i < child.length; i++) appendChild(el, child[i])

@@ -76,39 +76,6 @@
             position: absolute;
             pointer-events: none;
         }
-        .popover {
-            .header {
-                gap: $s1;
-                .vocab-state {
-                    padding-left: 1em;
-                    margin-left: auto;
-                    font-size: 0.6em;
-                    &.new {
-                        color: $brightRed;
-                    }
-                    &.known {
-                        color: $brightGreen;
-                    }
-                    &.particle {
-                        color: $brightBlue;
-                    }
-                    &.similar, &.kana, &.ignored, &.altspelling {
-                        color: $brightYellow;
-                    }
-                }
-                .frequency {
-                    font-size: 0.6em;
-                    &::before {
-                        content: "Top "
-                    }
-                }
-            }
-            .reading {
-                font-size: 0.8em;
-                opacity: 0.8;
-            }
-            max-width: 600px;
-        }
     }
     #status-info {
         font-size: 1.3em;
@@ -187,4 +154,40 @@
             }
         }
     }
+}
+
+
+#jp-hover-tooltip {
+    font-size: 0.975em;
+    .header {
+        gap: $s1;
+        .vocab-state {
+            padding-left: 1em;
+            margin-left: auto;
+            font-size: 0.6em;
+            &.new {
+                color: $brightRed;
+            }
+            &.known {
+                color: $brightGreen;
+            }
+            &.particle {
+                color: $brightBlue;
+            }
+            &.similar, &.kana, &.ignored, &.altspelling {
+                color: $brightYellow;
+            }
+        }
+        .frequency {
+            font-size: 0.6em;
+            &::before {
+                content: "Top "
+            }
+        }
+    }
+    .reading {
+        font-size: 0.8em;
+        opacity: 0.8;
+    }
+    max-width: 600px;
 }

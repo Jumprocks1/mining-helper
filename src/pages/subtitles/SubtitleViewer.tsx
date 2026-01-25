@@ -1,5 +1,4 @@
 import { getAnkiWords } from "../../pages/anki/CardList"
-import { Popover } from "../../components/basic/Popover"
 import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText"
 import { getVocabState, getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState"
 import { getCharacterIndex, getHoveredCharacterIndex, getSelectionRange } from "../../utils/CharacterHighlighter"
@@ -8,6 +7,7 @@ import { furiFromToken, furiToRuby, oldCreateElement } from "../../utils/util"
 import { setSetting } from "../../views/SettingsModal"
 import SubtitlesPage from "./subtitles"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
+import { JsPopover } from "../../components/basic/JsPopover"
 
 declare global {
     interface HTMLElement {
@@ -23,7 +23,7 @@ export default class SubtitleViewer {
     pointer: HTMLElement = <div className="pointer">-&gt;</div>
 
     hoverRectangle: HTMLElement = <div className="hover-rectangle" />
-    popover: Popover | undefined
+    popover: JsPopover | undefined
 
     Page: SubtitlesPage
 
@@ -36,7 +36,7 @@ export default class SubtitleViewer {
     DocumentKeydown(ev: KeyboardEvent) {
         if (this.subtitles.jpdbParse) {
             const showPopover = ev.shiftKey !== this.ShowHoverWithoutShift
-            if (this.popover?.Visible && !showPopover) return
+            if (this.popover?.IsOpen && !showPopover) return
             this.UpdateHoverInfo(showPopover)
         }
     }
@@ -143,14 +143,12 @@ export default class SubtitleViewer {
 
         if (vocab && hoverState) {
             if (!this.popover) {
-                this.popover = new Popover({
-                    side: "below",
-                    position: "absolute"
+                this.popover = new JsPopover({
+                    anchor: this.Node,
+                    id: "jp-hover-tooltip"
                 })
-                this.Node.append(this.popover.Node)
             }
-            const parent = this.popover.Node.parentElement!
-            const parentRect = parent.getBoundingClientRect()
+            const parentRect = this.Node.getBoundingClientRect()
             const [vocabState, vocabNote] = getVocabStateAndNote(vocab, { trimKana: true })
             const vocabStateString = VocabState[vocabState].toLowerCase()
 
@@ -168,9 +166,13 @@ export default class SubtitleViewer {
                     {i + 1}. {e}
                 </div>)}
             </>)
-            this.popover.Show(hoverState.rect.left - parentRect.left, hoverState.rect.bottom - parentRect.top)
+            this.popover.Open()
+            const x = hoverState.rect.left - parentRect.left
+            const y = hoverState.rect.bottom - parentRect.top
+            this.popover.Node.style.left = `calc(anchor(left) + ${x}px)`
+            this.popover.Node.style.top = `calc(anchor(top) + ${y}px)`
         } else {
-            this.popover?.Hide()
+            this.popover?.Close()
         }
     }
 

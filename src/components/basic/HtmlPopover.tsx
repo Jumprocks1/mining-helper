@@ -1,4 +1,4 @@
-import { appendChild, type Children } from "../../framework/createElement";
+import { replaceChildren, type Children } from "../../framework/createElement";
 import { Component } from "../../framework/Component";
 import Loader from "../Loader";
 
@@ -28,8 +28,7 @@ export class HtmlPopover extends Component {
     }
 
     SetContent(children: Children) {
-        this.Node.replaceChildren()
-        appendChild(this.Node, children)
+        replaceChildren(this.Node, children)
     }
 
     Remove() {
