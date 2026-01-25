@@ -269,7 +269,7 @@ export function cleanSource(source: string | undefined) {
             replace: " "
         },
         {
-            match: / 1080p (BluRay|NF) .+$/g,
+            match: / 1080p .+$/g,
             replace: ""
         },
         {
@@ -285,15 +285,15 @@ export function cleanSource(source: string | undefined) {
             replace: " "
         },
         {
-            match: /^\s+|\s+$/g,
-            replace: ""
-        },
-        {
-            match: /(?<= \- S\d+E\d+) - .+/g,
+            match: /(?<= S\d+E\d+) .+/g,
             replace: ""
         },
         {
             match: /(?<= - \d+)v\d$/g,
+            replace: ""
+        },
+        {
+            match: /^\s+|\s+$/g,
             replace: ""
         }
     ]
