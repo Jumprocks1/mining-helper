@@ -78,7 +78,8 @@ export async function tryGetAudioBytes(vocab: JpdbVocabulary | string) {
             audioBytes = await post(`audio-bytes-kanji:${kanji}:${vocab[1]}`)
         }
         if (!audioBytes.ok) return
-        return audioBytes.arrayBuffer()
+        const buffer = await audioBytes.arrayBuffer()
+        return buffer.byteLength > 0 ? buffer : undefined
     } catch (e: unknown) {
         console.error(e)
         return
@@ -106,5 +107,6 @@ export async function getAudio(entry?: AudioEntry) {
     if (!entry) return
     const audioBytes = await post(`audio-bytes:${entry.ID}`)
     if (!audioBytes.ok) return
-    return await audioBytes.arrayBuffer()
+    const buffer = await audioBytes.arrayBuffer()
+    return buffer.byteLength > 0 ? buffer : undefined
 }
