@@ -2,10 +2,12 @@ import { replaceChildren, type Children } from "../../framework/createElement";
 import { Component } from "../../framework/Component";
 import { Load, LoadableChildren } from "../Loader";
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util";
+import { onDeath } from "../../framework/Observer";
 
 interface Props extends BaseComponentProps {
     hydrate?: () => Promise<Children> | Children
     anchor?: HTMLElement
+    type: PopoverType
 }
 
 let portal: HTMLElement | undefined
@@ -19,15 +21,55 @@ export function getPortal() {
     return portal
 }
 
-// TODO unify with `Popover`, `HtmlPopover` and maybe `Modal`
-// only real benefit of this over HtmlPopover is HtmlPopover requires the popover to exist in the DOM ahead of time
-// this also puts popovers in a portal
+type Closable = { Close: () => void, Node: HTMLElement, CloseOnClickaway?: boolean }
+export const OpenPopovers: Closable[] = []
+
+let hooked = false
+export function TrackOpenPopover(popover: Closable) {
+    OpenPopovers.push(popover)
+    if (hooked) return
+    hooked = true
+    document.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+            if (OpenPopovers.length > 0) {
+                OpenPopovers[OpenPopovers.length - 1].Close()
+                e.stopImmediatePropagation()
+            }
+        }
+    })
+    document.addEventListener("pointerdown", e => {
+        const target = e.target as Node
+        if (!target) return
+        for (let i = OpenPopovers.length - 1; i >= 0; i--) {
+            const popover = OpenPopovers[i]
+            if (popover.CloseOnClickaway && !popover.Node.contains(target)) {
+                popover.Close()
+            }
+        }
+    })
+}
+export function MarkPopoverClosed(popover: Closable) {
+    const index = OpenPopovers.indexOf(popover)
+    if (index >= 0) OpenPopovers.splice(index, 1)
+}
+
+// TODO feed modals through here
+type PopoverType = "modal" | "tooltip" | "menu"
+
+// TODO maybe unify with `Modal`
+// main benefits of JsPopover vs CSS:
+//   lazy initialization
+//   custom placement (eventually)
+//   death tracking - CSS didn't really need this though
+//   portal (allowing styles to be separte, good and bad)
+//   general flexibility (CSS was causing issues when I wanted to add features, it was not possible)
 export class JsPopover extends Component {
     Node = <div className="popover js-popover" />
 
     Hydrated = false
     IsOpen = false
     Hydrate?: () => Promise<Children> | Children
+    Type: PopoverType
 
     private _anchor?: HTMLElement
     public get Anchor() { return this._anchor }
@@ -40,11 +82,17 @@ export class JsPopover extends Component {
         }
     }
 
+    get CloseOnClickaway() { return this.Type === "menu" }
+
     constructor(props: Props) {
         super()
         this.Hydrate = props.hydrate
         this.Anchor = props.anchor
+        this.Type = props.type
         applyBaseComponentProps(this.Node, props)
+        if (props.type === "menu") {
+            this.Node.classList.add("menu")
+        }
     }
 
     SetContent(children: LoadableChildren) {
@@ -63,9 +111,9 @@ export class JsPopover extends Component {
             return
         }
     }
-    Observer: MutationObserver | undefined
     Open() {
         if (this.IsOpen) return
+        TrackOpenPopover(this)
         this.IsOpen = true
 
         // TODO need to bind escape/clickaway
@@ -73,12 +121,7 @@ export class JsPopover extends Component {
         // in the auto open case, the anchor might not be in the DOM (since it likely gets added shortly after Open is called)
         // will fix that when/if it comes up
         if (!this.IsOpen) throw new Error("Popover immediately closed, likely due to disconnected anchor")
-        if (this.Anchor) {
-            this.Observer = new MutationObserver(() => this.Update())
-            // kinda sucks we observe the entire document, but just listening on the parent doesn't work
-            // issue is if multiple parents up is removed, it wouldn't trigger any events lower down
-            this.Observer.observe(document, { childList: true, subtree: true })
-        }
+        if (this.Anchor) onDeath(this.Anchor, () => this.Update())
         getPortal().append(this.Node)
 
         if (this.Hydrated || !this.Hydrate) return
@@ -87,11 +130,9 @@ export class JsPopover extends Component {
     }
     Close() {
         if (!this.IsOpen) return
+        MarkPopoverClosed(this)
+
         this.IsOpen = false
         this.Node.remove()
-        if (this.Observer) {
-            this.Observer.disconnect()
-            this.Observer = undefined
-        }
     }
 }

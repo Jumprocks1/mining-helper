@@ -10,7 +10,6 @@ import { formatTimestamp, parseSubtitles, SubtitleEntryWithCharacterOffset, Subt
 import UserError from "../utils/UserError"
 import { cleanSource, furiFromToken, furiToReading, furiToRuby, jpdbEntryUrl, lookupFuri } from "../utils/util"
 import AudioButton from "./AudioButton"
-import { HtmlPopover } from "./basic/HtmlPopover"
 import IconButton from "./basic/IconButton"
 import NumberField from "./basic/NumberField"
 import UpDownButtons from "./basic/UpDownButtons"
@@ -19,6 +18,7 @@ import LoadingButton from "./LoadingButton"
 import { Modal } from "./Modal"
 import { getSetting } from "../views/SettingsModal"
 import DropdownMenu from "./DropdownMenu"
+import { JsPopover } from "./basic/JsPopover"
 
 interface Props {
     word: string
@@ -157,8 +157,10 @@ export default (props: Props) => {
             <div className="field-value"><span>{card.furigana ? furiToRuby(card.furigana) : card.kanji}</span></div>
         </div>)
 
-        const menuPopover = new HtmlPopover({
-            className: "menu",
+        const menuButton = <IconButton icon="menu" onClick={() => menuPopover.Toggle()} /> as HTMLButtonElement
+        const menuPopover = new JsPopover({
+            type: "menu",
+            anchor: menuButton,
             hydrate: async () => {
                 const options = await getAudioOptionsFromKanji(kanji, furiToReading(card.furigana))
                 return options.map(e => <div className="audio-entry-option"
@@ -175,13 +177,9 @@ export default (props: Props) => {
                 </div>)
             }
         })
-        const menuButton = <IconButton icon="menu" /> as HTMLButtonElement
-        menuButton.popoverTargetElement = menuPopover.Node
-        menuButton.popoverTargetAction = "toggle"
 
         body.push(<div className="field">
             <div className="label">Word Audio{menuButton}</div>
-            {menuPopover}
             <div className="field-value">
                 {AudioButton({ audio: () => card.audioBytes, name: kanji })}
             </div>

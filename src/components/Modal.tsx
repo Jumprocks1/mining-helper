@@ -1,7 +1,7 @@
 import IconButton from "./basic/IconButton";
 import { Component } from "../framework/Component";
 import Loader from "./Loader";
-import { getPortal } from "./basic/JsPopover";
+import { getPortal, TrackOpenPopover, OpenPopovers, MarkPopoverClosed as MarkPopoverClosed } from "./basic/JsPopover";
 import { appendChild, Children } from "../framework/createElement";
 import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 
@@ -11,21 +11,6 @@ interface Props extends BaseComponentProps {
     onClose: () => void
     body: Children | Promise<Children> | ((body: HTMLElement) => (Promise<Children> | Children))
     getMinimizeTarget?: () => DOMRect | undefined // if supplied, allow minimize
-}
-
-const OpenModals: Modal[] = []
-
-let hooked = false
-function hookListener() {
-    if (hooked) return
-    hooked = true
-    document.addEventListener("keydown", e => {
-        if (e.key === "Escape") {
-            if (OpenModals.length > 0) {
-                OpenModals[OpenModals.length - 1].Close()
-            }
-        }
-    })
 }
 
 export class Modal extends Component {
@@ -117,8 +102,7 @@ export class Modal extends Component {
     }
     Close() {
         if (!this.IsOpen) return
-        const index = OpenModals.indexOf(this)
-        if (index >= 0) OpenModals.splice(index, 1)
+        MarkPopoverClosed(this)
         this._closeNoOnClose()
         // it's fine if OnClose calls this Close for some reason since the guard above will prevent a loop
         this.OnClose()
@@ -126,10 +110,9 @@ export class Modal extends Component {
 
     Open() {
         if (this.IsOpen) return
-        if (this.Node.id) OpenModals.find(e => e.Node.id === this.Node.id)?.Close()
-        hookListener()
+        if (this.Node.id) OpenPopovers.find(e => e.Node?.id === this.Node.id)?.Close()
+        TrackOpenPopover(this)
         this.IsOpen = true
-        OpenModals.push(this)
         getPortal().append(this.Node)
     }
 

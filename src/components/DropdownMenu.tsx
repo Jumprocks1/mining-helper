@@ -12,7 +12,7 @@ interface Props<T extends Option> {
 export default <T extends Option>({ button, options, onSelect }: Props<T>) => {
     button ??= <IconButton icon="menu" /> as HTMLButtonElement
     const menuPopover = new JsPopover({
-        className: "menu",
+        type: "menu",
         hydrate: async () => {
             let loadedOptions = options
             if (typeof loadedOptions === "function")

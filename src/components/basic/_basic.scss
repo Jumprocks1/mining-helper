@@ -57,13 +57,6 @@
     }
 }
 
-.popover[popover] {
-    margin: 0;
-    inset: auto;
-    top: calc(anchor(bottom));
-    left: calc(anchor(left));
-}
-
 .up-down-buttons {
     display: flex;
     flex-direction: column;

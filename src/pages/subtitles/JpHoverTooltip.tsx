@@ -10,7 +10,8 @@ export default class JpHoverTooltip extends JsPopover {
     constructor(anchor?: HTMLElement) {
         super({
             anchor,
-            id: "jp-hover-tooltip"
+            id: "jp-hover-tooltip",
+            type: "tooltip"
         })
     }
 
