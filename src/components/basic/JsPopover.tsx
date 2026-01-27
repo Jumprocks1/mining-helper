@@ -90,7 +90,10 @@ export class JsPopover extends Component {
         this.Anchor = props.anchor
         this.Type = props.type
         applyBaseComponentProps(this.Node, props)
-        this.Node.classList.add(props.type)
+        if (props.type === "tooltip") {
+            // TODO change this to just "tooltip" once we get rid of all other tooltip CSS
+            this.Node.classList.add("_js-tooltip")
+        } else this.Node.classList.add(props.type)
     }
 
     SetContent(children: LoadableChildren) {

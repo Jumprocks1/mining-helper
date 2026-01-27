@@ -237,41 +237,40 @@ div#result {
         position: fixed;
         left: anchor(left);
         top: anchor(bottom);
-
-
-        .header {
-            font-size: 1.2em;
-            display: flex;
+    }
+}
+// we don't actually have any .popover outside of #popover-portal, but the `#` makes the specificity too high
+.popover {
+    .header {
+        font-size: 1.2em;
+        display: flex;
+    }
+    font-size: 0.75em;
+    padding: 0.2em;
+    color: variables.$fontColor; // chrome resets color without this
+    background-color: variables.$background0;
+    border: variables.$border0;
+    // dropdown menus are usually small/tighter
+    &.menu {
+        padding: 0;
+        @include variables.shadow2;
+    }
+    .menu-option {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        padding: variables.$s1 variables.$s1 * 2;
+        max-width: 30em;
+        // couldn't get *:hover to work here, not sure why. !important didn't fix it
+        &:hover:not(:has(button:hover)) {
+            background: #FFFFFF20;
         }
-        font-size: 0.75em;
-        padding: 0.2em;
-        color: variables.$fontColor; // chrome resets color without this
-        background-color: variables.$background0;
-        border: variables.$border0;
-        // dropdown menus are usually small/tighter
-        &.menu {
-            padding: 0;
-            @include variables.shadow2;
+        &:not(:last-child) {
+            border-bottom: 1px solid #FFFFFF80;
         }
-
-        .menu-option {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            padding: variables.$s1 variables.$s1 * 2;
-            max-width: 30em;
-            // couldn't get *:hover to work here, not sure why. !important didn't fix it
-            &:hover:not(:has(button:hover)) {
-                background: #FFFFFF20;
-            }
-            &:not(:last-child) {
-                border-bottom: 1px solid #FFFFFF80;
-            }
-        }
-
-        .audio-entry-option {
-            padding: 0 variables.$s1 * 2 0 0;
-        }
+    }
+    .audio-entry-option {
+        padding: 0 variables.$s1 * 2 0 0;
     }
 }
 
