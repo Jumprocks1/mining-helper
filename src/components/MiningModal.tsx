@@ -163,7 +163,7 @@ export default (props: Props) => {
             anchor: menuButton,
             hydrate: async () => {
                 const options = await getAudioOptionsFromKanji(kanji, furiToReading(card.furigana))
-                return options.map(e => <div className="audio-entry-option"
+                return options.map(e => <div className="menu-option audio-entry-option"
                     onclick={async ev => {
                         if (ev.target !== ev.currentTarget) return
                         const audio = await getAudio(e)

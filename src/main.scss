@@ -238,11 +238,22 @@ div#result {
         left: anchor(left);
         top: anchor(bottom);
 
+
+        .header {
+            font-size: 1.2em;
+            display: flex;
+        }
+        font-size: 0.75em;
+        padding: 0.2em;
+        color: variables.$fontColor; // chrome resets color without this
+        background-color: variables.$background0;
+        border: variables.$border0;
+        // dropdown menus are usually small/tighter
         &.menu {
+            padding: 0;
             @include variables.shadow2;
         }
 
-        // copied from .audio-entry-option
         .menu-option {
             display: flex;
             align-items: center;
@@ -256,6 +267,10 @@ div#result {
             &:not(:last-child) {
                 border-bottom: 1px solid #FFFFFF80;
             }
+        }
+
+        .audio-entry-option {
+            padding: 0 variables.$s1 * 2 0 0;
         }
     }
 }

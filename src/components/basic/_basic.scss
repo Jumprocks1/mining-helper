@@ -41,22 +41,6 @@
     }
 }
 
-.popover {
-    .header {
-        font-size: 1.2em;
-        display: flex;
-    }
-    font-size: 0.75em;
-    padding: 0.2em;
-    color: $fontColor; // chrome resets color without this
-    background-color: $background0;
-    border: $border0;
-    // dropdown menus are usually small/tighter
-    &.menu {
-        padding: 0;
-    }
-}
-
 .up-down-buttons {
     display: flex;
     flex-direction: column;
