@@ -57,7 +57,8 @@ export default class SubtitlesPage extends PageComponent {
             // the hover token is easily gettable, but we'd have to rework most of the code below here
             const selected = getSelection()
             if (selected) {
-                const anchor = selected.anchorNode?.parentElement as HTMLElement
+                const anchor = selected.anchorNode?.parentElement as HTMLElement | undefined
+                if (!anchor) throw "Nothing selected"
                 const htmlSubtitles = anchor.closest<HTMLElement>(".subtitles")
                 const htmlEntry = htmlSubtitles?.closest<HTMLElement>(".subtitle-entry")
                 const entry = htmlEntry?.subtitleEntry

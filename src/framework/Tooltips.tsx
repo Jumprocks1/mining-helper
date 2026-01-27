@@ -43,12 +43,22 @@ export function ActionTooltip(action: string, binding?: string, description?: st
     </span>
 }
 
+let currentTooltip: Tooltip | undefined
+
+export function UpdateTooltip(el: HTMLElement) {
+    if (currentTooltip && currentTooltip.Anchor === el) {
+        const error = Boolean(el.tooltipError)
+        currentTooltip.SetContent(error ? el.tooltipError : el.tooltip)
+        if (error) currentTooltip.Node.classList.add("error-tooltip")
+        else currentTooltip.Node.classList.remove("error-tooltip")
+    }
+}
+
 let registered = false
 export function RegisterTooltipEvents(defaultConfig: TooltipConfig | undefined = undefined) {
     if (registered) return
     registered = true
 
-    let currentTooltip: Tooltip | undefined
 
     function show(el: HTMLElement) {
         const error = Boolean(el.tooltipError)
