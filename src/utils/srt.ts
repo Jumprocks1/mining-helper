@@ -137,7 +137,12 @@ export async function parseSrt(srt: string): Promise<Subtitles> {
     return o
 }
 
-export function cleanSubtitleEntries(entries: SubtitleEntry[]) {
+export function cleanSubtitleEntries(entries: SubtitleEntry[], sort = true) {
+    // .ass files frequently sort themselves by layer
+    // this can mean that the OP/ED subs are at the very beginning of the file, causing lots of issues without sorting
+    // potentially we should consider add another duplicate check before sorting
+    //   if I see some examples where that's useful, I'll add it
+    if (sort) entries.sort((a, b) => a.startTime - b.startTime)
     for (let i = entries.length - 1; i > 0; i--) {
         const previous = entries[i - 1]
         if (previous.text === entries[i].text) {
