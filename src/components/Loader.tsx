@@ -13,7 +13,8 @@ export const Load = (load: LoadableChildren) => {
         } catch (e: unknown) {
             console.error(e)
             const node = <div className="loader" />
-            node.dataset.error = userErrorMessage(e)
+            node.classList.add("errored")
+            node.error = userErrorMessage(e)
             return node
         }
     } else {
@@ -24,7 +25,8 @@ export const Load = (load: LoadableChildren) => {
     const node = <div className="loader" />
     children.then(e => replaceWith(node, e)).catch(e => {
         console.error(e)
-        node.dataset.error = userErrorMessage(e)
+        node.classList.add("errored")
+        node.error = userErrorMessage(e)
     })
     return node
 }

@@ -73,23 +73,6 @@ button {
             @include variables.MaterialIcon();
             font-size: 16px;
         }
-        &:hover {
-            &::after {
-                // TODO could probably use tooltip mixin here
-                content: attr(data-error);
-                font-size: variables.$tooltipFontSize;
-                white-space: pre;
-                border: variables.$border0;
-                padding: variables.$s1;
-                background: variables.$background0;
-                position: absolute;
-                left: calc(100% + variables.$s1);
-                top: 0;
-                min-height: 100%;
-                display: flex;
-                align-items: center;
-            }
-        }
     }
 }
 

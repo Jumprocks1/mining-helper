@@ -43,7 +43,7 @@ export function RegisterTooltipEvents() {
     function closestTooltip(el: HTMLElement | null): HTMLElement | undefined {
         do {
             if (!el) return
-            if (el.tooltip) return el
+            if (el.tooltip || el.error) return el
         } while (el = el.parentNode as HTMLElement | null)
     }
 
