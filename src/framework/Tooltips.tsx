@@ -1,25 +1,50 @@
 import { JsPopover } from "../components/basic/JsPopover"
 import { LoadableChildren } from "../components/Loader";
+import { delay } from "../utils/util";
 
 declare global {
     interface HTMLElement {
         tooltip?: LoadableChildren
         tooltipError?: LoadableChildren
+        tooltipConfig?: TooltipConfig
     }
 }
 
+interface TooltipConfig {
+    className?: string
+}
+
+export const SmallTooltip: TooltipConfig = {
+    className: "small-tooltip",
+}
+
 class Tooltip extends JsPopover {
-    constructor({ anchor, hydrate }: { anchor: HTMLElement, hydrate: LoadableChildren }) {
+    constructor({ anchor, hydrate, config }: { anchor: HTMLElement, hydrate: LoadableChildren, config: TooltipConfig | undefined }) {
         super({
             type: "js-tooltip",
             anchor,
             hydrate
         })
+        if (config) {
+            if (config.className) {
+                this.Node.classList.add(config.className)
+            }
+        }
     }
 }
 
+export function ActionTooltip(action: string, binding?: string, description?: string | (() => string)) {
+    return () => <span className="action-tooltip">
+        <div className="row">
+            <span className="action">{action}</span>
+            {binding && <span className="binding">{binding}</span>}
+        </div>
+        {description && <span className="description">{description}</span>}
+    </span>
+}
+
 let registered = false
-export function RegisterTooltipEvents() {
+export function RegisterTooltipEvents(defaultConfig: TooltipConfig | undefined = undefined) {
     if (registered) return
     registered = true
 
@@ -29,7 +54,8 @@ export function RegisterTooltipEvents() {
         const error = Boolean(el.tooltipError)
         currentTooltip = new Tooltip({
             anchor: el,
-            hydrate: error ? el.tooltipError : el.tooltip
+            hydrate: error ? el.tooltipError : el.tooltip,
+            config: el.tooltipConfig ?? defaultConfig
         })
         if (error) currentTooltip.Node.classList.add("error-tooltip")
         currentTooltip.Open()
@@ -56,8 +82,10 @@ export function RegisterTooltipEvents() {
     })
     document.addEventListener("pointerout", ev => {
         if (!currentTooltip) return
-        if (ev.relatedTarget && currentTooltip.Anchor!.contains(ev.relatedTarget as Node)) return
-        // may need to allow hovering nested tooltips here eventually
+        if (ev.relatedTarget) {
+            if (currentTooltip.Anchor!.contains(ev.relatedTarget as Node)) return
+            if (currentTooltip.Node.contains(ev.relatedTarget as Node)) return
+        }
         hide()
     })
 }

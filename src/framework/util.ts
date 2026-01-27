@@ -1,7 +1,9 @@
+import { LoadableChildren } from "../components/Loader"
+
 export interface BaseComponentProps {
     className?: string
     id?: string
-    tooltip?: string
+    tooltip?: LoadableChildren
     title?: string
 }
 

@@ -1,5 +1,6 @@
 import { JsPopover } from "../../components/basic/JsPopover";
 import { Children } from "../../framework/createElement";
+import { SmallTooltip } from "../../framework/Tooltips";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState";
 import AnkiConnect from "../../utils/AnkiConnect";
@@ -31,6 +32,7 @@ export default class JpHoverTooltip extends JsPopover {
             const target = vocabState === VocabState.Known ? vocab[0] : vocabNote
             if (target) {
                 vocabStateNode = <button className="link-button uncolored"
+                    tooltip="Open in Anki" tooltipConfig={SmallTooltip}
                     onclick={() => AnkiConnect.call("guiBrowse", { query: `word:${target}` })}>
                     {vocabStateString}
                 </button>

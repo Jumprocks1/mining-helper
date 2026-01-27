@@ -181,8 +181,10 @@ div#result {
     top: 0;
     .popover {
         position: fixed;
-        left: anchor(left);
-        top: anchor(bottom);
+        &.default-position {
+            left: anchor(left);
+            top: anchor(bottom);
+        }
     }
 }
 // we don't actually have any .popover outside of #popover-portal, but the `#` makes the specificity too high
@@ -236,7 +238,31 @@ div#result {
     background-color: variables.$backgroundTooltip;
     white-space: pre-wrap;
 
+    &.small-tooltip {
+        font-size: variables.$tooltipFontSize * 0.8;
+    }
+
     &.error-tooltip {
         color: variables.$error;
+    }
+
+    .action-tooltip {
+        .row {
+            display: flex;
+        }
+        .action {
+            color: variables.$brightGreen;
+        }
+        .binding {
+            margin-left: auto;
+            padding-left: variables.$s1 * 3;
+            padding-right: variables.$s1;
+            opacity: 80%;
+            font-family: monospace;
+        }
+        .description {
+            display: block;
+            font-size: 0.9em;
+        }
     }
 }

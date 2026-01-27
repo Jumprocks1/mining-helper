@@ -13,6 +13,7 @@ import { getCharacterIndex } from "../../utils/CharacterHighlighter"
 import { PageComponent } from "../../framework/PageComponent"
 import { Children } from "../../framework/createElement"
 import { ErrorDisplay } from "../../utils/UserError"
+import { ActionTooltip } from "../../framework/Tooltips"
 
 export default class SubtitlesPage extends PageComponent {
     Id = "subs-page"
@@ -44,6 +45,49 @@ export default class SubtitlesPage extends PageComponent {
             if ((subs.offset ?? 0) !== offset) {
                 subs.offset = offset
                 this.ReloadSubs()
+            }
+        }
+    }
+
+    TryMine() {
+        if (this.MiningModal) {
+            this.MiningModal.Close()
+        } else {
+            // TODO if selection is collapsed, we should prioritze the hover element in the SubtitleViewer
+            // the hover token is easily gettable, but we'd have to rework most of the code below here
+            const selected = getSelection()
+            if (selected) {
+                const anchor = selected.anchorNode?.parentElement as HTMLElement
+                const htmlSubtitles = anchor.closest<HTMLElement>(".subtitles")
+                const htmlEntry = htmlSubtitles?.closest<HTMLElement>(".subtitle-entry")
+                const entry = htmlEntry?.subtitleEntry
+                if (htmlSubtitles && entry) {
+                    let startIndex: number | undefined
+                    let endIndex: number | undefined
+                    // can only get these indices if the start/end for selection is in same entry
+                    if (selected.focusNode && selected.focusNode.parentElement?.closest<HTMLElement>(".subtitles") === htmlSubtitles) {
+                        startIndex = getCharacterIndex(htmlSubtitles, selected.anchorNode!, selected.anchorOffset)
+                        endIndex = getCharacterIndex(htmlSubtitles, selected.focusNode!, selected.focusOffset)
+                        if (startIndex > endIndex) {
+                            const temp = startIndex
+                            startIndex = endIndex
+                            endIndex = temp
+                        }
+                    }
+                    this.MiningModal = MiningModal({
+                        word: selected.toString(), entry, mpv: this.MpvWebSocket,
+                        subtitles: this.LoadedSubtitles!.subtitles,
+                        startIndex,
+                        endIndex,
+                        onClose: () => this.MiningModal = undefined,
+                        subtitlesPage: this
+                    })
+                    this.MiningModal.Open()
+                    this.MpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
+                    // Could use this to query, but really not needed
+                    // webSocket.RequestIfOpen(`ipc-request:["get_property", "sub-visibility"]`)
+                    this.MpvWebSocket.SendIfOpen(`ipc:set sub-visibility yes`)
+                }
             }
         }
     }
@@ -86,46 +130,7 @@ export default class SubtitlesPage extends PageComponent {
         } else if (key === ",") {
             SettingsModal()
         } else if (key === "m") {
-            if (this.MiningModal) {
-                this.MiningModal.Close()
-            } else {
-                // TODO if selection is collapsed, we should prioritze the hover element in the SubtitleViewer
-                // the hover token is easily gettable, but we'd have to rework most of the code below here
-                const selected = getSelection()
-                if (selected) {
-                    const anchor = selected.anchorNode?.parentElement as HTMLElement
-                    const htmlSubtitles = anchor.closest<HTMLElement>(".subtitles")
-                    const htmlEntry = htmlSubtitles?.closest<HTMLElement>(".subtitle-entry")
-                    const entry = htmlEntry?.subtitleEntry
-                    if (htmlSubtitles && entry) {
-                        let startIndex: number | undefined
-                        let endIndex: number | undefined
-                        // can only get these indices if the start/end for selection is in same entry
-                        if (selected.focusNode && selected.focusNode.parentElement?.closest<HTMLElement>(".subtitles") === htmlSubtitles) {
-                            startIndex = getCharacterIndex(htmlSubtitles, selected.anchorNode!, selected.anchorOffset)
-                            endIndex = getCharacterIndex(htmlSubtitles, selected.focusNode!, selected.focusOffset)
-                            if (startIndex > endIndex) {
-                                const temp = startIndex
-                                startIndex = endIndex
-                                endIndex = temp
-                            }
-                        }
-                        this.MiningModal = MiningModal({
-                            word: selected.toString(), entry, mpv: this.MpvWebSocket,
-                            subtitles: this.LoadedSubtitles!.subtitles,
-                            startIndex,
-                            endIndex,
-                            onClose: () => this.MiningModal = undefined,
-                            subtitlesPage: this
-                        })
-                        this.MiningModal.Open()
-                        this.MpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
-                        // Could use this to query, but really not needed
-                        // webSocket.RequestIfOpen(`ipc-request:["get_property", "sub-visibility"]`)
-                        this.MpvWebSocket.SendIfOpen(`ipc:set sub-visibility yes`)
-                    }
-                }
-            }
+            this.TryMine()
         } else if (key === "t") {
             this.TryJpdbParse()
         } else if (key === "y") {
@@ -172,7 +177,15 @@ export default class SubtitlesPage extends PageComponent {
         return this.JpdbParsePromise
     }
 
-    JpdbLoadButton = IconButtonClass({ icon: "document_search", onClick: () => this.TryJpdbParse() })
+    JpdbLoadButton = IconButtonClass({
+        icon: "document_search", onClick: () => this.TryJpdbParse(),
+        tooltip: ActionTooltip("Parse File", "T", "Parses the loaded subtitle file using jpdb's API")
+    })
+
+    MiningButton = IconButtonClass({
+        icon: "edit", onClick: () => this.TryMine(),
+        tooltip: ActionTooltip("Mine Selection", "M", "Create an Anki card based on the selected text")
+    })
 
     constructor() {
         super()
@@ -188,8 +201,9 @@ export default class SubtitlesPage extends PageComponent {
         }} />
         this.Node = <>
             <div id="status-info">
+                {this.MiningButton}
                 {this.JpdbLoadButton}
-                <IconButton icon="settings" onClick={() => SettingsModal()} />
+                <IconButton icon="settings" onClick={() => SettingsModal()} tooltip={ActionTooltip("Open Settings", ",")} />
                 {this.TimeElement}
                 {connectionDot}
             </div>
