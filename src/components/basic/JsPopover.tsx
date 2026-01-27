@@ -5,7 +5,7 @@ import { applyBaseComponentProps, BaseComponentProps } from "../../framework/uti
 import { onDeath } from "../../framework/Observer";
 
 interface Props extends BaseComponentProps {
-    hydrate?: () => Promise<Children> | Children
+    hydrate?: LoadableChildren
     anchor?: HTMLElement
     type: PopoverType
 }
@@ -68,7 +68,7 @@ export class JsPopover extends Component {
 
     Hydrated = false
     IsOpen = false
-    Hydrate?: () => Promise<Children> | Children
+    Hydrate?: LoadableChildren
     Type: PopoverType
 
     private _anchor?: HTMLElement
@@ -90,9 +90,7 @@ export class JsPopover extends Component {
         this.Anchor = props.anchor
         this.Type = props.type
         applyBaseComponentProps(this.Node, props)
-        if (props.type === "menu") {
-            this.Node.classList.add("menu")
-        }
+        this.Node.classList.add(props.type)
     }
 
     SetContent(children: LoadableChildren) {

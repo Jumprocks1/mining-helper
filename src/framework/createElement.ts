@@ -53,6 +53,9 @@ export function createElement(element: string | FC,
                     for (const key2 in properties[key])
                         // @ts-ignore
                         el[key][key2] = properties[key][key2];
+                    // I don't really use/like this
+                    // } else if (key.startsWith("data-")) {
+                    //     el.dataset[key.substring(5)] = properties[key]
                 } else {
                     const v = properties[key];
                     if (v !== undefined)

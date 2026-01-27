@@ -4,6 +4,7 @@ import MainLayout from "./MainLayout";
 import pages from "./pages";
 import { debounce } from "../utils/util"
 import { getSetting, onSettingChange } from "../views/SettingsModal"
+import { RegisterTooltipEvents } from "../framework/Tooltips";
 
 // we could target body directly, but that has issues since we clear the body on each page load
 // if we store things like the modal portal in the body, they would get removed on navigation
@@ -19,6 +20,7 @@ BindSpaRouter({
     onInit: onPageLoad,
     spaLinks: true
 })
+RegisterTooltipEvents()
 
 
 let customSheet: CSSStyleSheet | undefined
