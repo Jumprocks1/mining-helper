@@ -41,7 +41,7 @@ export default class LoadingButton extends Component {
                 console.error({ message: "error in promise", error })
                 const message = userErrorMessage(error)
                 this.Node.classList.add("errored")
-                this.Node.error = message
+                this.Node.tooltipError = message
                 if (!canRetry) this.Disabled = true
             }).then(() => {
                 this.Loading = false;

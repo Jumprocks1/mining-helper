@@ -4,14 +4,14 @@ import { LoadableChildren } from "../components/Loader";
 declare global {
     interface HTMLElement {
         tooltip?: LoadableChildren
-        error?: LoadableChildren
+        tooltipError?: LoadableChildren
     }
 }
 
 class Tooltip extends JsPopover {
     constructor({ anchor, hydrate }: { anchor: HTMLElement, hydrate: LoadableChildren }) {
         super({
-            type: "tooltip",
+            type: "js-tooltip",
             anchor,
             hydrate
         })
@@ -26,10 +26,10 @@ export function RegisterTooltipEvents() {
     let currentTooltip: Tooltip | undefined
 
     function show(el: HTMLElement) {
-        const error = Boolean(el.error)
+        const error = Boolean(el.tooltipError)
         currentTooltip = new Tooltip({
             anchor: el,
-            hydrate: error ? el.error : el.tooltip
+            hydrate: error ? el.tooltipError : el.tooltip
         })
         if (error) currentTooltip.Node.classList.add("error-tooltip")
         currentTooltip.Open()
@@ -43,7 +43,7 @@ export function RegisterTooltipEvents() {
     function closestTooltip(el: HTMLElement | null): HTMLElement | undefined {
         do {
             if (!el) return
-            if (el.tooltip || el.error) return el
+            if (el.tooltip || el.tooltipError) return el
         } while (el = el.parentNode as HTMLElement | null)
     }
 

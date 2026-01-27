@@ -136,10 +136,10 @@ export default () => {
             type="range" min="0" max="100" onchange={async e => {
                 const input = e.target as HTMLInputElement
                 inputVolume = input.valueAsNumber
-                volumeInput.dataset.tooltip = `${inputVolume}%`
+                volumeInput.tooltip = `${inputVolume}%`
                 return setSetting("volume", inputToVolume(input.valueAsNumber))
             }} />
-        volumeInput.dataset.tooltip = `${inputVolume}%`
+        volumeInput.tooltip = `${inputVolume}%`
 
 
         return <>

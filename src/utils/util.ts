@@ -218,23 +218,13 @@ interface ElementProps {
     mutate?: (e: HTMLElement) => void
 }
 
-export function tooltip(node: HTMLElement, text: Child[] | Child) {
-    const tooltip = document.createElement("div")
-    tooltip.classList.add("tooltip")
-    if (Array.isArray(text))
-        tooltip.replaceChildren(...text)
-    else
-        tooltip.replaceChildren(text)
-    node.append(tooltip)
-}
-
 export function oldCreateElement<T extends keyof HTMLElementTagNameMap>(type: T, props: ElementProps): HTMLElementTagNameMap[T] {
     const el = document.createElement(type)
     if (props.className) el.className = props.className
     if (props.textContent) el.textContent = props.textContent
     if (props.innerHTML) el.innerHTML = props.innerHTML
     if (props.children) el.replaceChildren(...props.children)
-    if (props.tooltip) tooltip(el, props.tooltip)
+    if (props.tooltip) el.tooltip = props.tooltip
     if (props.onClick) el.addEventListener("click", props.onClick)
     if (props.href) {
         (el as HTMLAnchorElement).href = props.href;

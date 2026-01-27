@@ -66,53 +66,6 @@ body {
     }
 }
 
-@mixin tooltip {
-    font-size: variables.$tooltipFontSize;
-    font-family: variables.$fontFamily;
-    display: none;
-    max-width: 280px;
-    width: max-content;
-    position: absolute;
-    top: 100%;
-
-    background-color: #222;
-    border: 1px solid rgba(255, 255, 255, 50%);
-    text-align: left;
-    border-radius: 3px;
-    padding: 5px;
-    z-index: 1;
-    white-space: pre-wrap;
-
-    &:hover {
-        display: block;
-    }
-}
-
-.tooltip {
-    @include tooltip;
-}
-
-/* *:hover doesn't work for some reason */
-span:hover:not(.error)>.tooltip {
-    display: block;
-}
-
-*:has(>.tooltip) {
-    position: relative
-}
-
-
-[data-tooltip] {
-    position: relative;
-    &:hover:not(.errored):before {
-        @include tooltip;
-        display: block;
-        content: attr(data-tooltip);
-
-        pointer-events: none; // prevent firing parent events (hover/click)
-    }
-}
-
 .meaning-index,
 .sentence-index,
 .kanji {
@@ -138,13 +91,6 @@ span:hover:not(.error)>.tooltip {
             &:hover {
                 border: 1px solid rgb(255, 255, 255);
             }
-        }
-
-        .tooltip {
-            font-size: 0.75em;
-        }
-        .tooltip b {
-            color: #a2f4ff;
         }
 
         .delete-button {
@@ -283,13 +229,14 @@ div#result {
     font-family: monospace;
 }
 
-._js-tooltip {
+.js-tooltip {
     font-size: variables.$tooltipFontSize;
+    max-width: 280px;
+    width: max-content;
+    background-color: variables.$backgroundTooltip;
+    white-space: pre-wrap;
 
-    // TODO there's lots of other `.error` selectors that we should cleanup
-    // also need to cleanup .tooltip stuff in general
     &.error-tooltip {
         color: variables.$error;
-        white-space: pre-wrap;
     }
 }

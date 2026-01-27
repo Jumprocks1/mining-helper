@@ -14,7 +14,7 @@ export const Load = (load: LoadableChildren) => {
             console.error(e)
             const node = <div className="loader" />
             node.classList.add("errored")
-            node.error = userErrorMessage(e)
+            node.tooltipError = userErrorMessage(e)
             return node
         }
     } else {
@@ -26,7 +26,7 @@ export const Load = (load: LoadableChildren) => {
     children.then(e => replaceWith(node, e)).catch(e => {
         console.error(e)
         node.classList.add("errored")
-        node.error = userErrorMessage(e)
+        node.tooltipError = userErrorMessage(e)
     })
     return node
 }
