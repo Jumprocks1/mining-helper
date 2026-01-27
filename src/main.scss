@@ -282,3 +282,9 @@ div#result {
     white-space: pre-wrap;
     font-family: monospace;
 }
+
+// TODO there's lots of other `.error` selectors that we should cleanup
+// also need to cleanup .tooltip stuff in general
+._js-tooltip.error-tooltip {
+    color: variables.$error;
+}
