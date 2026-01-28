@@ -1,3 +1,4 @@
+import { onDeath } from "../../framework/Observer"
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util"
 import Effects from "../../utils/Effects"
 import { setSetting, type SettingsKey } from "../../views/SettingsModal"
@@ -92,12 +93,18 @@ export default (props: Props) => {
             commitPending()
         }
     }
-    res.addEventListener("mouseenter", () => document.addEventListener("keydown", onKeyDown, true))
-    // if a modal is closed while hovering a number field, this will leak really badly
-    res.addEventListener("mouseleave", () => {
+    const leave = () => {
         document.removeEventListener("keydown", onKeyDown, true)
         commitPending()
+    }
+    let deathRegistered = false
+    res.addEventListener("mouseenter", () => {
+        document.addEventListener("keydown", onKeyDown, true)
+        if (deathRegistered) return
+        onDeath(res, leave)
+        deathRegistered = true
     })
+    res.addEventListener("mouseleave", leave)
 
     applyBaseComponentProps(res, props)
     return res

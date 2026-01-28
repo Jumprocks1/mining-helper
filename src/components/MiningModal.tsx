@@ -347,7 +347,8 @@ export default (props: Props) => {
         // I don't like this
         // only works because we know the modal will be in a loading state already
         modal.Node.querySelector(".inner-modal")!.append(<div className="footer">
-            <LoadingButton onClick={save} loading={mpvPromise}>Save</LoadingButton>
+            <LoadingButton onClick={save} loading={mpvPromise}
+                tooltip={"Creates a new Anki card"}>Save</LoadingButton>
         </div>)
         return body
     }
