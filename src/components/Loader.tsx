@@ -2,14 +2,18 @@ import { type Children, replaceWith } from "../framework/createElement"
 import { userErrorMessage } from "../utils/UserError"
 
 
-export type LoadableChildren = Promise<Children> | (() => Promise<Children> | Children) | Children
+export type LoadableChildren<T = undefined> = Promise<Children> | ((props: T) => Promise<Children> | Children) | Children
 
+type LoadOverload = {
+    (load: LoadableChildren<undefined>): Children;
+    <T>(load: LoadableChildren<T>, props: T): Children;
+}
 // slightly nicer than <Loader /> since it feels more like a regular function
-export const Load = (load: LoadableChildren) => {
+export const Load: LoadOverload = (load: LoadableChildren<any>, props?: any) => {
     let children: Promise<Children> | Children
     if (typeof load === "function") {
         try {
-            children = load()
+            children = load(props)
         } catch (e: unknown) {
             console.error(e)
             const node = <div className="loader" />

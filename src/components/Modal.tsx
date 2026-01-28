@@ -1,15 +1,15 @@
 import IconButton from "./basic/IconButton";
 import { Component } from "../framework/Component";
-import Loader from "./Loader";
+import { Load, LoadableChildren } from "./Loader";
 import { getPortal, TrackOpenPopover, OpenPopovers, MarkPopoverClosed as MarkPopoverClosed } from "./basic/JsPopover";
-import { appendChild, Children } from "../framework/createElement";
+import { appendChild } from "../framework/createElement";
 import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 
 interface Props extends BaseComponentProps {
     header: any
-    footer?: any
+    footer?: LoadableChildren<Props>
     onClose: () => void
-    body: Children | Promise<Children> | ((body: HTMLElement) => (Promise<Children> | Children))
+    body: LoadableChildren<Props>
     getMinimizeTarget?: () => DOMRect | undefined // if supplied, allow minimize
 }
 
@@ -44,12 +44,7 @@ export class Modal extends Component {
 
         const body = <div className="body"></div>
 
-        let innerBody = typeof props.body === "function" ? props.body(body) : props.body
-        if (innerBody instanceof Promise) {
-            innerBody = <Loader load={innerBody} />
-        }
-
-        appendChild(body, innerBody as any)
+        appendChild(body, Load(props.body, props))
 
         if (props.getMinimizeTarget) {
             this.getMinimizeTarget = props.getMinimizeTarget
@@ -75,7 +70,7 @@ export class Modal extends Component {
                 {closeButton}
             </div>
             {body}
-            {props.footer && <div className="footer">{props.footer}</div>}
+            {props.footer && <div className="footer">{Load(props.footer, props)}</div>}
         </div>
         const res = <div className="modal">
             {inner}
