@@ -1,9 +1,11 @@
+import LoadingButton from "../../components/LoadingButton";
 import { OpenModal } from "../../components/Modal";
 import Select from "../../components/Select";
 import AnkiConnect from "../../utils/AnkiConnect";
+import { delay } from "../../utils/util";
 import { getSetting, setSetting, stringSettingsField } from "../../views/SettingsModal";
 
-const body = async () => {
+const body = async (inner: HTMLElement) => {
     // JSX doesn't work with this component
     // TODO need to add more of these
     // Eventually they need to save to a shared object
@@ -12,14 +14,13 @@ const body = async () => {
         includeEmpty: true,
         loadOptions: async () => AnkiConnect.call("modelFieldNames", { modelName: await getSetting("targetAnkiModel") })
     })
-    // TODO this needs to be converted to a modal, since that's the only place we use it
     // Needs a button for checking everything. Check:
     //   API key
     //   Duplicate field names
     //   Unset important fields
     //   Set fields that don't exist on the current model
     // Needs a button for auto mapping, will auto press itself if nothing is set yet
-    return <>
+    const res = <>
         {await stringSettingsField("ankiConnectAddress", "AnkiConnect Address")}
         {await stringSettingsField("ankiConnectApiKey", "AnkiConnect API Key", "password")}
         <div className="field-group">
@@ -50,6 +51,15 @@ const body = async () => {
             </div>
         </div>
     </>
+    inner.append(<div className="footer">
+        <LoadingButton onClick={async () => {
+            await delay(1000)
+            throw "TODO this isn't set up yet"
+        }}>
+            Verify Settings
+        </LoadingButton>
+    </div>)
+    return res
 }
 
 export default () => OpenModal({
