@@ -1,6 +1,5 @@
 import { JsPopover } from "../components/basic/JsPopover"
 import { LoadableChildren } from "../components/Loader";
-import { delay } from "../utils/util";
 
 declare global {
     interface HTMLElement {
@@ -61,6 +60,7 @@ export function RegisterTooltipEvents(defaultConfig: TooltipConfig | undefined =
 
 
     function show(el: HTMLElement) {
+        hide()
         const error = Boolean(el.tooltipError)
         currentTooltip = new Tooltip({
             anchor: el,
@@ -91,6 +91,8 @@ export function RegisterTooltipEvents(defaultConfig: TooltipConfig | undefined =
         show(tooltipElement)
     })
     document.addEventListener("pointerout", ev => {
+        // mostly just nice for debugging
+        if (ev.ctrlKey) return
         if (!currentTooltip) return
         if (ev.relatedTarget) {
             if (currentTooltip.Anchor!.contains(ev.relatedTarget as Node)) return

@@ -109,22 +109,6 @@ export class JsPopover extends Component {
             return
         }
     }
-    CalculatePosition() {
-        // could probably use CSS position try here, but ehhh
-        const check = () => {
-            const current = this.Node.getBoundingClientRect()
-            return current.top >= 0 &&
-                current.left >= 0 &&
-                current.bottom <= window.innerHeight &&
-                current.right <= window.innerWidth
-        }
-        const inside = check()
-        if (!inside) {
-            this.Node.classList.remove("default-position")
-            // @ts-expect-error
-            this.Node.style.positionArea = "bottom"
-        }
-    }
     Open() {
         if (this.IsOpen) return
         TrackOpenPopover(this)
@@ -140,7 +124,6 @@ export class JsPopover extends Component {
         if (this.Hydrated || !this.Hydrate) return
         this.Hydrated = true
         this.SetContent(this.Hydrate)
-        if (this.Type === "js-tooltip") this.CalculatePosition()
     }
     Close() {
         if (!this.IsOpen) return

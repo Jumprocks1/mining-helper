@@ -182,8 +182,8 @@ div#result {
     .popover {
         position: fixed;
         &.default-position {
-            left: anchor(left);
-            top: anchor(bottom);
+            // could add extra fallbacks, but this seems pretty good for now
+            position-area: bottom span-right;
         }
     }
 }
