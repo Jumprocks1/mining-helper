@@ -5,11 +5,11 @@ import { getPortal, TrackOpenPopover, OpenPopovers, MarkPopoverClosed as MarkPop
 import { appendChild } from "../framework/createElement";
 import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 
-interface Props extends BaseComponentProps {
+export interface ModalProps extends BaseComponentProps {
     header: any
-    footer?: LoadableChildren<Props>
+    footer?: LoadableChildren
     onClose: () => void
-    body: LoadableChildren<Props>
+    body: LoadableChildren<HTMLElement>
     getMinimizeTarget?: () => DOMRect | undefined // if supplied, allow minimize
 }
 
@@ -24,7 +24,7 @@ export class Modal extends Component {
     IsMinimized = false;
     MinimizeButton?: HTMLElement
 
-    getMinimizeTarget?: Props["getMinimizeTarget"]
+    getMinimizeTarget?: ModalProps["getMinimizeTarget"]
 
     OnCloseHandlers?: (() => void)[]
     RegisterOnClose(onClose: () => void) {
@@ -36,15 +36,25 @@ export class Modal extends Component {
         this.OnCloseHandlers.push(onClose)
     }
 
-    constructor(props: Props) {
+    constructor(props: ModalProps) {
         super()
         this.OnClose = props.onClose
 
         const closeButton = <IconButton icon="close" onClick={() => this.Close()} />
 
-        const body = <div className="body"></div>
 
-        appendChild(body, Load(props.body, props))
+        const body = <div className="body"></div>
+        const inner = <div className="inner-modal">
+            <div className="header">
+                <div>{props.header}</div>
+                {this.MinimizeButton}
+                {closeButton}
+            </div>
+            {body}
+            {props.footer && <div className="footer">{Load(props.footer)}</div>}
+        </div>
+
+        appendChild(body, Load(props.body, inner))
 
         if (props.getMinimizeTarget) {
             this.getMinimizeTarget = props.getMinimizeTarget
@@ -63,15 +73,6 @@ export class Modal extends Component {
             }} />
         }
 
-        const inner = <div className="inner-modal">
-            <div className="header">
-                <div>{props.header}</div>
-                {this.MinimizeButton}
-                {closeButton}
-            </div>
-            {body}
-            {props.footer && <div className="footer">{Load(props.footer, props)}</div>}
-        </div>
         const res = <div className="modal">
             {inner}
         </div>
@@ -130,10 +131,10 @@ export class Modal extends Component {
 type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
 
-export function OpenModal(props: PartialBy<Props, "onClose">) {
+export function OpenModal(props: PartialBy<ModalProps, "onClose">) {
     if (!props.onClose)
         props.onClose = () => { }
-    const modal = new Modal(props as Props)
+    const modal = new Modal(props as ModalProps)
     modal.Open()
     return modal
 }

@@ -76,7 +76,7 @@ export default (props: Props) => {
 
     const sourceFile = cleanSource(filenameFromPath(props.subtitlesPage.CurrentFilename))
 
-    async function body() {
+    async function body(inner: HTMLElement) {
         const entries = subtitles.processedEntries
 
         const card = await getOrCreatePendingCard(word, true)
@@ -344,9 +344,7 @@ export default (props: Props) => {
             body.push(imageField)
         }
 
-        // I don't like this
-        // only works because we know the modal will be in a loading state already
-        modal.Node.querySelector(".inner-modal")!.append(<div className="footer">
+        inner.append(<div className="footer">
             <LoadingButton onClick={save} loading={mpvPromise}
                 tooltip={"Creates a new Anki card"}>Save</LoadingButton>
         </div>)
