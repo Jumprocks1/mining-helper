@@ -1,8 +1,9 @@
-import Select from "../components/Select";
-import AnkiConnect from "../utils/AnkiConnect";
-import { getSetting, setSetting, stringSettingsField } from "./SettingsModal";
+import { OpenModal } from "../../components/Modal";
+import Select from "../../components/Select";
+import AnkiConnect from "../../utils/AnkiConnect";
+import { getSetting, setSetting, stringSettingsField } from "../../views/SettingsModal";
 
-export const AnkiConnectSettingsFields = async () => {
+const body = async () => {
     // JSX doesn't work with this component
     // TODO need to add more of these
     // Eventually they need to save to a shared object
@@ -50,3 +51,9 @@ export const AnkiConnectSettingsFields = async () => {
         </div>
     </>
 }
+
+export default () => OpenModal({
+    className: "settings-modal",
+    body,
+    header: "Configuring AnkiConnect"
+})

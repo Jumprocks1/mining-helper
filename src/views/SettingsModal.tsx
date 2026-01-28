@@ -1,8 +1,8 @@
 import NumberField from "../components/basic/NumberField"
 import Loader from "../components/Loader"
 import { OpenModal } from "../components/Modal"
+import AnkiSettingsModal from "../pages/anki/AnkiSettingsModal"
 import AdvancedSettingsModal from "./AdvancedSettingsModal"
-import { AnkiConnectSettingsFields } from "./Fields"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 
 type Milliseconds = number
@@ -173,11 +173,7 @@ export default () => {
             <div className="footer-buttons">
                 <button onclick={() => {
                     modal.Close()
-                    OpenModal({
-                        className: "settings-modal",
-                        body: AnkiConnectSettingsFields,
-                        header: "Configuring AnkiConnect"
-                    })
+                    AnkiSettingsModal()
                 }}>
                     Anki Setup
                 </button>
