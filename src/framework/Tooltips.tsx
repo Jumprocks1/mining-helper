@@ -45,36 +45,52 @@ export function ActionTooltip(action: string, binding?: string, description?: st
 let currentTooltip: Tooltip | undefined
 
 export function UpdateTooltip(el: HTMLElement) {
+    if (!currentTooltip) {
+        // this isn't perfect, but it's very close
+        // main reason we need it is for errored buttons
+        // if the button doesn't have a tooltip before the error, it won't get tracked by pointerover
+        // this is the only real alternative
+        if (el.matches(":hover")) show(el)
+        return
+    }
     if (currentTooltip && currentTooltip.Anchor === el) {
         const error = Boolean(el.tooltipError)
-        currentTooltip.SetContent(error ? el.tooltipError : el.tooltip)
+        const tooltip = error ? el.tooltipError : el.tooltip
+        if (!tooltip) {
+            hide()
+            return
+        }
+        currentTooltip.SetContent(tooltip)
         if (error) currentTooltip.Node.classList.add("error-tooltip")
         else currentTooltip.Node.classList.remove("error-tooltip")
     }
+}
+
+function hide() {
+    if (!currentTooltip) return
+    currentTooltip.Close()
+    currentTooltip = undefined
+}
+
+let tooltipDefaultConfig: TooltipConfig | undefined = undefined
+
+function show(el: HTMLElement) {
+    hide()
+    const error = Boolean(el.tooltipError)
+    currentTooltip = new Tooltip({
+        anchor: el,
+        hydrate: error ? el.tooltipError : el.tooltip,
+        config: el.tooltipConfig ?? tooltipDefaultConfig
+    })
+    if (error) currentTooltip.Node.classList.add("error-tooltip")
+    currentTooltip.Open()
 }
 
 let registered = false
 export function RegisterTooltipEvents(defaultConfig: TooltipConfig | undefined = undefined) {
     if (registered) return
     registered = true
-
-
-    function show(el: HTMLElement) {
-        hide()
-        const error = Boolean(el.tooltipError)
-        currentTooltip = new Tooltip({
-            anchor: el,
-            hydrate: error ? el.tooltipError : el.tooltip,
-            config: el.tooltipConfig ?? defaultConfig
-        })
-        if (error) currentTooltip.Node.classList.add("error-tooltip")
-        currentTooltip.Open()
-    }
-    function hide() {
-        if (!currentTooltip) return
-        currentTooltip.Close()
-        currentTooltip = undefined
-    }
+    tooltipDefaultConfig = defaultConfig
 
     function closestTooltip(el: HTMLElement | null): HTMLElement | undefined {
         do {
