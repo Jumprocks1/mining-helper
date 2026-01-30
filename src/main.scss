@@ -184,6 +184,7 @@ div#result {
         &.default-position {
             // could add extra fallbacks, but this seems pretty good for now
             position-area: bottom span-right;
+            position-try-fallbacks: top span-right;
         }
     }
 }

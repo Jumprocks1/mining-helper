@@ -74,13 +74,9 @@ export class Modal extends Component {
         }
 
         const res = <div className="modal">
+            <div className="backdrop" onpointerdown={() => this.Close()} />
             {inner}
         </div>
-        res.onpointerdown = ev => {
-            if (ev.target === res) {
-                this.Close()
-            }
-        }
         applyBaseComponentProps(res, props)
         this.Node = res
     }
