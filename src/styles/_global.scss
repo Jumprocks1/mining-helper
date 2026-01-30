@@ -34,6 +34,62 @@ body {
     a {
         color: inherit;
     }
+    input {
+        display: block;
+        &:not([type="checkbox"]) {
+            width: 100%;
+        }
+        font-size: inherit;
+        color: inherit;
+        outline: none;
+        font-family: inherit;
+        background: none;
+        border: variables.$border0;
+        padding: variables.$s1 * 0.5;
+    }
+    input[type="range"] {
+        accent-color: variables.$blue;
+        max-width: 10em;
+    }
+
+    label, .label {
+        color: variables.$label;
+    }
+
+    ruby rt {
+        user-select: none;
+        opacity: 0.85;
+    }
+
+    select {
+        // mostly copied from input styles
+        display: block;
+        font-size: inherit;
+        color: inherit;
+        outline: none;
+        font-family: inherit;
+        background: none;
+        border: variables.$border0;
+        padding: 0 variables.$s1 * 0.5;
+        &:hover, &:focus {
+            background: rgba(255, 255, 255, 10%);
+        }
+
+        option {
+            background: variables.$background0;
+            border: variables.$border0;
+            padding: 0 variables.$s1 * 0.5;
+            &.unset {
+                font-style: italic;
+            }
+        }
+    }
+}
+
+@layer utilities {
+    .hide {
+        display: none;
+    }
 }
 
 button {
@@ -104,62 +160,6 @@ button {
             top: 0;
             @include variables.MaterialIcon();
             font-size: 16px;
-        }
-    }
-}
-
-input {
-    display: block;
-    &:not([type="checkbox"]) {
-        width: 100%;
-    }
-    font-size: inherit;
-    color: inherit;
-    outline: none;
-    font-family: inherit;
-    background: none;
-    border: variables.$border0;
-    padding: variables.$s1 * 0.5;
-}
-
-input[type="range"] {
-    accent-color: variables.$blue;
-    max-width: 10em;
-}
-
-.hide {
-    display: none;
-}
-
-label, .label {
-    color: variables.$label;
-}
-
-ruby rt {
-    user-select: none;
-    opacity: 0.85;
-}
-
-select {
-    // mostly copied from input styles
-    display: block;
-    font-size: inherit;
-    color: inherit;
-    outline: none;
-    font-family: inherit;
-    background: none;
-    border: variables.$border0;
-    padding: 0 variables.$s1 * 0.5;
-    &:hover, &:focus {
-        background: rgba(255, 255, 255, 10%);
-    }
-
-    option {
-        background: variables.$background0;
-        border: variables.$border0;
-        padding: 0 variables.$s1 * 0.5;
-        &.unset {
-            font-style: italic;
         }
     }
 }
