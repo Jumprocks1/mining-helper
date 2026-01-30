@@ -11,24 +11,13 @@
 @use "views/settings";
 @use "sass:color";
 
-html {
-    font-size: 24px;
+// TODO not sure if this counts as defining before the @use
+@layer base, elements, components, pages; // TODO move everything into these layers
+
+
+#body-container {
+    padding: 16px;
 }
-
-body {
-    background-color: variables.$background1;
-    color: variables.$fontColor;
-    padding: 0;
-
-    font-size: 24px;
-    #body-container {
-        padding: 16px;
-    }
-    #fullscreen-button {
-        display: none;
-    }
-}
-
 
 #mh-header {
     background-color: variables.$background0;

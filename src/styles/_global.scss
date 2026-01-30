@@ -3,6 +3,38 @@
 @use "sass:color";
 
 // These styles are relatively unrestricted, keep them in mind
+// higher layers can help override them
+
+// Some of this can't be in a layer since Chrome extension have this "injected stylesheet"
+// It's very minimal, so I think everything else can go in a layer
+// https://chromium.googlesource.com/chromium/src/+/master/extensions/renderer/resources/extension_fonts.css
+body {
+    font-family: variables.$fontFamily;
+    font-size: 24px;
+}
+
+@layer base {
+    html {
+        font-size: 24px;
+        box-sizing: border-box;
+        height: 100%;
+    }
+    *, *::after, *::before {
+        box-sizing: inherit;
+        margin: 0;
+    }
+    body {
+        min-height: 100%;
+        display: flex;
+        flex-direction: column;
+        background-color: variables.$background1;
+        color: variables.$fontColor;
+        padding: 0;
+    }
+    a {
+        color: inherit;
+    }
+}
 
 button {
     background: rgba(255, 255, 255, 3%);
@@ -74,25 +106,6 @@ button {
             font-size: 16px;
         }
     }
-}
-
-
-html {
-    box-sizing: border-box;
-    height: 100%;
-}
-body {
-    font-family: variables.$fontFamily;
-    min-height: 100%;
-    display: flex;
-    flex-direction: column;
-}
-*, *::after, *::before {
-    box-sizing: inherit;
-    margin: 0;
-}
-a {
-    color: inherit;
 }
 
 input {
