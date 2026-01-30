@@ -1,3 +1,4 @@
+@use "styles/layers"; // must be before other @use
 @use "pages/subtitles/subtitles";
 @use "pages/anki/anki";
 @use "pages/ss/ss";
@@ -10,10 +11,6 @@
 @use "views/RegexReplacements";
 @use "views/settings";
 @use "sass:color";
-
-// TODO not sure if this counts as defining before the @use
-@layer base, elements, components, pages; // TODO move everything into these layers
-
 
 #body-container {
     padding: 16px;
