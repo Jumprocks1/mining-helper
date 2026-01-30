@@ -81,7 +81,7 @@ export default class SentenceSearchPage extends PageComponent {
                 const highlighted = res.jap.replace(query, "<b>" + query + "</b>")
                 const jap = <span className="jap"></span>
                 jap.innerHTML = highlighted
-                const playButton = <span className="play-icon icon-button material-symbols-outlined">play_arrow</span>
+                const playButton = <IconButton icon="play_arrow" />
                 const row = <div className="match">
                     {playButton}
                     <div>

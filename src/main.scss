@@ -106,24 +106,20 @@ div#result {
     }
 }
 
-.icon-button {
-    // gets rid of button styles
-    background: none;
-    border: none;
-    margin: 0;
-    color: inherit;
+@layer components {
+    .icon-button {
+        // gets rid of regular button styles
+        background: none;
+        border: none;
 
-    cursor: pointer;
-    user-select: none;
-    padding: variables.$s1;
-    border-radius: 30%;
-    &:hover:not(.disabled):not(.loading), &:focus:not(.disabled):not(.loading) {
-        background: rgba(255, 255, 255, 10%);
-        border: none;
-    }
-    &:active:not(.disabled):not(.loading) {
-        background: rgba(255, 255, 255, 20%);
-        border: none;
+        padding: variables.$s1;
+        border-radius: 30%;
+        &:hover:not(.disabled):not(.loading), &:focus:not(.disabled):not(.loading) {
+            background: rgba(255, 255, 255, 10%);
+        }
+        &:active:not(.disabled):not(.loading) {
+            background: rgba(255, 255, 255, 20%);
+        }
     }
 }
 
@@ -196,7 +192,6 @@ div#result {
         cursor: pointer;
         padding: variables.$s1 variables.$s1 * 2;
         max-width: 30em;
-        // couldn't get *:hover to work here, not sure why. !important didn't fix it
         &:hover:not(:has(button:hover)) {
             background: #FFFFFF20;
         }

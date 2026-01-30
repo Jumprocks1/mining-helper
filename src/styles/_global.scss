@@ -84,6 +84,64 @@ body {
             }
         }
     }
+
+    button {
+        background: rgba(255, 255, 255, 3%);
+        color: inherit;
+        outline: none;
+        border: 1px solid #FFFFFF40;
+        padding: 0 variables.$s1 * 2;
+        font: inherit;
+        cursor: pointer;
+        border-radius: variables.$s1;
+        user-select: none;
+        position: relative;
+        color: variables.$fontColor;
+        display: inline-flex;
+        align-items: center;
+        gap: variables.$s1;
+
+
+        &:hover:not(.disabled):not(.loading) {
+            background: rgba(255, 255, 255, 10%);
+            border: 1px solid #FFFFFF80;
+        }
+        &:active:not(.disabled):not(.loading) {
+            background: rgba(255, 255, 255, 20%);
+        }
+        &:focus-visible {
+            outline: 1px dotted variables.$outline;
+        }
+        &.loading {
+            color: color.scale(variables.$fontColor, $alpha: -50%);
+            cursor: progress;
+
+            &::after {
+                content: "";
+                height: calc(100% - variables.$s1);
+                inset: 0;
+                margin: auto;
+                position: absolute;
+
+                @include loader.LoadingCircle
+            }
+        }
+        &.disabled {
+            color: color.scale(variables.$fontColor, $alpha: -50%);
+            cursor: not-allowed;
+        }
+        &.errored {
+            &::before {
+                color: variables.$error;
+                content: "error";
+                position: absolute;
+                right: 0;
+                top: 0;
+                @include variables.MaterialIcon();
+                font-size: 16px;
+            }
+        }
+    }
 }
 
 @layer utilities {
@@ -92,74 +150,16 @@ body {
     }
 }
 
-button {
-    background: rgba(255, 255, 255, 3%);
-    color: inherit;
-    outline: none;
-    border: 1px solid #FFFFFF40;
-    padding: 0 variables.$s1 * 2;
-    font: inherit;
-    cursor: pointer;
-    border-radius: variables.$s1;
-    user-select: none;
-    position: relative;
-    color: variables.$fontColor;
-    display: inline-flex;
-    align-items: center;
-    gap: variables.$s1;
-
-    &.link-button {
+@layer components {
+    button.link-button {
+        background: none;
+        border: none;
         text-decoration: underline;
         padding: 0;
         user-select: unset;
         color: variables.$linkColor;
         &.uncolored {
             color: inherit;
-        }
-
-        // without important, you have to add :not link-button,
-        //    but that increases specificity, breaking other things
-        background: none !important;
-        border: none !important;
-    }
-
-    &:hover:not(.disabled):not(.loading) {
-        background: rgba(255, 255, 255, 10%);
-        border: 1px solid #FFFFFF80;
-    }
-    &:active:not(.disabled):not(.loading) {
-        background: rgba(255, 255, 255, 20%);
-    }
-    &:focus-visible {
-        outline: 1px dotted variables.$outline;
-    }
-    &.loading {
-        color: color.scale(variables.$fontColor, $alpha: -50%);
-        cursor: progress;
-
-        &::after {
-            content: "";
-            height: calc(100% - variables.$s1);
-            inset: 0;
-            margin: auto;
-            position: absolute;
-
-            @include loader.LoadingCircle
-        }
-    }
-    &.disabled {
-        color: color.scale(variables.$fontColor, $alpha: -50%);
-        cursor: not-allowed;
-    }
-    &.errored {
-        &::before {
-            color: variables.$error;
-            content: "error";
-            position: absolute;
-            right: 0;
-            top: 0;
-            @include variables.MaterialIcon();
-            font-size: 16px;
         }
     }
 }
