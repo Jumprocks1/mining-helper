@@ -215,7 +215,7 @@ div#result {
 
 .js-tooltip {
     font-size: variables.$tooltipFontSize;
-    max-width: 280px;
+    max-width: 30em;
     width: max-content;
     background-color: variables.$backgroundTooltip;
     white-space: pre-wrap;
@@ -228,19 +228,31 @@ div#result {
         color: variables.$error;
     }
 
+    kbd {
+        color: color.mix(#FFFFFF, variables.$brightBlue, 40%);
+        display: inline-block;
+        background-color: variables.$background1;
+
+        font-family: monospace;
+        font-weight: bold;
+        font-size: 0.9em;
+        line-height: 1;
+
+        padding: 0.15em 0.3em;
+        border: variables.$border2;
+        border-radius: 0.2em;
+    }
+
     .action-tooltip {
         .row {
             display: flex;
+            gap: variables.$s1*2;
+            kbd {
+                margin-left: auto;
+            }
         }
         .action {
             color: variables.$brightGreen;
-        }
-        .binding {
-            margin-left: auto;
-            padding-left: variables.$s1 * 3;
-            padding-right: variables.$s1;
-            opacity: 80%;
-            font-family: monospace;
         }
         .description {
             display: block;

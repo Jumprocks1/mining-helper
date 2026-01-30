@@ -36,7 +36,7 @@ export function ActionTooltip(action: string, binding?: string, description?: st
     return () => <span className="action-tooltip">
         <div className="row">
             <span className="action">{action}</span>
-            {binding && <span className="binding">{binding}</span>}
+            {binding && <kbd>{binding}</kbd>}
         </div>
         {description && <span className="description">{description}</span>}
     </span>

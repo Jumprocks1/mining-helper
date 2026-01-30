@@ -107,5 +107,15 @@ export default (props: Props) => {
     res.addEventListener("mouseleave", leave)
 
     applyBaseComponentProps(res, props)
+    res.tooltip = () => {
+        return <>
+            Scroll or type to adjust.{"\n\n"}
+            {/* If we aren't storing default, don't bother explaining */}
+            {props.storeDefault && <>Press <kbd>D</kbd> to set the default{"\n"}</>}
+            Press <kbd>R</kbd> to reset to default{"\n"}
+            Hold <kbd>Ctrl</kbd> while scrolling for larger adjustments{"\n"}
+            Hold <kbd>Shift</kbd> for smaller adjustments
+        </>
+    }
     return res
 }
