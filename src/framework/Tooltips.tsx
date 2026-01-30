@@ -112,7 +112,12 @@ export function RegisterTooltipEvents(defaultConfig: TooltipConfig | undefined =
         if (!currentTooltip) return
         if (ev.relatedTarget) {
             if (currentTooltip.Anchor!.contains(ev.relatedTarget as Node)) return
-            if (currentTooltip.Node.contains(ev.relatedTarget as Node)) return
+            if (currentTooltip.Node.contains(ev.relatedTarget as Node)) {
+                if (ev.shiftKey) return
+                // if we make it inside the tooltip while holding shift, don't hide it when moving around inside tooltip
+                if (currentTooltip.Node.contains(ev.target as Node))
+                    return
+            }
         }
         hide()
     })
