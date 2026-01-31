@@ -54,9 +54,10 @@ interface LocalSettings {
 
     volume: number
 
-    // ms
     defaultStartOffset: Milliseconds
     defaultEndOffset: Milliseconds
+
+    defaultTooltipDelay: Milliseconds
 }
 
 export const defaultLocalSettings: LocalSettings = {
@@ -80,13 +81,16 @@ export const defaultLocalSettings: LocalSettings = {
     miningChronological: false,
     volume: 0.6,
     defaultStartOffset: 0,
-    defaultEndOffset: 100
+    defaultEndOffset: 100,
+
+    defaultTooltipDelay: 300
 }
 
-const temporarySettings: TemporarySettings = {
+const syncSettings = ["defaultTooltipDelay"] satisfies (keyof LocalSettings)[]
+const cachedSettings: { [key in keyof LocalSettings]?: LocalSettings[key] } & TemporarySettings = {
     offset: 0
 }
-
+type SyncSettingsKey = keyof TemporarySettings | (typeof syncSettings)[number]
 type AllSettings = LocalSettings & TemporarySettings
 export type SettingsKey = keyof TemporarySettings | keyof LocalSettings
 
@@ -103,23 +107,38 @@ export function removeOnSettingChange<K extends SettingsKey>(key: K, listener: (
     }
 }
 
+export function getSettingSync<K extends SyncSettingsKey>(key: K) {
+    if (key in cachedSettings)
+        return cachedSettings[key]
+    // @ts-expect-error
+    return defaultLocalSettings[key]
+}
+
 export function getSetting<K extends keyof TemporarySettings>(key: K): TemporarySettings[K];
 export function getSetting<K extends keyof LocalSettings>(key: K): Promise<LocalSettings[K]>;
 export function getSetting<K extends SettingsKey>(key: K): AllSettings[K] | Promise<AllSettings[K]> {
-    if (key in temporarySettings)
-        return temporarySettings[key as keyof TemporarySettings] as AllSettings[K]
+    if (key in cachedSettings)
+        // @ts-expect-error
+        return cachedSettings[key]
     if (key in defaultLocalSettings)
         return chrome.storage.local.get({ [key]: defaultLocalSettings[key as keyof LocalSettings] }).then(e => e[key])
     throw new Error()
 }
+
+// could be nice to have a promise ensuring these are loaded
+for (const key of syncSettings) {
+    getSetting(key).then(v => cachedSettings[key] = v)
+}
+
 export async function setSetting<K extends SettingsKey>(key: K, v: AllSettings[K]) {
-    if (key in temporarySettings) {
-        if (temporarySettings[key as keyof TemporarySettings] as AllSettings[K] === v) return
-        // @ts-expect-error
-        temporarySettings[key] = v
-        triggerSettingChanged(key, v)
-    } else if (key in defaultLocalSettings) {
+    if (key in defaultLocalSettings) {
+        if (key in cachedSettings && cachedSettings[key] === v) return
+        cachedSettings[key] = v
         await chrome.storage.local.set({ [key]: v })
+        triggerSettingChanged(key, v)
+    } else if (key in cachedSettings) {
+        if (cachedSettings[key] === v) return
+        cachedSettings[key] = v
         triggerSettingChanged(key, v)
     }
     else throw new Error()
