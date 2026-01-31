@@ -1,7 +1,6 @@
 import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 import { userErrorMessage } from "../utils/UserError";
 import { Component } from "../framework/Component"
-import { UpdateTooltip } from "../framework/Tooltips";
 
 export interface LoadingButtonProps extends BaseComponentProps {
     onClick?: (ev: PointerEvent) => unknown, // can return promise
@@ -44,7 +43,6 @@ export default class LoadingButton extends Component {
                 this.Node.classList.add("errored")
                 this.Node.tooltipError = message
                 if (!canRetry) this.Disabled = true
-                UpdateTooltip(this.Node)
             }).then(() => {
                 this.Loading = false;
                 this.Node.classList.remove("loading")
@@ -62,7 +60,6 @@ export default class LoadingButton extends Component {
             if (this.Node.tooltipError) {
                 this.Node.classList.remove("errored")
                 this.Node.tooltipError = undefined
-                UpdateTooltip(this.Node)
             }
             if (props.onClick) {
                 try {
@@ -72,7 +69,6 @@ export default class LoadingButton extends Component {
                     const message = userErrorMessage(error)
                     this.Node.classList.add("errored")
                     this.Node.tooltipError = message
-                    UpdateTooltip(this.Node)
                 }
             }
         })

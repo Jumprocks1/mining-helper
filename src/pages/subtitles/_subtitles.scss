@@ -88,23 +88,28 @@
             font-family: monospace;
             top: 0;
         }
-        #connection-status-dot {
-            margin: 0.2em;
-            width: 0.4em;
-            height: 0.4em;
-            border-radius: 50%;
+        #connection-status-dot-wrapper {
+            padding: 0 0.2em;
+            align-self: stretch;
+            display: flex;
+            align-items: center;
+            #connection-status-dot {
+                width: 0.4em;
+                height: 0.4em;
+                border-radius: 50%;
 
-            &:not(.disconnected):not(.connected) {
-                background-color: rgb(255, 205, 125);
-                cursor: wait;
-            }
+                &:not(.disconnected):not(.connected) {
+                    background-color: rgb(255, 205, 125);
+                    cursor: wait;
+                }
 
-            &.disconnected {
-                background-color: rgb(254, 97, 99);
-                cursor: pointer;
-            }
-            &.connected {
-                background-color: rgb(69, 197, 83);
+                &.disconnected {
+                    background-color: rgb(254, 97, 99);
+                    cursor: pointer;
+                }
+                &.connected {
+                    background-color: rgb(69, 197, 83);
+                }
             }
         }
     }

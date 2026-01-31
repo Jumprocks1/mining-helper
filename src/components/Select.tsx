@@ -1,4 +1,3 @@
-import { UpdateTooltip } from "../framework/Tooltips"
 import { userErrorMessage } from "../utils/UserError"
 
 interface Props {
@@ -52,7 +51,6 @@ export default ({ defaultValue = "", onChange, loadOptions, includeEmpty }: Prop
                 message.innerText = "Error occured"
                 // sadly this tooltip isn't visible until they close the list
                 select.tooltipError = userErrorMessage(e)
-                UpdateTooltip(select)
             }
         }
         select.addEventListener("pointerdown", load)

@@ -11,6 +11,7 @@ declare global {
 
 interface TooltipConfig {
     className?: string
+    delay?: number
 }
 
 export const SmallTooltip: TooltipConfig = {
@@ -18,17 +19,32 @@ export const SmallTooltip: TooltipConfig = {
 }
 
 class Tooltip extends JsPopover {
+    Delayed?: number // timeout reference
     constructor({ anchor, hydrate, config }: { anchor: HTMLElement, hydrate: LoadableChildren, config: TooltipConfig | undefined }) {
         super({
             type: "js-tooltip",
             anchor,
             hydrate
         })
+        // we still hydrate the tooltip even if this delay doesn't elapse
+        // could fix in the future, but realistically it's fine
+        const delay = config?.delay ?? 300
+        if (delay > 0) {
+            this.Node.classList.add("hide")
+            this.Delayed = setTimeout(() => this.Node.classList.remove("hide"), delay)
+        }
         if (config) {
             if (config.className) {
                 this.Node.classList.add(config.className)
             }
         }
+    }
+    override Close() {
+        if (this.Delayed !== undefined) {
+            clearTimeout(this.Delayed)
+            this.Delayed = undefined
+        }
+        super.Close()
     }
 }
 
@@ -74,6 +90,34 @@ function hide() {
 
 let tooltipDefaultConfig: TooltipConfig | undefined = undefined
 
+// think this is pretty safe, shouldn't leak memory
+function watchTooltipProperty(el: HTMLElement) {
+    const desc = Object.getOwnPropertyDescriptor(el, "tooltip")
+    if (desc?.get) return
+
+    let tooltip = el.tooltip
+    Object.defineProperty(el, "tooltip", {
+        enumerable: true,
+        get: () => tooltip,
+        set(value) {
+            if (value === tooltip) return
+            tooltip = value
+            UpdateTooltip(el)
+        }
+    })
+
+    let tooltipError = el.tooltipError
+    Object.defineProperty(el, "tooltipError", {
+        enumerable: true,
+        get: () => tooltipError,
+        set(value) {
+            if (value === tooltipError) return
+            tooltipError = value
+            UpdateTooltip(el)
+        }
+    })
+}
+
 function show(el: HTMLElement) {
     hide()
     const error = Boolean(el.tooltipError)
@@ -84,6 +128,7 @@ function show(el: HTMLElement) {
     })
     if (error) currentTooltip.Node.classList.add("error-tooltip")
     currentTooltip.Open()
+    watchTooltipProperty(el)
 }
 
 let registered = false
