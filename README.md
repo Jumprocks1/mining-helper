@@ -1,26 +1,2 @@
-# TODO
-- Try audio from yomitan?
-- mpv hook + web page
-    - need mpv script next probably
-    - Have hotkey to lookup with jisho? maybe just use yomitan idk
-    - Pull subtitles with ffprobe + ffmpeg
-        - `ffprobe -loglevel error -select_streams s -show_entries stream=index,codec_name:stream_tags=title,language -of csv=p=0 file.mkv`
-        - `ffmpeg -map 0:4 -f ass pipe:1 -i file.mkv`
-        - `ffmpeg -map 0:4 -f srt pipe:1 -i file.mkv`
-            - Think for now we convert everything to srt and only support 1 format on the web side
-    - Also allow dropping in .srt files since those aren't in the .mkv sometimes
-        - Make sure to style background on drag, same as my site
-- Bold could be better for だんだん元気が出てきた気がする。
-- Track words in our deck and mark them on jpdb (better than they currently do)
-    - Probably needs substring matching for verbs, can do it based on trimming trailing hiragana
-- Embed SS, like yomitan
-    - I have the full json file for this, can use directly
-- presss a key with jpdb open and it opens a modal with sentence search
-    - since it will be local, typing/pasting should immediately search
-    - pressing arrow keys should go to next ne
-    - hitting space should play it (fetch first, make sure it giga caches)
-        - make sure to clear any other playing audio. make a nice util for this
-    - hitting enter should select it for the current card/jpdb page
-        - if there's no current card, it won't do anything - make sure this is clear, probably by not closing the popup
-    - hitting escape closes popup
-    - clicking can select/play too
+# Anki Mining Helper
+This is a collection of tools for mining Anki cards from media viewed through mpv.
