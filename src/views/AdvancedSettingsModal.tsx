@@ -1,8 +1,9 @@
+import NumberField from "../components/basic/NumberField";
 import Loader from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
 import { JpdbCache } from "../jpdb/JpdbParseText";
-import { getSetting, setSetting } from "./SettingsModal";
+import { getDefaultSetting, getSetting, setSetting } from "./SettingsModal";
 
 async function ClearCache() {
     await JpdbCache.Clear();
@@ -24,6 +25,13 @@ export default () => {
             <div className="field">
                 <div className="label">Custom CSS</div>
                 <div className="field-value">{await customCssField()}</div>
+            </div>
+            <div className="field">
+                <label>Subtitle Offset</label>
+                <NumberField showPlus units="ms" baseChange={100}
+                    defaultValue={getDefaultSetting("defaultTooltipDelay")}
+                    initialValue={await getSetting("defaultTooltipDelay")}
+                    onChange={v => setSetting("defaultTooltipDelay", v)} />
             </div>
             <div className="footer-buttons">
                 <LoadingButton onClick={ClearCache}>Clear Cache</LoadingButton>

@@ -1,11 +1,15 @@
 import { onDeath } from "../../framework/Observer"
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util"
 import Effects from "../../utils/Effects"
-import { setSetting, type SettingsKey } from "../../views/SettingsModal"
+import { AllSettings, getDefaultSetting, setSetting, type SettingsKey } from "../../views/SettingsModal"
 import UpDownButtons from "./UpDownButtons"
 
+type NumericSettingsKey = { [key in SettingsKey]: AllSettings[key] extends number ? key : never }[SettingsKey]
+
 interface Props extends BaseComponentProps {
+    // TODO a lot of times defaultValue, initialValue, and onChange all target a settings key
     defaultValue?: number
+    initialValue?: number
     onChange: (e: number) => void
     label?: string
     showPlus?: true
@@ -13,16 +17,17 @@ interface Props extends BaseComponentProps {
     max?: number
     baseChange?: number
     units?: string
-    storeDefault?: ((e: number) => void) | SettingsKey
+    storeDefault?: ((e: number) => void) | NumericSettingsKey
 }
 
 export default (props: Props) => {
     if (props.min !== undefined && props.max !== undefined && props.min > props.max)
         throw new Error("Min greater than max")
-    let defaultValue = props.defaultValue ?? 0
+    const storeDefault = props.storeDefault
+    let defaultValue = props.defaultValue ?? (typeof storeDefault === "string" ? getDefaultSetting(storeDefault as NumericSettingsKey) : 0)
 
     let pendingValue = "" // when typing
-    let value = defaultValue
+    let value = props.initialValue ?? defaultValue
     function updateInnerText() {
         pendingValue = ""
         let text = props.showPlus && value >= 0 ? "+" + value : value.toString()

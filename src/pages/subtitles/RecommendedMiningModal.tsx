@@ -6,14 +6,14 @@ import UpDownButtons from "../../components/basic/UpDownButtons";
 import Loader from "../../components/Loader";
 import { OpenModal } from "../../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../../jpdb/IgnoreList";
-import { JpdbParseSubtitles, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
+import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../../jpdb/JpdbState";
 import { tryPlayAudio } from "../../utils/Audio";
 import { setSelection } from "../../utils/CharacterHighlighter";
 import { ClearEventHandler, RegisterEventHandler } from "../../utils/Events";
 import { SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt";
 import { CardData } from "../../utils/util";
-import { getSetting, setSetting } from "../../views/SettingsModal";
+import { getDefaultSetting, getSetting, setSetting } from "../../views/SettingsModal";
 import SubtitlesPage from "./subtitles";
 import JpHoverTooltip from "./JpHoverTooltip";
 
@@ -219,16 +219,16 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                     setSetting("miningChronological", v)
                     reload()
                 }} />
-                <NumberField label="Max Frequency" min={0} defaultValue={maxFrequency} baseChange={1000} onChange={v => {
+                <NumberField label="Max Frequency" min={0} initialValue={maxFrequency} baseChange={1000} onChange={v => {
                     maxFrequency = v
                     setSetting("miningMaxFrequency", v)
                     reload()
-                }} />
-                <NumberField label="Max Count" min={0} defaultValue={maxCount} baseChange={10} onChange={v => {
+                }} defaultValue={getDefaultSetting("miningMaxFrequency")} />
+                <NumberField label="Max Count" min={0} initialValue={maxCount} baseChange={10} onChange={v => {
                     maxCount = v
                     setSetting("miningMaxRecommendedCount", v)
                     reload()
-                }} />
+                }} defaultValue={getDefaultSetting("miningMaxRecommendedCount")} />
             </div>
             {body}
         </>,

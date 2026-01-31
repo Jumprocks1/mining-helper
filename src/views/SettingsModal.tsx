@@ -5,6 +5,8 @@ import AnkiSettingsModal from "../pages/anki/AnkiSettingsModal"
 import AdvancedSettingsModal from "./AdvancedSettingsModal"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 
+// TODO move non-UI stuff to new file
+
 type Milliseconds = number
 type KeysOfType<T, V> = {
     [K in keyof T]: T[K] extends V ? K : never
@@ -13,6 +15,10 @@ type KeysOfType<T, V> = {
 // resets on page load
 interface TemporarySettings {
     offset: Milliseconds
+}
+
+const defaultTemporarySettings: TemporarySettings = {
+    offset: 0
 }
 
 export const AnkiFieldsDefaults = {
@@ -86,12 +92,13 @@ export const defaultLocalSettings: LocalSettings = {
     defaultTooltipDelay: 300
 }
 
+// make sure none of these settings are needed on immediately page load
 const syncSettings = ["defaultTooltipDelay"] satisfies (keyof LocalSettings)[]
 const cachedSettings: { [key in keyof LocalSettings]?: LocalSettings[key] } & TemporarySettings = {
-    offset: 0
+    ...defaultTemporarySettings
 }
 type SyncSettingsKey = keyof TemporarySettings | (typeof syncSettings)[number]
-type AllSettings = LocalSettings & TemporarySettings
+export type AllSettings = LocalSettings & TemporarySettings
 export type SettingsKey = keyof TemporarySettings | keyof LocalSettings
 
 const listeners: { key: string, listener: (v: any) => void }[] = []
@@ -107,11 +114,21 @@ export function removeOnSettingChange<K extends SettingsKey>(key: K, listener: (
     }
 }
 
+// if settings aren't loaded yet, this will return the default value
+// this should be less than 10ms on page load
 export function getSettingSync<K extends SyncSettingsKey>(key: K) {
     if (key in cachedSettings)
         return cachedSettings[key]
     // @ts-expect-error
     return defaultLocalSettings[key]
+}
+
+export function getDefaultSetting<K extends keyof AllSettings>(key: K): AllSettings[K] {
+    if (key in defaultLocalSettings)
+        // @ts-expect-error
+        return defaultLocalSettings[key]
+    // @ts-expect-error
+    return defaultTemporarySettings[key]
 }
 
 export function getSetting<K extends keyof TemporarySettings>(key: K): TemporarySettings[K];
@@ -184,8 +201,8 @@ export default () => {
             <button onclick={RegexReplacements}>Regex replacements</button>
             <div className="field">
                 <label>Subtitle Offset</label>
-                <NumberField showPlus units="ms" id="offset-field" baseChange={100}
-                    defaultValue={getSetting("offset")} onChange={v => setSetting("offset", v)} />
+                <NumberField showPlus units="ms" baseChange={100} defaultValue={getDefaultSetting("offset")}
+                    initialValue={getSetting("offset")} onChange={v => setSetting("offset", v)} />
             </div>
             {await stringSettingsField("skipChapterRegex", "Ignore Chapters (Regex)")}
             <div className="field">
@@ -195,11 +212,11 @@ export default () => {
             <div className="field">
                 <label>Default Mining Offsets</label>
                 <div id="mining-offset-row">
-                    <NumberField label="Start" baseChange={100} showPlus
-                        onChange={v => setSetting("defaultStartOffset", v)} defaultValue={await getSetting("defaultStartOffset")}
+                    <NumberField label="Start" baseChange={100} showPlus defaultValue={getDefaultSetting("defaultStartOffset")}
+                        onChange={v => setSetting("defaultStartOffset", v)} initialValue={await getSetting("defaultStartOffset")}
                         units="ms" />
-                    <NumberField label="End" baseChange={100} showPlus
-                        onChange={v => setSetting("defaultEndOffset", v)} defaultValue={await getSetting("defaultEndOffset")}
+                    <NumberField label="End" baseChange={100} showPlus defaultValue={getDefaultSetting("defaultEndOffset")}
+                        onChange={v => setSetting("defaultEndOffset", v)} initialValue={await getSetting("defaultEndOffset")}
                         units="ms" />
                 </div>
             </div>

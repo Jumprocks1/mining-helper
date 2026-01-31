@@ -1,5 +1,6 @@
 import { JsPopover } from "../components/basic/JsPopover"
 import { LoadableChildren } from "../components/Loader";
+import { getSettingSync } from "../views/SettingsModal";
 
 declare global {
     interface HTMLElement {
@@ -28,7 +29,7 @@ class Tooltip extends JsPopover {
         })
         // we still hydrate the tooltip even if this delay doesn't elapse
         // could fix in the future, but realistically it's fine
-        const delay = config?.delay ?? 300
+        const delay = config?.delay ?? getSettingSync("defaultTooltipDelay")
         if (delay > 0) {
             this.Node.classList.add("hide")
             this.Delayed = setTimeout(() => this.Node.classList.remove("hide"), delay)
