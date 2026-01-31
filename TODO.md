@@ -6,9 +6,6 @@
 - Allow pasting random text (or .srt formatted text), or https url
 
 # High prio
-- Tooltip delay on number fields, probably like 1s
-    - Could add a `i` icon, can hide them with custom CSS if we want
-    - `i` icon can be hardcoded in tooltip logic to skip timeout
 - Finish up Anki config stuff
     - Helper buttons, error tooltips
     - Field configs
@@ -47,6 +44,7 @@
 - Don't allow arbitrary ipc
 
 # Eventually
+- Add `i` icons with no tooltip delay where needed
 - Changing offset requeries chapter list, should cache it or something
 - Multi highlight - no support in tokensToFuri sadly
     - If a line has multiple instances of the target vocab, all are highlighted in main view, but furigana view only has first

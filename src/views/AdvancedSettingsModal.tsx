@@ -27,8 +27,8 @@ export default () => {
                 <div className="field-value">{await customCssField()}</div>
             </div>
             <div className="field">
-                <label>Subtitle Offset</label>
-                <NumberField showPlus units="ms" baseChange={100}
+                <label>Tooltip Delay</label>
+                <NumberField units="ms" baseChange={100} min={0}
                     defaultValue={getDefaultSetting("defaultTooltipDelay")}
                     initialValue={await getSetting("defaultTooltipDelay")}
                     onChange={v => setSetting("defaultTooltipDelay", v)} />
