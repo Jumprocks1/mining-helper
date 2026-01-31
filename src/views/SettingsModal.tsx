@@ -15,6 +15,23 @@ interface TemporarySettings {
     offset: Milliseconds
 }
 
+export const AnkiFieldsDefaults = {
+    word: "Word",
+    wordReading: "Word Reading",
+    wordMeaning: "Word Meaning",
+    wordFurigana: "Word Furigana",
+    sentence: "Sentence",
+    sentenceMeaning: "Sentence Meaning",
+    sentenceFurigana: "Sentence Furigana",
+    jpdbVid: "Jpdb Vid",
+    source: "Source",
+    wordAudio: "Word Audio",
+    sentenceAudio: "Sentence Audio",
+    image: "Image",
+} as const
+
+export type AnkiFieldKey = keyof typeof AnkiFieldsDefaults
+
 interface LocalSettings {
     regexReplacements: ReplacementEntry[]
     skipChapterRegex: string
@@ -33,6 +50,7 @@ interface LocalSettings {
     targetAnkiModel: string,
     ankiConnectAddress: string
     ankiConnectApiKey: string
+    ankiFields: { [key in AnkiFieldKey]?: string }
 
     volume: number
 
@@ -41,7 +59,7 @@ interface LocalSettings {
     defaultEndOffset: Milliseconds
 }
 
-const defaultLocalSettings: LocalSettings = {
+export const defaultLocalSettings: LocalSettings = {
     regexReplacements: [],
 
     serverAddress: "127.0.0.1:4012",
@@ -52,6 +70,7 @@ const defaultLocalSettings: LocalSettings = {
     targetAnkiModel: "",
     ankiConnectAddress: "http://127.0.0.1:8765",
     ankiConnectApiKey: "",
+    ankiFields: {},
 
     skipChapterRegex: "",
     customCss: "",

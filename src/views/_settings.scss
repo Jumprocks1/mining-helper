@@ -38,6 +38,25 @@
     }
 }
 
+.settings-modal {
+    h3 {
+        margin-top: $s1 * 2;
+    }
+    .anki-field-mappings {
+        display: grid;
+        min-width: 100%;
+        grid-template-columns: repeat(4, auto);
+        gap: $s1;
+
+        >.field {
+            min-width: 10em;
+            >select {
+                width: 100%;
+            }
+        }
+    }
+}
+
 #advanced-settings-modal {
     .footer-buttons {
         padding-top: $s1;

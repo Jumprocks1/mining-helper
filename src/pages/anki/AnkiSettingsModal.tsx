@@ -3,17 +3,25 @@ import { OpenModal } from "../../components/Modal";
 import Select from "../../components/Select";
 import AnkiConnect from "../../utils/AnkiConnect";
 import { delay } from "../../utils/util";
-import { getSetting, setSetting, stringSettingsField } from "../../views/SettingsModal";
+import { AnkiFieldKey, AnkiFieldsDefaults as AnkiFieldDefaults, getSetting, setSetting, stringSettingsField } from "../../views/SettingsModal";
 
 const body = async (inner: HTMLElement) => {
-    // JSX doesn't work with this component
-    // TODO need to add more of these
-    // Eventually they need to save to a shared object
-    const fieldSelect = Select({
-        defaultValue: "",
-        includeEmpty: true,
-        loadOptions: async () => AnkiConnect.call("modelFieldNames", { modelName: await getSetting("targetAnkiModel") })
-    })
+    const ankiFields = await getSetting("ankiFields")
+    const fields: ReturnType<typeof Select>[] = []
+    const fieldSelect = (key: AnkiFieldKey) => {
+        const res = Select({
+            defaultValue: ankiFields[key] ?? AnkiFieldDefaults[key],
+            includeEmpty: true,
+            loadOptions: async () => AnkiConnect.call("modelFieldNames", { modelName: await getSetting("targetAnkiModel") }),
+            onChange: v => {
+                ankiFields[key] = v
+                // TODO we set these but don't use them anywhere
+                setSetting("ankiFields", ankiFields) // not awaited
+            }
+        })
+        fields.push(res)
+        return res
+    }
     // Needs a button for checking everything. Check:
     //   API key
     //   Duplicate field names
@@ -39,18 +47,23 @@ const body = async (inner: HTMLElement) => {
                     loadOptions: () => AnkiConnect.call("modelNames", undefined),
                     onChange: v => {
                         setSetting("targetAnkiModel", v)
-                        fieldSelect.Reset?.()
+                        fields.forEach(e => e.Reset?.())
                     }
                 })}
             </div>
         </div>
-        <div className="field-group">
-            <div className="field">
-                <label>Word Field *TODO*</label>
-                {fieldSelect}
-            </div>
-        </div>
+        <h3>Field Mappings</h3>
     </>
+    const fieldMappings = <div className="anki-field-mappings" />
+    for (const _key in AnkiFieldDefaults) {
+        const key = _key as AnkiFieldKey
+        const fieldName = AnkiFieldDefaults[key]
+        fieldMappings.append(<div className="field">
+            <label>{fieldName}</label>
+            {fieldSelect(key)}
+        </div>)
+    }
+    res.append(fieldMappings)
     inner.append(<div className="footer">
         <LoadingButton onClick={async () => {
             await delay(1000)
