@@ -44,8 +44,13 @@ export default class SubtitlesPage extends PageComponent {
             return this.LoadSubtitles(() => parseSubtitles(s, filename))
         }
     }
-    // TODO add click to open file select with (lazy) hidden <input/>
-    DropTarget: HTMLElement | undefined = <div id="subtitle-drop-target">
+    FileInput = <input type="file" hidden accept=".srt,.ass" onchange={() => {
+        if (this.FileInput.files) {
+            this.HandleFiles(this.FileInput.files)
+            this.FileInput.value = "" // reset for more files
+        }
+    }} /> as HTMLInputElement
+    DropTarget: HTMLElement | undefined = <div id="subtitle-drop-target" onclick={() => this.FileInput.click()}>
         <div className="drop-target-border" />
         <span className="primary-text">Drop an .srt or .ass file here to load</span>
         <span className="sub-text">
@@ -57,6 +62,7 @@ export default class SubtitlesPage extends PageComponent {
             <LoadingButton tooltip="May request browser permissions"
                 onClick={this.LoadFromClipboard}>Load From Clipboard</LoadingButton>
         </div>
+        {this.FileInput}
     </div>
     SubtitleContainer = <div id="subtitle-container" />
     InnerBodyContainer = <div id="inner-body-container">
@@ -75,24 +81,29 @@ export default class SubtitlesPage extends PageComponent {
         this.MpvWebSocket.Connection?.close()
     }
 
+    HandleFiles(files: FileList) {
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i]
+            if (file.name.endsWith(".srt") || file.name.endsWith(".ass")) {
+                const reader = new FileReader()
+                reader.onload = async e => {
+                    const target = e.target
+                    const res = target?.result
+                    if (typeof res === "string") {
+                        this.LoadFromString(res, file.name)
+                    }
+                }
+                reader.readAsText(file)
+                return
+            }
+        }
+    }
+
     HandleDataTransfer(dt: DataTransfer | null) {
         if (!dt) return
         const files = dt.files
         if (files && files.length > 0) {
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i]
-                if (file.name.endsWith(".srt") || file.name.endsWith(".ass")) {
-                    const reader = new FileReader()
-                    reader.onload = async e => {
-                        const target = e.target
-                        const res = target?.result
-                        if (typeof res === "string") {
-                            this.LoadFromString(res, file.name)
-                        }
-                    }
-                    reader.readAsText(file)
-                }
-            }
+            this.HandleFiles(files)
         } else {
             const uri = dt.getData("text/uri-list")
             if (uri) return this.LoadFromString(uri)
@@ -318,7 +329,7 @@ export default class SubtitlesPage extends PageComponent {
         })
         this.InnerBodyContainer.addEventListener("dragleave", ev => {
             // otherwise it triggers for leaving children
-            if (ev.target === ev.currentTarget)
+            if (ev.relatedTarget === null || !this.InnerBodyContainer.contains(ev.relatedTarget as Node))
                 this.DropTarget?.classList.remove("drag-enter")
         })
     }
