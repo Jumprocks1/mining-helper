@@ -326,16 +326,16 @@ export default class SubtitlesPage extends PageComponent {
         })
         this.InnerBodyContainer.addEventListener("drop", ev => {
             ev.preventDefault()
-            this.DropTarget?.classList.remove("drag-enter")
+            this.InnerBodyContainer.classList.remove("drag-enter")
             return this.HandleDataTransfer(ev.dataTransfer)
         })
         this.InnerBodyContainer.addEventListener("dragenter", ev => {
-            this.DropTarget?.classList.add("drag-enter")
+            this.InnerBodyContainer.classList.add("drag-enter")
         })
         this.InnerBodyContainer.addEventListener("dragleave", ev => {
             // otherwise it triggers for leaving children
             if (ev.relatedTarget === null || !this.InnerBodyContainer.contains(ev.relatedTarget as Node))
-                this.DropTarget?.classList.remove("drag-enter")
+                this.InnerBodyContainer.classList.remove("drag-enter")
         })
     }
 

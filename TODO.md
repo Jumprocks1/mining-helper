@@ -13,9 +13,6 @@
     - If address works but key doesn't put a red check next to the API key but green next to the URL
 
 # Before publishing/sharing
-- Styling showing when you can drop files in
-    - Even if there's already subs loaded, should style when they hover over
-    - Should be like a fullscreen faded + dotted lines
 - SPA
     - Move Chrome API to separate file with a shim
     - I wonder if audio bytes/arraybuffer will be saveable in localstorage

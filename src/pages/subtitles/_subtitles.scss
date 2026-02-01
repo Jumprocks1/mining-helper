@@ -15,6 +15,20 @@
             padding: 16px;
             flex: 1 1 0;
             @include vertical-scroll;
+
+            &.drag-enter {
+                .drop-target-border {
+                    inset: 20px;
+                }
+                #subtitle-drop-target {
+                    background: $hoverHighlight
+                }
+                // this triggers when we've already loaded subtitles (and removed the main drop target)
+                // we can still drop files though, so we need some sort of styling
+                &:not(:has(#subtitle-drop-target)) {
+                    background: $hoverHighlight
+                }
+            }
         }
 
         #subtitle-drop-target {
@@ -22,7 +36,7 @@
             max-width: 50%;
             cursor: pointer;
             user-select: none;
-            &:hover, &.drag-enter {
+            &:hover {
                 background: $hoverHighlight
             }
             display:flex;
@@ -35,11 +49,6 @@
                 inset: 0;
                 position: absolute;
                 border: 3px dashed #FFFFFFB0;
-            }
-            &.drag-enter {
-                .drop-target-border {
-                    inset: 20px;
-                }
             }
             >.primary-text {
                 margin-bottom: $s1 * 2;
