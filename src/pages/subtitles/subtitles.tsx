@@ -25,10 +25,6 @@ export default class SubtitlesPage extends PageComponent {
     CurrentTime = 0
     LoadedSubtitles: SubtitleViewer | undefined
     readonly MpvWebSocket: MpvWebSocket = new MpvWebSocket()
-    LoadFromClipboard = async () => {
-        const clipboard = await navigator.clipboard.readText()
-        return this.LoadFromString(clipboard)
-    }
     LoadFromString = async (s: string, filename?: string) => {
         if (!s) return
         if (s.startsWith("https://")) {
@@ -60,7 +56,16 @@ export default class SubtitlesPage extends PageComponent {
         <div className="button-group">
             <button>Select File</button>
             <LoadingButton tooltip="May request browser permissions"
-                onClick={this.LoadFromClipboard}>Load From Clipboard</LoadingButton>
+                onClick={async ev => {
+                    ev.preventDefault()
+                    ev.stopPropagation()
+                    // sadly clipboard.read() doesn't really help here
+                    // it *can* read something like raw image data (from print screen),
+                    //    but it can't currently read a copied file from Windows file explorer.
+                    // the "paste" event is different and much more powerful
+                    const clipboard = await navigator.clipboard.readText()
+                    return this.LoadFromString(clipboard)
+                }}>Load From Clipboard</LoadingButton>
         </div>
         {this.FileInput}
     </div>
