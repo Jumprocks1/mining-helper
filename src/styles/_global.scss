@@ -108,6 +108,7 @@ body {
         }
         &:active:not(.disabled):not(.loading) {
             background: rgba(255, 255, 255, 20%);
+            box-shadow: inset 0 0 3px black;
         }
         &:focus-visible {
             outline: 1px dotted variables.$outline;
