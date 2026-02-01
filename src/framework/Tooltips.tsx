@@ -21,7 +21,8 @@ export const SmallTooltip: TooltipConfig = {
 
 class Tooltip extends JsPopover {
     Delayed?: number // timeout reference
-    constructor({ anchor, hydrate, config }: { anchor: HTMLElement, hydrate: LoadableChildren, config: TooltipConfig | undefined }) {
+    constructor({ anchor, hydrate, config, error }:
+        { anchor: HTMLElement, hydrate: LoadableChildren, config: TooltipConfig | undefined, error?: boolean }) {
         super({
             type: "js-tooltip",
             anchor,
@@ -30,7 +31,8 @@ class Tooltip extends JsPopover {
         // we still hydrate the tooltip even if this delay doesn't elapse
         // could fix in the future, but realistically it's fine
         const delay = config?.delay ?? getSettingSync("defaultTooltipDelay")
-        if (delay > 0) {
+        // error tooltips have 0 delay
+        if (delay > 0 && !error) {
             this.Node.classList.add("hide")
             this.Delayed = setTimeout(() => this.Node.classList.remove("hide"), delay)
         }
@@ -46,6 +48,13 @@ class Tooltip extends JsPopover {
             this.Delayed = undefined
         }
         super.Close()
+    }
+    ShowImmediately() {
+        if (this.Delayed !== undefined) {
+            clearTimeout(this.Delayed)
+            this.Delayed = undefined
+            this.Node.classList.remove("hide")
+        }
     }
 }
 
@@ -78,7 +87,10 @@ export function UpdateTooltip(el: HTMLElement) {
             return
         }
         currentTooltip.SetContent(tooltip)
-        if (error) currentTooltip.Node.classList.add("error-tooltip")
+        if (error) {
+            currentTooltip.Node.classList.add("error-tooltip")
+            currentTooltip.ShowImmediately()
+        }
         else currentTooltip.Node.classList.remove("error-tooltip")
     }
 }
@@ -125,7 +137,8 @@ function show(el: HTMLElement) {
     currentTooltip = new Tooltip({
         anchor: el,
         hydrate: error ? el.tooltipError : el.tooltip,
-        config: el.tooltipConfig ?? tooltipDefaultConfig
+        config: el.tooltipConfig ?? tooltipDefaultConfig,
+        error
     })
     if (error) currentTooltip.Node.classList.add("error-tooltip")
     currentTooltip.Open()
