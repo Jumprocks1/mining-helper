@@ -6,6 +6,7 @@ export interface LoadingButtonProps extends BaseComponentProps {
     onClick?: (ev: PointerEvent) => unknown, // can return promise
     // Will show as loading initially until loading promise finishes
     loading?: Promise<any>
+    disabled?: boolean
 }
 
 // Also catches errors nicely
@@ -54,6 +55,7 @@ export default class LoadingButton extends Component {
         super()
 
         this.Node = <button />
+        if (props.disabled) this.Disabled = true
         applyBaseComponentProps(this.Node, props)
         this.Node.addEventListener("click", ev => {
             if (this.Loading || this.Disabled) return

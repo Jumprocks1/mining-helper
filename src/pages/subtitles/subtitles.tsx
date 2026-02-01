@@ -219,28 +219,35 @@ export default class SubtitlesPage extends PageComponent {
         } else if (key === "t") {
             this.TryJpdbParse()
         } else if (key === "y") {
-            const subs = this.LoadedSubtitles?.subtitles
-            if (subs) {
-                (async () => {
-                    const modal = await RecommendedMiningModal(subs, () => {
-                        const main = this.LoadedSubtitles?.Node
-                        if (!main) return
-                        // couldn't really think of a nice way to grab this without id
-                        // we could store it as a field in the layout, but we don't even have access to a layout instance here
-                        // even if we did, we can't trust that the layout would be an "instance"
-                        //   (since it could be a simple render function instance)
-                        const header = document.getElementById("mh-header")
-                        if (!header) return
-                        const mainRect = main.getBoundingClientRect()
-                        const headerRect = header.getBoundingClientRect()
-                        const full = document.body.getBoundingClientRect()
-                        const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
-                        return rect
-                    }, this)
-                    modal?.Minimize()
-                })()
-            }
+            this.TryRecommendedMiningModal()
         }
+    }
+
+    RecommendedMiningModalPromise?: Promise<void>
+    async TryRecommendedMiningModal() {
+        const subs = this.LoadedSubtitles?.subtitles
+        if (subs && !this.RecommendedMiningModalPromise) {
+            this.RecommendedMiningModalPromise = (async () => {
+                const modal = await RecommendedMiningModal(subs, () => {
+                    const main = this.LoadedSubtitles?.Node
+                    if (!main) return
+                    // couldn't really think of a nice way to grab this without id
+                    // we could store it as a field in the layout, but we don't even have access to a layout instance here
+                    // even if we did, we can't trust that the layout would be an "instance"
+                    //   (since it could be a simple render function instance)
+                    const header = document.getElementById("mh-header")
+                    if (!header) return
+                    const mainRect = main.getBoundingClientRect()
+                    const headerRect = header.getBoundingClientRect()
+                    const full = document.body.getBoundingClientRect()
+                    const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
+                    return rect
+                }, this)
+                modal?.Minimize()
+            })().finally(() => this.RecommendedMiningModalPromise = undefined)
+            this.RecommendedMiningButton.waitFor(this.RecommendedMiningModalPromise, true)
+        }
+        return this.RecommendedMiningModalPromise
     }
 
     JpdbParsePromise?: Promise<JpdbParseResponse | undefined>
@@ -263,12 +270,16 @@ export default class SubtitlesPage extends PageComponent {
     }
 
     JpdbLoadButton = IconButtonClass({
-        icon: "document_search", onClick: () => this.TryJpdbParse(),
+        icon: "document_search", onClick: () => this.TryJpdbParse(), disabled: true,
         tooltip: ActionTooltip("Parse File", "T", "Parses the loaded subtitle file using jpdb's API")
     })
-
+    RecommendedMiningButton = IconButtonClass({
+        icon: "format_list_numbered", onClick: () => this.TryRecommendedMiningModal(), disabled: true,
+        tooltip: ActionTooltip("Recommended Mining", "Y", "Recommends words/sentences to mine from the loaded subtitle file."
+            + "\nRelies on word frequency (jpdb) and your existing Anki cards.")
+    })
     MiningButton = IconButtonClass({
-        icon: "edit", onClick: () => this.TryMine(),
+        icon: "edit", onClick: () => this.TryMine(), disabled: true,
         tooltip: ActionTooltip("Mine Selection", "M", "Create an Anki card based on the selected text")
     })
 
@@ -290,6 +301,7 @@ export default class SubtitlesPage extends PageComponent {
             <div id="status-info">
                 {this.MiningButton}
                 {this.JpdbLoadButton}
+                {this.RecommendedMiningButton}
                 <IconButton icon="settings" onClick={() => SettingsModal()} tooltip={ActionTooltip("Open Settings", ",")} />
                 {this.TimeElement}
                 {connectionDotWrapper}
@@ -448,6 +460,9 @@ export default class SubtitlesPage extends PageComponent {
         JpdbParseSubtitles(this.LoadedSubtitles.subtitles, true)
             .then(() => this.JpdbLoadButton.Disabled = Boolean(subtitles.jpdbParse))
         setSetting("offset", offset) // set at the end to avoid triggering event handlers
+        this.JpdbLoadButton.Disabled = Boolean(subtitles.jpdbParse)
+        this.RecommendedMiningButton.Disabled = false
+        this.MiningButton.Disabled = false
     }
     async HandleWebSocketData(webSocket: MpvWebSocket, command: string | Blob) {
         if (typeof command === "string") {

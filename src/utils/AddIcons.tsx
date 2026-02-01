@@ -11,6 +11,7 @@ export const MaterialIcons = [
     "document_search",
     "edit",
     "error",
+    "format_list_numbered",
     "maximize",
     "menu",
     "minimize",
