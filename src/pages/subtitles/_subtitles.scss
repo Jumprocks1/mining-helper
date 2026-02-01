@@ -16,6 +16,42 @@
             flex: 1 1 0;
             @include vertical-scroll;
         }
+
+        #subtitle-drop-target {
+            height: 100%;
+            max-width: 50%;
+            cursor: pointer;
+            user-select: none;
+            &:hover, &.drag-enter {
+                background: $hoverHighlight
+            }
+            display:flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            .drop-target-border {
+                inset: 0;
+                position: absolute;
+                border: 3px dashed #FFFFFFB0;
+            }
+            &.drag-enter {
+                .drop-target-border {
+                    inset: 20px;
+                }
+            }
+            >.primary-text {
+                margin-bottom: $s1 * 2;
+            }
+            .sub-text {
+                font-size: 0.7em;
+            }
+            .button-group {
+                margin-top: $s1 * 2;
+                display: flex;
+                gap: $s1;
+            }
+        }
     }
     #subtitle-container {
         display: flex;

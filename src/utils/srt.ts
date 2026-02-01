@@ -87,7 +87,7 @@ export function parseSubtitles(subtitles: string, filename?: string) {
     }
 }
 
-export function parsePlain(text: string) {
+export function parsePlain(text: string): Subtitles {
     const entries = text.split("\n").map((e, i) => ({
         startTime: i * 1000,
         endTime: i * 1000 + 500,

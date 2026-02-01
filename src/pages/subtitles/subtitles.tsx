@@ -11,9 +11,10 @@ import { JpdbParseResponse, JpdbParseSubtitles } from "../../jpdb/JpdbParseText"
 import RecommendedMiningModal from "./RecommendedMiningModal"
 import { getCharacterIndex } from "../../utils/CharacterHighlighter"
 import { PageComponent } from "../../framework/PageComponent"
-import { Children } from "../../framework/createElement"
+import { Children, replaceChildren } from "../../framework/createElement"
 import { ErrorDisplay } from "../../utils/UserError"
 import { ActionTooltip } from "../../framework/Tooltips"
+import LoadingButton from "../../components/LoadingButton"
 
 export default class SubtitlesPage extends PageComponent {
     Id = "subs-page"
@@ -24,9 +25,43 @@ export default class SubtitlesPage extends PageComponent {
     CurrentTime = 0
     LoadedSubtitles: SubtitleViewer | undefined
     readonly MpvWebSocket: MpvWebSocket = new MpvWebSocket()
+    LoadFromClipboard = async () => {
+        const clipboard = await navigator.clipboard.readText()
+        return this.LoadFromString(clipboard)
+    }
+    LoadFromString = async (s: string, filename?: string) => {
+        if (!s) return
+        if (s.startsWith("https://")) {
+            return this.LoadSubtitles(async () => {
+                if (!s.endsWith(".srt") && !s.endsWith(".ass"))
+                    throw new Error("URL does not end in .srt or .ass")
+                const resp = await fetch(s)
+                if (!resp.ok) throw new Error(`Failed to fetch ${s}\nStatus: ${resp.status}`)
+                const body = await resp.text()
+                return parseSubtitles(body, s)
+            })
+        } else {
+            return this.LoadSubtitles(() => parseSubtitles(s, filename))
+        }
+    }
+    // TODO add click to open file select with (lazy) hidden <input/>
+    DropTarget: HTMLElement | undefined = <div id="subtitle-drop-target">
+        <div className="drop-target-border" />
+        <span className="primary-text">Drop an .srt or .ass file here to load</span>
+        <span className="sub-text">
+            https links (ie. from <a target="_blank" href="https://jimaku.cc" rel="noopener noreferrer">jimaku</a>)
+            and pasting (Ctrl+V) are also supported
+        </span>
+        <div className="button-group">
+            <button>Select File</button>
+            <LoadingButton tooltip="May request browser permissions"
+                onClick={this.LoadFromClipboard}>Load From Clipboard</LoadingButton>
+        </div>
+    </div>
     SubtitleContainer = <div id="subtitle-container" />
     InnerBodyContainer = <div id="inner-body-container">
         {this.SubtitleContainer}
+        {this.DropTarget}
     </div>
     TimeElement = <span id="current-time">00:00</span>
     MiningModal?: Modal
@@ -36,7 +71,40 @@ export default class SubtitlesPage extends PageComponent {
         removeOnSettingChange("regexReplacements", this.ReloadSubs)
         removeOnSettingChange("skipChapterRegex", this.ReloadSubs)
         document.removeEventListener("keydown", this.DocumentKeydown)
+        document.removeEventListener("paste", this.DocumentPaste)
         this.MpvWebSocket.Connection?.close()
+    }
+
+    HandleDataTransfer(dt: DataTransfer | null) {
+        if (!dt) return
+        const files = dt.files
+        if (files && files.length > 0) {
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i]
+                if (file.name.endsWith(".srt") || file.name.endsWith(".ass")) {
+                    const reader = new FileReader()
+                    reader.onload = async e => {
+                        const target = e.target
+                        const res = target?.result
+                        if (typeof res === "string") {
+                            this.LoadFromString(res, file.name)
+                        }
+                    }
+                    reader.readAsText(file)
+                }
+            }
+        } else {
+            const uri = dt.getData("text/uri-list")
+            if (uri) return this.LoadFromString(uri)
+            const plain = dt.getData("text/plain")
+            if (plain) return this.LoadFromString(plain)
+        }
+    }
+
+    DocumentPaste = (ev: ClipboardEvent) => {
+        if (this.LoadedSubtitles) return
+        ev.preventDefault()
+        return this.HandleDataTransfer(ev.clipboardData)
     }
 
     OffsetChanged = (offset: number) => {
@@ -234,42 +302,24 @@ export default class SubtitlesPage extends PageComponent {
         this.MpvWebSocket.Connect(true)
 
         document.addEventListener("keydown", this.DocumentKeydown)
+        document.addEventListener("paste", this.DocumentPaste)
 
         this.InnerBodyContainer.addEventListener("dragover", ev => {
             ev.preventDefault()
+            if (ev.dataTransfer) ev.dataTransfer.dropEffect = "link"
         })
         this.InnerBodyContainer.addEventListener("drop", ev => {
             ev.preventDefault()
-            const dt = ev.dataTransfer
-            if (!dt) return
-
-            const files = dt.files
-            if (files && files.length > 0) {
-                for (let i = 0; i < files.length; i++) {
-                    const file = files[i]
-                    if (file.name.endsWith(".srt") || file.name.endsWith(".ass")) {
-                        const reader = new FileReader()
-                        reader.onload = async e => {
-                            const target = e.target
-                            const res = target?.result
-                            if (typeof res === "string") {
-                                await this.LoadSubtitles(() => parseSubtitles(res, file.name))
-                            }
-                        }
-                        reader.readAsText(file)
-                    }
-                }
-            } else {
-                const uri = dt.getData("text/uri-list")
-                if (uri && (uri.endsWith(".srt") || uri.endsWith(".ass"))) {
-                    this.LoadSubtitles(async () => {
-                        const resp = await fetch(uri)
-                        if (!resp.ok) throw new Error(`Failed to fetch ${uri}\nStatus: ${resp.status}`)
-                        const body = await resp.text()
-                        return parseSubtitles(body, uri)
-                    })
-                }
-            }
+            this.DropTarget?.classList.remove("drag-enter")
+            return this.HandleDataTransfer(ev.dataTransfer)
+        })
+        this.InnerBodyContainer.addEventListener("dragenter", ev => {
+            this.DropTarget?.classList.add("drag-enter")
+        })
+        this.InnerBodyContainer.addEventListener("dragleave", ev => {
+            // otherwise it triggers for leaving children
+            if (ev.target === ev.currentTarget)
+                this.DropTarget?.classList.remove("drag-enter")
         })
     }
 
@@ -290,12 +340,22 @@ export default class SubtitlesPage extends PageComponent {
         }
     }
 
+    ShowError(error: Children) {
+        if (this.DropTarget) {
+            let errorContainer = this.DropTarget.querySelector(".error-container")
+            if (!errorContainer) this.DropTarget.append(errorContainer = <div className="error-container" />)
+            replaceChildren(errorContainer, error)
+        } else {
+            replaceChildren(this.SubtitleContainer, error)
+        }
+    }
+
     async LoadSubtitles(getSubs: () => (Promise<Subtitles> | Subtitles)) {
         let subtitles: Subtitles
         try {
             subtitles = await getSubs()
         } catch (e: unknown) {
-            this.SubtitleContainer.replaceChildren(ErrorDisplay(`Failed to load subs.\n${String(e)}`))
+            this.ShowError(ErrorDisplay(`Failed to load subs.\n${String(e)}`))
             return
         }
         const skip: [start: number, end?: number][] = []
@@ -363,6 +423,8 @@ export default class SubtitlesPage extends PageComponent {
 
         const viewer = new SubtitleViewer(subtitles, this)
         this.SubtitleContainer.replaceChildren(viewer.Node)
+        this.DropTarget?.remove()
+        this.DropTarget = undefined
         viewer.UpdateHighlighting(this.CurrentTime)
 
         this.LoadedSubtitles = viewer
