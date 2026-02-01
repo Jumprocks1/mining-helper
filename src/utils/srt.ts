@@ -24,7 +24,7 @@ export interface Subtitles {
     offset?: number
     originalEntries: SubtitleEntry[]
     processedEntries: SubtitleEntryWithCharacterOffset[]
-    source: "srt" | "ass"
+    source: "srt" | "ass" | "plain"
     language?: "eng" | "jp"
     name?: string
     hash?: number
@@ -83,8 +83,19 @@ export function parseSubtitles(subtitles: string, filename?: string) {
     } else if (start === "[") {
         return parseAss(subtitles)
     } else {
-        throw new Error(`Unknown subtitle file format, starts with "${start}"`)
+        return parsePlain(subtitles)
     }
+}
+
+export function parsePlain(text: string) {
+    const entries = text.split("\n").map((e, i) => ({
+        startTime: i * 1000,
+        endTime: i * 1000 + 500,
+        originalIndex: i,
+        text: e.trim()
+    }))
+    cleanSubtitleEntries(entries)
+    return { source: "plain", originalEntries: entries, processedEntries: [], hash: hash(text) }
 }
 
 export async function parseSrt(srt: string): Promise<Subtitles> {
