@@ -2,8 +2,9 @@ import LoadingButton from "../../components/LoadingButton";
 import { OpenModal } from "../../components/Modal";
 import Select from "../../components/Select";
 import AnkiConnect from "../../utils/AnkiConnect";
+import { ThrowUserError, userErrorMessage } from "../../utils/UserError";
 import { delay } from "../../utils/util";
-import { AnkiFieldKey, AnkiFieldsDefaults as AnkiFieldDefaults, getSetting, setSetting, stringSettingsField } from "../../views/SettingsModal";
+import { AnkiFieldKey, AnkiFieldsDefaults as AnkiFieldDefaults, getSetting, setSetting, stringSettingsField, getSettingSync } from "../../views/SettingsModal";
 
 const body = async (inner: HTMLElement) => {
     const ankiFields = await getSetting("ankiFields")
@@ -29,8 +30,11 @@ const body = async (inner: HTMLElement) => {
     //   Set fields that don't exist on the current model
     // Needs a button for auto mapping, will auto press itself if nothing is set yet
     const res = <>
-        {await stringSettingsField("ankiConnectAddress", "AnkiConnect Address")}
-        {await stringSettingsField("ankiConnectApiKey", "AnkiConnect API Key", "password")}
+        <div className="field-group">
+            {await stringSettingsField("ankiConnectAddress", "AnkiConnect Address", undefined,
+                "Defaults to http://127.0.0.1:8765\nShouldn't need to be changed.\nThe correct value can be located in AnkiConnect's config.")}
+            {await stringSettingsField("ankiConnectApiKey", "AnkiConnect API Key", "password")}
+        </div>
         <div className="field-group">
             <div className="field">
                 <label>Taget Deck</label>
@@ -64,14 +68,56 @@ const body = async (inner: HTMLElement) => {
         </div>)
     }
     res.append(fieldMappings)
-    inner.append(<div className="footer">
-        <LoadingButton onClick={async () => {
-            await delay(1000)
-            throw "TODO this isn't set up yet"
-        }}>
-            Verify Settings
-        </LoadingButton>
-    </div>)
+    const validateButton = <LoadingButton tooltip="This will attempt to connect to Anki and double check all settings." onClick={async () => {
+        validateButton.tooltip = undefined
+        let success = <div />
+        try {
+            const permissions = await AnkiConnect.call("requestPermission", undefined)
+            if (permissions.permission === "denied") {
+                throw `Access to AnkiConnect from ${location.origin} denied\n` +
+                "Please check the AnkiConnect options inside Anki and ensure access is allowed."
+            }
+            const apiKey = await getSetting("ankiConnectApiKey")
+            if (permissions.requireApikey && !apiKey)
+                throw "An API key is required. Please add one in the settings above.\n\n" +
+                "To find your current API key, in Anki, go to Tools > Add-ons > AnkiConnect > Config > apiKey"
+        } catch (e) { throw userErrorMessage(e, "Error connecting to Anki") }
+        const decks = await AnkiConnect.call("deckNames", undefined)
+        if (decks.length === 0) ThrowUserError("No Anki decks found")
+        success.append(<div>Found {decks.length} decks</div>)
+
+        const models = await AnkiConnect.call("modelNames", undefined)
+        const modelName = await getSetting("targetAnkiModel")
+        if (!models.includes(modelName)) ThrowUserError(`${modelName} not found`)
+        success.append(<div>Model '{modelName}' valid</div>)
+
+        const modelFields = await AnkiConnect.call("modelFieldNames", { modelName })
+        const ankiFields = await getSetting("ankiFields")
+        let invalidFields = 0
+        for (const _key in AnkiFieldDefaults) {
+            const key = _key as AnkiFieldKey
+            const fieldName = AnkiFieldDefaults[key]
+            const current = ankiFields[key] ?? AnkiFieldDefaults[key]
+            if (!current) {
+                success.append(<div className="warning">Field {fieldName} is unset</div>)
+                invalidFields += 1
+            } else if (!modelFields.includes(current)) {
+                success.append(<div className="warning">Field {current} (used for {fieldName}) does not exist in {modelName}</div>)
+                invalidFields += 1
+            }
+        }
+        if (invalidFields === 0)
+            success.append(<div>All fields valid</div>)
+
+        if (!success.querySelector(".warning")) {
+            success.append(<div className="success">No issues found</div>)
+        }
+
+        validateButton.tooltip = success
+    }}>
+        Validate Settings
+    </LoadingButton>
+    inner.append(<div className="footer">{validateButton}</div>)
     return res
 }
 

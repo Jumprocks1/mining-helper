@@ -208,6 +208,9 @@ div#result {
 .warning {
     color: variables.$warning;
 }
+.success {
+    color: variables.$success;
+}
 .error-text-display {
     color: variables.$error;
     white-space: pre-wrap;
@@ -227,6 +230,9 @@ div#result {
 
     &.error-tooltip {
         color: variables.$error;
+        .full-error {
+            color: variables.$fontColor;
+        }
     }
 
     kbd {

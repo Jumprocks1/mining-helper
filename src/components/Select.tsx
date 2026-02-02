@@ -38,6 +38,7 @@ export default ({ defaultValue = "", onChange, loadOptions, includeEmpty }: Prop
             try {
                 message.innerText = "Loading..."
                 message.hidden = false
+                select.tooltipError = undefined
                 const options = await loadOptions!()
                 if (includeEmpty && selected !== "" && !options.includes("")) addOption("")
                 message.hidden = true

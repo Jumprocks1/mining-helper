@@ -1,5 +1,5 @@
 import { getSetting } from "../views/SettingsModal"
-import UserError from "./UserError"
+import UserError, { ThrowUserError } from "./UserError"
 
 export default {
     async callAny(action: string, params: any, version = 6) {
@@ -21,8 +21,12 @@ export default {
         }
         const json = await res.json()
         if (json.error) {
-            if (json.error === "valid api key must be provided")
-                throw new UserError("AnkiConnect requires an API key.\nSet this in the settings.")
+            if (json.error === "valid api key must be provided") {
+                if (key)
+                    ThrowUserError("AnkiConnect requires an API key.", "The current API key is invalid.")
+                else
+                    ThrowUserError("AnkiConnect requires an API key.", "Set this in the settings.")
+            }
             throw new UserError(json.error)
         }
         return json.result
@@ -57,6 +61,17 @@ interface AnkiConnectActionMap {
             data: string
         },
         returns: string
+    },
+    requestPermission: {
+        params: undefined
+        returns: {
+            permission: "granted" | "denied",
+            // docs are notably incorrect
+            // they show requireApiKey, but the source here clearly shows requireApikey
+            // https://git.sr.ht/~foosoft/anki-connect/tree/master/item/plugin/__init__.py#L416
+            requireApikey: boolean
+            version: number
+        }
     },
     updateNote: {
         params: {

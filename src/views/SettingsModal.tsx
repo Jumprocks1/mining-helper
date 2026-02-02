@@ -175,8 +175,8 @@ function inputToVolume(input: number) {
 function volumeToInput(volume: number) {
     return Math.round(Math.pow(volume, 1 / 2) * 100)
 }
-export async function stringSettingsField(key: KeysOfType<LocalSettings, string>, label: string, type?: string) {
-    return <div className="field">
+export async function stringSettingsField(key: KeysOfType<LocalSettings, string>, label: string, type?: string, tooltip?: string) {
+    return <div className="field" tooltip={tooltip}>
         <label>{label}</label>
         <input type={type} defaultValue={await getSetting(key)}
             onchange={e => setSetting(key, (e.target as HTMLInputElement).value)} />
