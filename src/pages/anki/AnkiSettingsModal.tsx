@@ -3,15 +3,14 @@ import { OpenModal } from "../../components/Modal";
 import Select from "../../components/Select";
 import AnkiConnect from "../../utils/AnkiConnect";
 import { ThrowUserError, userErrorMessage } from "../../utils/UserError";
-import { delay } from "../../utils/util";
-import { AnkiFieldKey, AnkiFieldsDefaults as AnkiFieldDefaults, getSetting, setSetting, stringSettingsField, getSettingSync } from "../../views/SettingsModal";
+import { AnkiFieldKey, AnkiFieldInfo, getSetting, setSetting, stringSettingsField } from "../../views/SettingsModal";
 
 const body = async (inner: HTMLElement) => {
     const ankiFields = await getSetting("ankiFields")
     const fields: ReturnType<typeof Select>[] = []
     const fieldSelect = (key: AnkiFieldKey) => {
         const res = Select({
-            defaultValue: ankiFields[key] ?? AnkiFieldDefaults[key],
+            defaultValue: ankiFields[key] ?? AnkiFieldInfo[key].name,
             includeEmpty: true,
             loadOptions: async () => AnkiConnect.call("modelFieldNames", { modelName: await getSetting("targetAnkiModel") }),
             onChange: v => {
@@ -59,11 +58,11 @@ const body = async (inner: HTMLElement) => {
         <h3>Field Mappings</h3>
     </>
     const fieldMappings = <div className="anki-field-mappings" />
-    for (const _key in AnkiFieldDefaults) {
+    for (const _key in AnkiFieldInfo) {
         const key = _key as AnkiFieldKey
-        const fieldName = AnkiFieldDefaults[key]
-        fieldMappings.append(<div className="field">
-            <label>{fieldName}</label>
+        const field = AnkiFieldInfo[key]
+        fieldMappings.append(<div className="field" tooltip={field.tooltip}>
+            <label>{field.name}</label>
             {fieldSelect(key)}
         </div>)
     }
@@ -94,15 +93,15 @@ const body = async (inner: HTMLElement) => {
         const modelFields = await AnkiConnect.call("modelFieldNames", { modelName })
         const ankiFields = await getSetting("ankiFields")
         let invalidFields = 0
-        for (const _key in AnkiFieldDefaults) {
+        for (const _key in AnkiFieldInfo) {
             const key = _key as AnkiFieldKey
-            const fieldName = AnkiFieldDefaults[key]
-            const current = ankiFields[key] ?? AnkiFieldDefaults[key]
+            const field = AnkiFieldInfo[key]
+            const current = ankiFields[key] ?? field.name
             if (!current) {
-                success.append(<div className="warning">Field {fieldName} is unset</div>)
+                success.append(<div className="warning">Field {field.name} is unset</div>)
                 invalidFields += 1
             } else if (!modelFields.includes(current)) {
-                success.append(<div className="warning">Field {current} (used for {fieldName}) does not exist in {modelName}</div>)
+                success.append(<div className="warning">Field {current} (used for {field.name}) does not exist in {modelName}</div>)
                 invalidFields += 1
             }
         }

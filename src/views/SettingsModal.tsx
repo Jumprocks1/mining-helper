@@ -21,22 +21,23 @@ const defaultTemporarySettings: TemporarySettings = {
     offset: 0
 }
 
-export const AnkiFieldsDefaults = {
-    word: "Word",
-    wordReading: "Word Reading",
-    wordMeaning: "Word Meaning",
-    wordFurigana: "Word Furigana",
-    sentence: "Sentence",
-    sentenceMeaning: "Sentence Meaning",
-    sentenceFurigana: "Sentence Furigana",
-    jpdbVid: "Jpdb Vid",
-    source: "Source",
-    wordAudio: "Word Audio",
-    sentenceAudio: "Sentence Audio",
-    image: "Image",
-} as const
+function applyType<K extends string>(e: Record<K, { name: string, tooltip?: string }>) { return e }
+export const AnkiFieldInfo = applyType({
+    word: { name: "Word", tooltip: "Raw kanji for word, ex: 時間" },
+    wordReading: { name: "Word Reading", tooltip: "Kana reading for word, ex: じかん" },
+    wordMeaning: { name: "Word Meaning", tooltip: "English meaning of word, ex: time, hour" },
+    wordFurigana: { name: "Word Furigana", tooltip: "Kanji with furigana, ex: 時[じ] 間[かん]" },
+    sentence: { name: "Sentence" },
+    sentenceMeaning: { name: "Sentence Meaning" },
+    sentenceFurigana: { name: "Sentence Furigana" },
+    jpdbVid: { name: "Jpdb Vid", tooltip: "ID linking back to jpdb\nNot really used yet" },
+    source: { name: "Source", tooltip: "Filename + timestamp for mined cards" },
+    wordAudio: { name: "Word Audio" },
+    sentenceAudio: { name: "Sentence Audio" },
+    image: { name: "Image" },
+})
 
-export type AnkiFieldKey = keyof typeof AnkiFieldsDefaults
+export type AnkiFieldKey = keyof typeof AnkiFieldInfo
 
 interface LocalSettings {
     regexReplacements: ReplacementEntry[]
