@@ -2,6 +2,7 @@ import { onDeath } from "../../framework/Observer"
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util"
 import Effects from "../../utils/Effects"
 import { AllSettings, getDefaultSetting, setSetting, type SettingsKey } from "../../views/SettingsModal"
+import { Load, LoadableChildren } from "../Loader"
 import UpDownButtons from "./UpDownButtons"
 
 type NumericSettingsKey = { [key in SettingsKey]: AllSettings[key] extends number ? key : never }[SettingsKey]
@@ -18,6 +19,7 @@ interface Props extends BaseComponentProps {
     baseChange?: number
     units?: string
     storeDefault?: ((e: number) => void) | NumericSettingsKey
+    extraTooltip?: LoadableChildren
 }
 
 export default (props: Props) => {
@@ -50,7 +52,7 @@ export default (props: Props) => {
         setValue(value + (negative ? -1 : 1) * mult)
         ev.preventDefault()
     }
-    const display = <div className="number-display"></div>
+    const display = <div className="number-display" />
     updateInnerText()
     const res = <div className="number-field">
         <UpDownButtons onClick={handleEv} />
@@ -120,6 +122,7 @@ export default (props: Props) => {
             Press <kbd>R</kbd> to reset to default{"\n"}
             Hold <kbd>Ctrl</kbd> while scrolling for larger adjustments{"\n"}
             Hold <kbd>Shift</kbd> for smaller adjustments
+            {Load(props.extraTooltip)}
         </>
     }
     return res

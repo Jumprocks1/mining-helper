@@ -16,6 +16,7 @@ import { CardData } from "../../utils/util";
 import { getDefaultSetting, getSetting, setSetting } from "../../views/SettingsModal";
 import SubtitlesPage from "./subtitles";
 import JpHoverTooltip from "./JpHoverTooltip";
+import { UpdateTooltip } from "../../framework/Tooltips";
 
 
 declare global {
@@ -29,6 +30,8 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
     const jpdb = subtitles.jpdbParse
     if (!jpdb) return
 
+    let maxCountElement: HTMLElement
+
     let showIgnored = false
     let showKana = false
     let n1 = false
@@ -40,6 +43,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
 
     let loadedRows: Record<number, HTMLElement> | undefined = undefined
     const body = <div className="row-container" />
+    let loadedCount = 0
 
     const load = async () => {
         const body = <></>
@@ -147,6 +151,8 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
         for (const [_, row] of pendingRows) {
             body.append(row)
         }
+        loadedCount = pendingRows.length
+        UpdateTooltip(maxCountElement)
         return body
     }
 
@@ -224,11 +230,12 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                     setSetting("miningMaxFrequency", v)
                     reload()
                 }} defaultValue={getDefaultSetting("miningMaxFrequency")} />
-                <NumberField label="Max Count" min={0} initialValue={maxCount} baseChange={10} onChange={v => {
+                {maxCountElement = <NumberField label="Max Count" min={0} initialValue={maxCount} baseChange={10} onChange={v => {
                     maxCount = v
                     setSetting("miningMaxRecommendedCount", v)
                     reload()
-                }} defaultValue={getDefaultSetting("miningMaxRecommendedCount")} />
+                }} defaultValue={getDefaultSetting("miningMaxRecommendedCount")}
+                    extraTooltip={() => "\nCurrently loaded: " + loadedCount} />}
             </div>
             {body}
         </>,
