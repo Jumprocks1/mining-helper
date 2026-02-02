@@ -92,11 +92,14 @@ const body = async (inner: HTMLElement) => {
 
         const modelFields = await AnkiConnect.call("modelFieldNames", { modelName })
         const ankiFields = await getSetting("ankiFields")
+        let seen = new Set<string>()
         let invalidFields = 0
         for (const _key in AnkiFieldInfo) {
             const key = _key as AnkiFieldKey
             const field = AnkiFieldInfo[key]
             const current = ankiFields[key] ?? field.name
+            if (current && seen.has(current)) throw `Field name ${current} used twice`
+            seen.add(current)
             if (!current) {
                 success.append(<div className="warning">Field {field.name} is unset</div>)
                 invalidFields += 1
