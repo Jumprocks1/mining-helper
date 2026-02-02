@@ -1,14 +1,13 @@
 # TODO
-- Tooltips everywhere
 - Some way to force a different JPDB token
     - 意地でも vs 意地
     - 日本語字幕 - Japanese Subtitles - AssClass S01E10 - 18m
-- Allow pasting random text (or .srt formatted text), or https url
+
+# Bugs
+- Shift on rec modal word tooltips wasn't working
+    - Haven't reproduced yet, should attatch debugger next time
 
 # High prio
-- Finish up Anki config stuff
-    - Helper buttons, error tooltips
-    - Field configs
 - Add buttons to attempt using the various API keys/addresses from the settings modal(s)
     - If address works but key doesn't put a red check next to the API key but green next to the URL
 
@@ -18,8 +17,6 @@
     - I wonder if audio bytes/arraybuffer will be saveable in localstorage
 - Add error messages when API key isn't set up
     - Way to configure API key, make it as easy as possible
-- Buttons with tooltips/hotkey info
-    - Make sure they show as loading when equivalent hotkey is pressed
 - appsettings.json?
 - Config options for Anki card fields
 - Full instructions for setup
@@ -41,6 +38,7 @@
 - Don't allow arbitrary ipc
 
 # Eventually
+- Automatic Anki field config based on aliases
 - Add `i` icons with no tooltip delay where needed
 - Changing offset requeries chapter list, should cache it or something
 - Multi highlight - no support in tokensToFuri sadly
@@ -72,6 +70,8 @@
 - Stop using ffmpeg to convert .ass on the server side
 - There's some sketchiness with loading stuff while other promises are pending, this should be very rare in real use cases since the loading times are ~1s and no normal person will press other buttons/load other files during that time
 - Filter out OP/ED layers from .ass subtitles - .srt aren't fancy enough for this
+- Custom time filtering
+    - I've been manually doing this for things like movies where I might mine halfway through (but don't want to accidentally skip to the second half)
 
 # After publishing
 - Contact https://animecards.site/

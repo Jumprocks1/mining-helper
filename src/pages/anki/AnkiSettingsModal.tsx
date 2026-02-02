@@ -15,7 +15,6 @@ const body = async (inner: HTMLElement) => {
             loadOptions: async () => AnkiConnect.call("modelFieldNames", { modelName: await getSetting("targetAnkiModel") }),
             onChange: v => {
                 ankiFields[key] = v
-                // TODO we set these but don't use them anywhere
                 setSetting("ankiFields", ankiFields) // not awaited
             }
         })

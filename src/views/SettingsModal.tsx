@@ -151,12 +151,13 @@ for (const key of syncSettings) {
 
 export async function setSetting<K extends SettingsKey>(key: K, v: AllSettings[K]) {
     if (key in defaultLocalSettings) {
-        if (key in cachedSettings && cachedSettings[key] === v) return
+        // objects can have the same reference but still change
+        if (typeof v !== "object" && key in cachedSettings && cachedSettings[key] === v) return
         cachedSettings[key] = v
         await chrome.storage.local.set({ [key]: v })
         triggerSettingChanged(key, v)
     } else if (key in cachedSettings) {
-        if (cachedSettings[key] === v) return
+        if (typeof v !== "object" && cachedSettings[key] === v) return
         cachedSettings[key] = v
         triggerSettingChanged(key, v)
     }
