@@ -21,8 +21,8 @@ export const SmallTooltip: TooltipConfig = {
 
 class Tooltip extends JsPopover {
     Delayed?: number // timeout reference
-    constructor({ anchor, hydrate, config, error }:
-        { anchor: HTMLElement, hydrate: LoadableChildren, config: TooltipConfig | undefined, error?: boolean }) {
+    constructor({ anchor, hydrate, config, delayOverride }:
+        { anchor: HTMLElement, hydrate: LoadableChildren, config: TooltipConfig | undefined, delayOverride?: number }) {
         super({
             type: "js-tooltip",
             anchor,
@@ -30,9 +30,9 @@ class Tooltip extends JsPopover {
         })
         // we still hydrate the tooltip even if this delay doesn't elapse
         // could fix in the future, but realistically it's fine
-        const delay = config?.delay ?? getSettingSync("defaultTooltipDelay")
+        const delay = delayOverride ?? config?.delay ?? getSettingSync("defaultTooltipDelay")
         // error tooltips have 0 delay
-        if (delay > 0 && !error) {
+        if (delay > 0) {
             this.Node.classList.add("hide")
             this.Delayed = setTimeout(() => this.Node.classList.remove("hide"), delay)
         }
@@ -76,7 +76,7 @@ export function UpdateTooltip(el: HTMLElement) {
         // main reason we need it is for errored buttons
         // if the button doesn't have a tooltip before the error, it won't get tracked by pointerover
         // this is the only real alternative
-        if (el.matches(":hover")) show(el)
+        if (el.matches(":hover")) show(el, true)
         return
     }
     if (currentTooltip && currentTooltip.Anchor === el) {
@@ -87,11 +87,9 @@ export function UpdateTooltip(el: HTMLElement) {
             return
         }
         currentTooltip.SetContent(tooltip)
-        if (error) {
-            currentTooltip.Node.classList.add("error-tooltip")
-            currentTooltip.ShowImmediately()
-        }
+        if (error) currentTooltip.Node.classList.add("error-tooltip")
         else currentTooltip.Node.classList.remove("error-tooltip")
+        currentTooltip.ShowImmediately()
     }
 }
 
@@ -131,14 +129,15 @@ function watchTooltipProperty(el: HTMLElement) {
     })
 }
 
-function show(el: HTMLElement) {
+function show(el: HTMLElement, instant?: boolean) {
     hide()
     const error = Boolean(el.tooltipError)
+    instant ||= error
     currentTooltip = new Tooltip({
         anchor: el,
         hydrate: error ? el.tooltipError : el.tooltip,
         config: el.tooltipConfig ?? tooltipDefaultConfig,
-        error
+        delayOverride: instant ? 0 : undefined
     })
     if (error) currentTooltip.Node.classList.add("error-tooltip")
     currentTooltip.Open()
@@ -158,12 +157,17 @@ export function RegisterTooltipEvents(defaultConfig: TooltipConfig | undefined =
         } while (el = el.parentNode as HTMLElement | null)
     }
 
+    document.addEventListener("keydown", e => {
+        if (e.key === "Shift") {
+            if (currentTooltip) currentTooltip.ShowImmediately()
+        }
+    })
     document.addEventListener("pointerover", e => {
         const target = e.target
         if (!(target instanceof HTMLElement)) return
         const tooltipElement = closestTooltip(target)
         if (!tooltipElement || tooltipElement === currentTooltip?.Anchor) return
-        show(tooltipElement)
+        show(tooltipElement, e.shiftKey)
     })
     document.addEventListener("pointerout", ev => {
         // mostly just nice for debugging
