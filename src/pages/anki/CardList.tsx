@@ -1,10 +1,9 @@
 import { Icon } from "../../components/basic/IconButton"
 import LoadingButton from "../../components/LoadingButton"
-import { OpenModal } from "../../components/Modal"
 import { TrimKana } from "../../jpdb/JpdbState"
 import AnkiConnect from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
-import { getSetting } from "../../views/SettingsModal"
+import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../../views/SettingsModal"
 import AnkiSettingsModal from "./AnkiSettingsModal"
 
 // cache
@@ -57,8 +56,16 @@ export default async () => {
             // it responds instantly pretty much, so the extra web traffic is fine
             // for me it's 2.6MB
             // saved to local storage was only 15kB
+            const configuredFields = await getSetting("ankiFields")
+            function fieldName(key: AnkiFieldKey) {
+                return configuredFields[key] ?? AnkiFieldInfo[key].name
+            }
             const notes = await AnkiConnect.call("notesInfo", { query: "" })
-            localAnkiWords = notes.map(e => e.fields.Word.value)
+            localAnkiWords = []
+            for (const note of notes) {
+                const word = note.fields[fieldName("word")]?.value
+                if (word) localAnkiWords.push(word)
+            }
             // don't need to await this
             chrome.storage.local.set({ ankiWords: localAnkiWords })
             await update(false)

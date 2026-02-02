@@ -139,6 +139,7 @@ export function getSetting<K extends SettingsKey>(key: K): AllSettings[K] | Prom
         // @ts-expect-error
         return cachedSettings[key]
     if (key in defaultLocalSettings)
+        // we could probably store the results of this in cachedSettings
         return chrome.storage.local.get({ [key]: defaultLocalSettings[key as keyof LocalSettings] }).then(e => e[key])
     throw new Error()
 }

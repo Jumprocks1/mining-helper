@@ -39,7 +39,7 @@ export default {
 
 export interface AnkiNote {
     noteId: number, // aka created on
-    fields: { Word: { value: string }, Source: { value: string } }
+    fields: Record<string, { value: string } | undefined>
 }
 
 interface AnkiConnectActionMap {

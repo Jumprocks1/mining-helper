@@ -1,6 +1,7 @@
 import Loader from "../../components/Loader"
 import LoadingButton from "../../components/LoadingButton"
 import AnkiConnect, { AnkiNote } from "../../utils/AnkiConnect"
+import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../../views/SettingsModal"
 
 interface GroupingInfo<T> {
     key: (e: T) => string | number
@@ -27,7 +28,11 @@ export default () => {
     }
     const innerLoad = async () => {
         const notes = await AnkiConnect.call("notesInfo", { query: "" })
-        const final = (e: AnkiNote) => e.fields.Word.value
+        const configuredFields = await getSetting("ankiFields")
+        function fieldName(key: AnkiFieldKey) {
+            return configuredFields[key] ?? AnkiFieldInfo[key].name
+        }
+        const final = (e: AnkiNote) => e.fields[fieldName("word")]?.value
         let currentTimeGroup = "N/A"
         let lastTimeGroup = 0
         let groupings: GroupingInfo<AnkiNote>[] = [
@@ -47,13 +52,13 @@ export default () => {
             },
             {
                 key: e => {
-                    const source = cleanSource(e.fields.Source.value)
+                    const source = cleanSource(e.fields[fieldName("source")]!.value)
                     const epRegex = /\s*\-?\s+S\d{1,2}E\d{1,3}$|\s*\-\s*\d{1,3}$/g
                     return source.replaceAll(epRegex, "")
                 }
             },
             {
-                key: e => cleanSource(e.fields.Source.value)
+                key: e => cleanSource(e.fields[fieldName("source")]!.value)
             },
             {
                 key: e => {

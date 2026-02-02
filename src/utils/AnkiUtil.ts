@@ -1,5 +1,5 @@
 import { addAnkiWord } from "../pages/anki/CardList";
-import { getSetting } from "../views/SettingsModal";
+import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../views/SettingsModal";
 import AnkiConnect, { MediaAdd } from "./AnkiConnect"
 import { TriggerEvent } from "./Events";
 import UserError from "./UserError";
@@ -7,7 +7,7 @@ import { CardData, furiToReading } from "./util"
 
 // remove means remove from local storage, which we hardly use anymore
 export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal") {
-    const [fields, audio, picture] = activeFields(card);
+    const [fields, audio, picture] = await activeFields(card);
     const tags = ["ext-mined"]
     if (source) tags.push(source)
     const noteId = await AnkiConnect.call("addNote", {
@@ -37,18 +37,22 @@ export async function updateInAnkiAndRemove(card: CardData) {
 }
 
 
-function activeFields(card: CardData) {
+async function activeFields(card: CardData) {
+    const configuredFields = await getSetting("ankiFields")
+    function fieldName(key: AnkiFieldKey) {
+        return configuredFields[key] ?? AnkiFieldInfo[key].name
+    }
     // not sure how undefined behaves, so we filters those out first
     const tryFields = {
-        ["Word"]: card.kanji,
-        ["Word Reading"]: furiToReading(card.furigana),
-        ["Word Meaning"]: card.meaning,
-        ["Word Furigana"]: card.furigana,
-        ["Sentence"]: card.jpSentenceKanji,
-        ["Sentence Meaning"]: card.enSentence,
-        ["Sentence Furigana"]: card.jpSentenceFuri,
-        ["Jpdb Vid"]: card.vid?.toString(),
-        ["Source"]: card.source
+        [fieldName("word")]: card.kanji,
+        [fieldName("wordReading")]: furiToReading(card.furigana),
+        [fieldName("wordMeaning")]: card.meaning,
+        [fieldName("wordFurigana")]: card.furigana,
+        [fieldName("sentence")]: card.jpSentenceKanji,
+        [fieldName("sentenceMeaning")]: card.enSentence,
+        [fieldName("sentenceFurigana")]: card.jpSentenceFuri,
+        [fieldName("jpdbVid")]: card.vid?.toString(),
+        [fieldName("source")]: card.source
     }
     const fields: Record<string, string> = {}
     for (const key in tryFields) {
@@ -68,8 +72,8 @@ function activeFields(card: CardData) {
             fields[field] = "" // have to reset field so it doesn't add duplicate audio
         }
     }
-    tryAddAudio("Word Audio", card.audioLocalFile, card.audioBytes)
-    tryAddAudio("Sentence Audio", card.sentenceAudioLocalFile, card.sentenceAudioBytes)
+    tryAddAudio(fieldName("wordAudio"), card.audioLocalFile, card.audioBytes)
+    tryAddAudio(fieldName("sentenceAudio"), card.sentenceAudioLocalFile, card.sentenceAudioBytes)
     const picture: MediaAdd[] = []
     if (card.image) {
         const filename = card.kanji + "_" + card.vid + "_image.jpg"
@@ -77,7 +81,7 @@ function activeFields(card: CardData) {
             // @ts-expect-error toBase64 is pretty new
             data: card.image.toBase64(),
             filename: filename,
-            fields: ["Image"]
+            fields: [fieldName("image")]
         })
     }
     return [fields, audio, picture] as const
@@ -89,11 +93,16 @@ async function updateInAnki(card: CardData) {
     if (notes.length > 1) throw new Error(`Multiple notes matching ${card.kanji}`)
     const noteId = notes[0]
 
-    const [fields, audio] = activeFields(card);
+    const configuredFields = await getSetting("ankiFields")
+    function fieldName(key: AnkiFieldKey) {
+        return configuredFields[key] ?? AnkiFieldInfo[key].name
+    }
+
+    const [fields, audio] = await activeFields(card);
     // not allowed to update these for now
-    delete fields["Word"]
-    delete fields["Word Reading"]
-    delete fields["Word Furigana"]
+    delete fields[fieldName("word")]
+    delete fields[fieldName("wordReading")]
+    delete fields[fieldName("wordFurigana")]
     await AnkiConnect.call("updateNote", {
         note: {
             id: noteId,
