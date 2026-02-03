@@ -43,7 +43,7 @@ export default (props: Props) => {
         if (props.min !== undefined && value < props.min)
             value = props.min
         updateInnerText()
-        props.onChange(v)
+        props.onChange(value)
     }
     function handleEv(ev: MouseEvent, negative: boolean) {
         let mult = props.baseChange ?? 10
