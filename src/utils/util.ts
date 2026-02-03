@@ -1,5 +1,5 @@
 import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
-import { JpdbParseResponse, JpdbToken } from "../jpdb/JpdbParseText";
+import { ensureNoJpdbError, JpdbParseResponse, JpdbToken } from "../jpdb/JpdbParseText";
 import { applyReplacementsTo, ReplacementEntry } from "../views/RegexReplacements";
 import { getSetting } from "../views/SettingsModal";
 
@@ -100,6 +100,7 @@ export async function lookupFuri(jp: string | undefined, highlight?: string) {
         })
     })
     const json = await res.json() as JpdbParseResponse
+    ensureNoJpdbError(json)
     return tokensToFuri(jp, json.tokens, highlight)
 }
 

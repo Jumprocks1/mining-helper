@@ -3,6 +3,7 @@ import { delay } from "../utils/util";
 import StorageCache from "../utils/StorageCache";
 import { loadIgnoreList } from "./IgnoreList";
 import { getSetting } from "../views/SettingsModal";
+import { ThrowUserError } from "../utils/UserError";
 
 export type JpdbVocabulary = [
     spelling: string,
@@ -24,6 +25,7 @@ export type JpdbToken = [
 export interface JpdbParseResponse {
     tokens: JpdbToken[]
     vocabulary: JpdbVocabulary[]
+    error_message?: string
 }
 
 export async function JpdbParseSubtitles(subtitles: Subtitles, cacheOnly?: true) {
@@ -48,6 +50,16 @@ export const JpdbCache = new StorageCache({
 // had this fail at 5981 characters
 // seems inconsistent, might exclude certain characters or something
 const maxParseCharacters = 5000
+
+export function ensureNoJpdbError(response: { error?: string, error_message?: string }) {
+    if (!response.error && !response.error_message) return
+    if (response.error === "bad_key") {
+        if (response.error_message?.includes("missing"))
+            ThrowUserError("Missing jpdb.io API key", "Please set one in the settings menu")
+        ThrowUserError("Invalid jpdb.io API key", "Please make sure one is set in the settings menu")
+    }
+    ThrowUserError("Error with jpdb.io:", response.error_message)
+}
 
 // measured ~150kB per episode
 async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
@@ -92,6 +104,7 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
             })
         })
         const json = await res.json() as JpdbParseResponse
+        ensureNoJpdbError(json)
         for (const token of json.tokens) {
             token[0] += responseOffset
             token[3] += finalRes.vocabulary.length
