@@ -1,15 +1,14 @@
-# TODO
-- Some way to force a different JPDB token
-    - 意地でも vs 意地
-    - 日本語字幕 - Japanese Subtitles - AssClass S01E10 - 18m
-
 # Bugs
 - Shift on rec modal word tooltips wasn't working
     - Haven't reproduced yet, should attatch debugger next time
 
 # High prio
-- Add buttons to attempt using the various API keys/addresses from the settings modal(s)
-    - If address works but key doesn't put a red check next to the API key but green next to the URL
+- Add validate button to subs settings modal
+    - Check for mpv/ffmpeg, local audio
+- Setup page
+    - Full instructions
+    - Validate buttons
+    - ffmpeg, mpv, local audio database, API keys, mpv script, websocket, http
 
 # Before publishing/sharing
 - SPA
@@ -18,26 +17,24 @@
 - Add error messages when API key isn't set up
     - Way to configure API key, make it as easy as possible
 - appsettings.json?
-- Config options for Anki card fields
-- Full instructions for setup
 - Make sure C# log doesn't increase infinitely
 - Add sane default config options
     - Can make a local override for myself so we can keep in git
 - Merge all git stuff into 1 repo
     - mpv script we can just copy paste or simlink
-- Fix hard-coded stuff in mpv script
+- Fix hard-coded path to server exe in mpv script
 - Make sure it works (with good errors) without different parts
     - jpdb API key
     - `T` jpdb thing
     - put message in mpv when you start server
     - server API key
     - missing audio files
-- Button to check if everything is setup (websocket, http, audio, mpv)
-- Wait to set jpdb + anki connect keys
-- mpv notifications
 - Don't allow arbitrary ipc
 
 # Eventually
+- Some way to force a different JPDB token
+    - 意地でも vs 意地
+    - 日本語字幕 - Japanese Subtitles - AssClass S01E10 - 18m
 - Automatic Anki field config based on aliases
 - Add `i` icons with no tooltip delay where needed
 - Changing offset requeries chapter list, should cache it or something
@@ -52,6 +49,8 @@
 - Option to ignore kanji when looking up readings
     - Had issues with 兄[きょう]妹[だい]. There is good audio for 兄弟, but not 兄妹
     - Probably add advanced search modal, let you enter whatever you want for audio
+- Temporary ignore in recommended list, mainly for names
+    - Without this, N+1 isn't as good since it won't include sentences with names
 
 # Not really necessary
 - Built in video player so mpv isn't technically needed? Probably not since anyone with the media files would have mpv
@@ -61,7 +60,6 @@
 - Jimaku API https://jimaku.cc/api/docs
 - Option to load jpdb machine translation in mining modal
 - Hover top of mpv with mouse to show subs or something - saw this in different script
-- Temporary ignore in recommended list, mainly for names
 - Ability to update cards with mining modal
     - I could see myself finding better example sentences that I want to replace my existing cards with, but without losing the review history
 - Might not need API key if we trust the origin fully, could be a config option on the C# side "trust origin without API key"
