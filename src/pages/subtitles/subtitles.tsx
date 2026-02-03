@@ -119,6 +119,10 @@ export default class SubtitlesPage extends PageComponent {
 
     DocumentPaste = (ev: ClipboardEvent) => {
         if (this.LoadedSubtitles) return
+        function isEditable(el: HTMLElement) {
+            return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el.isContentEditable
+        }
+        if (isEditable(ev.target as HTMLElement)) return
         ev.preventDefault()
         return this.HandleDataTransfer(ev.clipboardData)
     }
@@ -382,6 +386,7 @@ export default class SubtitlesPage extends PageComponent {
         let subtitles: Subtitles
         try {
             subtitles = await getSubs()
+            if (subtitles.originalEntries.length === 0) throw "No subtitles found"
         } catch (e: unknown) {
             this.ShowError(ErrorDisplay(`Failed to load subs.\n${String(e)}`))
             return
