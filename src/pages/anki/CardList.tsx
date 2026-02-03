@@ -74,9 +74,9 @@ export default async () => {
     refresh.Node.innerText = "Refresh"
     refresh.Loading = true
 
-    const loadedCount = <span></span>
-    const uniqueCharacters = <div></div>
-    const uniqueSets = <div className="unique-sets"></div>
+    const loadedCount = <span />
+    const uniqueCharacters = <div />
+    const uniqueKanji = <div tooltip={`Only includes kanji in the word field`} />
 
     async function update(disableCache: boolean) {
         const ankiWords = await getAnkiWords(disableCache)
@@ -93,14 +93,8 @@ export default async () => {
             }
         }
         uniqueCharacters.textContent = `Unique Characters: ${characters.size}`
-        let s = ""
-        for (const setType in sets) {
-            // @ts-expect-error
-            const set = sets[setType]
-            // @ts-expect-error
-            s += `Unique ${UnicodeCharacterType[setType]}: ${set.size}\n`
-        }
-        uniqueSets.textContent = s;
+        const kanji = sets[UnicodeCharacterType.Kanji]
+        uniqueKanji.textContent = `Unique Kanji: ${kanji?.size ?? 0}`;
         refresh.Loading = false
     }
 
@@ -123,6 +117,6 @@ export default async () => {
         <button onclick={AnkiSettingsModal}><Icon icon="settings" />Anki Settings</button>
         <div className="flex-row">{loadedCount} {refresh}</div>
         {uniqueCharacters}
-        {uniqueSets}
+        {uniqueKanji}
     </div>
 }
