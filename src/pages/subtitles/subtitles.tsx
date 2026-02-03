@@ -258,16 +258,15 @@ export default class SubtitlesPage extends PageComponent {
     async TryJpdbParse() {
         if (this.LoadedSubtitles) {
             if (!this.JpdbParsePromise) {
-                this.JpdbLoadButton.Loading = true
                 this.JpdbParsePromise = JpdbParseSubtitles(this.LoadedSubtitles.subtitles)
                     .then(e => {
                         this.JpdbLoadButton.Disabled = true
                         return e
                     })
                     .finally(() => {
-                        this.JpdbLoadButton.Loading = false
                         this.JpdbParsePromise = undefined
                     })
+                this.JpdbLoadButton.waitFor(this.JpdbParsePromise, true)
             }
         }
         return this.JpdbParsePromise

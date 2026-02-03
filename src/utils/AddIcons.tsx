@@ -12,6 +12,7 @@ export const MaterialIcons = [
     "edit",
     "error",
     "format_list_numbered",
+    "help",
     "maximize",
     "menu",
     "minimize",

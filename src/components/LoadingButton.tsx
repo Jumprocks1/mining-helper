@@ -38,6 +38,7 @@ export default class LoadingButton extends Component {
             this.Loading = true;
             this.Node.classList.add("loading")
             this.Node.classList.remove("errored")
+            this.Node.tooltipError = undefined
             maybePromise.catch(error => {
                 console.error({ message: "error in promise", error })
                 const message = userErrorMessage(error)

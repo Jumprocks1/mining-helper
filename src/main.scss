@@ -123,6 +123,10 @@ div#result {
         }
     }
 }
+.material-symbols-outlined.inline {
+    // Icon style sheet isn't in a layer
+    font-size: 1em;
+}
 
 #title {
     display: flex

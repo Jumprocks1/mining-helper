@@ -111,7 +111,7 @@ export async function parseSrt(srt: string): Promise<Subtitles> {
     function closePending() {
         if (pendingEntry) {
             pendingEntry.text = pendingEntry.text?.trim()
-            entries.push(pendingEntry as SubtitleEntry)
+            if (pendingEntry.text) entries.push(pendingEntry as SubtitleEntry)
             pendingEntry = undefined
         }
     }

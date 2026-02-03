@@ -1,3 +1,4 @@
+import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util"
 import AddIcons, { MaterialIcons } from "../../utils/AddIcons"
 import LoadingButton, { LoadingButtonProps } from "../LoadingButton"
 
@@ -8,13 +9,17 @@ interface Props extends LoadingButtonProps {
 }
 
 
-interface IconProps {
+interface IconProps<K extends keyof HTMLElementTagNameMap | undefined = undefined> extends BaseComponentProps {
     icon: (typeof MaterialIcons)[number]
+    component?: K
+    componentProps?: K extends keyof HTMLElementTagNameMap ? Partial<HTMLElementTagNameMap[K]> : undefined
 }
-export const Icon = (props: IconProps) => {
-    const res = <span>{props.icon}</span>
+export const Icon = <K extends keyof HTMLElementTagNameMap | undefined>(props: IconProps<K>) => {
+    const res = createElement(props.component ?? "span", props.componentProps)
+    res.textContent = props.icon
     res.classList.add("material-symbols-outlined")
     res.classList.add("icon")
+    applyBaseComponentProps(res, props)
     return res
 }
 
