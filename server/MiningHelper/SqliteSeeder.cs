@@ -38,6 +38,9 @@ public static class SqliteSeeder
     public static void Load(Stream stream)
     {
         using var _ = stream;
+
+        // of course it's super silly to parse SQL instead of just running it directly
+        // but in my testing this runs at least 10x, maybe 100x faster than directly running the sql
         Console.WriteLine("Parsing SQL");
 
         var regex = new Regex(@"^INSERT INTO ([\S]+) VALUES\((.+)\);$");

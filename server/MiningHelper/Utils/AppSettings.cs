@@ -17,8 +17,14 @@ public static class AppSettings
 
     public static T Get<T>(string key) => Settings[key]!.AsValue().GetValue<T>();
     public static T? GetOptional<T>(string key) => (Settings[key]?.AsValue().TryGetValue<T>(out var v) ?? false) ? v : default;
-    public static string GetPath(string path) => Path.GetFullPath(Get<string>(path),
+    public static string GetPath(string key) => Path.GetFullPath(Get<string>(key),
         SettingsFolder ?? throw new Exception("Settings not loaded"));
+    public static string? GetOptionalPath(string key)
+    {
+        var path = GetOptional<string>(key);
+        if (path == null) return null;
+        return Path.GetFullPath(path, SettingsFolder ?? throw new Exception("Settings not loaded"));
+    }
     public static void Load()
     {
         var settingsFile = new string[] {
