@@ -6,8 +6,8 @@ namespace MiningHelper.Utils;
 
 public static class AppSettings
 {
-    static JsonNode? _settings;
-    public static JsonNode Settings => _settings ?? throw new Exception("Settings not loaded");
+    static JsonObject? _settings;
+    public static JsonObject Settings => _settings ?? throw new Exception("Settings not loaded");
     public static string? LogPath { get; private set; }
     public static string? AllowOrigin { get; private set; }
     public static string? ApiKey { get; private set; }
@@ -25,6 +25,21 @@ public static class AppSettings
         if (path == null) return null;
         return Path.GetFullPath(path, SettingsFolder ?? throw new Exception("Settings not loaded"));
     }
+
+
+    public static void MergeNodes(JsonObject baseNode, JsonObject overrideNode)
+    {
+        foreach (var property in overrideNode)
+        {
+            var key = property.Key;
+            var overrideValue = property.Value;
+            if (baseNode.TryGetPropertyValue(key, out var _bV) && _bV is JsonObject bV && property.Value is JsonObject oV)
+                MergeNodes(bV, oV);
+            else
+                baseNode[key] = overrideValue?.DeepClone();
+        }
+    }
+
     public static void Load()
     {
         var settingsFile = new string[] {
@@ -37,10 +52,19 @@ public static class AppSettings
         var found = settingsFile.FirstOrDefault(File.Exists)
             ?? throw new ExitException($"appsettings.json not found.\nPlease place it near {Assembly.GetEntryAssembly()?.Location}");
 
-        _settings = JsonNode.Parse(File.ReadAllText(found));
+        _settings = (JsonObject?)JsonNode.Parse(File.ReadAllText(found)) ?? throw new Exception("Settings null");
         SettingsFolder = Path.GetDirectoryName(Path.GetFullPath(found));
+
+        var local = Path.Join(SettingsFolder, "appsettings.Local.json");
+        if (File.Exists(local))
+        {
+            var localOverrides = (JsonObject?)JsonNode.Parse(File.ReadAllText(local))
+                ?? throw new Exception("Override settings null");
+            MergeNodes(_settings, localOverrides);
+        }
+
         LogPath = GetPath("LogPath");
-        AllowOrigin = Get<string>("AllowOrigin");
+        AllowOrigin = GetOptional<string>("AllowOrigin");
         Port = GetOptional<int?>("Port") ?? Port;
 
         var directory = Path.GetDirectoryName(found);

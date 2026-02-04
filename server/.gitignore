@@ -9,3 +9,5 @@ log.txt
 *.zip
 
 ApiKey.txt
+
+appsettings.Local.json

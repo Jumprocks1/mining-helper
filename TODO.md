@@ -10,6 +10,9 @@
     - Validate buttons
     - ffmpeg, mpv, local audio database, API keys, mpv script, websocket, http
     - lib folder for ffmpeg
+- Setup flag
+    - Move mpv script and set the exe location
+    - Make sure we check each step to see if it's already set
 
 # Before publishing/sharing
 - SPA
@@ -17,13 +20,8 @@
     - I wonder if audio bytes/arraybuffer will be saveable in localstorage
 - Add error messages when API key isn't set up
     - Way to configure API key, make it as easy as possible
-- appsettings.json?
-    - Probably need a `.Local` version
 - Make sure C# log doesn't increase infinitely
-- Add sane default config options
-    - Can make a local override for myself so we can keep in git
-- Merge all git stuff into 1 repo
-    - mpv script we can just copy paste or simlink
+- Move mpv script into repo
 - Fix hard-coded path to server exe in mpv script
 - Make sure it works (with good errors) without different parts
     - jpdb API key

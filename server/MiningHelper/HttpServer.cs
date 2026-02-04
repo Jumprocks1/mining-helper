@@ -33,6 +33,7 @@ public class HttpServer : IDisposable
             {
                 context.Response.StatusCode = 403;
                 context.Response.Close();
+                Program.Log($"Access to server denied from origin {origin}");
                 continue;
             }
             context.Response.AddHeader("Access-Control-Allow-Origin", origin);
@@ -50,6 +51,8 @@ public class HttpServer : IDisposable
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
                 context.Response.OutputStream.Write(Encoding.UTF8.GetBytes("X-Api-Key header required"));
                 context.Response.Close();
+                if (string.IsNullOrWhiteSpace(requestKey)) Program.Log($"Missing API key");
+                else Program.Log($"Incorrect API key");
                 continue;
             }
 
