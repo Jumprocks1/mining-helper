@@ -120,6 +120,16 @@ public class CommandHandler
                 return spl2[0];
             }
 
+            async Task WriteIpc(string ipcCommand)
+            {
+                var writer = InputListener.pipeWriter;
+                if (writer != null)
+                {
+                    await writer.WriteLineAsync(ipcCommand);
+                    await writer.FlushAsync();
+                }
+            }
+
             async Task returnSubs(string lang)
             {
                 var writer = InputListener.pipeWriter;
@@ -161,27 +171,18 @@ public class CommandHandler
             {
                 InputListener.RegisterPipe(commandValue);
             }
-            else if (commandName == "ipc")
+            // used to have generic ipc commands here, but I think they're a bit too powerful from a security perspective
+            else if (commandName == "show-subs") await WriteIpc("set sub-visibility yes");
+            else if (commandName == "toggle-subs") await WriteIpc("cycle sub-visibility");
+            else if (commandName == "toggle-pause") await WriteIpc("cycle pause");
+            else if (commandName == "seek")
             {
-                var writer = InputListener.pipeWriter;
-                if (writer != null)
-                {
-                    await writer.WriteLineAsync(commandValue);
-                    await writer.FlushAsync();
-                }
+                var timeS = double.Parse(commandValue!, CultureInfo.InvariantCulture) / 1000;
+                await WriteIpc($"seek {timeS.ToString(CultureInfo.InvariantCulture)} absolute");
             }
-            else if (commandName == "ipc-request")
-            {
-                await IpcRequest(commandValue!, async response =>
-                {
-                    await SendResponse(context, response.ToString());
-                });
-            }
-            else if (commandName == "forward" || commandName == "f" || commandName == "")
-            {
-                if (HttpServer != null)
-                    await HttpServer.BroadcastMessage(commandValue!);
-            }
+            else if (commandName == "chapter-list")
+                await IpcRequest("[\"get_property\", \"chapter-list\"]",
+                    response => SendResponse(context, response.ToString()));
             else if (commandName == "jp-subs")
             {
                 await returnSubs("ja");

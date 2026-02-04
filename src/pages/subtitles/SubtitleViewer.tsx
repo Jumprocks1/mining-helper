@@ -61,7 +61,7 @@ export default class SubtitleViewer {
                         const subs = this.subtitles
                         setSetting("offset", (subs?.offset ?? 0) + page.CurrentTime - entry.startTime)
                     } else {
-                        if (page.MpvWebSocket.Open) page.MpvWebSocket.SendIfOpen(`ipc:seek ${time / 1000} absolute`)
+                        if (page.MpvWebSocket.Open) page.MpvWebSocket.SendIfOpen(`seek:${time}`)
                         else page.UpdateTime(time)
                     }
                     ev.preventDefault();

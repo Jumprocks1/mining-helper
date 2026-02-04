@@ -172,10 +172,8 @@ export default class SubtitlesPage extends PageComponent {
                         subtitlesPage: this
                     })
                     this.MiningModal.Open()
-                    this.MpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
-                    // Could use this to query, but really not needed
-                    // webSocket.RequestIfOpen(`ipc-request:["get_property", "sub-visibility"]`)
-                    this.MpvWebSocket.SendIfOpen(`ipc:set sub-visibility yes`)
+                    this.MpvWebSocket.SendIfOpen(`seek:${entry.startTime}`)
+                    this.MpvWebSocket.SendIfOpen("show-subs")
                 }
             }
         }
@@ -199,7 +197,7 @@ export default class SubtitlesPage extends PageComponent {
                 const entries = subs.subtitles.processedEntries
                 for (let i = 0; i < entries.length - 1; i++) {
                     if (entries[i].startTime < this.CurrentTime && entries[i + 1].startTime > this.CurrentTime) {
-                        this.MpvWebSocket.SendIfOpen(`ipc:seek ${entries[i].startTime / 1000} absolute`)
+                        this.MpvWebSocket.SendIfOpen(`seek:${entries[i].startTime}`)
                         ev.preventDefault();
                         break
                     }
@@ -212,9 +210,9 @@ export default class SubtitlesPage extends PageComponent {
         } else if (key === "i") { // i for info?
             this.LoadedSubtitles?.ToggleShift()
         } else if (key === "v") {
-            this.MpvWebSocket.SendIfOpen("ipc:cycle sub-visibility");
+            this.MpvWebSocket.SendIfOpen("toggle-subs");
         } else if (key === " ") {
-            this.MpvWebSocket.SendIfOpen("ipc:cycle pause");
+            this.MpvWebSocket.SendIfOpen("toggle-pause");
             ev.preventDefault()
         } else if (key === ",") {
             SettingsModal()
@@ -396,7 +394,7 @@ export default class SubtitlesPage extends PageComponent {
             if (skipChapterRegex) {
                 const regex = new RegExp(skipChapterRegex)
                 // bit inefficient but probably good
-                const resp = await this.MpvWebSocket.RequestIfOpen(`ipc-request:["get_property", "chapter-list"]`)
+                const resp = await this.MpvWebSocket.RequestIfOpen("chapter-list")
                 if (typeof resp === "string") {
                     const parsed = JSON.parse(resp) as { title: string, time: number }[]
                     for (let i = 0; i < parsed.length; i++) {
@@ -507,7 +505,7 @@ export default class SubtitlesPage extends PageComponent {
     }
     SeekToSubtitle(entry: SubtitleEntry) {
         if (this.MpvWebSocket?.Open)
-            this.MpvWebSocket.SendIfOpen(`ipc:seek ${entry.startTime / 1000} absolute`)
+            this.MpvWebSocket.SendIfOpen(`seek:${entry.startTime}`)
         else this.UpdateTime(entry.startTime)
     }
 

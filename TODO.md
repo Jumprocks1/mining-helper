@@ -22,11 +22,8 @@
     - Way to configure API key, make it as easy as possible
 - Move mpv script into repo
 - Make sure it works (with good errors) without different parts
-    - jpdb API key
-    - `T` jpdb thing
     - server API key
     - missing audio files
-- Don't allow arbitrary ipc
 
 # Eventually
 - Some way to force a different JPDB token

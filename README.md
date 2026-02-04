@@ -16,3 +16,13 @@ Here's a rough outline of what it will help you set up:
 
 ### TODO
 - Actually add that setup page
+
+## Missing Features
+I plan to add these eventually. Please open a [GitHub issue](https://github.com/Jumprocks1/mining-helper/issues) if you haveideas or suggestions on how to implement these features.
+
+- Pitch accent mining
+    - jpdb has this info in their api, but I haven't tried pulling it yet
+- Yomitan integration
+    - I don't currently use Yomitan, but I imagine there's some useful integrations that would make things smoother for those who do use it.
+
+See also [TODO.md](TODO.md) for more things I have planned. That's my personal TODO list for the project, so don't take it too seriously.
