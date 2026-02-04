@@ -12,8 +12,14 @@ public static class Program
     public static string? Pipe { get; private set; } = null;
     public static void Log(string s)
     {
+        const int LogMaxLength = 5 * 1024 * 1024;
         if (AppSettings.LogPath != null)
+        {
+            // not ideal to clear it like this, but it's better than letting it grow infinity if we mess something up
+            if (new FileInfo(AppSettings.LogPath).Length > LogMaxLength)
+                File.WriteAllText(AppSettings.LogPath, "");
             File.AppendAllText(AppSettings.LogPath, $"{DateTime.Now:hh:mm:ss.fff}: {s.Trim()}\n");
+        }
     }
     public static async Task Main(string[] args)
     {

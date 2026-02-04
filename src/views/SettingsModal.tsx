@@ -238,7 +238,7 @@ export default () => {
                             rel: "noopener noreferrer"
                         }}
                         className="inline"
-                        tooltip={"You can get one from the very bottom on the jpdb.io settings page.\nAn account is required, but only a username/password is needed.\nClick to open jpdb.io"} /></label>
+                        tooltip={"You can get one from the very bottom of the jpdb.io settings page.\nAn account is required, but only a username/password is needed.\nClick to open jpdb.io"} /></label>
                 <input type="password" defaultValue={await getSetting("jpdbApiKey")}
                     onchange={e => setSetting("jpdbApiKey", (e.target as HTMLInputElement).value)} />
             </div>
