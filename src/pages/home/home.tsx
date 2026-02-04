@@ -42,7 +42,8 @@ export default class HomePage extends PageComponent {
                 <li><a href="https://jimaku.cc/">Jimaku</a></li>
                 <li><a href="https://jpdb.io/">jpdb.io</a></li>
                 <li><a href="https://jisho.org/">jisho.org</a></li>
-                <li><a href="https://github.com/Jumprocks1/anki-mining-helper">Site source</a></li>
+                <li><a href="https://guidetojapanese.org/learn/complete/">Tae Kim's Guide</a></li>
+                <li><a href="https://github.com/Jumprocks1/mining-helper">This site's source</a></li>
                 <li><a href="https://mpv.io/manual/master">mpv manual</a></li>
                 <li><a href="https://sentencesearch.neocities.org/">Sentence Search</a></li>
             </ul>

@@ -9,6 +9,7 @@
     - Full instructions
     - Validate buttons
     - ffmpeg, mpv, local audio database, API keys, mpv script, websocket, http
+    - lib folder for ffmpeg
 
 # Before publishing/sharing
 - SPA
@@ -17,6 +18,7 @@
 - Add error messages when API key isn't set up
     - Way to configure API key, make it as easy as possible
 - appsettings.json?
+    - Probably need a `.Local` version
 - Make sure C# log doesn't increase infinitely
 - Add sane default config options
     - Can make a local override for myself so we can keep in git
