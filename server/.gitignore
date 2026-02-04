@@ -1,0 +1,11 @@
+bin/
+obj/
+publish/
+log.txt
+
+*.db
+
+*.ogg
+*.zip
+
+ApiKey.txt

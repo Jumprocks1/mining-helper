@@ -1,0 +1,1 @@
+dotnet run --project .\MiningHelper\MiningHelper.csproj $args

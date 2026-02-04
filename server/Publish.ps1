@@ -1,0 +1,1 @@
+dotnet publish .\MiningHelper\MiningHelper.csproj -c Debug -r win-x64 -o ./publish
