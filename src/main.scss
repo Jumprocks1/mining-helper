@@ -2,6 +2,7 @@
 @use "pages/subtitles/subtitles";
 @use "pages/anki/anki";
 @use "pages/ss/ss";
+@use "pages/setup/setup";
 @use "styles/loader";
 @use "styles/variables";
 @use "styles/modal";
@@ -42,6 +43,9 @@
         }
         &.ss {
             background-color: color.change($color: variables.$yellow, $alpha: 0.3);
+        }
+        &.setup-link {
+            background-color: color.change(color.mix(variables.$red, variables.$yellow, 75%), $alpha: 0.3);
         }
         &:hover {
             border: 1px solid rgb(255, 255, 255, 50%);
