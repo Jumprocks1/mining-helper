@@ -5,6 +5,7 @@ import { OpenModal } from "../components/Modal"
 import AnkiSettingsModal from "../pages/anki/AnkiSettingsModal"
 import AdvancedSettingsModal from "./AdvancedSettingsModal"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
+import { JpdbApiKeyField } from "./SettingsFields"
 
 // TODO move non-UI stuff to new file
 
@@ -227,21 +228,7 @@ export default () => {
             {await stringSettingsField("serverAddress", "mpv/Audio Server Address")}
             {await stringSettingsField("serverApiKey", "Server API Key", "password")}
 
-            <div className="field">
-                <label>jpdb API Key
-                    {" "}
-                    <Icon icon="help"
-                        component="a"
-                        componentProps={{
-                            href: "https://jpdb.io/settings",
-                            target: "_blank",
-                            rel: "noopener noreferrer"
-                        }}
-                        className="inline"
-                        tooltip={"You can get one from the very bottom of the jpdb.io settings page.\nAn account is required, but only a username/password is needed.\nClick to open jpdb.io"} /></label>
-                <input type="password" defaultValue={await getSetting("jpdbApiKey")}
-                    onchange={e => setSetting("jpdbApiKey", (e.target as HTMLInputElement).value)} />
-            </div>
+            {await JpdbApiKeyField()}
 
             <div className="footer-buttons">
                 <button onclick={() => {

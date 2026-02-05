@@ -22,10 +22,14 @@ export type JpdbToken = [
     vocab_index: number
 ]
 
-export interface JpdbParseResponse {
+interface JpdbResponse {
+    error?: string
+    error_message?: string
+}
+
+export interface JpdbParseResponse extends JpdbResponse {
     tokens: JpdbToken[]
     vocabulary: JpdbVocabulary[]
-    error_message?: string
 }
 
 export async function JpdbParseSubtitles(subtitles: Subtitles, cacheOnly?: true) {
@@ -51,7 +55,7 @@ export const JpdbCache = new StorageCache({
 // seems inconsistent, might exclude certain characters or something
 const maxParseCharacters = 5000
 
-export function ensureNoJpdbError(response: { error?: string, error_message?: string }) {
+export function ensureNoJpdbError(response: JpdbResponse) {
     if (!response.error && !response.error_message) return
     if (response.error === "bad_key") {
         if (response.error_message?.includes("missing"))
@@ -145,4 +149,18 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
 export default async function JpdbParseText(s: string[], cacheOnly?: true) {
     const fullJoin = s.join("\n")
     return await JpdbCache.Get("jpdb_" + hash(fullJoin), cacheOnly ? undefined : () => JpdbParseTextNoCache(s, fullJoin))
+}
+
+
+// TODO should use in more places
+export async function callJpdb<T extends JpdbResponse>(endpoint: string, body: any) {
+    const res = await fetch(`https://jpdb.io/api/v1/${endpoint}`, {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${await getSetting("jpdbApiKey")}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(body)
+    })
+    return res.json() as Promise<T>
 }
