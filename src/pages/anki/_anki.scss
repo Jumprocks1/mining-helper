@@ -22,6 +22,9 @@
             &:focus-visible {
                 outline: 1px dotted $outline;
             }
+            &:hover {
+                background-color: $hoverHighlight;
+            }
         }
 
         span.count {
