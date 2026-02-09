@@ -9,6 +9,8 @@ interface ValidateResponse {
     ffmpegFound?: boolean
     connected?: boolean
     pipe?: boolean
+    mpvFound?: boolean
+    mpvScriptFound?: boolean
 
     error?: string
     errorMessage?: string
@@ -44,6 +46,15 @@ export async function validateSettings(validateButton: HTMLElement) {
             output.append(<div className="warning">mpv IPC pipe not connected - please make sure you started the server through the mpv script</div>)
         } else {
             output.append(<div className="row">{CheckIcon()}mpv IPC pipe connected</div>)
+        }
+        if (!json.mpvFound) {
+            output.append(<div className="warning">mpv folder not found - this is fine if everything else is working. Otherwise, please install mpv</div>)
+        } else {
+            if (json.mpvScriptFound) {
+                output.append(<div className="row">{CheckIcon()}mpv script found</div>)
+            } else {
+                output.append(<div className="warning">mpv script not found - please place `mining_helper.lua` in your mpv scripts folder</div>)
+            }
         }
 
         const websocket = new MpvWebSocket()
