@@ -1,6 +1,7 @@
 import { Icon } from "../../components/basic/IconButton"
 import { callJpdb } from "../../jpdb/JpdbParseText"
 import { serverPost } from "../../utils/Audio"
+import MpvWebSocket from "../../utils/MpvWebSocket"
 import { userErrorMessage } from "../../utils/UserError"
 import { getSetting } from "../../views/SettingsModal"
 
@@ -38,6 +39,15 @@ export async function validateSettings(validateButton: HTMLElement) {
                 {CheckIcon()}ffmpeg found
             </div>)
         }
+
+        const websocket = new MpvWebSocket()
+        await websocket.Connect()
+        if (websocket.Open) {
+            output.append(<div className="row">{CheckIcon()}WebSocket connected</div>)
+        } else {
+            throw "WebSocket connection failed. Check server logs."
+        }
+        websocket.Close()
     } catch (e) {
         if (String(e).includes("Failed to fetch"))
             throw userErrorMessage(`Please make sure the server is running.\nFull error:\n${String(e)}`,

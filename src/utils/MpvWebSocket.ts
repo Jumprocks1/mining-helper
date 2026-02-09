@@ -66,6 +66,11 @@ export default class MpvWebSocket {
         this.Connection!.send(message)
     }
 
+    Close() {
+        this.Connection?.close()
+        this.Connection = undefined
+    }
+
     pendingRequests = new Map<string, (response: Uint8Array<ArrayBuffer> | string) => void>()
     nextRequestId = 1;
     public RequestIfOpen(message: string) {
