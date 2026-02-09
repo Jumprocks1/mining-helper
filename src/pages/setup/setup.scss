@@ -2,7 +2,6 @@
 @use "../../styles/loader";
 @use "sass:color";
 
-// TODO get rid of styles in `.output` in favor of this
 .validation-result {
     .row {
         display: flex;
@@ -11,6 +10,22 @@
     }
     .check {
         color: $success;
+    }
+    .error {
+        color: $error;
+    }
+
+    .loading-icon {
+        position: relative;
+        height: 1em;
+        width: 1em;
+        &::after {
+            content: "";
+            inset: 0;
+            margin: auto;
+            position: absolute;
+            @include loader.LoadingCircle
+        }
     }
 }
 
@@ -22,32 +37,8 @@
             gap: $s1;
             align-items: flex-start;
         }
-        .row {
-            display: flex;
-            align-items: center;
-            gap: $s1;
-        }
-        .loading-icon {
-            position: relative;
-            height: 1em;
-            width: 1em;
-            &::after {
-                content: "";
-                inset: 0;
-                margin: auto;
-                position: absolute;
-                @include loader.LoadingCircle
-            }
-        }
         margin-top: $s1 * 2;
         font-size: 0.8em;
-
-        .error {
-            color: $error;
-        }
-        .check {
-            color: $success;
-        }
 
         .jpdb-key-field {
             max-width: 15em;

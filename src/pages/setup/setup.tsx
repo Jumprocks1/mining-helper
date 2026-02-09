@@ -13,7 +13,7 @@ export default class SetupPage extends PageComponent {
     override Title = "Mining Helper - Setup"
     override Node: Children
 
-    Output = <div className="output" />
+    Output = <div className="output validation-result" />
 
     constructor() {
         super()
