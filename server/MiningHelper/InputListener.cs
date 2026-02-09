@@ -14,7 +14,7 @@ public enum CommandSource
 
 public class InputListener : IDisposable
 {
-    NamedPipeClientStream? pipe = null;
+    public NamedPipeClientStream? Pipe { get; private set; } = null;
     StreamReader? pipeReader = null;
     public StreamWriter? pipeWriter = null;
 
@@ -52,13 +52,13 @@ public class InputListener : IDisposable
 
     public void RegisterPipe(string? name)
     {
-        if (pipe != null) return;
+        if (Pipe != null) return;
         if (string.IsNullOrWhiteSpace(name)) name = @"tmp\mpv-socket";
         if (name.StartsWith(@"\\.\pipe")) name = name[8..];
-        pipe = new(".", name, PipeDirection.InOut, PipeOptions.Asynchronous);
-        pipe.Connect(1000);
-        pipeReader = new(pipe, Encoding.UTF8);
-        pipeWriter = new(pipe, new UTF8Encoding(false)) { NewLine = "\n" };
+        Pipe = new(".", name, PipeDirection.InOut, PipeOptions.Asynchronous);
+        Pipe.Connect(1000);
+        pipeReader = new(Pipe, Encoding.UTF8);
+        pipeWriter = new(Pipe, new UTF8Encoding(false)) { NewLine = "\n" };
     }
 
     public async Task EventLoop()
@@ -135,7 +135,8 @@ public class InputListener : IDisposable
 
     public void Dispose()
     {
-        pipe?.Dispose();
+        Pipe?.Dispose();
+        Pipe = null;
         HttpServer?.Dispose();
         stdin.Dispose();
     }

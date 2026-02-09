@@ -4,12 +4,13 @@ namespace MiningHelper;
 
 public static class ValidateSetup
 {
-    public static async Task<object> Validate()
+    public static async Task<object> Validate(InputListener listener)
     {
         return new
         {
             ffmpegFound = FfmpegUtil.FfmpegLocation != null,
-            connected = true
+            connected = true,
+            pipe = listener.Pipe != null
         };
     }
 }

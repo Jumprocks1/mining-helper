@@ -250,7 +250,7 @@ public class CommandHandler
                 }
             }
             else if (commandName == "validate")
-                await SendResponse(context, await ValidateSetup.Validate());
+                await SendResponse(context, await ValidateSetup.Validate(InputListener));
             else context.Error($"unrecognized {source} command: {command}");
         }
         catch (Exception e)

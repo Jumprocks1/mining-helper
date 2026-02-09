@@ -8,6 +8,7 @@ import { getSetting } from "../../views/SettingsModal"
 interface ValidateResponse {
     ffmpegFound?: boolean
     connected?: boolean
+    pipe?: boolean
 
     error?: string
     errorMessage?: string
@@ -38,6 +39,11 @@ export async function validateSettings(validateButton: HTMLElement) {
             output.append(<div className="row">
                 {CheckIcon()}ffmpeg found
             </div>)
+        }
+        if (!json.pipe) {
+            output.append(<div className="warning">mpv IPC pipe not connected - please make sure you started the server through the mpv script</div>)
+        } else {
+            output.append(<div className="row">{CheckIcon()}mpv IPC pipe connected</div>)
         }
 
         const websocket = new MpvWebSocket()
