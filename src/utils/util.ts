@@ -280,7 +280,7 @@ export function cleanSource(source: string | undefined) {
             replace: ""
         },
         {
-            match: /(?<= - \d+)v\d$/g,
+            match: /(?<= \- \d+)v\d\s*$/g,
             replace: ""
         },
         {

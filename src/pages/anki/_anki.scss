@@ -2,6 +2,9 @@
 
 #anki-page {
     .card-list {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
         .flex-row {
             display: flex;
             align-items: center;
