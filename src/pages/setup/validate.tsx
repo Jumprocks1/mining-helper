@@ -1,11 +1,10 @@
 import { Icon } from "../../components/basic/IconButton"
 import { callJpdb } from "../../jpdb/JpdbParseText"
 import { serverPost } from "../../utils/Audio"
-import MpvWebSocket from "../../utils/MpvWebSocket"
 import { userErrorMessage } from "../../utils/UserError"
 import { getSetting } from "../../views/SettingsModal"
 
-interface ValidateResponse {
+export interface ValidateResponse {
     ffmpegFound?: boolean
     connected?: boolean
     pipe?: boolean
@@ -33,38 +32,6 @@ export async function validateSettings(validateButton: HTMLElement) {
         if (json.error) throw json.userMessage
         if (json.connected) output.append(<div className="row">{CheckIcon()}Server connected</div>)
         else output.append(<div className="warning">Server not connected</div>)
-        if (!json.ffmpegFound) {
-            output.append(<div className="warning">
-                ffmpeg not found. Please place it in the system path or in the `lib` folder next to appsettings.json
-            </div>)
-        } else {
-            output.append(<div className="row">
-                {CheckIcon()}ffmpeg found
-            </div>)
-        }
-        if (!json.pipe) {
-            output.append(<div className="warning">mpv IPC pipe not connected - please make sure you started the server through the mpv script</div>)
-        } else {
-            output.append(<div className="row">{CheckIcon()}mpv IPC pipe connected</div>)
-        }
-        if (!json.mpvFound) {
-            output.append(<div className="warning">mpv folder not found - this is fine if everything else is working. Otherwise, please install mpv</div>)
-        } else {
-            if (json.mpvScriptFound) {
-                output.append(<div className="row">{CheckIcon()}mpv script found</div>)
-            } else {
-                output.append(<div className="warning">mpv script not found - please place `mining_helper.lua` in your mpv scripts folder</div>)
-            }
-        }
-
-        const websocket = new MpvWebSocket()
-        await websocket.Connect()
-        if (websocket.Open) {
-            output.append(<div className="row">{CheckIcon()}WebSocket connected</div>)
-        } else {
-            throw "WebSocket connection failed. Check server logs."
-        }
-        websocket.Close()
     } catch (e) {
         if (String(e).includes("Failed to fetch"))
             throw userErrorMessage(`Please make sure the server is running.\nFull error:\n${String(e)}`,

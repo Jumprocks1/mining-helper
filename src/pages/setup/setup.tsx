@@ -3,10 +3,12 @@ import LoadingButton from "../../components/LoadingButton"
 import { Children, replaceChildren } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { callJpdb } from "../../jpdb/JpdbParseText"
+import { serverPost } from "../../utils/Audio"
+import MpvWebSocket from "../../utils/MpvWebSocket"
 import { userErrorMessage } from "../../utils/UserError"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
 import { getSetting } from "../../views/SettingsModal"
-import { CheckIcon } from "./validate"
+import { CheckIcon, ValidateResponse } from "./validate"
 
 export default class SetupPage extends PageComponent {
     Id = "setup-page"
@@ -33,6 +35,7 @@ export default class SetupPage extends PageComponent {
 
         try {
             await this.CheckJpdb()
+            await this.CheckServer()
         } catch (e) {
             replaceChildren(this.Output, userErrorMessage(e))
         }
@@ -54,6 +57,56 @@ export default class SetupPage extends PageComponent {
             found.replaceWith(el)
         } else {
             this.Output.append(el)
+        }
+    }
+
+    CheckServer = async () => {
+        try {
+            // TODO this checks things pretty well, but it doesn't give proper advice for fixing
+            // the styles/formatting are also different from the jpdb validation
+            const resp = await serverPost("validate")
+            const json = await resp.json() as ValidateResponse
+            if (json.error) throw json.userMessage
+            if (json.connected) this.Output.append(<div className="row">{CheckIcon()}Server connected</div>)
+            else this.Output.append(<div className="warning">Server not connected</div>)
+
+            if (!json.ffmpegFound) {
+                this.Output.append(<div className="warning">
+                    ffmpeg not found. Please place it in the system path or in the `lib` folder next to appsettings.json
+                </div>)
+            } else {
+                this.Output.append(<div className="row">
+                    {CheckIcon()}ffmpeg found
+                </div>)
+            }
+            if (!json.pipe) {
+                this.Output.append(<div className="warning">mpv IPC pipe not connected - please make sure you started the server through the mpv script</div>)
+            } else {
+                this.Output.append(<div className="row">{CheckIcon()}mpv IPC pipe connected</div>)
+            }
+            if (!json.mpvFound) {
+                this.Output.append(<div className="warning">mpv folder not found - this is fine if everything else is working. Otherwise, please install mpv</div>)
+            } else {
+                if (json.mpvScriptFound) {
+                    this.Output.append(<div className="row">{CheckIcon()}mpv script found</div>)
+                } else {
+                    this.Output.append(<div className="warning">mpv script not found - please place `mining_helper.lua` in your mpv scripts folder</div>)
+                }
+            }
+
+            const websocket = new MpvWebSocket()
+            await websocket.Connect()
+            if (websocket.Open) {
+                this.Output.append(<div className="row">{CheckIcon()}WebSocket connected</div>)
+            } else {
+                throw "WebSocket connection failed. Check server logs."
+            }
+            websocket.Close()
+        } catch (e) {
+            if (String(e).includes("Failed to fetch"))
+                throw userErrorMessage(`Please make sure the server is running.\nFull error:\n${String(e)}`,
+                    `Failed to connect to ${await getSetting("serverAddress")}`)
+            throw userErrorMessage(e, "Error connecting to server")
         }
     }
 
