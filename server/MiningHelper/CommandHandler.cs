@@ -249,6 +249,8 @@ public class CommandHandler
                     });
                 }
             }
+            else if (commandName == "validate")
+                await SendResponse(context, await ValidateSetup.Validate());
             else context.Error($"unrecognized {source} command: {command}");
         }
         catch (Exception e)

@@ -2,6 +2,18 @@
 @use "../../styles/loader";
 @use "sass:color";
 
+// TODO get rid of styles in `.output` in favor of this
+.validation-result {
+    .row {
+        display: flex;
+        align-items: center;
+        gap: $s1;
+    }
+    .check {
+        color: $success;
+    }
+}
+
 #setup-page {
     .output {
         .spaced {

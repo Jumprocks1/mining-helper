@@ -6,6 +6,7 @@ import { callJpdb } from "../../jpdb/JpdbParseText"
 import { userErrorMessage } from "../../utils/UserError"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
 import { getSetting } from "../../views/SettingsModal"
+import { CheckIcon } from "./validate"
 
 export default class SetupPage extends PageComponent {
     Id = "setup-page"
@@ -35,10 +36,6 @@ export default class SetupPage extends PageComponent {
         } catch (e) {
             replaceChildren(this.Output, userErrorMessage(e))
         }
-    }
-
-    Check() {
-        return <Icon icon="check" className="check" />
     }
 
     Recheck(target: () => Promise<void>) {
@@ -90,7 +87,7 @@ export default class SetupPage extends PageComponent {
         }
 
         o.replaceChildren(<div className="row">
-            {this.Check()} Connected to jpdb.io
+            {CheckIcon()} Connected to jpdb.io
         </div>)
     }
 }

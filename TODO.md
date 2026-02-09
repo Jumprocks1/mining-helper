@@ -4,7 +4,10 @@
 
 # High prio
 - Add validate button to subs settings modal
-    - Check for mpv/ffmpeg, local audio
+    - This is started, but does not check everything yet
+    - Check for mpv, local audio
+    - Check websocket
+    - Check jpdb connection (reuse code from setup page)
 - Setup page
     - Full instructions
     - Validate buttons
@@ -24,6 +27,7 @@
 - Make sure it works (with good errors) without different parts
     - server API key
     - missing audio files
+- Make sure server comes with (empty) lib folder next to appsettings
 
 # Eventually
 - Some way to force a different JPDB token

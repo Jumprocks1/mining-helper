@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Net;
 using System.Net.WebSockets;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Channels;
 using MiningHelper.Utils;
 
@@ -17,6 +18,8 @@ public class HttpServer : IDisposable
     {
         listener.Prefixes.Add($"http://127.0.0.1:{Port}/");
     }
+
+    static void json(HttpListenerResponse response, object json) => JsonSerializer.Serialize(response.OutputStream, json);
 
     public int PreviousWebSocketClientId = 0;
     public ConcurrentDictionary<WebSocket, int>? Clients = new();
@@ -49,7 +52,20 @@ public class HttpServer : IDisposable
             if (string.IsNullOrWhiteSpace(requestKey) || requestKey != AppSettings.ApiKey)
             {
                 context.Response.StatusCode = (int)HttpStatusCode.Unauthorized;
-                context.Response.OutputStream.Write(Encoding.UTF8.GetBytes("X-Api-Key header required"));
+                if (string.IsNullOrWhiteSpace(requestKey))
+                    json(context.Response, new
+                    {
+                        error = "missing-key",
+                        errorMessage = "X-Api-Key header required",
+                        userMessage = "Server API key not set"
+                    });
+                else
+                    json(context.Response, new
+                    {
+                        error = "bad-key",
+                        errorMessage = "Invalid X-Api-Key header",
+                        userMessage = "Invalid server API key"
+                    });
                 context.Response.Close();
                 if (string.IsNullOrWhiteSpace(requestKey)) Program.Log($"Missing API key");
                 else Program.Log($"Incorrect API key");

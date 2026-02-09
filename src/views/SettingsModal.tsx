@@ -1,8 +1,9 @@
-import { Icon } from "../components/basic/IconButton"
 import NumberField from "../components/basic/NumberField"
 import Loader from "../components/Loader"
+import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
 import AnkiSettingsModal from "../pages/anki/AnkiSettingsModal"
+import { validateSettings } from "../pages/setup/validate"
 import AdvancedSettingsModal from "./AdvancedSettingsModal"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 import { JpdbApiKeyField } from "./SettingsFields"
@@ -201,6 +202,12 @@ export default () => {
             }} />
         volumeInput.tooltip = `${inputVolume}%`
 
+        const validateButton = <LoadingButton className="validate-button"
+            tooltip="Will attempt connections using the configured settings"
+            onClick={() => validateSettings(validateButton)}>
+            Validate Settings
+        </LoadingButton>
+
 
         return <>
             <button onclick={RegexReplacements}>Regex replacements</button>
@@ -243,6 +250,7 @@ export default () => {
                 }}>
                     Advanced Settings
                 </button>
+                {validateButton}
             </div>
         </>
     }} />

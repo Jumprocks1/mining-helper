@@ -57,7 +57,7 @@ export async function playAudio(name: string, audio: PlayableAudio, offset: numb
 }
 
 
-async function post(body: string) {
+export async function serverPost(body: string) {
     const apiKey = await getSetting("serverApiKey")
     const headers: HeadersInit = {}
     if (apiKey) headers["X-Api-Key"] = apiKey
@@ -72,10 +72,10 @@ export async function tryGetAudioBytes(vocab: JpdbVocabulary | string) {
     try {
         let audioBytes: Response
         if (typeof vocab === "string") {
-            audioBytes = await post(`audio-bytes-kanji:${vocab}`)
+            audioBytes = await serverPost(`audio-bytes-kanji:${vocab}`)
         } else {
             const kanji = vocab[0]
-            audioBytes = await post(`audio-bytes-kanji:${kanji}:${vocab[1]}`)
+            audioBytes = await serverPost(`audio-bytes-kanji:${kanji}:${vocab[1]}`)
         }
         if (!audioBytes.ok) return
         const buffer = await audioBytes.arrayBuffer()
@@ -99,13 +99,13 @@ export interface AudioEntry {
 export async function getAudioOptionsFromKanji(kanji: string, reading?: string) {
     let body = `lookup-audio:${kanji}`
     if (reading) body += ":" + reading
-    const audioOptions = await post(body)
+    const audioOptions = await serverPost(body)
     return await audioOptions.json() as AudioEntry[]
 }
 
 export async function getAudio(entry?: AudioEntry) {
     if (!entry) return
-    const audioBytes = await post(`audio-bytes:${entry.ID}`)
+    const audioBytes = await serverPost(`audio-bytes:${entry.ID}`)
     if (!audioBytes.ok) return
     const buffer = await audioBytes.arrayBuffer()
     return buffer.byteLength > 0 ? buffer : undefined

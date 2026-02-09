@@ -5,6 +5,11 @@
         padding-top: $s1;
         display: flex;
         gap: $s1;
+        width: 100%;
+
+        .validate-button {
+            margin-left: auto;
+        }
     }
 
     #mining-offset-row {
