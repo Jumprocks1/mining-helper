@@ -32,6 +32,19 @@ public class HttpServer : IDisposable
             var context = await listener.GetContextAsync();
             var request = context.Request;
             var origin = request.Headers["Origin"];
+            if (request.Url?.AbsolutePath == "/ping")
+            {
+                context.Response.AddHeader("Access-Control-Allow-Origin", "*");
+                context.Response.StatusCode = (int)HttpStatusCode.OK;
+                json(context.Response, new
+                {
+                    success = true,
+                    allowOrigin = AppSettings.ShouldAllowOrigin(origin),
+                    origin
+                });
+                context.Response.Close();
+                continue;
+            }
             if (!AppSettings.ShouldAllowOrigin(origin) || origin == null)
             {
                 context.Response.StatusCode = 403;

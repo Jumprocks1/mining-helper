@@ -20,6 +20,20 @@ export function CheckIcon() {
     return <Icon icon="check" className="check" />
 }
 
+interface PingResponse {
+    success: boolean
+    allowOrigin: boolean
+    origin: string
+}
+// intetionally doesn't send API key
+export async function serverPing() {
+    const serverAddress = await getSetting("serverAddress")
+    const httpServer = `http://${serverAddress}/ping`
+    const resp = await fetch(httpServer, { method: "GET" })
+    const json = await resp.json() as PingResponse
+    return json
+}
+
 export async function validateSettings(validateButton: HTMLElement) {
     const runningRow = <div className="row"><span className="loading-icon" />Running checks...</div>
     const output = <div className="validation-result">
@@ -27,12 +41,16 @@ export async function validateSettings(validateButton: HTMLElement) {
     </div>
     validateButton.tooltip = output
     try {
+        const ping = await serverPing()
+        if (ping.success && !ping.allowOrigin)
+            throw userErrorMessage(`Server connected, but origin "${ping.origin}" is not allowed`, "Origin not allowed")
         const resp = await serverPost("validate")
         const json = await resp.json() as ValidateResponse
         if (json.error) throw json.userMessage
         if (json.connected) output.append(<div className="row">{CheckIcon()}Server connected</div>)
         else output.append(<div className="warning">Server not connected</div>)
     } catch (e) {
+        if (e instanceof HTMLElement) throw e
         if (String(e).includes("Failed to fetch"))
             throw userErrorMessage(`Please make sure the server is running.\nFull error:\n${String(e)}`,
                 `Failed to connect to ${await getSetting("serverAddress")}`)
