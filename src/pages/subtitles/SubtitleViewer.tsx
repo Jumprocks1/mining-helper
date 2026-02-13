@@ -280,12 +280,17 @@ export default class SubtitleViewer {
         await getAnkiWords() // needed for AddStateClass
         const jpdb = this.subtitles.jpdbParse
         if (!jpdb) return
+        const underlined = Boolean(this.Node.querySelector(".subtitles .underline"))
         const tokens = jpdb.tokens
         let nextToken = 0
         for (let i = 0; i < this.subtitles.processedEntries.length; i++) {
             const entry = this.subtitles.processedEntries[i]
             const node = entry.node?.querySelector(".subtitles")
             if (node) {
+                if (underlined) {
+                    node.replaceChildren(entry.text)
+                    continue
+                }
                 const children: (Node | string)[] = []
                 let i = 0;
                 while (i < entry.text.length) {
