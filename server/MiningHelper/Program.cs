@@ -55,13 +55,18 @@ public static class Program
             }
             if (Server)
             {
+                if (HttpServer.Busy)
+                {
+                    Print($"Port {HttpServer.Port} is already in use", ConsoleColor.Red, true);
+                    return;
+                }
                 using var messageHandler = new InputListener();
                 await messageHandler.EventLoop();
             }
         }
         catch (ExitException e)
         {
-            Print(e.Message, ConsoleColor.Red);
+            Print(e.Message, ConsoleColor.Red, true);
         }
         finally
         {
@@ -69,8 +74,9 @@ public static class Program
         }
     }
 
-    public static void Print(string message, ConsoleColor? color = null)
+    public static void Print(string message, ConsoleColor? color = null, bool log = false)
     {
+        if (log) Log(message);
         if (color == null)
         {
             Console.WriteLine(message);

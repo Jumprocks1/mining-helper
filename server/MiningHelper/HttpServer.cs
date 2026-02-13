@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -24,6 +25,7 @@ public class HttpServer : IDisposable
     public int PreviousWebSocketClientId = 0;
     public ConcurrentDictionary<WebSocket, int>? Clients = new();
 
+    public static bool Busy => IPGlobalProperties.GetIPGlobalProperties().GetActiveTcpListeners().Any(e => e.Port == Port);
     public async Task StartAsync(CancellationToken token)
     {
         listener.Start();
