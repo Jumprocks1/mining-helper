@@ -3,7 +3,6 @@ import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbPar
 import { getVocabState, VocabState } from "../../jpdb/JpdbState"
 import { getCharacterIndex, getHoveredCharacterIndex, getSelectionRange } from "../../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt"
-import { oldCreateElement } from "../../utils/util"
 import { setSetting } from "../../views/SettingsModal"
 import SubtitlesPage from "./subtitles"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
@@ -54,7 +53,7 @@ export default class SubtitleViewer {
             const clicked = ev.target as HTMLElement | null
             if (clicked) {
                 if (clicked.classList.contains("timestamp")) {
-                    const entry = (clicked as any).entry
+                    const entry = clicked.subtitleEntry
                     if (!entry) return
                     const time = entry.startTime
                     if (ev.ctrlKey) {
@@ -120,15 +119,7 @@ export default class SubtitleViewer {
 
         const parentRect = parent.getBoundingClientRect()
 
-        if (vocab) {
-            const state = getVocabState(vocab, { trimKana: true })
-            if (state === VocabState.Known)
-                this.hoverRectangle.classList.add("known")
-            else if (state === VocabState.Similar || state === VocabState.AltSpelling)
-                this.hoverRectangle.classList.add("similar")
-            else if (state !== VocabState.New)
-                this.hoverRectangle.classList.add("ignore")
-        }
+        if (vocab) this.AddStateClass(this.hoverRectangle, vocab)
 
         this.hoverRectangle.style.width = hoverState.rect.width + "px"
         this.hoverRectangle.style.height = hoverState.rect.height + "px"
@@ -190,17 +181,12 @@ export default class SubtitleViewer {
         if (!inner) return
         const newChildren: Node[] = []
         for (const entry of this.subtitles.processedEntries) {
-            newChildren.push(entry.node = oldCreateElement("div", {
-                className: "subtitle-entry",
-                children: [
-                    oldCreateElement("span", {
-                        className: "timestamp",
-                        textContent: formatTimestamp(entry.startTime),
-                        mutate: (e: any) => e.entry = entry
-                    }),
-                    <div className="subtitles">{entry.text}</div>
-                ]
-            }))
+            const timestamp = <span className="timestamp">{formatTimestamp(entry.startTime)}</span>
+            timestamp.subtitleEntry = entry
+            newChildren.push(entry.node = <div className="subtitle-entry">
+                {timestamp}
+                <div className="subtitles">{entry.text}</div>
+            </div>)
             entry.node.subtitleEntry = entry
         }
         inner.replaceChildren(...newChildren)
@@ -276,6 +262,52 @@ export default class SubtitleViewer {
                 } else {
                     node.classList.remove("highlight")
                 }
+            }
+        }
+    }
+
+    AddStateClass(el: HTMLElement, vocab: JpdbVocabulary) {
+        const state = getVocabState(vocab, { trimKana: true })
+        if (state === VocabState.Known)
+            el.classList.add("known")
+        else if (state === VocabState.Similar || state === VocabState.AltSpelling)
+            el.classList.add("similar")
+        else if (state !== VocabState.New)
+            el.classList.add("ignore")
+    }
+
+    async UnderlineWords() {
+        await getAnkiWords() // needed for AddStateClass
+        const jpdb = this.subtitles.jpdbParse
+        if (!jpdb) return
+        const tokens = jpdb.tokens
+        let nextToken = 0
+        for (let i = 0; i < this.subtitles.processedEntries.length; i++) {
+            const entry = this.subtitles.processedEntries[i]
+            const node = entry.node?.querySelector(".subtitles")
+            if (node) {
+                const children: (Node | string)[] = []
+                let i = 0;
+                while (i < entry.text.length) {
+                    let s: HTMLElement | string
+                    if (nextToken < tokens.length) {
+                        const pos = entry.characterOffset + i
+                        if (pos < tokens[nextToken][0]) {
+                            s = entry.text.substring(i, tokens[nextToken][0] - entry.characterOffset)
+                            i += s.length
+                        } else {
+                            s = <span className="underline">{entry.text.substring(i, i + tokens[nextToken][1])}</span>
+                            this.AddStateClass(s, jpdb.vocabulary[tokens[nextToken][3]])
+                            i += tokens[nextToken][1]
+                            nextToken += 1;
+                        }
+                    } else {
+                        s = entry.text.substring(i)
+                        i += s.length
+                    }
+                    children.push(s)
+                }
+                node.replaceChildren(...children)
             }
         }
     }

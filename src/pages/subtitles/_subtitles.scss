@@ -105,22 +105,33 @@
                 padding-right: 16px;
             }
             .subtitles {
-                // Not sure why I had these styles
-                // display: flex;
-                // flex-direction: column;
                 white-space: pre-wrap;
+
+                .underline {
+                    text-decoration: underline 2px dashed $red;
+                    text-underline-offset: 6px;
+                }
+                .known {
+                    text-decoration-color: $green;
+                }
+                .similar {
+                    text-decoration-color: $yellow;
+                }
+                .ignore {
+                    text-decoration-color: $blue;
+                }
             }
         }
         .hover-rectangle {
-            border-bottom: 2px dashed color.change($red, $alpha: 0.7);
+            border-bottom: 2px dashed $red;
             &.known {
-                border-bottom: 2px dashed color.change($green, $alpha: 0.7);
+                border-bottom: 2px dashed $green;
             }
             &.similar {
-                border-bottom: 2px dashed color.change($yellow, $alpha: 0.7);
+                border-bottom: 2px dashed $yellow;
             }
             &.ignore {
-                border-bottom: 2px dashed color.change($blue, $alpha: 0.7);
+                border-bottom: 2px dashed $blue;
             }
             position: absolute;
             pointer-events: none;

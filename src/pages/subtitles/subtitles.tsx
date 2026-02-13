@@ -207,6 +207,8 @@ export default class SubtitlesPage extends PageComponent {
 
         if (key === "h") {
             this.LoadedSubtitles?.HighlightAnkiWords()
+        } else if (key === "u") {
+            this.LoadedSubtitles?.UnderlineWords()
         } else if (key === "i") { // i for info?
             this.LoadedSubtitles?.ToggleShift()
         } else if (key === "v") {
