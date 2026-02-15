@@ -85,7 +85,7 @@ export const defaultLocalSettings: LocalSettings = {
 
     skipChapterRegex: "",
     customCss: "",
-    miningMaxRecommendedCount: 50,
+    miningMaxRecommendedCount: 40,
     miningMaxFrequency: 20_000,
     miningTrimKana: true,
     miningChronological: false,
