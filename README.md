@@ -17,8 +17,19 @@ Here's a rough outline of what it will help you set up:
 ### TODO
 - Actually add that setup page
 
+## Advantages over existing tools
+- Doesn't rely on mpv for parsing the subtitles, allowing it to load the entire subtitle file at once
+- Doesn't use the clipboard for transferring subtitles
+- Recommends the most frequently used words that you haven't mined yet
+- Easy to mine after finishing the content (without pausing to mine)
+
+## Related projects
+- https://yomitan.wiki/ - not required since the site parses subtitles with jpdb
+- https://docs.asbplayer.dev/docs/intro - similar, but works with online video players instead of mpv
+- https://github.com/kuroahna/mpv_websocket - similar, works with mpv but with less features
+
 ## Missing Features
-I plan to add these eventually. Please open a [GitHub issue](https://github.com/Jumprocks1/mining-helper/issues) if you haveideas or suggestions on how to implement these features.
+I plan to add these eventually. Please open a [GitHub issue](https://github.com/Jumprocks1/mining-helper/issues) if you have ideas or suggestions on how to implement these features.
 
 - Pitch accent mining
     - jpdb has this info in their api, but I haven't tried pulling it yet
