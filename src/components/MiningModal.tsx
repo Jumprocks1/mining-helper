@@ -247,8 +247,10 @@ export default (props: Props) => {
         </div>)
 
 
-        let startOffset = await getSetting("defaultStartOffset")
-        let endOffset = await getSetting("defaultEndOffset")
+        const defaultStartOffset = await getSetting("defaultStartOffset")
+        const defaultEndOffset = await getSetting("defaultEndOffset")
+        let startOffset = defaultStartOffset
+        let endOffset = defaultEndOffset
         let loadedOffsets: [number, number] | undefined = undefined
 
         const playButtonPlaceholder = <div></div>
@@ -264,9 +266,9 @@ export default (props: Props) => {
             <label>Time</label>
             <div className="field-value">
                 {timeField}
-                <NumberField onChange={v => startOffset = v} initialValue={startOffset} label="Start" baseChange={100} showPlus
+                <NumberField onChange={v => startOffset = v} defaultValue={defaultStartOffset} label="Start" baseChange={100} showPlus
                     storeDefault="defaultStartOffset" />
-                <NumberField onChange={v => endOffset = v} initialValue={endOffset} label="End" baseChange={100} showPlus
+                <NumberField onChange={v => endOffset = v} defaultValue={defaultEndOffset} label="End" baseChange={100} showPlus
                     storeDefault="defaultEndOffset" />
                 {playButtonPlaceholder}
             </div>
