@@ -86,6 +86,7 @@ public static class MpvUtil
             if (e.Title != null)
             {
                 if (e.Title.Contains("Songs", StringComparison.OrdinalIgnoreCase)) score -= 1;
+                if (e.Title.Contains("Signs", StringComparison.OrdinalIgnoreCase)) score -= 1;
                 if (e.Title.Contains("Dialog", StringComparison.OrdinalIgnoreCase)) score += 10;
                 // not really sure what these are
                 // Star Wars Visions S3 had them
