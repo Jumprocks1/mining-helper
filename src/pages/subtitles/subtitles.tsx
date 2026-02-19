@@ -416,7 +416,7 @@ export default class SubtitlesPage extends PageComponent {
 
         let characterOffset = 0
         for (const entry of subtitles.originalEntries) {
-            const text = applyReplacementsTo(replacements, entry.text)
+            const text = applyReplacementsTo(replacements, entry.text).trim()
             if (!text) continue
             if (skip.length > 0) {
                 let shouldSkip = false
