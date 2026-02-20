@@ -11,8 +11,8 @@ public static class ValidateSetup
         var script = Path.Join(mpvLocation, "scripts", "mining_helper.lua");
         return new
         {
-            ffmpegFound = FfmpegUtil.FfmpegLocation != null,
             connected = true,
+            ffmpegFound = FfmpegUtil.FfmpegLocation != null,
             pipe = listener.Pipe != null,
             mpvFound = Directory.Exists(mpvLocation),
             mpvScriptFound = File.Exists(script)

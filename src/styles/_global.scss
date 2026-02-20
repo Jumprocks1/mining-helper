@@ -33,6 +33,9 @@ body {
     }
     a {
         color: inherit;
+        &.colored {
+            color: variables.$linkColor
+        }
     }
     input {
         display: block;

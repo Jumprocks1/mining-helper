@@ -3,6 +3,7 @@
 @use "sass:color";
 
 .validation-result {
+    white-space: pre-wrap;
     .row {
         display: flex;
         align-items: center;

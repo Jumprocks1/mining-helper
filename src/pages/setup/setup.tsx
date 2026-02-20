@@ -4,6 +4,7 @@ import { Children, replaceChildren } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { callJpdb } from "../../jpdb/JpdbParseText"
 import { serverPost } from "../../utils/Audio"
+import { getHttpServerAddress } from "../../utils/httpServerUtil"
 import MpvWebSocket from "../../utils/MpvWebSocket"
 import { userErrorMessage } from "../../utils/UserError"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
@@ -61,6 +62,23 @@ export default class SetupPage extends PageComponent {
     }
 
     CheckServer = async () => {
+        try {
+            const pingResult = await fetch(await getHttpServerAddress(), { method: "GET" })
+        } catch {
+            // TODO should mention that the server might already be set up, just not running
+            const res = <div>
+                Failed to connect to {await getHttpServerAddress()}{"\n"}
+                This connection is required in order to communicate with mpv.{"\n"}
+                {"\n"}
+                To get started, download the server <a target="_blank" rel="noopener noreferrer"
+                    className="colored"
+                    href="https://github.com/Jumprocks1/mining-helper/releases">from GitHub</a>.{"\n"}
+                Once downloaded, unzip and run "setup.bat".{"\n"}
+                For manual setup instructions, see the included README.txt file.{"\n"}
+                Once complete, check your settings again.
+            </div>
+            throw res
+        }
         try {
             // TODO this checks things pretty well, but it doesn't give proper advice for fixing
             // the styles/formatting are also different from the jpdb validation

@@ -12,10 +12,9 @@ public static class SqliteSeeder
     public static string ZipFile => AppSettings.GetPath("AudioDataZip");
     public static void Setup()
     {
-        Console.WriteLine("Checking for existing database file");
         if (File.Exists(DbFile))
         {
-            Console.WriteLine($"{DbFile} already exists, skipping db setup");
+            Program.Print($"{DbFile} already exists, skipping db setup", ConsoleColor.DarkGray);
             return;
         }
         Console.WriteLine($"{DbFile} not found, seeding");

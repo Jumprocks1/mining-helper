@@ -49,8 +49,7 @@ public static class Program
 
             if (Setup)
             {
-                Console.WriteLine("Starting first time setup");
-                SqliteSeeder.Setup();
+                MiningHelper.Setup.Run();
                 return;
             }
             if (Server)
