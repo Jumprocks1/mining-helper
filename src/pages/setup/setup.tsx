@@ -23,6 +23,9 @@ export default class SetupPage extends PageComponent {
 
         this.Node = <>
             <h2>Setup</h2>
+            <p className="warning">This page is not yet complete. For more instructions, please see
+                {" "}<a target="_blank" rel="noopener noreferrer" href="https://github.com/Jumprocks1/mining-helper/blob/main/docs/SETUP.md">GitHub</a>.</p>
+            <br />
             <p>This page will walk you through setting up Anki Mining Helper. Start by using the button below.</p>
             <LoadingButton onClick={() => this.CheckSettings()}>Check Current Settings</LoadingButton>
             {this.Output}

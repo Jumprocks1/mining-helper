@@ -11,7 +11,7 @@ try {
         Write-Host "Jobs started"
         Wait-Process -Id $sass.Id,$esbuild.Id,$css.Id
     } else {
-        $esbuild = Start-Process node esbuild.mjs -NoNewWindow -PassThru
+        $esbuild = Start-Process node esbuild.mjs,--watch -NoNewWindow -PassThru
         Write-Host "Jobs started"
         Wait-Process -Id $sass.Id,$esbuild.Id
     }

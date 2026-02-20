@@ -2,8 +2,9 @@ import * as esbuild from 'esbuild'
 
 
 // process.env.NODE_ENV might also work?
-const prod = process.argv.includes('--prod');
-const hotReloadCss = process.argv.includes('--hot-reload-css');
+const prod = process.argv.includes('--prod')
+const watch = process.argv.includes('--watch')
+const hotReloadCss = process.argv.includes('--hot-reload-css')
 
 
 /** @type {import('esbuild').BuildOptions} */
@@ -22,9 +23,9 @@ const config = {
     }
 }
 
-if (prod) {
-    await esbuild.build(config)
-} else {
+if (watch) {
     const context = await esbuild.context(config)
     await context.watch();
+} else {
+    await esbuild.build(config)
 }
