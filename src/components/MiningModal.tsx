@@ -10,7 +10,7 @@ import { formatTimestamp, parseSubtitles, SubtitleEntryWithCharacterOffset, Subt
 import UserError from "../utils/UserError"
 import { cleanSource, furiFromToken, furiToReading, furiToRuby, jpdbEntryUrl, lookupFuri } from "../utils/util"
 import AudioButton from "./AudioButton"
-import IconButton from "./basic/IconButton"
+import IconButton, { Icon } from "./basic/IconButton"
 import NumberField from "./basic/NumberField"
 import UpDownButtons from "./basic/UpDownButtons"
 import Loader, { Load } from "./Loader"
@@ -181,7 +181,9 @@ export default (props: Props) => {
         body.push(<div className="field">
             <div className="label">Word Audio{menuButton}</div>
             <div className="field-value">
-                {AudioButton({ audio: () => card.audioBytes, name: kanji })}
+                {card.audioBytes ? AudioButton({ audio: () => card.audioBytes, name: kanji })
+                    : <Icon className="error" icon="error"
+                        tooltip={`No audio found for ${kanji}`} />}
             </div>
         </div>)
 
