@@ -44,6 +44,10 @@ export async function addAnkiWord(word: string) {
         await chrome.storage.local.set({ ankiWords: words })
     }
     if (localAnkiWordsSet) localAnkiWordsSet.add(word)
+    if (localAnkiWordsTrimKanaMap) {
+        const trimmed = TrimKana(word)
+        if (trimmed !== "") localAnkiWordsTrimKanaMap.set(trimmed, word)
+    }
     return words
 }
 
