@@ -69,7 +69,12 @@ export default (props: Props) => {
     }, { passive: false }) // we call preventDefault, so can't let the browser run it's own scrolling in parallel
 
     function commitPending() {
-        const v = parseInt(pendingValue)
+        let mult = 1
+        while (pendingValue.endsWith("k")) {
+            pendingValue = pendingValue.substring(0, pendingValue.length - 1)
+            mult *= 1000
+        }
+        const v = Math.trunc(parseFloat(pendingValue) * mult)
         if (Number.isFinite(v)) setValue(v)
         else updateInnerText()
     }
@@ -90,7 +95,7 @@ export default (props: Props) => {
                 Effects.flash(res)
             }
             e.stopPropagation()
-        } else if (e.key === "-" || (e.key >= "0" && e.key <= "9")) {
+        } else if (e.key === "-" || (e.key >= "0" && e.key <= "9") || e.key === "k" || e.key === ".") {
             pendingValue += e.key
             display.innerText = pendingValue
         } else if (e.key === "Backspace") {
