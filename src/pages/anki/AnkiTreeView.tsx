@@ -15,7 +15,7 @@ function cleanSource(source: string) {
     if (!source) return "No source"
     const slash = source.indexOf("/")
     if (slash >= 0) source = source.substring(0, slash)
-    return source
+    return source.replace(/[\s\-]+$/, "")
 }
 
 export default () => {
@@ -53,7 +53,7 @@ export default () => {
             {
                 key: e => {
                     const source = cleanSource(e.fields[fieldName("source")]!.value)
-                    const epRegex = /\s*\-?\s+S\d{1,2}E\d{1,3}$|\s*\-\s*\d{1,3}$/g
+                    const epRegex = /\s*\-?\s+S\d{1,2}E\d{1,3}$|\s*\-?\s+S\d{1,2} - E?\d{1,3}$|\s*\-\s+(\d{1,3}|OVA)$/g
                     return source.replaceAll(epRegex, "")
                 }
             },
