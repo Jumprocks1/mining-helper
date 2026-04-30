@@ -327,7 +327,9 @@ export default (props: Props) => {
                 async function addOption(t: number) {
                     if (!mpv) return
                     // parameter is vertical resolution
-                    const image = await mpv.RequestIfOpen(`image:150:${t}`)
+                    // it's nice if it's divisible by 9 to avoid layout shifts from imperfect 16:9
+                    // ie. 144h/9*16 = 256w
+                    const image = await mpv.RequestIfOpen(`image:144:${t}`)
                     if (!image || typeof image === "string") return
                     const url = URL.createObjectURL(new Blob([image]))
                     modal.RegisterOnClose(() => URL.revokeObjectURL(url))
@@ -335,7 +337,12 @@ export default (props: Props) => {
                         container.querySelectorAll("img").forEach(e => e.classList.remove("selected"))
                         img.classList.add("selected")
                         card.imageTime = t
-                    }} />
+                    }} /> as HTMLImageElement
+                    // browser sometimes takes 1 frame to decode the image
+                    // during that decoding, it thinks the image is ~0x0
+                    // since we aren't setting the width in CSS, that causes a layout flash
+                    // calling decode() fixes this
+                    await img.decode() // takes <1ms
                     placeholders[i++].replaceWith(img)
                 }
                 await addOption(startTime + startOffset)
