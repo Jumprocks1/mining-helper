@@ -157,17 +157,23 @@
                 width: 0.4em;
                 height: 0.4em;
                 border-radius: 50%;
+            }
 
-                &:not(.disconnected):not(.connected) {
+            &:not(.disconnected):not(.connected) {
+                cursor: wait;
+                #connection-status-dot {
                     background-color: rgb(255, 205, 125);
-                    cursor: wait;
                 }
+            }
 
-                &.disconnected {
+            &.disconnected {
+                cursor: pointer;
+                #connection-status-dot {
                     background-color: rgb(254, 97, 99);
-                    cursor: pointer;
                 }
-                &.connected {
+            }
+            &.connected {
+                #connection-status-dot {
                     background-color: rgb(69, 197, 83);
                 }
             }

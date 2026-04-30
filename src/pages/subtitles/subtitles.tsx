@@ -294,12 +294,13 @@ export default class SubtitlesPage extends PageComponent {
         onSettingChange("skipChapterRegex", this.ReloadSubs)
 
 
-        const connectionDot = <div id="connection-status-dot" onclick={ev => {
+        // wrapper is nice just to offset the tooltip
+        const connectionDot = <div id="connection-status-dot-wrapper" onclick={ev => {
             this.MpvWebSocket.Connect();
             ev.preventDefault();
-        }} />
-        // wrapper is nice just to offset the tooltip
-        const connectionDotWrapper = <div id="connection-status-dot-wrapper">{connectionDot}</div>
+        }}>
+            <div id="connection-status-dot" />
+        </div>
         this.Node = <>
             <div id="status-info">
                 {this.MiningButton}
@@ -307,25 +308,25 @@ export default class SubtitlesPage extends PageComponent {
                 {this.RecommendedMiningButton}
                 <IconButton icon="settings" onClick={() => SettingsModal()} tooltip={ActionTooltip("Open Settings", ",")} />
                 {this.TimeElement}
-                {connectionDotWrapper}
+                {connectionDot}
             </div>
             {this.InnerBodyContainer}
         </>
         this.MpvWebSocket.onMessage = (e) => this.HandleWebSocketData(this.MpvWebSocket, e.data)
         this.MpvWebSocket.onConnecting = () => {
-            connectionDotWrapper.tooltip = "WebSocket connecting"
+            connectionDot.tooltip = "WebSocket connecting"
             connectionDot.classList.remove(...connectionDot.classList);
         }
         this.MpvWebSocket.onOpen = () => {
-            connectionDotWrapper.tooltip = "WebSocket connected"
+            connectionDot.tooltip = "WebSocket connected"
             connectionDot.classList.add("connected")
             connectionDot.classList.remove("disconnected")
         }
         this.MpvWebSocket.onClose = skipped => {
             if (skipped) {
-                connectionDotWrapper.tooltip = "No API key specified\nClick to try anyways"
+                connectionDot.tooltip = "No API key specified\nClick to try anyways"
             } else {
-                connectionDotWrapper.tooltip = "WebSocket disconnected\nClick to retry"
+                connectionDot.tooltip = "WebSocket disconnected\nClick to retry"
             }
             connectionDot.classList.remove("connected")
             connectionDot.classList.add("disconnected")
