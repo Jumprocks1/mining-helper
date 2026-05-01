@@ -3,12 +3,14 @@ import LoadingButton from "../../components/LoadingButton"
 import { Children, replaceChildren } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { callJpdb } from "../../jpdb/JpdbParseText"
+import AnkiConnect from "../../utils/AnkiConnect"
 import { serverPost } from "../../utils/Audio"
 import { getHttpServerAddress } from "../../utils/httpServerUtil"
 import MpvWebSocket from "../../utils/MpvWebSocket"
-import { userErrorMessage } from "../../utils/UserError"
+import UserError, { userErrorMessage } from "../../utils/UserError"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
 import { getSetting } from "../../views/SettingsModal"
+import AnkiSettingsModal from "../anki/AnkiSettingsModal"
 import { CheckIcon, ValidateResponse } from "./validate"
 
 export default class SetupPage extends PageComponent {
@@ -40,6 +42,7 @@ export default class SetupPage extends PageComponent {
         try {
             await this.CheckJpdb()
             await this.CheckServer()
+            await this.CheckAnki()
         } catch (e) {
             replaceChildren(this.Output, userErrorMessage(e))
         }
@@ -62,6 +65,18 @@ export default class SetupPage extends PageComponent {
         } else {
             this.Output.append(el)
         }
+    }
+
+    CheckAnki = async () => {
+        // TODO should be able to call the same validate as in AnkiSettingsModal
+        let decks = []
+        try {
+            decks = await AnkiConnect.call("deckNames", undefined)
+        } catch (e) {
+            throw userErrorMessage(e, <button onclick={() => AnkiSettingsModal()}><Icon icon="settings" />Configure Anki</button>)
+        }
+        if (decks.length === 0) throw new UserError("Anki connected, but no decks found")
+        this.Output.append(<div className="row">{CheckIcon()}Connected to Anki, found {decks.length} decks</div>)
     }
 
     CheckServer = async () => {
@@ -161,7 +176,7 @@ export default class SetupPage extends PageComponent {
         }
 
         o.replaceChildren(<div className="row">
-            {CheckIcon()} Connected to jpdb.io
+            {CheckIcon()}Connected to jpdb.io
         </div>)
     }
 }

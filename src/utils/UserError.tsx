@@ -18,7 +18,7 @@ export function ThrowUserError(title: string, details?: string) {
     throw error
 }
 
-export function userErrorMessage(e: unknown, extraContext?: string): Children {
+export function userErrorMessage(e: unknown, extraContext?: Children): Children {
     let res: Children
 
     if (e instanceof UserError) res = e.message

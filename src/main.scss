@@ -126,6 +126,11 @@ div#result {
             background: rgba(255, 255, 255, 20%);
         }
     }
+    .icon {
+        &.error {
+            color: variables.$error;
+        }
+    }
 }
 .material-symbols-outlined.inline {
     // Icon style sheet isn't in a layer
