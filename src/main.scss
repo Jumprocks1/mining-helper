@@ -243,6 +243,12 @@ div#result {
         }
     }
 
+    em {
+        color: variables.$highlighted;
+        font-style: normal;
+        font-weight: bold;
+    }
+
     kbd {
         color: color.mix(#FFFFFF, variables.$brightBlue, 40%);
         display: inline-block;

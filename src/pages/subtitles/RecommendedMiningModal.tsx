@@ -207,15 +207,24 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                     showIgnored = v
                     reload()
                 }} />
-                <CheckboxField label="Kana" onChange={v => {
-                    showKana = v
-                    reload()
-                }} />
-                <CheckboxField label="i+1" onChange={v => {
-                    i1 = v
-                    reload()
-                }} />
-                <CheckboxField label="Trim Kana" checked={trimKana} onChange={v => {
+                <CheckboxField label="Kana" tooltip={`When unchecked, filters out vocab composed entirely of kana.\nTypically these are grammar or common words that aren't worth mining.`}
+                    onChange={v => {
+                        showKana = v
+                        reload()
+                    }} />
+                <CheckboxField label="i+1" tooltip={() =>
+                    `Filters vocab to subtitle entries with only 1 new vocab in them.\n\nSomewhat limited because:\n`
+                    + `1. Names often count as unknown vocab, despite not having a relevant meaning.\n`
+                    + `2. More than a single subtitle entry is often needed for context.`}
+                    onChange={v => {
+                        i1 = v
+                        reload()
+                    }} />
+                <CheckboxField tooltip={() => <>
+                    Trims kana before checking if a word is already mined.<br />
+                    Ex:<br />
+                    <em>姉</em> vs <em>お姉ちゃん</em>
+                </>} label="Trim Kana" checked={trimKana} onChange={v => {
                     trimKana = v
                     setSetting("miningTrimKana", v)
                     reload()
