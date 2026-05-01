@@ -104,7 +104,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
 }
 
 
-export function getN1Tokens(subtitles: Subtitles, jpdb: JpdbParseResponse, config: VocabStateConfig) {
+export function geti1Tokens(subtitles: Subtitles, jpdb: JpdbParseResponse, config: VocabStateConfig) {
     const { kanaUnknown } = config
     const res = new Map<number, number[]>()
     for (const entry of subtitles.processedEntries) {

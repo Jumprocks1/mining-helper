@@ -7,7 +7,7 @@ import Loader from "../../components/Loader";
 import { OpenModal } from "../../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../../jpdb/IgnoreList";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
-import { getN1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../../jpdb/JpdbState";
+import { geti1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../../jpdb/JpdbState";
 import { tryPlayAudio } from "../../utils/Audio";
 import { setSelection } from "../../utils/CharacterHighlighter";
 import { ClearEventHandler, RegisterEventHandler } from "../../utils/Events";
@@ -34,7 +34,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
 
     let showIgnored = false
     let showKana = false
-    let n1 = false
+    let i1 = false
     const pending = [getSetting("miningTrimKana"), getSetting("miningChronological"), getSetting("miningMaxFrequency"), getSetting("miningMaxRecommendedCount")] as const
     let trimKana = await pending[0]
     let chronological = await pending[1]
@@ -55,7 +55,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
             kanaUnknown: showKana
         }
 
-        const n1Ids = n1 && getN1Tokens(subtitles, jpdb, stateConfig)
+        const i1Ids = i1 && geti1Tokens(subtitles, jpdb, stateConfig)
 
         loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
@@ -83,8 +83,8 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
             }
             let firstToken: JpdbToken | undefined // needed for furigana parsing on tooltip
             let tokenUsages: number[]
-            if (n1Ids) {
-                const found = n1Ids.get(vocab[5])
+            if (i1Ids) {
+                const found = i1Ids.get(vocab[5])
                 if (!found) continue
                 tokenUsages = found
             } else {
@@ -211,8 +211,8 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                     showKana = v
                     reload()
                 }} />
-                <CheckboxField label="N+1" onChange={v => {
-                    n1 = v
+                <CheckboxField label="i+1" onChange={v => {
+                    i1 = v
                     reload()
                 }} />
                 <CheckboxField label="Trim Kana" checked={trimKana} onChange={v => {
