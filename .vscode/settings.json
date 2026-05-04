@@ -3,5 +3,9 @@
     "workbench.colorCustomizations": {
         "titleBar.activeBackground": "#521852",
         "titleBar.inactiveBackground": "#521852"
+    },
+    "files.exclude": {
+        "server/audio-source.db": true,
+        "server/yomitan_ultimate_audio_source.zip": true
     }
 }

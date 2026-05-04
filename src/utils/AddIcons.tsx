@@ -24,7 +24,8 @@ export const MaterialIcons = [
     "settings",
     "star",
     "stat_1",
-    "stat_minus_1"
+    "stat_minus_1",
+    "subtitles_gear"
 ] as const satisfies string[]
 
 export default () => {

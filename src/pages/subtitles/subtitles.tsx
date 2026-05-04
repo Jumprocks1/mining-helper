@@ -3,7 +3,7 @@ import MpvWebSocket from "../../utils/MpvWebSocket"
 import SubtitleViewer from "./SubtitleViewer"
 import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
 import MiningModal from "../../components/MiningModal"
-import { Modal } from "../../components/Modal"
+import { Modal, OpenModal } from "../../components/Modal"
 import IconButton, { IconButtonClass } from "../../components/basic/IconButton"
 import SettingsModal, { getSetting, onSettingChange, removeOnSettingChange, setSetting } from "../../views/SettingsModal"
 import { applyReplacementsTo, getReplacements } from "../../views/RegexReplacements"
@@ -15,6 +15,7 @@ import { Children, replaceChildren } from "../../framework/createElement"
 import { ErrorDisplay } from "../../utils/UserError"
 import { ActionTooltip } from "../../framework/Tooltips"
 import LoadingButton from "../../components/LoadingButton"
+import Select from "../../components/Select"
 
 export default class SubtitlesPage extends PageComponent {
     Id = "subs-page"
@@ -285,6 +286,40 @@ export default class SubtitlesPage extends PageComponent {
         icon: "edit", onClick: () => this.TryMine(), disabled: true,
         tooltip: ActionTooltip("Mine Selection", "M", "Create an Anki card based on the selected text")
     })
+    ChangeSubs = IconButtonClass({
+        icon: "subtitles_gear", onClick: async () => {
+            const tracks = await this.MpvWebSocket.SubtitleTrackList()
+            if (tracks) {
+                const modal = OpenModal({
+                    body: () => {
+                        const select = Select({
+                            unsetLabel: "Please select a track",
+                            onChange: async value => {
+                                modal.Close()
+                                await this.LoadSubtitles(async () => {
+                                    const subs = await this.MpvWebSocket.RequestIfOpen(`get-subs:${value}`)
+                                    if (typeof subs === "string") throw new Error()
+                                    const decoded = new TextDecoder().decode(subs)
+                                    return parseSubtitles(decoded)
+                                })
+                            },
+                        })
+                        for (const track of tracks) {
+                            let title = `${track.title} (${track.lang ? track.lang + " " : ""}${track.codec})`
+                            if (track.selected) title += " [selected]"
+                            if (track.default) title += " [default]"
+                            if (track.forced) title += " [forced]"
+                            if (track.external) title += " [external]"
+                            select.Node.append(<option value={track.id.toString()}>{title}</option>)
+                        }
+                        return select.Node
+                    },
+                    header: "Changing Subtitle Track"
+                })
+            }
+        },
+        tooltip: ActionTooltip("Change Subtitle Track")
+    })
 
     constructor() {
         super()
@@ -303,6 +338,7 @@ export default class SubtitlesPage extends PageComponent {
         </div>
         this.Node = <>
             <div id="status-info">
+                {this.ChangeSubs}
                 {this.MiningButton}
                 {this.JpdbLoadButton}
                 {this.RecommendedMiningButton}

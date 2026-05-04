@@ -102,4 +102,25 @@ export default class MpvWebSocket {
             }
         }
     }
+
+    async SubtitleTrackList() {
+        if (!this.Open) throw "mpv not connected"
+        const tracksJson = await this.RequestIfOpen("track-list")
+        if (typeof tracksJson === "string") {
+            const tracks = JSON.parse(tracksJson) as MpvTrack[]
+            return tracks.filter(e => e.type === "sub")
+        }
+    }
+}
+
+interface MpvTrack {
+    codec: "ass" | "subrip"
+    default: boolean
+    external: boolean
+    forced: boolean
+    id: number // for now, we'll use this to reference a track. None of the other ids seem like they would work
+    lang?: "en" | "jp"
+    selected: boolean
+    title: string
+    type: "sub" | "video" | "audio"
 }

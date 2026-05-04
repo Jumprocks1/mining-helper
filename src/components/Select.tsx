@@ -5,9 +5,10 @@ interface Props {
     defaultValue?: string
     onChange?: (value: string) => void
     includeEmpty?: true
+    unsetLabel?: string
 }
 
-export default ({ defaultValue = "", onChange, loadOptions, includeEmpty }: Props) => {
+export default ({ defaultValue = "", unsetLabel = "Unset", onChange, loadOptions, includeEmpty }: Props) => {
     let selected = defaultValue
     const select = <select onchange={ev => {
         selected = (ev.currentTarget as any).value
@@ -18,7 +19,7 @@ export default ({ defaultValue = "", onChange, loadOptions, includeEmpty }: Prop
     function addOption(value: string) {
         select.append(<option hidden={!loaded && !value && !includeEmpty} value={value}
             className={value ? undefined : "unset"}>
-            {value || "Unset"}
+            {value || unsetLabel}
         </option>)
     }
 

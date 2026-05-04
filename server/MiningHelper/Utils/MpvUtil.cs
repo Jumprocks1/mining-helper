@@ -12,6 +12,7 @@ public static class MpvUtil
         public string? Filename;
         public int? FfmpegIndex;
         public string? Lang;
+        public int Id;
         public int? SrcId;
         public string? Codec;
         public bool CanRead => Codec == "subrip" || Codec == "ass";
@@ -117,6 +118,7 @@ public static class MpvUtil
                     Lang = track.Get<string>("lang"),
                     SrcId = track.Get<int?>("src-id"),
                     Codec = track.Get<string>("codec"),
+                    Id = track.Get<int>("id"),
                 });
             }
         }

@@ -132,22 +132,18 @@ public class CommandHandler
 
             async Task returnSubs(string lang)
             {
-                var writer = InputListener.pipeWriter;
-                if (writer != null)
+                await IpcRequest("""["get_property", "track-list"]""", async json =>
                 {
-                    await IpcRequest("""["get_property", "track-list"]""", async json =>
+                    var track = MpvUtil.ParseTrackList(json).TrackForLanguage(lang);
+                    if (track == null) return;
+                    if (track.Codec == "hdmv_pgs_subtitle")
                     {
-                        var track = MpvUtil.ParseTrackList(json).TrackForLanguage(lang);
-                        if (track == null) return;
-                        if (track.Codec == "hdmv_pgs_subtitle")
-                        {
-                            await SendResponse(context, "subtitles are in pgs (image) format");
-                            return;
-                        }
-                        var bytes = await track.ReadAsync(CurrentFile);
-                        await context.SendBinaryResponse(bytes, "application/x-subrip");
-                    });
-                }
+                        await SendResponse(context, "subtitles are in pgs (image) format");
+                        return;
+                    }
+                    var bytes = await track.ReadAsync(CurrentFile);
+                    await context.SendBinaryResponse(bytes, "application/x-subrip");
+                });
             }
 
             if (commandName == "kill")
@@ -190,6 +186,21 @@ public class CommandHandler
             else if (commandName == "english-subs")
             {
                 await returnSubs("en");
+            }
+            else if (commandName == "get-subs")
+            {
+                await IpcRequest("""["get_property", "track-list"]""", async json =>
+                {
+                    var track = MpvUtil.ParseTrackList(json)
+                        .FirstOrDefault(e => e.Id.ToString(CultureInfo.InvariantCulture) == commandValue);
+                    if (track == null) return;
+                    var bytes = await track.ReadAsync(CurrentFile);
+                    await context.SendBinaryResponse(bytes, "application/x-subrip");
+                });
+            }
+            else if (commandName == "track-list")
+            {
+                await IpcRequest("""["get_property", "track-list"]""", json => SendResponse(context, json));
             }
             else if (commandName == "image")
             {
