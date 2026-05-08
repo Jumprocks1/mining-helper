@@ -16,6 +16,7 @@ public static class MpvUtil
         public int? SrcId;
         public string? Codec;
         public bool CanRead => Codec == "subrip" || Codec == "ass";
+        public bool Forced;
 
         public async Task<byte[]> ReadAsync(string? mpvPath)
         {
@@ -89,9 +90,8 @@ public static class MpvUtil
                 if (e.Title.Contains("Songs", StringComparison.OrdinalIgnoreCase)) score -= 1;
                 if (e.Title.Contains("Signs", StringComparison.OrdinalIgnoreCase)) score -= 1;
                 if (e.Title.Contains("Dialog", StringComparison.OrdinalIgnoreCase)) score += 10;
-                // not really sure what these are
-                // Star Wars Visions S3 had them
-                if (e.Title.Equals("Forced", StringComparison.OrdinalIgnoreCase)) score -= 3;
+                // Forced means "even if the player has subs disabled, try to show these". Usually for signs/songs in dubs
+                if (e.Title.Equals("Forced", StringComparison.OrdinalIgnoreCase) || e.Forced) score -= 3;
             }
             return score;
         }).ToList();
@@ -119,6 +119,7 @@ public static class MpvUtil
                     SrcId = track.Get<int?>("src-id"),
                     Codec = track.Get<string>("codec"),
                     Id = track.Get<int>("id"),
+                    Forced = track.Get<bool>("forced"),
                 });
             }
         }
