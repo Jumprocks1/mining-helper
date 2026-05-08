@@ -174,6 +174,7 @@ public class CommandHandler
             else if (commandName == "seek")
             {
                 var timeS = double.Parse(commandValue!, CultureInfo.InvariantCulture) / 1000;
+                timeS = Math.Max(0, timeS);
                 await WriteIpc($"seek {timeS.ToString(CultureInfo.InvariantCulture)} absolute");
             }
             else if (commandName == "chapter-list")

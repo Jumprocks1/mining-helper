@@ -43,7 +43,10 @@ export function hash(s: string) {
 }
 
 export function formatTimestamp(timestamp: number, showMs: false | 1 | 2 | 3 = false) {
+    const negative = timestamp < 0
+    if (negative) timestamp = -timestamp;
     let seconds = Math.floor(timestamp / 1000)
+    const sign = negative && (seconds > 0 || showMs) ? "-" : "" // negative sign doesn't show for -00:00
     const ms = timestamp - seconds * 1000
     let minutes = Math.floor(seconds / 60)
     seconds -= minutes * 60
@@ -55,9 +58,9 @@ export function formatTimestamp(timestamp: number, showMs: false | 1 | 2 | 3 = f
     let msS = ""
     if (showMs) msS = "." + f(ms, 3).substring(0, showMs)
     if (hours <= 0) {
-        return `${f(minutes)}:${f(seconds)}${msS}`
+        return `${sign}${f(minutes)}:${f(seconds)}${msS}`
     } else {
-        return `${f(hours)}:${f(minutes)}:${f(seconds)}${msS}`
+        return `${sign}${f(hours)}:${f(minutes)}:${f(seconds)}${msS}`
     }
 }
 
