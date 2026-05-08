@@ -12,7 +12,7 @@ import RecommendedMiningModal from "./RecommendedMiningModal"
 import { getCharacterIndex } from "../../utils/CharacterHighlighter"
 import { PageComponent } from "../../framework/PageComponent"
 import { Children, replaceChildren } from "../../framework/createElement"
-import { ErrorDisplay } from "../../utils/UserError"
+import UserError, { ErrorDisplay } from "../../utils/UserError"
 import { ActionTooltip } from "../../framework/Tooltips"
 import LoadingButton from "../../components/LoadingButton"
 import Select from "../../components/Select"
@@ -533,6 +533,15 @@ export default class SubtitlesPage extends PageComponent {
             this.UpdateTime(parseFloat(commandData as string))
         } else if (commandName === "response") {
             await webSocket.HandleResponse(commandData)
+        } else if (commandName === "response-error" && typeof commandData === "string") {
+            const spl = commandData.indexOf(":")
+            const requestId = commandData.substring(0, spl);
+            const commandValue = commandData.substring(spl + 1);
+            const request = webSocket.pendingRequests.get(requestId)
+            if (request) {
+                request.err(new UserError(commandValue))
+                webSocket.pendingRequests.delete(requestId)
+            }
         } else if (commandName === "current-file") {
             if (typeof commandData === "string") {
                 if (commandData !== this.CurrentFilename) {

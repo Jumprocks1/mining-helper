@@ -18,7 +18,7 @@ public static class Program
             // not ideal to clear it like this, but it's better than letting it grow infinity if we mess something up
             if (new FileInfo(AppSettings.LogPath).Length > LogMaxLength)
                 File.WriteAllText(AppSettings.LogPath, "");
-            File.AppendAllText(AppSettings.LogPath, $"{DateTime.Now:hh:mm:ss.fff}: {s.Trim()}\n");
+            File.AppendAllText(AppSettings.LogPath, $"{DateTime.Now:hh:mm:ss.fff}: {s.Trim().Replace("\n", "\n  ")}\n");
         }
     }
     public static async Task Main(string[] args)

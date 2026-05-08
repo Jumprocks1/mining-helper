@@ -48,7 +48,8 @@ public static class MpvUtil
             }
             else
             {
-                if (FfmpegIndex == null || !File.Exists(mpvPath)) throw new Exception();
+                if (FfmpegIndex == null) throw new Exception("Missing FFmpeg index");
+                if (!File.Exists(mpvPath)) throw new UserException($"File '{Path.GetFileName(mpvPath)}' not found, ensure it exists still.");
                 var arguments = new string[] {
                     "-i", mpvPath, "-f", "srt", "-map", $"0:{FfmpegIndex}", "-"
                 };

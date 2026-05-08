@@ -46,6 +46,23 @@ public class CommandContext
         Console.WriteLine(error);
     }
 
+    public async Task SendErrorReponse(string error)
+    {
+        var message = $"response-error:{RequestId}:{error}";
+        if (Source == CommandSource.WebSocket)
+        {
+            if (RequestId == default) throw new Exception("Missing request ID");
+            var socket = WebSocket ?? throw new Exception("Missing WebSocket");
+            await HttpServer.SendMessage(socket, Encoding.UTF8.GetBytes(message), false);
+        }
+        else if (HttpContext != null)
+        {
+            if (HttpContext.Response.StatusCode == (int)HttpStatusCode.OK)
+                HttpContext.Response.StatusCode = (int)HttpStatusCode.BadRequest;
+            await HttpContext.Response.OutputStream.WriteAsync(Encoding.UTF8.GetBytes(message));
+        }
+        else Console.WriteLine(message);
+    }
 
     public async Task SendBinaryResponse(byte[]? data, string mime)
     {
@@ -89,22 +106,31 @@ public class CommandHandler
 
     int nextRequestId = 1;
     public Dictionary<int, Func<JsonNode, Task>> PendingRequests = [];
-    // these take like 1ms, it's very fast
-    public async Task IpcRequest(string request, Func<JsonNode, Task> callback)
-    {
-        var writer = InputListener.pipeWriter;
-        if (writer != null)
-        {
-            PendingRequests[nextRequestId] = callback;
-            await writer.WriteLineAsync($"{{\"command\": {request}, \"request_id\": {nextRequestId++}}}");
-            await writer.FlushAsync();
-        }
-    }
 
     // TODO technically should allow binary command data,
     // but hasn't been needed yet since all the binary data originates from this program
     public async Task Handle(CommandContext context)
     {
+        // these take like 1ms, it's very fast
+        async Task IpcRequest(string request, Func<JsonNode, Task> callback)
+        {
+            async Task wrappedCallback(JsonNode node)
+            {
+                try { await callback(node); }
+                catch (UserException e)
+                {
+                    await context.SendErrorReponse(e.UserMessage);
+                }
+            }
+            var writer = InputListener.pipeWriter;
+            if (writer != null)
+            {
+                PendingRequests[nextRequestId] = wrappedCallback;
+                await writer.WriteLineAsync($"{{\"command\": {request}, \"request_id\": {nextRequestId++}}}");
+                await writer.FlushAsync();
+            }
+        }
+
         var command = context.NotNullStringData;
         try
         {
@@ -264,6 +290,10 @@ public class CommandHandler
             else if (commandName == "validate")
                 await SendResponse(context, await ValidateSetup.Validate(InputListener));
             else context.Error($"unrecognized {source} command: {command}");
+        }
+        catch (UserException e)
+        {
+            await context.SendErrorReponse(e.UserMessage);
         }
         catch (Exception e)
         {

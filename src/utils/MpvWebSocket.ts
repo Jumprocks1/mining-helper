@@ -71,14 +71,14 @@ export default class MpvWebSocket {
         this.Connection = undefined
     }
 
-    pendingRequests = new Map<string, (response: Uint8Array<ArrayBuffer> | string) => void>()
+    pendingRequests = new Map<string, { res: (response: Uint8Array<ArrayBuffer> | string) => void, err: (err: any) => void }>()
     nextRequestId = 1;
     public RequestIfOpen(message: string) {
         if (!this.Open) return
-        return new Promise<Uint8Array<ArrayBuffer> | string>(res => {
+        return new Promise<Uint8Array<ArrayBuffer> | string>((res, err) => {
             const requestId = this.nextRequestId++;
             this.SendIfOpen(`request:${requestId}:${message}`);
-            this.pendingRequests.set(requestId.toString(), res)
+            this.pendingRequests.set(requestId.toString(), { res, err })
         })
     }
 
@@ -87,17 +87,17 @@ export default class MpvWebSocket {
             const spl = response.indexOf(":")
             const requestId = response.substring(0, spl);
             const commandValue = response.substring(spl + 1);
-            const callback = this.pendingRequests.get(requestId)
-            if (callback) {
-                callback(commandValue)
+            const request = this.pendingRequests.get(requestId)
+            if (request) {
+                request.res(commandValue)
                 this.pendingRequests.delete(requestId)
             }
         } else {
             const spl = response.indexOf(":".charCodeAt(0))
             const requestId = new TextDecoder().decode(response.subarray(0, spl));
-            const callback = this.pendingRequests.get(requestId)
-            if (callback) {
-                callback(response.subarray(spl + 1))
+            const request = this.pendingRequests.get(requestId)
+            if (request) {
+                request.res(response.subarray(spl + 1))
                 this.pendingRequests.delete(requestId)
             }
         }
