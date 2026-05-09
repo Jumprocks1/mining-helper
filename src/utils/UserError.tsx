@@ -9,7 +9,7 @@ export default class UserError extends Error {
 
 export function ThrowUserError(title: string, details?: string) {
     const error = <div>
-        <span className="error-context">{title}</span>
+        <span className="error">{title}</span>
     </div>
     if (details) {
         error.append(<br />)
@@ -25,15 +25,15 @@ export function userErrorMessage(e: unknown, extraContext?: Children): Children 
     else if (e instanceof Node) res = e
     else res = String(e)
 
-    if (extraContext) {
-        // can't use document fragment with tooltips
-        res = <div>
-            <span className="error-context">{extraContext}</span>
-            <br />
-            <span className="full-error">{res}</span>
-        </div>
-    }
+    if (extraContext) res = userErrorMessage2(extraContext, res)
     return res
+}
+export function userErrorMessage2(basicMessage: Children, fullError: Children): Children {
+    return <div>
+        <span className="error">{basicMessage}</span>
+        <br />
+        <span className="full-error">{fullError}</span>
+    </div>
 }
 
 export function ErrorDisplay(e: string) {

@@ -2,8 +2,59 @@ import LoadingButton from "../../components/LoadingButton";
 import { OpenModal } from "../../components/Modal";
 import Select from "../../components/Select";
 import AnkiConnect from "../../utils/AnkiConnect";
-import { ThrowUserError, userErrorMessage } from "../../utils/UserError";
+import SettingsValidator from "../../utils/SettingsValidator";
+import { userErrorMessage, userErrorMessage2 } from "../../utils/UserError";
 import { AnkiFieldKey, AnkiFieldInfo, getSetting, setSetting, stringSettingsField } from "../../views/SettingsModal";
+
+async function validateAnkiSettings(validator: SettingsValidator) {
+    // TODO don't like how this populates
+    // probably just need a loading circle at the bottom
+    try {
+        const permissions = await AnkiConnect.call("requestPermission", undefined)
+        if (permissions.permission === "denied") {
+            throw userErrorMessage2(`Access to AnkiConnect from ${location.origin} denied`,
+                "Please check the AnkiConnect options inside Anki and ensure access is allowed.")
+        }
+        const apiKey = await getSetting("ankiConnectApiKey")
+        if (permissions.requireApikey && !apiKey)
+            throw userErrorMessage2("An API key is required. Please add one in the settings above.",
+                "To find your current API key, in Anki, go to Tools > Add-ons > AnkiConnect > Config > apiKey")
+    } catch (e) {
+        if (e instanceof Error) throw userErrorMessage(e, "Error connecting to Anki")
+        else throw e
+    }
+    const decks = await AnkiConnect.call("deckNames", undefined)
+    if (decks.length === 0) throw "No Anki decks found"
+    validator.Pass(`Found ${decks.length} decks`)
+
+    const models = await AnkiConnect.call("modelNames", undefined)
+    const modelName = await getSetting("targetAnkiModel")
+    if (!models.includes(modelName)) throw `${modelName} not found`
+    validator.Pass(`Model '${modelName}' valid`)
+
+    const modelFields = await AnkiConnect.call("modelFieldNames", { modelName })
+    const ankiFields = await getSetting("ankiFields")
+    let seen = new Set<string>()
+    let invalidFields = 0
+    for (const _key in AnkiFieldInfo) {
+        const key = _key as AnkiFieldKey
+        const field = AnkiFieldInfo[key]
+        const current = ankiFields[key] ?? field.name
+        if (current && seen.has(current)) throw `Field name ${current} used twice`
+        seen.add(current)
+        if (!current) {
+            validator.Warn(`Field ${field.name} is unset`)
+            invalidFields += 1
+        } else if (!modelFields.includes(current)) {
+            validator.Warn(`Field ${current} (used for ${field.name}) does not exist in ${modelName}`)
+            invalidFields += 1
+        }
+    }
+    if (invalidFields === 0)
+        validator.Pass("All fields valid")
+
+    if (!validator.HasWarnings) validator.SuccessMessage("No issues found")
+}
 
 const body = async (inner: HTMLElement) => {
     const ankiFields = await getSetting("ankiFields")
@@ -67,54 +118,9 @@ const body = async (inner: HTMLElement) => {
     }
     res.append(fieldMappings)
     const validateButton = <LoadingButton tooltip="This will attempt to connect to Anki and double check all settings." onClick={async () => {
-        validateButton.tooltip = undefined
-        let success = <div />
-        try {
-            const permissions = await AnkiConnect.call("requestPermission", undefined)
-            if (permissions.permission === "denied") {
-                throw `Access to AnkiConnect from ${location.origin} denied\n` +
-                "Please check the AnkiConnect options inside Anki and ensure access is allowed."
-            }
-            const apiKey = await getSetting("ankiConnectApiKey")
-            if (permissions.requireApikey && !apiKey)
-                throw "An API key is required. Please add one in the settings above.\n\n" +
-                "To find your current API key, in Anki, go to Tools > Add-ons > AnkiConnect > Config > apiKey"
-        } catch (e) { throw userErrorMessage(e, "Error connecting to Anki") }
-        const decks = await AnkiConnect.call("deckNames", undefined)
-        if (decks.length === 0) ThrowUserError("No Anki decks found")
-        success.append(<div>Found {decks.length} decks</div>)
-
-        const models = await AnkiConnect.call("modelNames", undefined)
-        const modelName = await getSetting("targetAnkiModel")
-        if (!models.includes(modelName)) ThrowUserError(`${modelName} not found`)
-        success.append(<div>Model '{modelName}' valid</div>)
-
-        const modelFields = await AnkiConnect.call("modelFieldNames", { modelName })
-        const ankiFields = await getSetting("ankiFields")
-        let seen = new Set<string>()
-        let invalidFields = 0
-        for (const _key in AnkiFieldInfo) {
-            const key = _key as AnkiFieldKey
-            const field = AnkiFieldInfo[key]
-            const current = ankiFields[key] ?? field.name
-            if (current && seen.has(current)) throw `Field name ${current} used twice`
-            seen.add(current)
-            if (!current) {
-                success.append(<div className="warning">Field {field.name} is unset</div>)
-                invalidFields += 1
-            } else if (!modelFields.includes(current)) {
-                success.append(<div className="warning">Field {current} (used for {field.name}) does not exist in {modelName}</div>)
-                invalidFields += 1
-            }
-        }
-        if (invalidFields === 0)
-            success.append(<div>All fields valid</div>)
-
-        if (!success.querySelector(".warning")) {
-            success.append(<div className="success">No issues found</div>)
-        }
-
-        validateButton.tooltip = success
+        const validator = new SettingsValidator()
+        validateButton.tooltip = validator.Node
+        validator.Test(validateAnkiSettings)
     }}>
         Validate Settings
     </LoadingButton>

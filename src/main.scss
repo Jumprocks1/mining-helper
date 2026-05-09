@@ -224,6 +224,7 @@ div#result {
 .success {
     color: variables.$success;
 }
+// only for technical errors
 .error-text-display {
     color: variables.$error;
     white-space: pre-wrap;
