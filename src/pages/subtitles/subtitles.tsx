@@ -418,7 +418,13 @@ export default class SubtitlesPage extends PageComponent {
         }
     }
 
+    // this helps when LoadSubtitles is called too fast
+    // still not 100% sure it's perfect, but so far it's fixed the main case of spamming the scroll wheel on the offset setting
+    LoadController?: AbortController
     async LoadSubtitles(getSubs: () => (Promise<Subtitles> | Subtitles)) {
+        this.LoadController?.abort();
+        this.LoadController = new AbortController()
+        const signal = this.LoadController.signal
         let subtitles: Subtitles
         try {
             subtitles = await getSubs()
@@ -487,6 +493,7 @@ export default class SubtitlesPage extends PageComponent {
             OffsetCache.Store(subtitles.hash, offset)
         }
 
+        if (signal.aborted) return
 
         this.LoadedSubtitles?.Node.remove()
 
