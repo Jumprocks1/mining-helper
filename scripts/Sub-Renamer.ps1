@@ -2,7 +2,10 @@ param($Target = ".", [switch]$Force, [switch]$WhatIf)
 
 $dir = Get-Item $Target
 
-$videos = gci -LiteralPath $dir -Recurse *.mkv | sort Name
+$videos = gci -LiteralPath $dir *.mkv | sort Name
+if ($videos.Count -eq 0) {
+    $videos = gci -LiteralPath $dir -Recurse *.mkv | sort Name
+}
 $videoBaseNames = $videos.BaseName
 $subs = gci -LiteralPath $dir -Recurse |? {$_.Extension -in ".srt",".ass"} | sort Name
 $subsBaseNames = $subs.BaseName
