@@ -4,7 +4,7 @@ import { getSettingSync } from "../views/SettingsModal";
 
 declare global {
     interface HTMLElement {
-        tooltip?: LoadableChildren
+        tooltip?: LoadableChildren // don't set this to a fragment, it breaks
         tooltipError?: LoadableChildren
         tooltipConfig?: TooltipConfig
     }

@@ -8,6 +8,18 @@ if ($videos.Count -eq 0) {
 }
 $videoBaseNames = $videos.BaseName
 $subs = gci -LiteralPath $dir -Recurse |? {$_.Extension -in ".srt",".ass"} | sort Name
+if ($subs.Count -eq 0) {
+    $zips = gci -LiteralPath $dir -Recurse |? {$_.Extension -in ".zip"}
+    if ($zips.Count -eq 1) {
+        $zip = $zips | Select -First 1
+        $response = Read-Host "Do you want to unzip '$($zip.Name)'? (y/n)"
+        if ($response -ne "y") { exit; }
+        # Expand-Archive is jank and can't handle `[]` characters. This will usually remove them
+        $relativeOutput = Resolve-Path -Relative -LiteralPath $zip.DirectoryName
+        Expand-Archive -LiteralPath $zip.FullName -DestinationPath $relativeOutput
+        $subs = gci -LiteralPath $dir -Recurse |? {$_.Extension -in ".srt",".ass"} | sort Name
+    }
+}
 $subsBaseNames = $subs.BaseName
 
 # ignore files that already have the correct name
