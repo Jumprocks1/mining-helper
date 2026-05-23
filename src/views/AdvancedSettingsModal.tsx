@@ -24,7 +24,7 @@ export default () => {
         return <>
             <div className="field">
                 <div className="label">Custom CSS</div>
-                <div className="field-value">{await customCssField()}</div>
+                <div className="field-value monospace">{await customCssField()}</div>
             </div>
             <div className="field">
                 <label>Tooltip Delay</label>

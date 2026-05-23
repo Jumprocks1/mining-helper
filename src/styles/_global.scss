@@ -152,6 +152,9 @@ body {
     .hide {
         display: none;
     }
+    .monospace {
+        font-family: monospace;
+    }
 }
 
 @layer components {
@@ -164,6 +167,18 @@ body {
         color: variables.$linkColor;
         &.uncolored {
             color: inherit;
+        }
+    }
+
+    .field {
+        div[contentEditable="plaintext-only"] {
+            padding-left: variables.$s1 * 0.5;
+            padding-right: variables.$s1 * 0.5;
+            border: variables.$border0;
+            outline: none;
+            &:focus {
+                border: variables.$border1;
+            }
         }
     }
 }

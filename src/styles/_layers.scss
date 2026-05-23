@@ -1,4 +1,5 @@
 // Have to be a little careful while we still have stuff outside of layers
 // for example, we have .hide in utilities to set display: none,
 //    but if we apply that to an element that has `display: flex` outside of a layer, it won't work
+// keep in mind stuff outside of a layer always has priority, even if it would normally have a stronger condition (id vs class)
 @layer base, elements, components, pages, utilities; // TODO move everything into these layers
