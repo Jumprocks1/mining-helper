@@ -34,15 +34,8 @@ public static class MpvUtil
                 }
                 else if (File.Exists(Filename))
                 {
-                    if (Filename.EndsWith(".srt"))
+                    if (Filename.EndsWith(".srt") || Filename.EndsWith(".ass"))
                         return await File.ReadAllBytesAsync(Filename);
-                    else if (Filename.EndsWith(".ass"))
-                    {
-                        var arguments = new string[] {
-                            "-i", Filename, "-f", "srt", "-"
-                        };
-                        return await FfmpegUtil.Request(arguments);
-                    }
                 }
                 throw new Exception($"No valid handler for {Filename}");
             }

@@ -45,6 +45,7 @@ export type AnkiFieldKey = keyof typeof AnkiFieldInfo
 interface LocalSettings {
     regexReplacements: ReplacementEntry[]
     skipChapterRegex: string
+    skipAssStyleRegex: string
     customCss: string
 
     miningMaxFrequency: number
@@ -84,6 +85,7 @@ export const defaultLocalSettings: LocalSettings = {
     ankiFields: {},
 
     skipChapterRegex: "",
+    skipAssStyleRegex: "",
     customCss: "",
     miningMaxRecommendedCount: 40,
     miningMaxFrequency: 20_000,

@@ -24,6 +24,7 @@ export interface Subtitles {
     offset?: number
     originalEntries: SubtitleEntry[]
     processedEntries: SubtitleEntryWithCharacterOffset[]
+    styles?: string[]
     source: "srt" | "ass" | "plain"
     language?: "eng" | "jp"
     name?: string
@@ -74,7 +75,14 @@ export function parseTimestamp(timestamp: string) {
     return ((parseInt(hours) * 60 + parseInt(minutes)) * 60 + parseInt(seconds)) * 1000 + milliseconds
 }
 
-export function parseSubtitles(subtitles: string, filename?: string) {
+export function parseSubtitles(subtitles: Uint8Array<ArrayBuffer> | string | undefined, filename?: string) {
+    if (!subtitles) throw new Error("Subtitles bytes undefined")
+    if (typeof subtitles !== "string") {
+        let encoding = undefined
+        if (subtitles[0] === 0xFF && subtitles[1] === 0xFE) encoding = "utf-16"
+        subtitles = new TextDecoder(encoding).decode(subtitles)
+    }
+
     if (filename) {
         if (filename.endsWith(".srt")) return parseSrt(subtitles)
         if (filename.endsWith(".ass")) return parseAss(subtitles)

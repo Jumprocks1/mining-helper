@@ -1,12 +1,18 @@
+import { getSetting } from "../views/SettingsModal";
 import { cleanSubtitleEntries, hash, OffsetCache, parseTimestamp, SubtitleEntry, Subtitles } from "./srt";
 
 export async function parseAss(ass: string): Promise<Subtitles> {
+    const styles = new Set<string>()
     const entries: SubtitleEntry[] = []
     const o: Subtitles = { source: "ass", originalEntries: entries, processedEntries: [], hash: hash(ass) }
 
     if (o.hash !== undefined) {
         o.offset = await OffsetCache.Get(o.hash)
     }
+
+    const skipRegexString = await getSetting("skipAssStyleRegex")
+    let skipRegex: RegExp | undefined = undefined
+    if (skipRegexString) skipRegex = new RegExp(skipRegexString)
 
     const lines = ass.split("\n");
     let category = ""
@@ -25,6 +31,12 @@ export async function parseAss(ass: string): Promise<Subtitles> {
             dialogueFormat.forEach((e, i) => indices.set(e, i))
         } else if (line.startsWith("Dialogue:")) {
             const spl = line.split(",")
+            const style = spl[indices.get("Style")!]
+            if (style) styles.add(style)
+            if (skipRegex) {
+                if (style && skipRegex.test(style))
+                    continue
+            }
             entries.push({
                 startTime: parseTimestamp(spl[indices.get("Start")!]),
                 endTime: parseTimestamp(spl[indices.get("End")!]),
@@ -37,6 +49,7 @@ export async function parseAss(ass: string): Promise<Subtitles> {
     }
 
     cleanSubtitleEntries(entries)
+    if (styles.size > 0) o.styles = Array.from(styles)
 
     return o
 }

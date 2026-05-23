@@ -39,9 +39,7 @@ async function tryLoadEnglish(subtitles: Subtitles, mpv: MpvWebSocket | undefine
     if (subtitles.translated || !mpv) return subtitles.translated
     try {
         const subs = await mpv.RequestIfOpen("english-subs")
-        if (typeof subs === "string") throw new Error(subs)
-        const decoded = new TextDecoder().decode(subs)
-        return subtitles.translated = await parseSubtitles(decoded)
+        return subtitles.translated = await parseSubtitles(subs)
     } catch (e) {
         // TODO this is a bit awkward
         // should really only set this for errors that we know can't really be fixed (eg image subs)

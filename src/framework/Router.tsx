@@ -47,6 +47,8 @@ function getRouteFromLocation() {
 
 // @ts-expect-error - this gets set right away, so might as well be not-undefined
 let globalRouterProps: Props = undefined
+// @ts-expect-error - this gets set right away, so might as well be not-undefined
+let currentPage: PageComponent = undefined
 
 export function navigateTo(page: PageDefinition | string) {
     let path = typeof page === "string" ? page : page.path
@@ -55,6 +57,11 @@ export function navigateTo(page: PageDefinition | string) {
     }
     history.pushState(undefined, "", path)
     for (const e of onRouteChangeListeners) e()
+}
+
+
+export function CurrentPage() {
+    return currentPage
 }
 
 const onRouteChangeListeners: (() => void)[] = []
@@ -78,8 +85,6 @@ export function BindSpaRouter(props: Props) {
             })
         }
         props.onInit?.()
-
-        let currentPage: PageComponent | undefined
 
         function getPageFromRoute(route: string) {
             for (const pageKey in props.pages) {

@@ -1,8 +1,11 @@
+import { Icon } from "../components/basic/IconButton";
 import NumberField from "../components/basic/NumberField";
 import Loader from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
+import { BindSpaRouter, CurrentPage } from "../framework/Router";
 import { JpdbCache } from "../jpdb/JpdbParseText";
+import SubtitlesPage from "../pages/subtitles/subtitles";
 import { getDefaultSetting, getSetting, setSetting } from "./SettingsModal";
 
 async function ClearCache() {
@@ -25,6 +28,23 @@ export default () => {
             <div className="field">
                 <div className="label">Custom CSS</div>
                 <div className="field-value monospace">{await customCssField()}</div>
+            </div>
+            <div className="field">
+                <label>Ignore ASS Style (Regex)<Icon icon="info" tooltip={() => {
+                    let res = "Each subtitle entry in a .ass file has a style associated with it."
+                        + "\nSome files use different styles for things like signs, dialouge, translation, or notes."
+                    const currentPage = CurrentPage()
+                    if (currentPage instanceof SubtitlesPage) {
+                        const subs = currentPage.LoadedSubtitles?.subtitles
+                        if (subs && subs.styles && subs.styles.length > 0) {
+                            res += "\nThe current file has the following styles:\n"
+                                + subs.styles.join("\n")
+                        }
+                    }
+                    return res
+                }} /></label>
+                <input defaultValue={await getSetting("skipAssStyleRegex")}
+                    onchange={e => setSetting("skipAssStyleRegex", (e.target as HTMLInputElement).value)} />
             </div>
             <div className="field">
                 <label>Tooltip Delay</label>

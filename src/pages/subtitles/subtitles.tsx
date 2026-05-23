@@ -298,9 +298,7 @@ export default class SubtitlesPage extends PageComponent {
                                 modal.Close()
                                 await this.LoadSubtitles(async () => {
                                     const subs = await this.MpvWebSocket.RequestIfOpen(`get-subs:${value}`)
-                                    if (typeof subs === "string") throw new Error()
-                                    const decoded = new TextDecoder().decode(subs)
-                                    return parseSubtitles(decoded)
+                                    return parseSubtitles(subs)
                                 })
                             },
                         })
@@ -530,9 +528,7 @@ export default class SubtitlesPage extends PageComponent {
     async RequestAndLoadSubs(webSocket: MpvWebSocket) {
         await this.LoadSubtitles(async () => {
             const subs = await webSocket.RequestIfOpen("jp-subs")
-            if (typeof subs === "string") throw new Error()
-            const decoded = new TextDecoder().decode(subs)
-            return parseSubtitles(decoded)
+            return parseSubtitles(subs)
         })
     }
     async HandleCommandAndData(webSocket: MpvWebSocket, commandName: string, commandData: string | Uint8Array<ArrayBuffer>) {
