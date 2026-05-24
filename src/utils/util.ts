@@ -260,6 +260,10 @@ export function cleanSource(source: string | undefined) {
             replace: " "
         },
         {
+            match: /\(BD 1080p .+$/g,
+            replace: ""
+        },
+        {
             match: / 1080p .+$/g,
             replace: ""
         },

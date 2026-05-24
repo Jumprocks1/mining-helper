@@ -2,7 +2,7 @@ import { Children } from "../framework/createElement";
 import { getAnkiWordsTrimKanaMapSync, getAnkiWordsSetSync, getAnkiWordsSync } from "../pages/anki/CardList";
 import { UnicodeCharacterType, unicodeType } from "../utils/AnkiUtil";
 import { Subtitles } from "../utils/srt";
-import { isIgnoredSync } from "./IgnoreList";
+import { getIgnoredStateSync } from "./IgnoreList";
 import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "./JpdbParseText";
 
 export interface VocabStateConfig {
@@ -19,7 +19,8 @@ export enum VocabState {
     Kana,
     Similar,
     AltSpelling,
-    Ignored
+    Ignored,
+    TemporarilyIgnored
 }
 
 export function TrimKana(s: string) {
@@ -55,7 +56,10 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
             if (knownWordsSet.has(spelling))
                 return [VocabState.AltSpelling, spelling]
     }
-    if (!skipIgnoreCheck && isIgnoredSync(vocab[5])) return [VocabState.Ignored, undefined]
+    if (!skipIgnoreCheck) {
+        const ignoredState = getIgnoredStateSync(vocab[5])
+        if (ignoredState) return [ignoredState, undefined]
+    }
     if (vocab[4].includes("prt"))
         return [VocabState.Particle, undefined]
     let kanji = false

@@ -218,6 +218,11 @@
                     color: $ignored;
                 }
             }
+            &.temporarilyignored {
+                .frequency {
+                    color: $brightOrange;
+                }
+            }
             &.known {
                 .frequency {
                     color: $known;
@@ -247,6 +252,9 @@
             }
             &.similar, &.kana, &.ignored, &.altspelling {
                 color: $brightYellow;
+            }
+            &.temporarilyignored {
+                color: $brightOrange;
             }
         }
         .frequency {

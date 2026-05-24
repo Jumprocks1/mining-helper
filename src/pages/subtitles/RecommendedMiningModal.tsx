@@ -64,10 +64,11 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
         for (let i = 0; i < sorted.length; i++) {
             if (pendingRows.length >= maxCount) break
             const vocab = sorted[i]
-            let state = getVocabState(vocab, stateConfig)
-            let ignored = state === VocabState.Ignored
+            const originalState = getVocabState(vocab, stateConfig)
+            let ignored = originalState === VocabState.Ignored || originalState === VocabState.TemporarilyIgnored
+            let state = originalState
 
-            if (showIgnored && state === VocabState.Ignored) {
+            if (showIgnored && ignored) {
                 const newState = getVocabStateAndNote(vocab, {
                     ...stateConfig,
                     skipIgnoreCheck: true
@@ -77,7 +78,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
             }
 
             if (state !== VocabState.New) {
-                if (state === VocabState.Ignored) { if (!showIgnored) continue }
+                if (state === VocabState.Ignored || state === VocabState.TemporarilyIgnored) { if (!showIgnored) continue }
                 else if (state === VocabState.Kana) { if (!showKana) continue }
                 else continue
             }
@@ -98,16 +99,19 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                 }
             }
             const makeDeleteButton = () => <IconButton icon={ignored ? "restore_from_trash" : "delete"}
-                title={ignored ? "Restore" : "Ignore"}
-                onClick={async () => {
+                title={ignored ? "Restore" : "Ignore" + "\nHold shift to ignore for 30 days\nUseful for names/locations."}
+                onClick={async ev => {
                     if (ignored) {
                         ignored = false
                         await UnIgnoreVid(vocab[5])
                         row.classList.remove("ignored")
+                        row.classList.remove("temporarilyignored")
                     } else {
                         ignored = true
-                        await IgnoreVid(vocab[5])
+                        await IgnoreVid(vocab[5], vocab[0], ev.shiftKey)
                         row.classList.add("ignored")
+                        if (ev.shiftKey)
+                            row.classList.add("temporarilyignored")
                     }
                     // this is sketchy, but works
                     deleteButton.replaceWith(deleteButton = makeDeleteButton())
@@ -142,7 +146,8 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                 <span><span className="vocab-kanji">{vocab[0]}</span> - {vocab[3][0]}</span>
             </div>
             if (firstToken) row.vocabInfo = [vocab, firstToken] // for tooltip
-            if (state === VocabState.Ignored) row.classList.add("ignored")
+            if (originalState === VocabState.Ignored) row.classList.add("ignored")
+            if (originalState === VocabState.TemporarilyIgnored) row.classList.add("temporarilyignored")
             if (state === VocabState.Kana) row.classList.add("kana")
             loadedRows[vocab[5]] = row
             pendingRows.push([vocab, row, tokenUsages[0]])
