@@ -12,6 +12,7 @@ export interface SubtitleEntry {
     text: string
     translation?: string
     node?: HTMLElement
+    style?: string // ass style
 }
 
 export interface SubtitleEntryWithCharacterOffset extends SubtitleEntry {

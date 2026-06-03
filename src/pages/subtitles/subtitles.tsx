@@ -81,6 +81,7 @@ export default class SubtitlesPage extends PageComponent {
     override Dispose() {
         removeOnSettingChange("offset", this.OffsetChanged)
         removeOnSettingChange("regexReplacements", this.ReloadSubs)
+        removeOnSettingChange("skipAssStyleRegex", this.ReloadSubs)
         removeOnSettingChange("skipChapterRegex", this.ReloadSubs)
         document.removeEventListener("keydown", this.DocumentKeydown)
         document.removeEventListener("paste", this.DocumentPaste)
@@ -324,6 +325,7 @@ export default class SubtitlesPage extends PageComponent {
 
         onSettingChange("offset", this.OffsetChanged)
         onSettingChange("regexReplacements", this.ReloadSubs)
+        onSettingChange("skipAssStyleRegex", this.ReloadSubs)
         onSettingChange("skipChapterRegex", this.ReloadSubs)
 
 
@@ -449,6 +451,12 @@ export default class SubtitlesPage extends PageComponent {
             }
         }
 
+        let skipStyleRegex: RegExp | undefined = undefined
+        if (subtitles.styles && subtitles.styles.length > 0) {
+            const skipRegexString = await getSetting("skipAssStyleRegex")
+            if (skipRegexString) skipStyleRegex = new RegExp(skipRegexString)
+        }
+
         const offset = subtitles.offset ?? 0
         const replacements = await getReplacements()
         const res: SubtitleEntryWithCharacterOffset[] = []
@@ -469,6 +477,8 @@ export default class SubtitlesPage extends PageComponent {
                 }
                 if (shouldSkip) continue
             }
+            if (skipStyleRegex && entry.style && skipStyleRegex.test(entry.style))
+                continue
             const p = {
                 ...entry,
                 startTime: entry.startTime + offset,

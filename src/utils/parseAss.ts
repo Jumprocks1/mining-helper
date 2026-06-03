@@ -1,4 +1,3 @@
-import { getSetting } from "../views/SettingsModal";
 import { cleanSubtitleEntries, hash, OffsetCache, parseTimestamp, SubtitleEntry, Subtitles } from "./srt";
 
 export async function parseAss(ass: string): Promise<Subtitles> {
@@ -9,10 +8,6 @@ export async function parseAss(ass: string): Promise<Subtitles> {
     if (o.hash !== undefined) {
         o.offset = await OffsetCache.Get(o.hash)
     }
-
-    const skipRegexString = await getSetting("skipAssStyleRegex")
-    let skipRegex: RegExp | undefined = undefined
-    if (skipRegexString) skipRegex = new RegExp(skipRegexString)
 
     const lines = ass.split("\n");
     let category = ""
@@ -33,17 +28,14 @@ export async function parseAss(ass: string): Promise<Subtitles> {
             const spl = line.split(",")
             const style = spl[indices.get("Style")!]
             if (style) styles.add(style)
-            if (skipRegex) {
-                if (style && skipRegex.test(style))
-                    continue
-            }
             entries.push({
                 startTime: parseTimestamp(spl[indices.get("Start")!]),
                 endTime: parseTimestamp(spl[indices.get("End")!]),
                 // would prefer to limit the split instead of join, but limit isn't like c# string split
                 text: spl.splice(indices.get("Text")!).join(",")
                     .replace(/\s*\\N\s*/g, "\n"),
-                originalIndex: undefined as any // gets set later
+                originalIndex: undefined as any, // gets set later
+                style
             })
         }
     }
