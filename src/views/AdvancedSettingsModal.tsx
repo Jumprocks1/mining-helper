@@ -32,7 +32,7 @@ export default () => {
             <div className="field">
                 <label>Ignore ASS Style (Regex)<Icon icon="info" tooltip={() => {
                     let res = "Each subtitle entry in a .ass file has a style associated with it."
-                        + "\nSome files use different styles for things like signs, dialouge, translation, or notes."
+                        + "\nSome files use different styles for things like signs, songs, dialouge, translation, or notes."
                     const currentPage = CurrentPage()
                     if (currentPage instanceof SubtitlesPage) {
                         const subs = currentPage.LoadedSubtitles?.subtitles

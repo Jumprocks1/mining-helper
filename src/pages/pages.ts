@@ -1,6 +1,7 @@
 import { type Pages } from "../framework/Router";
 import AnkiPage from "./anki/anki";
 import HomePage from "./home/home";
+import KanjiPage from "./kanji/kanji";
 import SetupPage from "./setup/setup";
 import SentenceSearchPage from "./ss/ss";
 import SubtitlesPage from "./subtitles/subtitles";
@@ -14,5 +15,6 @@ export default {
     sentences: { path: "/ss", component: SentenceSearchPage },
     subtitles: { path: "/subtitles", component: SubtitlesPage },
     anki: { path: "/anki", component: AnkiPage },
+    kanji: { path: "/kanji", component: KanjiPage },
     setup: { path: "/setup", component: SetupPage },
 } satisfies Pages
