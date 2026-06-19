@@ -64,7 +64,8 @@ export default async () => {
             function fieldName(key: AnkiFieldKey) {
                 return configuredFields[key] ?? AnkiFieldInfo[key].name
             }
-            const notes = await AnkiConnect.call("notesInfo", { query: "" })
+            const deckName = await getSetting("targetAnkiDeck")
+            const notes = await AnkiConnect.call("notesInfo", { query: `deck:\"${deckName}\"` })
             localAnkiWords = []
             for (const note of notes) {
                 const word = note.fields[fieldName("word")]?.value

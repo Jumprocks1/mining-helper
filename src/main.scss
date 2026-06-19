@@ -47,6 +47,9 @@
         &.setup-link {
             background-color: color.change(color.mix(variables.$red, variables.$yellow, 75%), $alpha: 0.3);
         }
+        &.kanji {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
         &:hover {
             border: 1px solid rgb(255, 255, 255, 50%);
         }
@@ -284,6 +287,46 @@ div#result {
         .description {
             display: block;
             font-size: 0.9em;
+        }
+    }
+}
+
+
+@layer pages {
+    #kanji-page {
+        #body-container {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        #inner-body {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+
+            hr {
+                align-self: stretch;
+                border: 1px solid rgba(255, 255, 255, 0.4);
+                margin: 2 * variables.$s1 (- variables.$s1);
+            }
+        }
+        #stats {
+            >div {
+                display: flex;
+                align-items: center;
+            }
+        }
+        #recommended-kanji {
+            >div {
+                display: flex;
+                align-items: center;
+                gap: variables.$s1;
+                >a {
+                    padding: 0 variables.$s1;
+                    text-decoration: none;
+                    opacity: 0.5;
+                }
+            }
         }
     }
 }

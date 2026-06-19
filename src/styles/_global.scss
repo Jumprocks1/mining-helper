@@ -181,4 +181,11 @@ body {
             }
         }
     }
+
+    .link-button {
+        text-decoration: underline;
+        user-select: unset;
+        cursor: pointer;
+        color: variables.$linkColor;
+    }
 }

@@ -27,7 +27,8 @@ export default () => {
         return promise
     }
     const innerLoad = async () => {
-        const notes = await AnkiConnect.call("notesInfo", { query: "" })
+        const deckName = await getSetting("targetAnkiDeck")
+        const notes = await AnkiConnect.call("notesInfo", { query: `deck:\"${deckName}\"` })
         const configuredFields = await getSetting("ankiFields")
         function fieldName(key: AnkiFieldKey) {
             return configuredFields[key] ?? AnkiFieldInfo[key].name

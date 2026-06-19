@@ -1,6 +1,11 @@
+import IconButton, { Icon } from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
 import { Children } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
+import AnkiConnect from "../../utils/AnkiConnect"
+import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
+import { getSetting } from "../../views/SettingsModal"
+import { getAnkiWords } from "../anki/CardList"
 
 const deckName = "Mining Helper Kanji"
 
@@ -10,13 +15,78 @@ export default class KanjiPage extends PageComponent {
     Node: Children
     constructor() {
         super()
-        this.Node = <Loader load={main} />
+        this.Node = <Loader load={main} showFullError />
     }
 }
 
 
 const main = async () => {
-    return <div>
-        test
+    const kanjiDeck = await AnkiConnect.call("deckNames", undefined)
+    if (!kanjiDeck.includes(deckName)) throw `Deck named '${deckName}' not found`
+
+    const kanjiNotes = await AnkiConnect.call("notesInfo", { query: `deck:\"${deckName}\"` })
+
+    const vocabDeckName = await getSetting("targetAnkiDeck")
+
+    const knownKanji = new Set<string>()
+    for (const note of kanjiNotes) {
+        const kanji = note.fields["Kanji"]?.value
+        if (!kanji) throw `${note.noteId} missing 'Kanji' field`
+        knownKanji.add(kanji)
+    }
+
+    const vocab = await getAnkiWords()
+    let knownKanjiUsages = 0
+    let unknownKanjiUsages = 0
+    let vocabKanji = new Set<string>()
+
+    let unknownKanjiUsageMap = new Map<string, number>()
+
+    for (const word of vocab) {
+        for (let i = 0; i < word.length; i++) {
+            const c = word[i]
+            if (unicodeType(c) === UnicodeCharacterType.Kanji) {
+                if (knownKanji.has(c)) knownKanjiUsages += 1
+                else {
+                    unknownKanjiUsages += 1
+                    const cur = unknownKanjiUsageMap.get(c) ?? 0
+                    unknownKanjiUsageMap.set(c, cur + 1)
+                }
+                vocabKanji.add(c)
+            }
+        }
+    }
+
+    const recommendedKanji = [...unknownKanjiUsageMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+
+
+    return <div id="inner-body">
+        <div id="stats">
+            <div>Vocab loaded: {vocab.length}
+                <Icon icon="help" tooltip="Can refresh this from the Anki page"
+                    component="a" componentProps={{ href: "/anki.html" }} />
+            </div>
+            <div>Kanji notes found: {kanjiNotes.length}</div>
+            <div>Unique kanji in vocab: {vocabKanji.size}</div>
+            <div>Known kanji usages in vocab: {knownKanjiUsages}</div>
+            <div>Unknown kanji usages in vocab: {unknownKanjiUsages}</div>
+        </div>
+        <hr />
+        <div id="recommended-kanji">
+            <h4>Recommended Kanji</h4>
+            {recommendedKanji.map(e => <div>
+                <a href={`https://jisho.org/search/${encodeURIComponent(`${e[0]} #kanji`)}`}
+                    tooltip="View on jisho"
+                    rel="noopener noreferrer" target="_blank">j</a>
+                <a href={`https://jpdb.io/kanji/${encodeURIComponent(e[0])}`}
+                    tooltip="View on jpdb"
+                    rel="noopener noreferrer" target="_blank">d</a>
+                <IconButton icon="add" tooltip="Add to Kanji deck" />
+                <span>{e[0]} - <span className="link-button"
+                    onclick={() => AnkiConnect.call("guiBrowse", { query: `deck:\"${vocabDeckName}\" word:*${e[0]}*` })}>
+                    {e[1]} usages
+                </span></span>
+            </div>)}
+        </div>
     </div>
 }
