@@ -13,7 +13,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />
+    <!-- Can remove after updating Sqlite library further -->
+    <NuGetAuditSuppress Include="GHSA-2m69-gcr7-jv3q" />
   </ItemGroup>
 
 </Project>

@@ -30,7 +30,7 @@ public static class Program
             for (var i = 0; i < args.Length; i++)
             {
                 var arg = args[i];
-                if (arg == "--wait-for-debugger")
+                if (arg == "--wait-for-debugger" || arg == "-d")
                 {
                     while (!Debugger.IsAttached) Thread.Sleep(100);
                 }

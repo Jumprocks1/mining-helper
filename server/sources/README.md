@@ -1,4 +1,4 @@
-Actual source files are not kept in source control to keep the repo small/modular.
+Some source files are not kept in source control to keep the repo small/modular.
 
 # Files
 - kradfile.gz
@@ -14,3 +14,7 @@ Actual source files are not kept in source control to keep the repo small/modula
     - https://www.edrdg.org/wiki/index.php/JMdict-EDICT_Dictionary_Project
     - http://ftp.edrdg.org/pub/Nihongo/JMdict_e.gz
     - https://edrdg.org/pub/Nihongo/JMdict_e.gz
+- kangxi_radicals.csv
+    - https://en.wikipedia.org/wiki/List_of_kanji_radicals_by_stroke_count
+    - https://github.com/gambolputty/wikitable2csv
+    - https://wikitable2csv.ggor.de/

@@ -13,12 +13,12 @@ public static class AppSettings
     public static string? ApiKey { get; private set; }
     public static int Port { get; private set; } = 4012;
 
-    public static string? SettingsFolder { get; private set; }
+    public static string SettingsFolder { get => field ?? throw new Exception("Settings not loaded"); private set; }
 
     public static T Get<T>(string key) => Settings[key]!.AsValue().GetValue<T>();
     public static T? GetOptional<T>(string key) => (Settings[key]?.AsValue().TryGetValue<T>(out var v) ?? false) ? v : default;
     public static string GetPath(string key) => Path.GetFullPath(Get<string>(key),
-        SettingsFolder ?? throw new Exception("Settings not loaded"));
+        SettingsFolder);
     public static string? GetOptionalPath(string key)
     {
         var path = GetOptional<string>(key);
@@ -53,7 +53,7 @@ public static class AppSettings
             ?? throw new ExitException($"appsettings.json not found.\nPlease place it near {Assembly.GetEntryAssembly()?.Location}");
 
         _settings = (JsonObject?)JsonNode.Parse(File.ReadAllText(found)) ?? throw new Exception("Settings null");
-        SettingsFolder = Path.GetDirectoryName(Path.GetFullPath(found));
+        SettingsFolder = Path.GetDirectoryName(Path.GetFullPath(found))!;
 
         var local = Path.Join(SettingsFolder, "appsettings.Local.json");
         if (File.Exists(local))

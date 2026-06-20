@@ -4,6 +4,7 @@ import { Children } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import AnkiConnect from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
+import { serverPostJson } from "../../utils/Audio"
 import { getSetting } from "../../views/SettingsModal"
 import { getAnkiWords } from "../anki/CardList"
 
@@ -81,7 +82,7 @@ const main = async () => {
                 <a href={`https://jpdb.io/kanji/${encodeURIComponent(e[0])}`}
                     tooltip="View on jpdb"
                     rel="noopener noreferrer" target="_blank">d</a>
-                <IconButton icon="add" tooltip="Add to Kanji deck" />
+                <IconButton icon="add" onClick={() => createKanjiCard(e[0])} tooltip="Add to Kanji deck" />
                 <span>{e[0]} - <span className="link-button"
                     onclick={() => AnkiConnect.call("guiBrowse", { query: `deck:\"${vocabDeckName}\" word:*${e[0]}*` })}>
                     {e[1]} usages
@@ -89,4 +90,9 @@ const main = async () => {
             </div>)}
         </div>
     </div>
+}
+
+async function createKanjiCard(kanji: string) {
+    const res = await serverPostJson(`kanji-info:${kanji}`)
+    console.log(res)
 }
