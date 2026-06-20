@@ -16,7 +16,7 @@ public static class KanjiInfo
     public class CharacterEntry
     {
         [XmlElement("literal")]
-        public string? Kanji;
+        public required string Kanji;
         [XmlElement("radical")]
         public Radical? Radical;
 
@@ -24,6 +24,13 @@ public static class KanjiInfo
 
         [XmlElement("reading_meaning")]
         public ReadingMeaning? ReadingMeaning;
+        [XmlElement("misc")]
+        public required Misc Misc;
+    }
+    public class Misc
+    {
+        [XmlElement("stroke_count")]
+        public required int Strokes;
     }
 
     public class ReadingMeaning
@@ -84,11 +91,7 @@ public static class KanjiInfo
             var serializer = new XmlSerializer(typeof(CharacterEntry));
             while ((reader.NodeType == XmlNodeType.Element && reader.Name == "character") || reader.ReadToFollowing("character"))
             {
-                // Could set it up to only parse the target character instead of loading the entire dictionary into memory
-                // Could use the special comments before the character elements
-                // This seems fine for now though since it's lazy
-                var el = (CharacterEntry?)serializer.Deserialize(reader);
-                if (el?.Kanji != null)
+                if (serializer.Deserialize(reader) is CharacterEntry el)
                     o[el.Kanji] = new SimplifiedKanjiInfo(el);
             }
         }
@@ -98,14 +101,41 @@ public static class KanjiInfo
             using var decompress = new GZipStream(gz, CompressionMode.Decompress);
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             using var streamReader = new StreamReader(decompress, Encoding.GetEncoding("EUC-JP"));
+            int getStrokeCount(string part)
+            {
+                if (o.TryGetValue(part, out var c)) return c.StrokeCount;
+                return part switch
+                {
+                    "｜" => 1,
+                    "ノ" => 1,
+                    "ヨ" => 3,
+                    "ユ" => 2,
+                    "ハ" => 2,
+                    "マ" => 2,
+                    _ => 2 // shouldn't be any of these, but 2 is a good guess
+                };
+            }
             string? line;
             while ((line = streamReader.ReadLine()) != null)
             {
                 if (line.StartsWith('#')) continue;
                 var spl = line.Split(':', 2, StringSplitOptions.TrimEntries);
                 var kanji = spl[0];
-                var parts = string.Join("", spl[1].Split(' ', StringSplitOptions.TrimEntries));
-                o[kanji].Parts = parts;
+                var parts = new List<KanjiPart>();
+                foreach (var part in spl[1].Split(' ', StringSplitOptions.TrimEntries))
+                {
+                    // Contains checks for variants
+                    var radical = Radicals.FirstOrDefault(e => e.Kanji.Contains(part));
+                    if (part == kanji && radical == null) continue;
+                    var meaning = radical?.Meaning;
+                    if (meaning == null)
+                    {
+                        var kanjiInfo = o.GetValueOrDefault(part);
+                        if (kanjiInfo != null) meaning = string.Join(", ", kanjiInfo.Meanings);
+                    }
+                    parts.Add(new() { Part = part, Meaning = meaning });
+                }
+                o[kanji].Parts = [.. parts.OrderBy(e => getStrokeCount(e.Part))];
             }
         }
         return o;
@@ -166,13 +196,20 @@ public class SimplifiedKanjiInfo
         KunReadings = Entry.ReadingMeaning?.RmGroup.Readings.Where(e => e.Type == "ja_kun").Select(e => e.Text).ToList() ?? [];
         OnReadings = Entry.ReadingMeaning?.RmGroup.Readings.Where(e => e.Type == "ja_on").Select(e => e.Text).ToList() ?? [];
         NameReadings = Entry.ReadingMeaning?.Nanori ?? [];
+        StrokeCount = Entry.Misc.Strokes;
     }
     public string Kanji { get; set; }
-    public string? Parts { get; set; }
+    public List<KanjiPart>? Parts { get; set; }
     public int RadicalIndex;
+    public int StrokeCount { get; set; }
     public RadicalInfo Radical => KanjiInfo.Radicals[RadicalIndex];
     public List<string> Meanings { get; set; }
     public List<string> KunReadings { get; set; }
     public List<string> OnReadings { get; set; }
     public List<string> NameReadings { get; set; }
+}
+public class KanjiPart
+{
+    public required string Part { get; set; }
+    public string? Meaning { get; set; } // some parts like '｜' have no meaning - jisho works this way too
 }

@@ -18,3 +18,4 @@ Some source files are not kept in source control to keep the repo small/modular.
     - https://en.wikipedia.org/wiki/List_of_kanji_radicals_by_stroke_count
     - https://github.com/gambolputty/wikitable2csv
     - https://wikitable2csv.ggor.de/
+    - This one has some manual cleaning
