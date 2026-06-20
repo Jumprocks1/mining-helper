@@ -93,6 +93,60 @@ const main = async () => {
 }
 
 async function createKanjiCard(kanji: string) {
-    const res = await serverPostJson(`kanji-info:${kanji}`)
-    console.log(res)
+    // TODO this assumes some fields in the vocab deck when we could be pulling those from settings
+
+    const res = await serverPostJson<KanjiInfo>(`kanji-info:${kanji}`)
+    const vocabDeckName = await getSetting("targetAnkiDeck")
+
+    const knownCardIds = await AnkiConnect.call("findCards", { query: `deck:\"${vocabDeckName}\" word:*${kanji}*` })
+    const intervals = await AnkiConnect.call("getIntervals", { cards: knownCardIds })
+    // sorts based on longest intervals first
+    // could eventually try getting more variety, ie. trading harder words for varied readings
+    // sorting by longest interval could lead to skipping the harder (even if they're common) readings
+    const zipped = knownCardIds.map((e, i) => [e, intervals[i]]).sort((a, b) => b[1] - a[1])
+    const top5 = zipped.slice(0, 5).map(e => e[0])
+    const noteIds = await AnkiConnect.call("cardsToNotes", { cards: top5 })
+    const noteInfo = await AnkiConnect.call("notesInfo", { notes: noteIds })
+    const simpleKnownWordInfo = noteInfo.map(e => {
+        const furigana = e.fields["Word Furigana"]?.value
+        const meaning = e.fields["Word Meaning"]?.value
+        return `${furigana} - ${meaning}`
+    })
+
+    AnkiConnect.call("addNote", {
+        note: {
+            deckName,
+            modelName: deckName,
+            fields: {
+                Kanji: res.Kanji,
+                Meaning: res.Meanings.join(", "),
+                Radical: res.Radical.Kanji + " - " + res.Radical.Meaning,
+                // we use <br> for line breaks so it renders a bit better in Anki browser
+                // on the actual card rendering side, we'll split out the <br> anyways
+                Parts: res.Parts?.map(e => e.Part + " - " + e.Meaning).join("<br>"),
+                ["Kun Readings"]: res.KunReadings.join(", "),
+                ["On Readings"]: res.OnReadings.join(", "),
+                ["Name Readings"]: res.NameReadings.join(", "),
+                ["Known Words"]: simpleKnownWordInfo.join("<br>")
+                // Variants: , // don't think we really needs these for now
+            },
+        }
+    })
+}
+
+interface KanjiInfo {
+    Kanji: string
+    Parts?: {
+        Part: string
+        Meaning: string
+    }[]
+    StrokeCount: number
+    Radical: {
+        Kanji: string
+        Meaning: string
+    }
+    Meanings: string[]
+    KunReadings: string[]
+    OnReadings: string[]
+    NameReadings: string[]
 }

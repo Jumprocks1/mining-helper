@@ -67,10 +67,10 @@ export async function serverPost(body: string) {
         method: "POST", body, headers
     })
 }
-export async function serverPostJson(body: string) {
+export async function serverPostJson<T>(body: string) {
     const res = await serverPost(body)
     if (!res.ok) throw await res.text()
-    return res.json()
+    return res.json() as T
 }
 
 export async function tryGetAudioBytes(vocab: JpdbVocabulary | string) {

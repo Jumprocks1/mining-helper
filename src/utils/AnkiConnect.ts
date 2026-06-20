@@ -103,10 +103,12 @@ interface AnkiConnectActionMap {
         }, returns: number[]
     },
     findCards: { params: { query: string }, returns: number[] },
-    notesInfo: { params: { query: string }, returns: AnkiNote[] },
+    notesInfo: { params: { query: string } | { notes: number[] }, returns: AnkiNote[] },
     guiSelectCard: { params: { card: number }, returns: boolean },
     multi: { params: { actions: [] }, returns: any },
-    findNotes: { params: { query: string }, returns: number[] }
+    findNotes: { params: { query: string }, returns: number[] },
+    getIntervals: { params: { cards: number[] }, returns: number[] },
+    cardsToNotes: { params: { cards: number[] }, returns: number[] }
 }
 
 interface NoteAdd {
