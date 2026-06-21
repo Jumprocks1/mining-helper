@@ -58,9 +58,11 @@ const main = async () => {
         }
     }
 
-    const recommendedKanji = [...unknownKanjiUsageMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const sortedKanjiUsage = [...unknownKanjiUsageMap.entries()].sort((a, b) => b[1] - a[1])
+    const recommendedKanji = sortedKanjiUsage.slice(0, 10);
     const refreshInput = <input autocomplete="off" id="search" placeholder="Update" /> as HTMLInputElement
 
+    const unknownKanjiWith5Usage = sortedKanjiUsage.reduce((p, c) => p + (c[1] >= 5 ? 1 : 0), 0)
 
     return <div id="inner-body">
         <div id="refresh-container">
@@ -77,6 +79,7 @@ const main = async () => {
             <div>Unique kanji in vocab: {vocabKanji.size}</div>
             <div>Known kanji usages in vocab: {knownKanjiUsages}</div>
             <div>Unknown kanji usages in vocab: {unknownKanjiUsages}</div>
+            <div>Unknown kanji with 5+ usages: {unknownKanjiWith5Usage}</div>
         </div>
         <hr />
         <div id="recommended-kanji">
