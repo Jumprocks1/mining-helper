@@ -122,20 +122,21 @@ public static class KanjiInfo
                 var spl = line.Split(':', 2, StringSplitOptions.TrimEntries);
                 var kanji = spl[0];
                 var parts = new List<KanjiPart>();
+                var kanjiInfo = o[kanji];
                 foreach (var part in spl[1].Split(' ', StringSplitOptions.TrimEntries))
                 {
                     // Contains checks for variants
                     var radical = Radicals.FirstOrDefault(e => e.Kanji.Contains(part));
-                    if (part == kanji && radical == null) continue;
+                    if (part == kanji && radical == null || radical == kanjiInfo.Radical) continue;
                     var meaning = radical?.Meaning;
                     if (meaning == null)
                     {
-                        var kanjiInfo = o.GetValueOrDefault(part);
-                        if (kanjiInfo != null) meaning = string.Join(", ", kanjiInfo.Meanings);
+                        var partInfo = o.GetValueOrDefault(part);
+                        if (partInfo != null) meaning = string.Join(", ", partInfo.Meanings);
                     }
                     parts.Add(new() { Part = part, Meaning = meaning });
                 }
-                o[kanji].Parts = [.. parts.OrderBy(e => getStrokeCount(e.Part))];
+                kanjiInfo.Parts = [.. parts.OrderBy(e => getStrokeCount(e.Part))];
             }
         }
         return o;

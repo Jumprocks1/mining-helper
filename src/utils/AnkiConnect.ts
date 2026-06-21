@@ -75,14 +75,7 @@ interface AnkiConnectActionMap {
     },
     updateNote: {
         params: {
-            note: {
-                id: number,
-                fields: Record<string, string>
-                tags?: string[]
-                audio?: MediaAdd[]
-                video?: MediaAdd[]
-                picture?: MediaAdd[]
-            }
+            note: NoteUpdate
         },
         returns: null
     },
@@ -111,11 +104,18 @@ interface AnkiConnectActionMap {
     cardsToNotes: { params: { cards: number[] }, returns: number[] }
 }
 
-interface NoteAdd {
+export interface NoteAdd extends NoteBase {
     deckName: string
     modelName: string
-    fields: Record<string, string | undefined>
     options?: { allowDuplicate: boolean }
+}
+
+export interface NoteUpdate extends NoteBase {
+    id: number,
+}
+
+export interface NoteBase {
+    fields: Record<string, string | undefined>
     tags?: string[]
     audio?: MediaAdd[]
     video?: MediaAdd[]

@@ -294,6 +294,25 @@ div#result {
 
 @layer pages {
     #kanji-page {
+        #refresh-container {
+            align-self: stretch;
+            display: flex;
+            padding: 0.3em;
+            background-color: variables.$background0;
+            border: 1px solid #FFFFFF30;
+            border-radius: 4px;
+            align-items: center;
+            &:focus-within {
+                border: 1px solid #FFFFFF80;
+            }
+            >input {
+                flex: 1;
+                padding: 0;
+                border: none;
+                align-self: stretch;
+            }
+        }
+
         #body-container {
             display: flex;
             flex-direction: column;
