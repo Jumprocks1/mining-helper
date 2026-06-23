@@ -26,7 +26,6 @@ export async function loadIgnoreList(disableCache = false) {
         if (expired) {
             await chrome.storage.local.set({ ignoreList: localIgnoreList })
         }
-        console.log(localIgnoreList)
     }
     return localIgnoreList!
 }

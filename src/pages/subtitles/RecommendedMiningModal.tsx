@@ -88,6 +88,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                 const found = i1Ids.get(vocab[5])
                 if (!found) continue
                 tokenUsages = found
+                firstToken = jpdb.tokens.find(e => e[0] === found[0])
             } else {
                 tokenUsages = []
                 for (const token of jpdb.tokens) {
