@@ -114,7 +114,11 @@ async function getNoteInfo(kanji: string): Promise<NoteBase> {
     const intervals = await AnkiConnect.call("getIntervals", { cards: cardIds })
     const notesWithIntervals: [interval: number, AnkiNote][] = intervals.map((e, i) => [e, noteInfo[i]])
     notesWithIntervals.sort((a, b) => b[0] - a[0])
+    return noteInfoToKanjiNote(kanji, notesWithIntervals, res)
+}
 
+// This method shouldn't do anything expensive (network calls, large filters) so it can be bulk called
+function noteInfoToKanjiNote(kanji: string, notesWithIntervals: [interval: number, AnkiNote][], kanjiInfo: KanjiInfo): NoteBase {
     // these should be all different readings, if there's <5, it will pull whatever has the best interval
     const examples: AnkiNote[] = []
 
@@ -144,15 +148,15 @@ async function getNoteInfo(kanji: string): Promise<NoteBase> {
 
     return {
         fields: {
-            Kanji: res.Kanji,
-            Meaning: res.Meanings.join(", "),
-            Radical: res.Radical.Kanji + " - " + res.Radical.Meaning,
+            Kanji: kanjiInfo.Kanji,
+            Meaning: kanjiInfo.Meanings.join(", "),
+            Radical: kanjiInfo.Radical.Kanji + " - " + kanjiInfo.Radical.Meaning,
             // we use <br> for line breaks so it renders a bit better in Anki browser
             // on the actual card rendering side, we'll split out the <br> anyways
-            Parts: res.Parts?.map(e => e.Meaning ? e.Part + " - " + e.Meaning : e.Part).join("<br>"),
-            ["Kun Readings"]: res.KunReadings.join(", "),
-            ["On Readings"]: res.OnReadings.join(", "),
-            ["Name Readings"]: res.NameReadings.join(", "),
+            Parts: kanjiInfo.Parts?.map(e => e.Meaning ? e.Part + " - " + e.Meaning : e.Part).join("<br>"),
+            ["Kun Readings"]: kanjiInfo.KunReadings.join(", "),
+            ["On Readings"]: kanjiInfo.OnReadings.join(", "),
+            ["Name Readings"]: kanjiInfo.NameReadings.join(", "),
             ["Examples"]: simpleExamples.join("<br>")
             // Variants: , // don't think we really needs these for now
         },
