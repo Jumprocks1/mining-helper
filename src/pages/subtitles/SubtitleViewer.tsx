@@ -137,7 +137,7 @@ export default class SubtitleViewer {
 
         if (vocab && hoverState) {
             this.popover ??= new JpHoverTooltip(this.Node)
-            this.popover.TargetRect(hoverState.rect, vocab, hoverState.token)
+            this.popover.TargetRect(hoverState.rect, vocab)
         } else {
             this.popover?.Close()
         }

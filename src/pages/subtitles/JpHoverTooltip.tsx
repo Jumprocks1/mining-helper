@@ -1,10 +1,10 @@
 import { JsPopover } from "../../components/basic/JsPopover";
 import { Children } from "../../framework/createElement";
 import { SmallTooltip } from "../../framework/Tooltips";
-import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
+import { JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState";
 import AnkiConnect from "../../utils/AnkiConnect";
-import { furiFromToken, furiToRuby } from "../../utils/util";
+import { furiToRuby, vocabFuri } from "../../utils/util";
 
 export default class JpHoverTooltip extends JsPopover {
 
@@ -16,14 +16,15 @@ export default class JpHoverTooltip extends JsPopover {
         })
     }
 
-    Target(target: HTMLElement, vocab: JpdbVocabulary, token: JpdbToken) {
+    Target(target: HTMLElement, vocab: JpdbVocabulary) {
+        if (!vocab.token) this.Close()
         this.Anchor = target
-        this.TargetBase(vocab, token)
+        this.TargetBase(vocab)
         this.Node.style.left = `anchor(left)`
         this.Node.style.top = `anchor(bottom)`
     }
 
-    private TargetBase(vocab: JpdbVocabulary, token: JpdbToken) {
+    private TargetBase(vocab: JpdbVocabulary) {
         const [vocabState, vocabNote] = getVocabStateAndNote(vocab, { trimKana: true })
 
         const vocabStateString = VocabState[vocabState].toLowerCase()
@@ -39,7 +40,7 @@ export default class JpHoverTooltip extends JsPopover {
             }
         }
 
-        const ruby = furiToRuby(furiFromToken(vocab[0], token))
+        const ruby = furiToRuby(vocabFuri(vocab))
 
         this.SetContent(<>
             <div className="header">
@@ -56,9 +57,9 @@ export default class JpHoverTooltip extends JsPopover {
         this.Open()
     }
 
-    TargetRect(hoverRect: DOMRect, vocab: JpdbVocabulary, token: JpdbToken) {
+    TargetRect(hoverRect: DOMRect, vocab: JpdbVocabulary) {
         if (!this.Anchor) return
-        this.TargetBase(vocab, token)
+        this.TargetBase(vocab)
         const parentRect = this.Anchor.getBoundingClientRect()
         const x = hoverRect.left - parentRect.left
         const y = hoverRect.bottom - parentRect.top

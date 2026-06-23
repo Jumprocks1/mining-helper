@@ -12,8 +12,13 @@ export type JpdbVocabulary = [
     meanings: string[],
     parts_of_speech: string[],
     vid: number,
-    alt_spelling: string[]
-]
+    alt_spelling: string[],
+] & {
+    // doesn't actually come populated from the API
+    // set after parsing API response
+    // used for getting furigana
+    token: JpdbToken | undefined
+}
 
 export type JpdbToken = [
     start: number,
@@ -148,7 +153,16 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
 
 export default async function JpdbParseText(s: string[], cacheOnly?: true) {
     const fullJoin = s.join("\n")
-    return await JpdbCache.Get("jpdb_" + hash(fullJoin), cacheOnly ? undefined : () => JpdbParseTextNoCache(s, fullJoin))
+    const res = await JpdbCache.Get("jpdb_" + hash(fullJoin), cacheOnly ? undefined : () => JpdbParseTextNoCache(s, fullJoin))
+    if (res) {
+        // post-cached processing
+        for (let i = 0; i < res.tokens.length; i++) {
+            const token = res.tokens[i]
+            const vocab = res.vocabulary[token[3]]
+            if (vocab && !vocab.token) vocab.token = res.tokens[i]
+        }
+    }
+    return res
 }
 
 

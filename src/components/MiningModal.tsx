@@ -8,7 +8,7 @@ import { getOrCreatePendingCard } from "../utils/MiningUtil"
 import MpvWebSocket from "../utils/MpvWebSocket"
 import { formatTimestamp, parseSubtitles, SubtitleEntryWithCharacterOffset, Subtitles } from "../utils/srt"
 import UserError from "../utils/UserError"
-import { cleanSource, furiFromToken, furiToReading, furiToRuby, jpdbEntryUrl, lookupFuri } from "../utils/util"
+import { cleanSource, furiToReading, furiToRuby, jpdbEntryUrl, lookupFuri, vocabFuri } from "../utils/util"
 import AudioButton from "./AudioButton"
 import IconButton, { Icon } from "./basic/IconButton"
 import NumberField from "./basic/NumberField"
@@ -96,7 +96,7 @@ export default (props: Props) => {
                 if (card.audioBytes) card.audioLocalFile = `${card.kanji}_auto.mp3`
             }
             if (!card.furigana)
-                card.furigana = furiFromToken(vocab[0], token)
+                card.furigana = vocabFuri(vocab)
         } else {
             if (!card.audioLocalFile) {
                 card.audioBytes = await tryGetAudioBytes(card.kanji)
