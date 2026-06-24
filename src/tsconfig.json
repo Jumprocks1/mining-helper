@@ -14,8 +14,5 @@
         "types": [
             "chrome"
         ]
-    },
-    "include": [
-        "src"
-    ]
+    }
 }
