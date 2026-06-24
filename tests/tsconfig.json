@@ -12,7 +12,8 @@
         "jsxFragmentFactory": "createFragment",
         "noImplicitOverride": true,
         "types": [
-            "node"
+            "node",
+            "chrome"
         ]
     }
 }

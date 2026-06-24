@@ -20,7 +20,7 @@ export const SmallTooltip: TooltipConfig = {
 }
 
 class Tooltip extends JsPopover {
-    Delayed?: number // timeout reference
+    Delayed?: ReturnType<typeof setTimeout>
     constructor({ anchor, hydrate, config, delayOverride }:
         { anchor: HTMLElement, hydrate: LoadableChildren, config: TooltipConfig | undefined, delayOverride?: number }) {
         super({

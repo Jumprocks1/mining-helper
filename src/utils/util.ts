@@ -296,7 +296,7 @@ export function cleanSource(source: string | undefined) {
     return applyReplacementsTo(replacements, source)
 }
 
-const pendingDebounces = new Map<string | Symbol, number>()
+const pendingDebounces = new Map<string | Symbol, ReturnType<typeof setTimeout>>()
 export function debounce(key: string | Symbol, delay: number, callback: () => void) {
     const existing = pendingDebounces.get(key)
     if (existing !== undefined) {
