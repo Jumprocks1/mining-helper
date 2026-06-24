@@ -1,4 +1,4 @@
-import { getAnkiWords } from "../../pages/anki/CardList";
+import { getAnkiFurigana } from "../anki/CardList";
 import CheckboxField from "../../components/basic/CheckboxField";
 import IconButton from "../../components/basic/IconButton";
 import NumberField from "../../components/basic/NumberField";
@@ -6,7 +6,7 @@ import UpDownButtons from "../../components/basic/UpDownButtons";
 import Loader from "../../components/Loader";
 import { OpenModal } from "../../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../../jpdb/IgnoreList";
-import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
+import { JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { geti1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../../jpdb/JpdbState";
 import { tryPlayAudio } from "../../utils/Audio";
 import { setSelection } from "../../utils/CharacterHighlighter";
@@ -47,7 +47,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
 
     const load = async () => {
         const body = <></>
-        await getAnkiWords()
+        await getAnkiFurigana()
         await loadIgnoreList()
 
         const stateConfig: VocabStateConfig = {

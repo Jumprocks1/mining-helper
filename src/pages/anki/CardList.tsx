@@ -1,54 +1,59 @@
 import { Icon } from "../../components/basic/IconButton"
 import LoadingButton from "../../components/LoadingButton"
-import { TrimKana } from "../../jpdb/JpdbState"
+import { furiganaTrimmed, simplifiedFurigana } from "../../jpdb/JpdbState"
 import AnkiConnect from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../../views/SettingsModal"
 import AnkiSettingsModal from "./AnkiSettingsModal"
 
-// cache
-let localAnkiWords: string[] | undefined
-let localAnkiWordsSet: Set<string> | undefined
-let localAnkiWordsTrimKanaMap: Map<string, string> | undefined
+// we started using furigana for everything since kanji alone is not enough without context
+// kanji have multiple readings, and multiple readings can also target different kanji.
+// Keying on furigana solves both these issuses
 
-export function getAnkiWordsSetSync() {
-    if (!localAnkiWords) return
-    return localAnkiWordsSet ??= new Set(localAnkiWords)
+// cache
+let localAnkiFurigana: string[] | undefined
+let localAnkiFuriganaSet: Set<string> | undefined
+let localAnkiFuriganaTrimmedMap: Map<string, string> | undefined
+
+export function getAnkiFuriganaSetSync() {
+    if (!localAnkiFurigana) return
+    return localAnkiFuriganaSet ??= new Set(localAnkiFurigana)
 }
 
-export function getAnkiWordsTrimKanaMapSync() {
-    if (!localAnkiWords) return
-    if (!localAnkiWordsTrimKanaMap) {
-        localAnkiWordsTrimKanaMap ??= new Map()
-        for (const word of localAnkiWords) {
-            const trimmed = TrimKana(word)
+export function getAnkiFuriganaTrimmedMapSync() {
+    if (!localAnkiFurigana) return
+    if (!localAnkiFuriganaTrimmedMap) {
+        localAnkiFuriganaTrimmedMap ??= new Map()
+        for (const furigana of localAnkiFurigana) {
+            const trimmed = furiganaTrimmed(furigana)
             if (trimmed === "") continue
-            // this will overwrite some, that's fine
-            localAnkiWordsTrimKanaMap.set(trimmed, word)
+            // this might overwrite some, that's fine
+            localAnkiFuriganaTrimmedMap.set(trimmed, furigana)
         }
     }
-    return localAnkiWordsTrimKanaMap
+    return localAnkiFuriganaTrimmedMap
 }
 
-export function getAnkiWordsSync() { return localAnkiWords }
+export function getAnkiFuriganaSync() { return localAnkiFurigana }
 
-export async function getAnkiWords(disableCache = false): Promise<string[]> {
-    if (!disableCache && localAnkiWords) return localAnkiWords
-    return localAnkiWords = (await chrome.storage.local.get({ ankiWords: [] })).ankiWords
+export async function getAnkiFurigana(disableCache = false): Promise<string[]> {
+    if (!disableCache && localAnkiFurigana) return localAnkiFurigana
+    return localAnkiFurigana = (await chrome.storage.local.get({ ankiFurigana: [] })).ankiFurigana
 }
 
-export async function addAnkiWord(word: string) {
-    const words = await getAnkiWords(true) // can't use cache, too risky
-    if (!words.includes(word)) {
-        words.push(word)
-        await chrome.storage.local.set({ ankiWords: words })
+export async function addAnkiFurigana(furi: string) {
+    furi = simplifiedFurigana(furi)
+    const ankiFuri = await getAnkiFurigana(true) // can't use cache, too risky
+    if (!ankiFuri.includes(furi)) {
+        ankiFuri.push(furi)
+        await chrome.storage.local.set({ ankiFurigana: ankiFuri })
     }
-    if (localAnkiWordsSet) localAnkiWordsSet.add(word)
-    if (localAnkiWordsTrimKanaMap) {
-        const trimmed = TrimKana(word)
-        if (trimmed !== "") localAnkiWordsTrimKanaMap.set(trimmed, word)
+    if (localAnkiFuriganaSet) localAnkiFuriganaSet.add(furi)
+    if (localAnkiFuriganaTrimmedMap) {
+        const key = furiganaTrimmed(furi)
+        if (key !== "") localAnkiFuriganaTrimmedMap.set(key, furi)
     }
-    return words
+    return ankiFuri
 }
 
 
@@ -66,13 +71,15 @@ export default async () => {
             }
             const deckName = await getSetting("targetAnkiDeck")
             const notes = await AnkiConnect.call("notesInfo", { query: `deck:\"${deckName}\"` })
-            localAnkiWords = []
+            localAnkiFurigana = []
             for (const note of notes) {
-                const word = note.fields[fieldName("word")]?.value
-                if (word) localAnkiWords.push(word)
+                const furi = note.fields[fieldName("wordFurigana")]?.value
+                if (furi) localAnkiFurigana.push(simplifiedFurigana(furi))
             }
+            localAnkiFuriganaSet = undefined
+            localAnkiFuriganaTrimmedMap = undefined
             // don't need to await this
-            chrome.storage.local.set({ ankiWords: localAnkiWords })
+            chrome.storage.local.set({ ankiFurigana: localAnkiFurigana })
             await update(false)
         }
     })
@@ -84,13 +91,13 @@ export default async () => {
     const uniqueKanji = <div tooltip={`Only includes kanji in the word field`} />
 
     async function update(disableCache: boolean) {
-        const ankiWords = await getAnkiWords(disableCache)
-        loadedCount.textContent = `Currently loaded notes: ${ankiWords.length}`
+        const ankiFurigana = await getAnkiFurigana(disableCache)
+        loadedCount.textContent = `Currently loaded notes: ${ankiFurigana.length}`
 
         const characters = new Set();
         const sets: Partial<Record<UnicodeCharacterType, Set<string>>> = {}
-        for (const word of ankiWords) {
-            for (const c of word) {
+        for (const furigana of ankiFurigana) {
+            for (const c of furigana) {
                 characters.add(c)
                 const type = unicodeType(c)
                 const set = sets[type] ??= new Set()

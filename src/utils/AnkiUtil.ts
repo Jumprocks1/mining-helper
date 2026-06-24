@@ -1,4 +1,4 @@
-import { addAnkiWord } from "../pages/anki/CardList";
+import { addAnkiFurigana } from "../pages/anki/CardList";
 import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../views/SettingsModal";
 import AnkiConnect, { MediaAdd } from "./AnkiConnect"
 import { TriggerEvent } from "./Events";
@@ -7,6 +7,7 @@ import { CardData, furiToReading } from "./util"
 
 // remove means remove from local storage, which we hardly use anymore
 export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal") {
+    // TODO allow holding shift to force save (skip dupe check)
     const [fields, audio, picture] = await activeFields(card);
     const tags = ["ext-mined"]
     if (source) tags.push(source)
@@ -20,7 +21,7 @@ export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal
             picture
         }
     })
-    await addAnkiWord(card.kanji) // could probably skip awaiting this
+    await addAnkiFurigana(card.furigana) // could probably skip awaiting this
     await AnkiConnect.call("guiBrowse", { query: "added:1" })
     const cards = await AnkiConnect.call("findCards", { query: `nid:${noteId}` })
     const cardId = cards.length > 0 && cards[0]
@@ -88,6 +89,7 @@ async function activeFields(card: CardData) {
 }
 
 async function updateInAnki(card: CardData) {
+    // TODO this should use Furigana instead
     const notes = await AnkiConnect.call("findNotes", { query: `word:${card.kanji}` })
     if (notes.length === 0) throw new Error(`No notes matching ${card.kanji}`)
     if (notes.length > 1) throw new Error(`Multiple notes matching ${card.kanji}`)

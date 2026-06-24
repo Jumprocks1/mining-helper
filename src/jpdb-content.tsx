@@ -1,9 +1,10 @@
-import { getAnkiWords } from "./pages/anki/CardList"
+import { getAnkiFurigana } from "./pages/anki/CardList"
 import { disallowGlobalInput, handleKeyDown } from "./utils/GlobalHotkeys"
 import { furiToReading } from "./utils/util"
 import "./framework/createElement"
 import { mutatePendingCard } from "./utils/MiningUtil"
 import { getAudio, getAudioOptionsFromKanji, playAudio } from "./utils/Audio"
+import { simplifiedFurigana } from "./jpdb/JpdbState"
 
 const style = `
 .vocabulary:has(.tag:is(.blacklisted, .known, .overdue)) .primary-spelling > .spelling > div
@@ -64,13 +65,13 @@ async function getAudioOptions(vocab?: HTMLElement | null) {
 }
 
 async function afterLoad() {
-    const allAnkiWords = await getAnkiWords()
+    const allAnkiFurigana = await getAnkiFurigana()
     const vocabs = document.querySelectorAll(".vocabulary")
     for (const vocab of vocabs) {
         const wordRuby = vocab.querySelector<HTMLElement>(".spelling ruby.v")
         if (wordRuby) {
-            const [kanji,] = kanjiAndFurigana(wordRuby)
-            if (allAnkiWords.includes(kanji)) {
+            const [, furigana] = kanjiAndFurigana(wordRuby)
+            if (allAnkiFurigana.includes(simplifiedFurigana(furigana))) {
                 vocab.classList.add("has-anki-card")
                 const target = vocab.querySelector<HTMLElement>(".primary-spelling > .spelling > div")
                 if (target) target.title = "Already has Anki card with this exact word field"
@@ -81,8 +82,8 @@ async function afterLoad() {
     for (const vocab of entries) {
         const wordRuby = vocab.querySelector<HTMLElement>(".vocabulary-spelling>a")
         if (wordRuby) {
-            const [kanji,] = kanjiAndFurigana(wordRuby)
-            if (allAnkiWords.includes(kanji))
+            const [, furigana] = kanjiAndFurigana(wordRuby)
+            if (allAnkiFurigana.includes(simplifiedFurigana(furigana)))
                 vocab.classList.add("has-anki-card")
         }
     }

@@ -1,5 +1,4 @@
-import { Children } from "../framework/createElement";
-import { getAnkiWordsTrimKanaMapSync, getAnkiWordsSetSync, getAnkiWordsSync } from "../pages/anki/CardList";
+import { getAnkiFuriganaSetSync, getAnkiFuriganaTrimmedMapSync } from "../pages/anki/CardList";
 import { UnicodeCharacterType, unicodeType } from "../utils/AnkiUtil";
 import { Subtitles } from "../utils/srt";
 import { getIgnoredStateSync } from "./IgnoreList";
@@ -23,18 +22,59 @@ export enum VocabState {
     TemporarilyIgnored
 }
 
-export function TrimKana(s: string) {
-    let firstKanji = -1;
-    let lastKanji = -1;
-    for (let i = 0; i < s.length; i++) {
-        const state = unicodeType(s, i)
-        if (state === UnicodeCharacterType.Kanji) {
-            if (firstKanji === -1) firstKanji = i
-            lastKanji = i
+// this collects the entire kanji + reading and applies them as a whole
+// this is really bad for viewing/reading, but good for matching/diffing
+export function simplifiedFurigana(furi: string) {
+    if (!furi) return furi
+    let [base, reading] = furiBaseAndReading(furi)
+    return `${base}[${reading}]`
+}
+
+export function furiBaseAndReading(furi: string): [base: string, reading: string] {
+    let base = ""
+    let pendingBase = ""
+    let pendingReading = ""
+    let reading = ""
+    let insideReading = false
+    function pushPending() {
+        if (pendingBase) {
+            if (insideReading) {
+                base += pendingBase
+                reading += pendingReading
+            } else {
+                // if no reading listed, add to both
+                base += pendingBase
+                reading += pendingBase
+            }
         }
+        pendingBase = ""
+        pendingReading = ""
+        insideReading = false
     }
-    if (firstKanji === -1) return ""
-    return s.substring(firstKanji, lastKanji + 1)
+    for (let i = 0; i < furi.length; i++) {
+        const c = furi[i]
+        if (c === "[") insideReading = true
+        else if (c === "]" || c === " ") pushPending()
+        else if (insideReading) pendingReading += c
+        else pendingBase += c
+    }
+    pushPending()
+    return [base, reading]
+}
+
+// Ideally only returns the relvant part of a furigana
+// should trim kana from the word + reading
+export function furiganaTrimmed(furi: string) {
+    let [base, reading] = furiBaseAndReading(furi)
+    let i = 0;
+    while (i < base.length && i < reading.length && base[i] === reading[i]) i += 1
+    let j = 0;
+    while (j < base.length && j < reading.length && base[base.length - j - 1] === reading[reading.length - j - 1]) j += 1
+    if (i + j >= base.length) return ""
+    base = base.substring(i, base.length - j)
+    reading = reading.substring(i, reading.length - j)
+    // return base // returning just the base for this is similar to our old logic
+    return `${base}[${reading}]`
 }
 
 // somewhat expensive (profiler says otherwise though)
@@ -46,15 +86,25 @@ export function getVocabState(vocab: JpdbVocabulary, config: VocabStateConfig = 
 export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateConfig = {}): [VocabState, string | undefined] {
     const { skipIgnoreCheck, trimKana } = config
 
-    const knownWords = getAnkiWordsSync()
-    const knownWordsSet = getAnkiWordsSetSync()
+    const knownFuriganaSet = getAnkiFuriganaSetSync()
     const word = vocab[0]
-    if (vocab && knownWordsSet) {
-        if (knownWordsSet.has(word))
+    const furigana = vocab.furigana
+    if (!furigana) throw `Missing furigana for ${vocab[0]}`
+
+    if (vocab && knownFuriganaSet) {
+        if (knownFuriganaSet.has(simplifiedFurigana(furigana)))
             return [VocabState.Known, undefined]
-        for (const spelling of vocab[6])
-            if (knownWordsSet.has(spelling))
-                return [VocabState.AltSpelling, spelling]
+        const altSpelling = vocab[6]
+        if (altSpelling && altSpelling.length > 0) {
+            // The below code works pretty well as far as matching our old behavior
+            // I haven't yet found this behavior desirable though, so will probably leave it disabled
+            // for (const spelling of vocab[6]) {
+            //     for (const e of knownFuriganaSet) {
+            //         if (furiBaseAndReading(e)[0] === spelling)
+            //             return [VocabState.AltSpelling, spelling]
+            //     }
+            // }
+        }
     }
     if (!skipIgnoreCheck) {
         const ignoredState = getIgnoredStateSync(vocab[5])
@@ -68,40 +118,13 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
         if (unicode === UnicodeCharacterType.Kanji)
             kanji = true;
     }
-    // TODO these can still be valuable
-    // stop filtering once we set up good ignoring
+    // TODO kana vocab is fine as long as it's past a certain frequency
     if (!kanji) return [VocabState.Kana, undefined]
-    if (knownWords) {
-        const startsWithKanji = unicodeType(word[0]) === UnicodeCharacterType.Kanji
-        const endsWithKanji = unicodeType(word[word.length - 1]) === UnicodeCharacterType.Kanji
-        const start = word.substring(0, word.length - 1)
-        const end = word.substring(1, word.length)
-        for (const knownWord of knownWords) {
-            if (knownWord.length > 0) {
-                if (knownWord.length === word.length - 1) {
-                    if (!endsWithKanji && word.startsWith(knownWord))
-                        return [VocabState.Similar, knownWord]
-                    if (!startsWithKanji && word.endsWith(knownWord))
-                        return [VocabState.Similar, knownWord]
-                } else if (knownWord.length === word.length) {
-                    if (!endsWithKanji && knownWord.startsWith(start) &&
-                        unicodeType(knownWord[knownWord.length - 1]) !== UnicodeCharacterType.Kanji)
-                        return [VocabState.Similar, knownWord]
-                    if (!startsWithKanji && knownWord.endsWith(end) &&
-                        unicodeType(knownWord[0]) !== UnicodeCharacterType.Kanji)
-                        return [VocabState.Similar, knownWord]
-                }
-            }
-        }
-    }
     if (trimKana) {
-        const ankiTrimmedKana = getAnkiWordsTrimKanaMapSync()
-        if (ankiTrimmedKana) {
-            const trimmed = TrimKana(word)
-            const found = ankiTrimmedKana.get(trimmed)
-            if (found) {
-                return [VocabState.Similar, found]
-            }
+        const ankiFuriTrim = getAnkiFuriganaTrimmedMapSync()
+        if (ankiFuriTrim) {
+            const found = ankiFuriTrim.get(furiganaTrimmed(furigana))
+            if (found) return [VocabState.Similar, found]
         }
     }
     return [VocabState.New, undefined]

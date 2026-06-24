@@ -6,7 +6,7 @@ import AnkiConnect, { AnkiNote, NoteBase } from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { serverPostJson } from "../../utils/Audio"
 import { getSetting } from "../../views/SettingsModal"
-import { getAnkiWords } from "../anki/CardList"
+import { getAnkiFurigana } from "../anki/CardList"
 
 const deckName = "Mining Helper Kanji"
 
@@ -36,7 +36,7 @@ const main = async () => {
         knownKanji.add(kanji)
     }
 
-    const vocab = await getAnkiWords()
+    const vocab = await getAnkiFurigana()
     let knownKanjiUsages = 0
     let unknownKanjiUsages = 0
     let vocabKanji = new Set<string>()

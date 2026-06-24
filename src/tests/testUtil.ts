@@ -21,6 +21,7 @@ export function executeTests() {
             passed += 1
         } catch (e: any) {
             // TODO not sure why the stack continues past here
+            // TODO should also remove any lines coming from assert.*
             console.error(`Error during ${test.name}:\n${"stack" in e ? e.stack : e}`)
         }
     }
