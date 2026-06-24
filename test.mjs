@@ -1,13 +1,21 @@
 import * as esbuild from "esbuild";
 import { spawn } from "node:child_process";
 
-const watch = process.argv.includes('--watch')
+const watch = process.argv.includes("--watch")
+const debug = process.argv.includes("--debug")
 
-const run = () => spawn(
-    process.execPath, // node
-    ["--enable-source-maps", "./dist/js/test.js"],
-    { stdio: "inherit" }
-)
+const run = () => {
+    const args = ["--enable-source-maps"]
+    if (debug) {
+        console.log("Waiting for debugger...")
+        args.push("--inspect-wait")
+    }
+    args.push("./dist/js/test.js")
+    return spawn(
+        process.execPath, // node
+        args, { stdio: "inherit" }
+    )
+}
 
 /** @type {import('esbuild').BuildOptions} */
 const config = {
@@ -22,7 +30,6 @@ const config = {
     }
 }
 
-// TODO is debugging possible?
 if (watch) {
     /** @type {ChildProcess | undefined} */
     let child = undefined

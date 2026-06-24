@@ -1,9 +1,10 @@
 param(
-    [switch]$Watch
+    [switch]$Watch,
+    [switch]$Debug
 )
 
-if ($Watch) {
-    node test.mjs --watch
-} else {
-    node test.mjs
-}
+$args = @()
+if ($Watch) { $args += "--watch" }
+if ($Debug) { $args += "--debug" }
+
+node test.mjs @args
