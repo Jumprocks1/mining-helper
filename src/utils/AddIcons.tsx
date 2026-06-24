@@ -32,6 +32,7 @@ export const MaterialIcons = [
 export default () => {
     if (added) return
     added = true
+    if (!document.createElement) return // when testing
     const url = `https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0..1,0&icon_names=${MaterialIcons.join(",")}`;
 
     const style = document.createElement('style');
