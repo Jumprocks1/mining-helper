@@ -7,18 +7,19 @@ import AnkiConnect from "../../utils/AnkiConnect"
 import { serverPost } from "../../utils/Audio"
 import { getHttpServerAddress } from "../../utils/httpServerUtil"
 import MpvWebSocket from "../../utils/MpvWebSocket"
+import SettingsValidator, { CheckIcon } from "../../utils/SettingsValidator"
 import UserError, { userErrorMessage } from "../../utils/UserError"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
 import { getSetting } from "../../views/SettingsModal"
 import AnkiSettingsModal from "../anki/AnkiSettingsModal"
-import { CheckIcon, ValidateResponse } from "./validate"
+import { ValidateResponse } from "./validate"
 
 export default class SetupPage extends PageComponent {
     Id = "setup-page"
     override Title = "Mining Helper - Setup"
     override Node: Children
 
-    Output = <div className="output validation-result" />
+    Output = <div className="output" />
 
     constructor() {
         super()
@@ -37,15 +38,22 @@ export default class SetupPage extends PageComponent {
     }
 
     async CheckSettings() {
-        this.Output.replaceChildren()
+        const tester = new SettingsValidator()
 
-        try {
-            await this.CheckJpdb()
-            await this.CheckServer()
-            await this.CheckAnki()
-        } catch (e) {
-            replaceChildren(this.Output, userErrorMessage(e))
-        }
+        this.Output.replaceChildren(tester.Node)
+
+        await tester.Test(async tester => {
+            // TODO need to think carefully about the order here
+            // If these throw exceptions, it bubbles past here and other checks won't run
+            // If we throw exceptions in non-critical parts, then it's impossible to test later than those parts
+
+            // Think we just need to add a fail method which doesn't replace all the output
+            //    Maybe give it "hover for more info" to avoid super clog
+
+            // await this.CheckJpdb()
+            await this.CheckServer(tester)
+            // await this.CheckAnki()
+        })
     }
 
     Recheck(target: () => Promise<void>) {
@@ -79,9 +87,10 @@ export default class SetupPage extends PageComponent {
         this.Output.append(<div className="row">{CheckIcon()}Connected to Anki, found {decks.length} decks</div>)
     }
 
-    CheckServer = async () => {
+    CheckServer = async (tester: SettingsValidator) => {
         try {
             const pingResult = await fetch(await getHttpServerAddress(), { method: "GET" })
+            // TODO might need to check pingResult more? not sure
         } catch {
             // TODO should mention that the server might already be set up, just not running
             const res = <div>
@@ -103,37 +112,33 @@ export default class SetupPage extends PageComponent {
             const resp = await serverPost("validate")
             const json = await resp.json() as ValidateResponse
             if (json.error) throw json.userMessage
-            if (json.connected) this.Output.append(<div className="row">{CheckIcon()}Server connected</div>)
-            else this.Output.append(<div className="warning">Server not connected</div>)
+            if (json.connected) tester.Pass("Server connected")
+            else tester.Warn("Server not connected")
 
             if (!json.ffmpegFound) {
-                this.Output.append(<div className="warning">
-                    ffmpeg not found. Please place it in the system path or in the `lib` folder next to appsettings.json
-                </div>)
+                tester.Warn("ffmpeg not found. Please place it in the system path or in the `lib` folder next to appsettings.json")
             } else {
-                this.Output.append(<div className="row">
-                    {CheckIcon()}ffmpeg found
-                </div>)
+                tester.Pass("ffmpeg found")
             }
             if (!json.pipe) {
-                this.Output.append(<div className="warning">mpv IPC pipe not connected - please make sure you started the server through the mpv script</div>)
+                tester.Warn("mpv IPC pipe not connected - please make sure you started the server through the mpv script")
             } else {
-                this.Output.append(<div className="row">{CheckIcon()}mpv IPC pipe connected</div>)
+                tester.Pass("mpv IPC pipe connected")
             }
             if (!json.mpvFound) {
-                this.Output.append(<div className="warning">mpv folder not found - this is fine if everything else is working. Otherwise, please install mpv</div>)
+                tester.Warn("mpv folder not found - this is fine if everything else is working. Otherwise, please install mpv")
             } else {
                 if (json.mpvScriptFound) {
-                    this.Output.append(<div className="row">{CheckIcon()}mpv script found</div>)
+                    tester.Pass("mpv script found")
                 } else {
-                    this.Output.append(<div className="warning">mpv script not found - please place `mining_helper.lua` in your mpv scripts folder</div>)
+                    tester.Warn("mpv script not found - please place `mining_helper.lua` in your mpv scripts folder")
                 }
             }
 
             const websocket = new MpvWebSocket()
             await websocket.Connect()
             if (websocket.Open) {
-                this.Output.append(<div className="row">{CheckIcon()}WebSocket connected</div>)
+                tester.Pass("WebSocket connected")
             } else {
                 throw "WebSocket connection failed. Check server logs."
             }

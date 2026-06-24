@@ -1,6 +1,7 @@
 import { Icon } from "../../components/basic/IconButton"
 import { callJpdb } from "../../jpdb/JpdbParseText"
 import { serverPost } from "../../utils/Audio"
+import { CheckIcon } from "../../utils/SettingsValidator"
 import { userErrorMessage } from "../../utils/UserError"
 import { getSetting } from "../../views/SettingsModal"
 
@@ -14,10 +15,6 @@ export interface ValidateResponse {
     error?: string
     errorMessage?: string
     userMessage?: string
-}
-
-export function CheckIcon() {
-    return <Icon icon="check" className="check" />
 }
 
 interface PingResponse {
