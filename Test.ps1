@@ -7,4 +7,4 @@ $args = @()
 if ($Watch) { $args += "--watch" }
 if ($Debug) { $args += "--debug" }
 
-node test.mjs @args
+node esbuild-test.mjs @args

@@ -19,9 +19,10 @@ const run = () => {
 
 /** @type {import('esbuild').BuildOptions} */
 const config = {
-    entryPoints: ["./src/tests/test.ts"],
+    entryPoints: ["./tests/test.ts"],
     bundle: true,
     minify: false,
+    platform: "node",
     sourcemap: "inline",
     outdir: "./dist/js",
     define: {
