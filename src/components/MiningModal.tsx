@@ -90,13 +90,12 @@ export default (props: Props) => {
         if (jpdb && token) {
             vocab = jpdb.vocabulary[token[3]]
             card.kanji = vocab[0]
+            card.furigana = vocab.furigana
             card.meaning = vocab[3][0]
             if (!card.audioLocalFile) {
                 card.audioBytes = await tryGetAudioBytes(vocab)
                 if (card.audioBytes) card.audioLocalFile = `${card.kanji}_auto.mp3`
             }
-            if (!card.furigana)
-                card.furigana = vocab.furigana
         } else {
             if (!card.audioLocalFile) {
                 card.audioBytes = await tryGetAudioBytes(card.kanji)
@@ -158,7 +157,7 @@ export default (props: Props) => {
 
         body.push(<div className="field" id="word-field">
             <div className="label">Word</div>
-            <div className="field-value"><span>{card.furigana ? furiToRuby(card.furigana) : card.kanji}</span></div>
+            <div className="field-value"><span>{furiToRuby(card.furigana)}</span></div>
         </div>)
 
         const menuButton = <IconButton icon="menu" onClick={() => menuPopover.Toggle()} /> as HTMLButtonElement
