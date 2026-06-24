@@ -1,5 +1,5 @@
 import { hash, Subtitles } from "../utils/srt";
-import { delay } from "../utils/util";
+import { delay, furiFromToken } from "../utils/util";
 import StorageCache from "../utils/StorageCache";
 import { loadIgnoreList } from "./IgnoreList";
 import { getSetting } from "../views/SettingsModal";
@@ -16,8 +16,7 @@ export type JpdbVocabulary = [
 ] & {
     // doesn't actually come populated from the API
     // set after parsing API response
-    // used for getting furigana
-    token: JpdbToken | undefined
+    furigana: string
 }
 
 export type JpdbToken = [
@@ -159,7 +158,7 @@ export default async function JpdbParseText(s: string[], cacheOnly?: true) {
         for (let i = 0; i < res.tokens.length; i++) {
             const token = res.tokens[i]
             const vocab = res.vocabulary[token[3]]
-            if (vocab && !vocab.token) vocab.token = res.tokens[i]
+            if (vocab && !vocab.furigana) vocab.furigana = furiFromToken(vocab[0], token)
         }
     }
     return res

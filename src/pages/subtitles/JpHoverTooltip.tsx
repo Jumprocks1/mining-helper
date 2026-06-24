@@ -4,7 +4,7 @@ import { SmallTooltip } from "../../framework/Tooltips";
 import { JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState";
 import AnkiConnect from "../../utils/AnkiConnect";
-import { furiToRuby, vocabFuri } from "../../utils/util";
+import { furiToRuby } from "../../utils/util";
 
 export default class JpHoverTooltip extends JsPopover {
 
@@ -17,7 +17,7 @@ export default class JpHoverTooltip extends JsPopover {
     }
 
     Target(target: HTMLElement, vocab: JpdbVocabulary) {
-        if (!vocab.token) this.Close()
+        if (!vocab.furigana) this.Close()
         this.Anchor = target
         this.TargetBase(vocab)
         this.Node.style.left = `anchor(left)`
@@ -40,7 +40,7 @@ export default class JpHoverTooltip extends JsPopover {
             }
         }
 
-        const ruby = furiToRuby(vocabFuri(vocab))
+        const ruby = furiToRuby(vocab.furigana)
 
         this.SetContent(<>
             <div className="header">

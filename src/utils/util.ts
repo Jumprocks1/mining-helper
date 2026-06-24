@@ -7,13 +7,9 @@ export function jpdbEntryUrl(word: string) {
     return `https://jpdb.io/search?q=${encodeURIComponent(word)}&lang=english`
 }
 
-export function vocabFuri(vocab: JpdbVocabulary) {
-    if (!vocab.token) throw `Vocab ${vocab[0]} missing token`
-    return furiFromToken(vocab[0], vocab.token)
-}
 // token will not necessarily match word, mainly with verb conjugations
 // This might have some issues, but I can't think of any, so will leave it until we find some
-function furiFromToken(word: string, token: JpdbToken) {
+export function furiFromToken(word: string, token: JpdbToken) {
     // Some of the sketchiness is to fix words with 2 of the same kanji (生き生き)
     if (Array.isArray(token[2])) {
         let o = ""
@@ -170,12 +166,13 @@ export function tokensToFuri(jp: string, tokens: JpdbToken[], highlight?: string
 
 export interface CardData {
     kanji: string
+    furigana: string
+
     modified: number
 
     audioLocalFile?: string
     sentenceAudioLocalFile?: string
     meaning?: string
-    furigana?: string
     jpSentenceKanji?: string
     jpSentenceFuri?: string
     enSentence?: string
