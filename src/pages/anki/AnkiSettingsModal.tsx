@@ -7,8 +7,6 @@ import { userErrorMessage, userErrorMessage2 } from "../../utils/UserError";
 import { AnkiFieldKey, AnkiFieldInfo, getSetting, setSetting, stringSettingsField } from "../../views/SettingsModal";
 
 async function validateAnkiSettings(validator: SettingsValidator) {
-    // TODO don't like how this populates
-    // probably just need a loading circle at the bottom
     try {
         const permissions = await AnkiConnect.call("requestPermission", undefined)
         if (permissions.permission === "denied") {
@@ -27,10 +25,23 @@ async function validateAnkiSettings(validator: SettingsValidator) {
     if (decks.length === 0) throw "No Anki decks found"
     validator.Pass(`Found ${decks.length} decks`)
 
+    const deckName = await getSetting("targetAnkiDeck")
+    if (!decks.includes(deckName)) throw `Deck '${deckName}' not found`
+    let notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}"` })
+    if (notes.length === 0)
+        validator.Warn(`No notes found in '${deckName}'`)
+    else
+        validator.Pass(`Found ${notes.length} notes in '${deckName}'`)
+
     const models = await AnkiConnect.call("modelNames", undefined)
     const modelName = await getSetting("targetAnkiModel")
-    if (!models.includes(modelName)) throw `${modelName} not found`
-    validator.Pass(`Model '${modelName}' valid`)
+    if (!models.includes(modelName)) throw `Model '${modelName}' not found`
+
+    notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}" "note:${modelName}"` })
+    if (notes.length === 0)
+        validator.Warn(`No notes with type '${modelName}'`)
+    else
+        validator.Pass(`Found ${notes.length} notes with type '${modelName}'`)
 
     const modelFields = await AnkiConnect.call("modelFieldNames", { modelName })
     const ankiFields = await getSetting("ankiFields")
@@ -119,8 +130,9 @@ const body = async (inner: HTMLElement) => {
     res.append(fieldMappings)
     const validateButton = <LoadingButton tooltip="This will attempt to connect to Anki and double check all settings." onClick={async () => {
         const validator = new SettingsValidator()
+        validator.ShowLoading = true
         validateButton.tooltip = validator.Node
-        validator.Test(validateAnkiSettings)
+        await validator.Test(validateAnkiSettings)
     }}>
         Validate Settings
     </LoadingButton>

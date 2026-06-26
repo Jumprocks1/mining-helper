@@ -13,32 +13,38 @@ export default class SettingsValidator {
     ReplaceOutputOnError = false
     HasWarnings = false
     HasErrors = false
+    ShowLoading = false
+    Container: HTMLElement
 
     constructor() {
-        this.Node = <div className="validation-result" />
+        this.Node = <div className="validation-result">
+            {this.Container = <div />}
+        </div>
     }
 
     ReplaceEntireOutput(e: Children) {
-        replaceChildren(this.Node, e)
+        replaceChildren(this.Container, e)
     }
 
     Pass(e: Children) {
-        appendChild(this.Node, <div className="row">{CheckIcon()}{e}</div>)
+        appendChild(this.Container, <div className="row">{CheckIcon()}{e}</div>)
     }
     // not for a specific step, usually at the end if everything is good
     SuccessMessage(e: Children) {
-        appendChild(this.Node, <div className="success">{e}</div>)
+        appendChild(this.Container, <div className="success">{e}</div>)
     }
     Warn(e: Children) {
         this.HasWarnings = true
-        appendChild(this.Node, <div className="warning">{e}</div>)
+        appendChild(this.Container, <div className="warning">{e}</div>)
     }
 
     AppendOutput(e: Children) {
-        appendChild(this.Node, e)
+        appendChild(this.Container, e)
     }
 
     async Test(testMethod: (tester: SettingsValidator) => void | Promise<void> | Children | Promise<Children>) {
+        let loader: HTMLElement | undefined
+        if (this.ShowLoading) this.Node.append(loader = <div className="loader" />)
         try {
             const res = await testMethod(this)
             if (res) this.ReplaceEntireOutput(res)
@@ -52,7 +58,8 @@ export default class SettingsValidator {
             if (this.ReplaceOutputOnError)
                 this.ReplaceEntireOutput(node)
             else
-                appendChild(this.Node, node)
+                this.AppendOutput(node)
         }
+        loader?.remove()
     }
 }
