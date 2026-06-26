@@ -1,5 +1,5 @@
 import NumberField from "../components/basic/NumberField"
-import Loader from "../components/Loader"
+import Loader, { LoadableChildren } from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
 import AnkiSettingsModal from "../pages/anki/AnkiSettingsModal"
@@ -59,6 +59,7 @@ interface LocalSettings {
 
     targetAnkiDeck: string,
     targetAnkiModel: string,
+    targetAnkiNoteFilter: string,
     ankiConnectAddress: string
     ankiConnectApiKey: string
     ankiFields: { [key in AnkiFieldKey]?: string }
@@ -80,6 +81,7 @@ export const defaultLocalSettings: LocalSettings = {
 
     targetAnkiDeck: "",
     targetAnkiModel: "",
+    targetAnkiNoteFilter: "",
     ankiConnectAddress: "http://127.0.0.1:8765",
     ankiConnectApiKey: "",
     ankiFields: {},
@@ -183,7 +185,7 @@ function inputToVolume(input: number) {
 function volumeToInput(volume: number) {
     return Math.round(Math.pow(volume, 1 / 2) * 100)
 }
-export async function stringSettingsField(key: KeysOfType<LocalSettings, string>, label: string, type?: string, tooltip?: string) {
+export async function stringSettingsField(key: KeysOfType<LocalSettings, string>, label: string, type?: string, tooltip?: LoadableChildren) {
     return <div className="field" tooltip={tooltip}>
         <label>{label}</label>
         <input type={type} defaultValue={await getSetting(key)}

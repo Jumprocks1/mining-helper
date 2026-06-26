@@ -1,3 +1,4 @@
+import ExternalLink from "../../components/ExternalLink";
 import LoadingButton from "../../components/LoadingButton";
 import { OpenModal } from "../../components/Modal";
 import Select from "../../components/Select";
@@ -26,22 +27,31 @@ async function validateAnkiSettings(validator: SettingsValidator) {
     validator.Pass(`Found ${decks.length} decks`)
 
     const deckName = await getSetting("targetAnkiDeck")
-    if (!decks.includes(deckName)) throw `Deck '${deckName}' not found`
+    if (!decks.includes(deckName)) throw (<div>Deck <code>{deckName}</code> not found</div>)
     let notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}"` })
     if (notes.length === 0)
-        validator.Warn(`No notes found in '${deckName}'`)
+        validator.Warn(<div>No notes found in <code>{deckName}</code></div>)
     else
-        validator.Pass(`Found ${notes.length} notes in '${deckName}'`)
+        validator.Pass(<div>Found {notes.length} notes in <code>{deckName}</code></div>)
+
+    if (await getSetting("targetAnkiNoteFilter")) {
+        const filter = await getTargetNoteFilter()
+        notes = await AnkiConnect.call("findNotes", { query: filter })
+        if (notes.length === 0)
+            validator.Warn(<div>No notes found in <code>{filter}</code></div>)
+        else
+            validator.Pass(<div>Found {notes.length} in filter <code>{filter}</code></div>)
+    }
 
     const models = await AnkiConnect.call("modelNames", undefined)
     const modelName = await getSetting("targetAnkiModel")
-    if (!models.includes(modelName)) throw `Model '${modelName}' not found`
+    if (!models.includes(modelName)) throw (<div>Model <code>{modelName}</code> not found</div>)
 
     notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}" "note:${modelName}"` })
     if (notes.length === 0)
-        validator.Warn(`No notes with type '${modelName}'`)
+        validator.Warn(<div>No notes with type <code>{modelName}</code></div>)
     else
-        validator.Pass(`Found ${notes.length} notes with type '${modelName}'`)
+        validator.Pass(<div>Found {notes.length} notes with type <code>{modelName}</code></div>)
 
     const modelFields = await AnkiConnect.call("modelFieldNames", { modelName })
     const ankiFields = await getSetting("ankiFields")
@@ -65,6 +75,12 @@ async function validateAnkiSettings(validator: SettingsValidator) {
         validator.Pass("All fields valid")
 
     if (!validator.HasWarnings) validator.SuccessMessage("No issues found")
+}
+
+export async function getTargetNoteFilter() {
+    const s = await getSetting("targetAnkiNoteFilter")
+    if (s) return s
+    return `"deck:${await getSetting("targetAnkiDeck")}"`
 }
 
 const body = async (inner: HTMLElement) => {
@@ -115,6 +131,14 @@ const body = async (inner: HTMLElement) => {
                     }
                 })}
             </div>
+        </div>
+        <div className="field-group">
+            {await stringSettingsField("targetAnkiNoteFilter", "Existing Note Filter", undefined,
+                async () => <span>
+                    Can be any <ExternalLink href="https://docs.ankiweb.net/searching.html">Anki search string.</ExternalLink><br />
+                    Mainly used for marking already known words.<br />
+                    Will use <code>"deck:{await getSetting("targetAnkiDeck")}"</code> if unset.
+                </span>)}
         </div>
         <h3>Field Mappings</h3>
     </>

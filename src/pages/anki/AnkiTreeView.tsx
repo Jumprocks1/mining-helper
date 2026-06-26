@@ -2,6 +2,7 @@ import Loader from "../../components/Loader"
 import LoadingButton from "../../components/LoadingButton"
 import AnkiConnect, { AnkiNote } from "../../utils/AnkiConnect"
 import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../../views/SettingsModal"
+import { getTargetNoteFilter } from "./AnkiSettingsModal"
 
 interface GroupingInfo<T> {
     key: (e: T) => string | number
@@ -27,8 +28,7 @@ export default () => {
         return promise
     }
     const innerLoad = async () => {
-        const deckName = await getSetting("targetAnkiDeck")
-        const notes = await AnkiConnect.call("notesInfo", { query: `deck:\"${deckName}\"` })
+        const notes = await AnkiConnect.call("notesInfo", { query: await getTargetNoteFilter() })
         const configuredFields = await getSetting("ankiFields")
         function fieldName(key: AnkiFieldKey) {
             return configuredFields[key] ?? AnkiFieldInfo[key].name

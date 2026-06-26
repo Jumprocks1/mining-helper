@@ -4,7 +4,7 @@ import { furiganaTrimmed, simplifiedFurigana } from "../../jpdb/JpdbState"
 import AnkiConnect from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../../views/SettingsModal"
-import AnkiSettingsModal from "./AnkiSettingsModal"
+import AnkiSettingsModal, { getTargetNoteFilter } from "./AnkiSettingsModal"
 
 // we started using furigana for everything since kanji alone is not enough without context
 // kanji have multiple readings, and multiple readings can also target different kanji.
@@ -69,8 +69,7 @@ export default async () => {
             function fieldName(key: AnkiFieldKey) {
                 return configuredFields[key] ?? AnkiFieldInfo[key].name
             }
-            const deckName = await getSetting("targetAnkiDeck")
-            const notes = await AnkiConnect.call("notesInfo", { query: `deck:\"${deckName}\"` })
+            const notes = await AnkiConnect.call("notesInfo", { query: await getTargetNoteFilter() })
             localAnkiFurigana = []
             for (const note of notes) {
                 const furi = note.fields[fieldName("wordFurigana")]?.value

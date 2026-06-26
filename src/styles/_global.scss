@@ -189,3 +189,7 @@ body {
         color: variables.$linkColor;
     }
 }
+
+code {
+    color: color.mix(#FFFFFF, variables.$brightBlue, 70%);
+}
