@@ -106,7 +106,7 @@ export default (props: Props) => {
 
         const kanji = card.kanji // this can be different if word is a verb
 
-        async function save() {
+        async function save(force: boolean) {
             card.jpSentenceKanji = sentenceCE.innerText.replaceAll("\n", " ");
 
             const meaning = meaningCE.innerText
@@ -129,8 +129,14 @@ export default (props: Props) => {
                 if (typeof image !== "string")
                     card.image = image
             }
-
-            await saveToAnkiAndRemove(card, "mining-modal")
+            try {
+                await saveToAnkiAndRemove(card, "mining-modal", force)
+            } catch (e) {
+                if (e instanceof UserError && e.message === "cannot create note because it is a duplicate") {
+                    throw `A duplicate note already exists.\nHold shift and save to force create.`
+                }
+                throw e
+            }
             modal.Close()
         }
 
@@ -359,7 +365,7 @@ export default (props: Props) => {
         }
 
         inner.append(<div className="footer">
-            <LoadingButton onClick={save} loading={mpvPromise}
+            <LoadingButton onClick={e => save(e.shiftKey)} loading={mpvPromise}
                 tooltip={"Creates a new Anki card"}>Save</LoadingButton>
         </div>)
         return body

@@ -6,23 +6,24 @@ import UserError from "./UserError";
 import { CardData, furiToReading } from "./util"
 
 // remove means remove from local storage, which we hardly use anymore
-export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal") {
-    // TODO allow holding shift to force save (skip dupe check)
+export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal", force?: boolean) {
     const [fields, audio, picture] = await activeFields(card);
     const tags = ["ext-mined"]
     if (source) tags.push(source)
+    const deck = await getSetting("targetAnkiDeck")
     const noteId = await AnkiConnect.call("addNote", {
         note: {
-            deckName: await getSetting("targetAnkiDeck"),
+            deckName: deck,
             modelName: await getSetting("targetAnkiModel"),
             fields,
             audio,
             tags,
-            picture
+            picture,
+            options: { allowDuplicate: force ?? false }
         }
     })
     await addAnkiFurigana(card.furigana) // could probably skip awaiting this
-    await AnkiConnect.call("guiBrowse", { query: "added:1" })
+    await AnkiConnect.call("guiBrowse", { query: `"deck:${deck}" added:1` })
     const cards = await AnkiConnect.call("findCards", { query: `nid:${noteId}` })
     const cardId = cards.length > 0 && cards[0]
     if (cardId)
