@@ -30,7 +30,7 @@ export default class JpHoverTooltip extends JsPopover {
         const vocabStateString = VocabState[vocabState].toLowerCase()
         let vocabStateNode: Children = vocabStateString
         if (vocabState === VocabState.AltSpelling || vocabState === VocabState.Known || vocabState === VocabState.Similar) {
-            const target = vocabState === VocabState.Known ? vocab[0] : vocabNote
+            const target = vocabState === VocabState.Known ? vocabNote ?? vocab[0] : vocabNote
             if (target) {
                 vocabStateNode = <button className="link-button uncolored"
                     tooltip="Open in Anki" tooltipConfig={SmallTooltip}

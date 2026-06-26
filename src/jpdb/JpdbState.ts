@@ -21,16 +21,17 @@ export enum VocabState {
     Ignored,
     TemporarilyIgnored
 }
+type FuriganaRemove = (pendingBase: string, pendingRead: string) => boolean
 
 // this collects the entire kanji + reading and applies them as a whole
 // this is really bad for viewing/reading, but good for matching/diffing
-export function simplifiedFurigana(furi: string) {
+export function simplifiedFurigana(furi: string, remove?: FuriganaRemove) {
     if (!furi) return furi
-    let [base, reading] = furiBaseAndReading(furi)
+    let [base, reading] = furiBaseAndReading(furi, remove)
     return `${base}[${reading}]`
 }
 
-export function furiBaseAndReading(furi: string): [base: string, reading: string] {
+export function furiBaseAndReading(furi: string, remove?: FuriganaRemove): [base: string, reading: string] {
     let base = ""
     let pendingBase = ""
     let pendingReading = ""
@@ -39,8 +40,10 @@ export function furiBaseAndReading(furi: string): [base: string, reading: string
     function pushPending() {
         if (pendingBase) {
             if (insideReading) {
-                base += pendingBase
-                reading += pendingReading
+                if (!remove?.(pendingBase, pendingReading)) {
+                    base += pendingBase
+                    reading += pendingReading
+                }
             } else {
                 // if no reading listed, add to both
                 base += pendingBase
@@ -92,8 +95,13 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
     if (!furigana) throw `Missing furigana for ${vocab[0]}`
 
     if (vocab && knownFuriganaSet) {
-        if (knownFuriganaSet.has(simplifiedFurigana(furigana)))
-            return [VocabState.Known, undefined]
+        const [base, reading] = furiBaseAndReading(furigana)
+        if (knownFuriganaSet.has(`${base}[${reading}]`))
+            return [VocabState.Known, base]
+        // Note this is not applied to the Anki cards in the known set
+        const [numberTrimBase, numberTrimReading] = furiBaseAndReading(furigana, b => b.length === 1 && unicodeType(b) === UnicodeCharacterType.Number)
+        if (numberTrimBase !== base && knownFuriganaSet.has(`${numberTrimBase}[${numberTrimReading}]`))
+            return [VocabState.Known, numberTrimBase]
         const altSpelling = vocab[6]
         if (altSpelling && altSpelling.length > 0) {
             // The below code works pretty well as far as matching our old behavior
@@ -124,7 +132,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
         const ankiFuriTrim = getAnkiFuriganaTrimmedMapSync()
         if (ankiFuriTrim) {
             const found = ankiFuriTrim.get(furiganaTrimmed(furigana))
-            if (found) return [VocabState.Similar, found]
+            if (found) return [VocabState.Similar, furiBaseAndReading(found)[0]]
         }
     }
     return [VocabState.New, undefined]
