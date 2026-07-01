@@ -158,10 +158,34 @@ export default async function JpdbParseText(s: string[], cacheOnly?: true) {
         for (let i = 0; i < res.tokens.length; i++) {
             const token = res.tokens[i]
             const vocab = res.vocabulary[token[3]]
-            if (vocab && !vocab.furigana) vocab.furigana = furiFromToken(vocab[0], token)
+            if (vocab && !vocab.furigana) {
+                vocab.furigana = furiFromToken(vocab[0], token)
+                if (!vocab.furigana.includes("[")) {
+                    // happens if the token doesn't 100% match the vocab kanji parts
+                    // どー考えても vs どう考えても
+                    // may also happen for kana-only, but the method below should just return vocab[0] in that case
+                    vocab.furigana = furiganaFromFullReading(vocab[0], vocab[1])
+                }
+            }
         }
     }
     return res
+}
+
+// trims excess reading information and then combines
+// similar to `furiganaTrimmed`
+// doesn't handle splitting kanji readings or kana between kanji
+export function furiganaFromFullReading(base: string, reading: string) {
+    let i = 0;
+    while (i < base.length && i < reading.length && base[i] === reading[i]) i += 1
+    let j = 0;
+    while (j < base.length && j < reading.length && base[base.length - j - 1] === reading[reading.length - j - 1]) j += 1
+    if (i + j >= base.length) return base
+    reading = reading.substring(i, reading.length - j)
+    let o = `${base.substring(i, base.length - j)}[${reading}]`
+    if (i > 0) o = `${base.substring(0, i)} ${o}`;
+    if (j > 0) o += ` ${base.substring(base.length - j)}`
+    return o
 }
 
 
