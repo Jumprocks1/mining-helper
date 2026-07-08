@@ -69,7 +69,13 @@ export async function serverPost(body: string) {
 }
 export async function serverPostJson<T>(body: string) {
     const res = await serverPost(body)
-    if (!res.ok) throw await res.text()
+    if (!res.ok) {
+        let text = await res.text()
+        // Not the prettiest but think this is realistically fine
+        const trim = "response-error::"
+        if (text.startsWith(trim)) text = text.substring(trim.length)
+        throw text
+    }
     return res.json() as T
 }
 

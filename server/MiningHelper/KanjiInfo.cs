@@ -79,8 +79,7 @@ public static class KanjiInfo
     {
         var o = new Dictionary<string, SimplifiedKanjiInfo>();
         {
-            var path = Path.GetFullPath("sources/kanjidic2.xml.gz", AppSettings.SettingsFolder);
-            using var gz = File.OpenRead(path);
+            using var gz = AppSettings.OpenRead("sources/kanjidic2.xml.gz");
             using var decompress = new GZipStream(gz, CompressionMode.Decompress);
             using var reader = XmlReader.Create(decompress, new XmlReaderSettings
             {
@@ -96,8 +95,7 @@ public static class KanjiInfo
             }
         }
         {
-            var path = Path.GetFullPath("sources/kradfile.gz", AppSettings.SettingsFolder);
-            using var gz = File.OpenRead(path);
+            using var gz = AppSettings.OpenRead("sources/kradfile.gz");
             using var decompress = new GZipStream(gz, CompressionMode.Decompress);
             Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
             using var streamReader = new StreamReader(decompress, Encoding.GetEncoding("EUC-JP"));

@@ -88,4 +88,11 @@ public static class AppSettings
         "https://jumprocks1.github.io" => true,
         _ => AllowOrigin != null && origin == AllowOrigin
     };
+
+    public static FileStream OpenRead(string path)
+    {
+        path = Path.GetFullPath(path, SettingsFolder);
+        if (!File.Exists(path)) throw new UserException($"{path} not found");
+        return File.OpenRead(path);
+    }
 }
