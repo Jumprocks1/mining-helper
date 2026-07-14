@@ -49,7 +49,7 @@ public static class Program
 
             if (Setup)
             {
-                MiningHelper.Setup.Run();
+                await MiningHelper.Setup.Run();
                 return;
             }
             if (Server)
@@ -73,17 +73,19 @@ public static class Program
         }
     }
 
-    public static void Print(string message, ConsoleColor? color = null, bool log = false)
+    public static void Print(string message, ConsoleColor? color = null, bool log = false, bool newLine = true)
     {
         if (log) Log(message);
         if (color == null)
         {
-            Console.WriteLine(message);
+            if (newLine) Console.WriteLine(message);
+            else Console.Write(message);
             return;
         }
         var prevColor = Console.ForegroundColor;
         Console.ForegroundColor = color.Value;
-        Console.WriteLine(message);
+        if (newLine) Console.WriteLine(message);
+        else Console.Write(message);
         Console.ForegroundColor = prevColor;
     }
 }
