@@ -3,10 +3,11 @@ import { userErrorMessage } from "../utils/UserError";
 import { Component } from "../framework/Component"
 
 export interface LoadingButtonProps extends BaseComponentProps {
-    onClick?: (ev: PointerEvent) => unknown, // can return promise
+    onClick?: (ev: MouseEvent) => unknown, // can return promise
     // Will show as loading initially until loading promise finishes
     loading?: Promise<any>
     disabled?: boolean
+    onDown?: boolean
 }
 
 // Also catches errors nicely
@@ -58,7 +59,8 @@ export default class LoadingButton extends Component {
         this.Node = <button />
         if (props.disabled) this.Disabled = true
         applyBaseComponentProps(this.Node, props)
-        this.Node.addEventListener("click", ev => {
+        const eventName = props.onDown ? "mousedown" : "click"
+        this.Node.addEventListener(eventName, ev => {
             if (this.Loading || this.Disabled) return
             if (this.Node.tooltipError) {
                 this.Node.classList.remove("errored")

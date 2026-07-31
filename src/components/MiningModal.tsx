@@ -300,7 +300,7 @@ export default (props: Props) => {
                 card.sentenceAudioLocalFile = `${card.kanji}_ex_mpv.ogg`
                 card.sentenceIndex = "mpv"
                 loadedOffsets = [so, eo]
-                const click = async (ev: PointerEvent) => {
+                const click = async (ev: MouseEvent) => {
                     if (!loadedOffsets) return
                     if (startOffset !== loadedOffsets[0] || endOffset !== loadedOffsets[1]) {
                         const reloaded = await loadMpvAudio()
@@ -311,7 +311,7 @@ export default (props: Props) => {
                     }
                 }
                 return {
-                    button: <IconButton className="play-icon" icon="play_arrow" onClick={click} />,
+                    button: <IconButton className="play-icon" icon="play_arrow" onClick={click} onDown />,
                     click
                 }
             })
