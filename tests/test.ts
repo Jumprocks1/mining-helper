@@ -2,6 +2,7 @@ import "./testContext"
 import { furiganaTrimmed, simplifiedFurigana } from "../src/jpdb/JpdbState"
 import { assert, executeTests, test } from "./testUtil"
 import { furiganaFromFullReading } from "../src/jpdb/JpdbParseText"
+import { UnicodeCharacterType, unicodeType } from "../src/utils/AnkiUtil"
 
 test("simplified furigana", () => {
     assert.equal(simplifiedFurigana(""), "")
@@ -14,6 +15,9 @@ test("simplified furigana", () => {
 
     assert.equal(furiganaTrimmed("a    c"), "")
     assert.equal(furiganaTrimmed("a[b]    c"), "a[b]")
+    assert.equal(unicodeType("一"), UnicodeCharacterType.Kanji)
+    assert.equal(unicodeType("1"), UnicodeCharacterType.Other)
+    assert.equal(unicodeType("１"), UnicodeCharacterType.Number)
 
     assert.equal(furiganaFromFullReading("どう考えても", "どうかんがえても"), "どう 考[かんが] えても")
     assert.equal(furiganaFromFullReading("どうかんがえても", "どうかんがえても"), "どうかんがえても")

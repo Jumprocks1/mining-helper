@@ -1,35 +1,68 @@
 # Bugs
 - Shift on rec modal word tooltips wasn't working
     - Haven't reproduced yet, should attatch debugger next time
+- Tooltip can flash like crazy if you hover a button border
+    - Seems to be some sort of subpixel overlap, despite the anchor being set so there's no overlap
 
 # High prio
-- Add validate button to subs settings modal
-    - This is started, but does not check everything yet
-    - Check for mpv, local audio
-    - Check websocket
-    - Check jpdb connection (reuse code from setup page)
-- Setup page
+- Prioritize enm subs?
+- Some way of showing rarer kana vocab
+- Rec modal tooltip requires a mouse movement
+- Override jpdb id button when mining
+    - 傷痕 in koori 8
+    - Override word, audio, highlighting
+    - 素性 Re:Zero ep 73, pulled the correct meaning + audio, but the furigana reading was wrong
+        - Kind of seems like a JPDB bug, probably can't do anything
+        - I also had to swap out the reading inside the sentence, should be doable
+        - I think the reading for the vocab was wrong because we pull it from the sentence, and the JPDB sentence parsing was incorrect
+- Hide .ass marker things? should try running .ass => .srt and see what ffmpeg does
+    - These show up as a bunch of numbers currently. Need to find example
+- `SETUP.md`
+- Setup page - maybe we just get things released with a `SETUP.md`
+    - Add more info for server check instructions
+    - Add non-origin requiring server check
+        - Make it like `/ping`, allow all origins
     - Full instructions
     - Validate buttons
     - ffmpeg, mpv, local audio database, API keys, mpv script, websocket, http
     - lib folder for ffmpeg
-- Setup flag
-    - Move mpv script and set the exe location
-    - Make sure we check each step to see if it's already set
+    - Setup flag
+        - Move mpv script and set the exe location
+        - Make sure we check each step to see if it's already set
+    - Should make a nice system that takes delegate and checks stuff
+        - Delegate should be able to easily return async progress as well as a final output error
+        - Should use same delegates/functions for all validate/setup checks
+- SetupMpv function not complete
+- README has a TODO in it
+- Make sure release has
+    - setup.bat
+    - README.txt
 
-# Before publishing/sharing
+# GitHub build/release
+- Make sure `setup.bat` works
+- Make sure server comes with (empty) lib folder next to appsettings
+- README.txt
+    - Add a link to this file from the web client, maybe call it `SETUP.md` but then rename it to README.txt in the zip
+- Add versioning to the server exe
+
+# Before sharing
+- Search for all TODOs
 - SPA
     - Move Chrome API to separate file with a shim
     - I wonder if audio bytes/arraybuffer will be saveable in localstorage
 - Add error messages when API key isn't set up
     - Way to configure API key, make it as easy as possible
-- Move mpv script into repo
 - Make sure it works (with good errors) without different parts
     - server API key
     - missing audio files
-- Make sure server comes with (empty) lib folder next to appsettings
+- Demo videos
 
 # Eventually
+- Some way of selecting different English subs, was an issue for Guilty Crown
+- Hotkeys for recommended modal - highlight current row, up/down to go to next vocab
+    - Nice because we might be staring at mpv instead of looking where mouse is
+- Linux/Mac instructions
+- PWA
 - Some way to force a different JPDB token
     - 意地でも vs 意地
     - 日本語字幕 - Japanese Subtitles - AssClass S01E10 - 18m
@@ -47,10 +80,9 @@
 - Option to ignore kanji when looking up readings
     - Had issues with 兄[きょう]妹[だい]. There is good audio for 兄弟, but not 兄妹
     - Probably add advanced search modal, let you enter whatever you want for audio
-- Temporary ignore in recommended list, mainly for names
-    - Without this, N+1 isn't as good since it won't include sentences with names
 
 # Not really necessary
+- Chapter filtering doesn't account for offset
 - Built in video player so mpv isn't technically needed? Probably not since anyone with the media files would have mpv
 - Hook into other video sites like asbplayer does
 - Option to filter out words with no good audio readings
