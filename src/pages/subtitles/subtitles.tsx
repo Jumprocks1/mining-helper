@@ -304,7 +304,7 @@ export default class SubtitlesPage extends PageComponent {
                             },
                         })
                         for (const track of tracks) {
-                            let title = `${track.title} (${track.lang ? track.lang + " " : ""}${track.codec})`
+                            let title = `${track.title ? track.title + " " : ""} (${track.lang ? track.lang + " " : ""}${track.codec})`
                             if (track.selected) title += " [selected]"
                             if (track.default) title += " [default]"
                             if (track.forced) title += " [forced]"
