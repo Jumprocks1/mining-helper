@@ -33,6 +33,10 @@ export function furiFromToken(word: string, token: JpdbToken) {
             }
         }
         o += word.substring(i)
+        // This is a special verb in that when it's conjugated, the reading changes
+        // I haven't seen any other kanji verbs like this (where the reading changes in the kanji based on the conjugation)
+        // This doesn't really matter for 来る on it's own, but there's other verbs like 持って来る
+        o = o.replaceAll(/来\[.\]る/g, "来[く]る")
         return o
     }
     return word
