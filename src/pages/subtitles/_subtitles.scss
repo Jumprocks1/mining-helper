@@ -193,14 +193,21 @@
         }
     }
     .row-container {
-        display: grid;
-        // 1fr at the end means the last column will grow after all columns have hit their desired size
-        // without the 1fr, the button columns will also grow, which looks bad
-        grid-template-columns: repeat(4, auto) 1fr;
-        column-gap: $s1;
-        align-items: center;
+        border-collapse: collapse;
         .vocab-row {
-            display: contents; // I kinda hate this, but table wasn't great either
+            td {
+                padding: 0;
+                &:not(:last-child) {
+                    padding-right: $s1;
+                }
+                >div {
+                    display: flex;
+                    align-items: center;
+                }
+            }
+            .grow-column {
+                width: 100%;
+            }
             .up-down-buttons {
                 margin-right: -$s1; // remove gap
                 position: relative;

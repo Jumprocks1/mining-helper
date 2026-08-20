@@ -42,7 +42,7 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
     let maxCount = await pending[3]
 
     let loadedRows: Record<number, HTMLElement> | undefined = undefined
-    const body = <div className="row-container" />
+    const body = <table className="row-container" />
     let loadedCount = 0
 
     const load = async () => {
@@ -113,34 +113,38 @@ export default async (subtitles: Subtitles, getMinimizeTarget: () => DOMRect | u
                     deleteButton.replaceWith(deleteButton = makeDeleteButton())
                 }} />
             let deleteButton = makeDeleteButton()
-            const row = <div className="vocab-row">
-                {deleteButton}
-                <span className="frequency">{vocab[2] ?? "N/A"}</span>
-                <UpDownButtons onClick={(_, down) => {
-                    const options: [sub: SubtitleEntryWithCharacterOffset, token: number][] = []
-                    for (const entry of subtitles.processedEntries) {
-                        const end = entry.characterOffset + entry.text.length
-                        for (const token of tokenUsages) {
-                            if (entry.characterOffset <= token && token < end) {
-                                options.push([entry, token])
+            const row = <tr className="vocab-row">
+                <td><div>{deleteButton}</div></td>
+                <td className="frequency"><div>{vocab[2] ?? "N/A"}</div></td>
+                <td><div>
+                    <UpDownButtons onClick={(_, down) => {
+                        const options: [sub: SubtitleEntryWithCharacterOffset, token: number][] = []
+                        for (const entry of subtitles.processedEntries) {
+                            const end = entry.characterOffset + entry.text.length
+                            for (const token of tokenUsages) {
+                                if (entry.characterOffset <= token && token < end) {
+                                    options.push([entry, token])
+                                }
                             }
                         }
-                    }
-                    const index = subtitlesPage.SeekToNextEntry(options.map(e => e[0]), !down)
-                    if (index !== undefined) {
-                        const [entry, tokenStart] = options[index]
-                        // this is lame
-                        const token = jpdb.tokens.find(e => e[0] === tokenStart)
-                        if (!token) return
-                        const node = entry.node?.querySelector<HTMLDivElement>(".subtitles")
-                        setSelection(node, tokenStart - entry.characterOffset, tokenStart + token[1] - entry.characterOffset)
-                    }
-                }}>
-                    <span className="usage-count">{tokenUsages.length}</span>
-                </UpDownButtons>
-                <IconButton icon="play_arrow" onClick={() => tryPlayAudio(vocab)} />
-                <span><span className="vocab-kanji">{vocab[0]}</span> - {vocab[3][0]}</span>
-            </div>
+                        const index = subtitlesPage.SeekToNextEntry(options.map(e => e[0]), !down)
+                        if (index !== undefined) {
+                            const [entry, tokenStart] = options[index]
+                            // this is lame
+                            const token = jpdb.tokens.find(e => e[0] === tokenStart)
+                            if (!token) return
+                            const node = entry.node?.querySelector<HTMLDivElement>(".subtitles")
+                            setSelection(node, tokenStart - entry.characterOffset, tokenStart + token[1] - entry.characterOffset)
+                        }
+                    }}>
+                        <span className="usage-count">{tokenUsages.length}</span>
+                    </UpDownButtons>
+                </div></td>
+                <td><div>
+                    <IconButton icon="play_arrow" onClick={() => tryPlayAudio(vocab)} />
+                </div></td>
+                <td className="grow-column"><div><span><span className="vocab-kanji">{vocab[0]}</span> - {vocab[3][0]}</span></div></td>
+            </tr>
             row.vocab = vocab // for tooltip
             if (originalState === VocabState.Ignored) row.classList.add("ignored")
             if (originalState === VocabState.TemporarilyIgnored) row.classList.add("temporarilyignored")
