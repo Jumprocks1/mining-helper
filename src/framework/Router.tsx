@@ -66,6 +66,10 @@ export function CurrentPage() {
 
 const onRouteChangeListeners: (() => void)[] = []
 
+export function addRouteChangeListener(listener: () => void) {
+    onRouteChangeListeners.push(listener)
+}
+
 export function BindSpaRouter(props: Props) {
     globalRouterProps = props
     function init() {
@@ -129,7 +133,7 @@ export function BindSpaRouter(props: Props) {
                 appendChild(target, children)
         }
         recalculateRoute()
-        onRouteChangeListeners.push(recalculateRoute)
+        addRouteChangeListener(recalculateRoute)
         window.addEventListener("popstate", () => {
             for (const e of onRouteChangeListeners) e()
         })

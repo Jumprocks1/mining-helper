@@ -1,8 +1,9 @@
-import { replaceChildren, type Children } from "../../framework/createElement";
+import { replaceChildren } from "../../framework/createElement";
 import { Component } from "../../framework/Component";
 import { Load, LoadableChildren } from "../Loader";
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util";
 import { onDeath } from "../../framework/Observer";
+import { addRouteChangeListener } from "../../framework/Router";
 
 interface Props extends BaseComponentProps {
     hydrate?: LoadableChildren
@@ -46,6 +47,9 @@ export function TrackOpenPopover(popover: Closable) {
                 popover.Close()
             }
         }
+    })
+    addRouteChangeListener(() => {
+        while (OpenPopovers.length > 0) OpenPopovers[OpenPopovers.length - 1].Close()
     })
 }
 export function MarkPopoverClosed(popover: Closable) {
