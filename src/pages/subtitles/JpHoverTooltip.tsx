@@ -72,7 +72,9 @@ export default class JpHoverTooltip extends JsPopover {
 
 
 
-// TODO would love to share this with SubtitleViewer somehow
+// TODO would love to share this with SubtitleViewer
+// Not quite as simple as I wanted since SubtitleViewer also relies on the hover state for underlining
+// We'll need to change loadedTooltip to also work for returning the currently hovered characters (even if there's no tooltip present)
 
 interface TooltipHandler {
     body: HTMLElement,
@@ -143,21 +145,17 @@ function UpdateHoverInfoSingle(handler: TooltipHandler, shiftKey: boolean) {
     popover.Target(target, vocab)
 }
 
-// can safely modify invert in the return object
-export function RegisterJpHoverTooltip(
-    body: HTMLElement,
-    getTargetAndVocab: (node: Node) => [HTMLElement, JpdbVocabulary] | undefined,
-    invert = false) {
+// can safely modify invert in handler object
+export function RegisterJpHoverTooltip(handler: TooltipHandler) {
     if (!globalHandlerRegistered) {
         globalHandlerRegistered = true
         document.addEventListener("mousemove", mousemove)
         document.addEventListener("keydown", keydown)
     }
-    const handler = { body, getTargetAndVocab, invert }
     kanjiTooltipHandlers.push(handler)
-    onDeath(body, () => {
+    onDeath(handler.body, () => {
         for (let i = kanjiTooltipHandlers.length - 1; i >= 0; i--) {
-            if (kanjiTooltipHandlers[i].body === body) {
+            if (kanjiTooltipHandlers[i].body === handler.body) {
                 kanjiTooltipHandlers.splice(i, 1)
             }
         }

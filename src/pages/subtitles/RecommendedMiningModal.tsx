@@ -166,12 +166,15 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, subtitlesPag
     }
 
     RegisterKeyboardHandler(body, subtitlesPage)
-    RegisterJpHoverTooltip(body, node => {
-        const kanji = (node.parentElement as HTMLElement).closest(".vocab-kanji") as HTMLElement
-        if (!kanji) return
-        const vocab = kanji.closest<HTMLElement>(".vocab-row")?.vocab
-        if (!vocab) return
-        return [kanji, vocab]
+    RegisterJpHoverTooltip({
+        body, invert: false,
+        getTargetAndVocab: node => {
+            const kanji = (node.parentElement as HTMLElement).closest(".vocab-kanji") as HTMLElement
+            if (!kanji) return
+            const vocab = kanji.closest<HTMLElement>(".vocab-row")?.vocab
+            if (!vocab) return
+            return [kanji, vocab]
+        }
     })
 
     const reload = () => {
