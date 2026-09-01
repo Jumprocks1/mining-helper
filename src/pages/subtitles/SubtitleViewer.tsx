@@ -1,13 +1,12 @@
 import { getAnkiFurigana } from "../../pages/anki/CardList"
-import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText"
+import { JpdbParseResponse, JpdbVocabulary } from "../../jpdb/JpdbParseText"
 import { getVocabState, VocabState } from "../../jpdb/JpdbState"
-import { getCharacterIndex, getHoveredCharacterIndex, getSelectionRange } from "../../utils/CharacterHighlighter"
+import { getCharacterIndex, getSelectionRange } from "../../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt"
 import { setSetting } from "../../views/SettingsModal"
 import SubtitlesPage from "./subtitles"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
-import JpHoverTooltip from "./JpHoverTooltip"
-import { onDeath } from "../../framework/Observer"
+import { JpHoverTooltipHandler, JpHoverTooltipState, RegisterJpHoverTooltip, UpdateJpHover } from "./JpHoverTooltip"
 
 declare global {
     interface HTMLElement {
@@ -15,31 +14,17 @@ declare global {
     }
 }
 
-type HoverState = { token: JpdbToken, range: Range }
-
 export default class SubtitleViewer {
     Node: HTMLElement
     subtitles: Subtitles
     pointer: HTMLElement = <div className="pointer">-&gt;</div>
 
     hoverRectangle: HTMLElement = <div className="hover-rectangle" />
-    popover: JpHoverTooltip | undefined
 
     Page: SubtitlesPage
 
     // use to block scrolling when selecting
     MouseDown = false
-
-    MouseX: number | undefined
-    MouseY: number | undefined
-
-    DocumentKeydown(ev: KeyboardEvent) {
-        if (this.subtitles.jpdbParse) {
-            const showPopover = ev.shiftKey !== this.ShowHoverWithoutShift
-            if (this.popover?.IsOpen && !showPopover) return
-            this.UpdateHoverInfo(showPopover)
-        }
-    }
 
     constructor(subtitles: Subtitles, page: SubtitlesPage) {
         this.Page = page
@@ -76,43 +61,57 @@ export default class SubtitleViewer {
             this.MouseDown = false
         })
 
-        const mousemove = (ev: MouseEvent) => {
-            this.MouseX = ev.clientX
-            this.MouseY = ev.clientY
-            if (this.subtitles.jpdbParse) {
-                const showPopover = ev.shiftKey !== this.ShowHoverWithoutShift
-                if (this.popover && !showPopover) {
-                    if (this.popover.Node.contains(ev.target as HTMLElement)) return
+        this.TooltipHandler = RegisterJpHoverTooltip({
+            body: this.Node,
+            getTargetAndVocab: hovered => {
+                const jpdb = this.subtitles.jpdbParse
+                if (!jpdb) return
+                const htmlElement = hovered[0].parentElement!
+                const subtitles = htmlElement.closest<HTMLElement>(".subtitles")
+                if (!subtitles) return
+                const entry = subtitles.closest<HTMLElement>(".subtitle-entry")?.subtitleEntry
+                if (!entry) return
+                const indexInParent = getCharacterIndex(subtitles, hovered[0], hovered[1])
+                const offset = entry.characterOffset + indexInParent
+                let token: JpdbParseResponse["tokens"][number] | undefined = undefined
+                // this is probably really slow, could do binary search
+                for (const e of jpdb.tokens) {
+                    if (e[0] <= offset && e[0] + e[1] > offset) {
+                        token = e
+                        break
+                    }
                 }
-                this.UpdateHoverInfo(showPopover)
-            }
-        }
-        document.addEventListener("mousemove", mousemove)
-        onDeath(this.Node, () => document.removeEventListener("mousemove", mousemove))
+                if (token) {
+                    const start = token[0] - entry.characterOffset
+                    const range = getSelectionRange(subtitles, start, start + token[1])
+                    return [range, jpdb.vocabulary[token[3]]]
+                }
+            },
+            invert: false,
+            onChange: state => this.UpdateHoverBox(state)
+        })
 
         // make sure anki words are loaded for later, this caches the result
         // no harm in calling multiple times if promise isn't resolved yet
         getAnkiFurigana()
     }
 
+    TooltipHandler: JpHoverTooltipHandler
 
-    ShowHoverWithoutShift = false
     // toggles whether or not shift needs to be held down to show additional information about the hovered word
     ToggleShift() {
-        this.ShowHoverWithoutShift = !this.ShowHoverWithoutShift
-        this.UpdateHoverInfo(false)
+        this.TooltipHandler.invert = !this.TooltipHandler.invert
+        UpdateJpHover(false)
     }
 
-    LoadedHoverState: HoverState | undefined
-    UpdateHoverBox(hoverState: HoverState | undefined, vocab: JpdbVocabulary | undefined) {
-        if (this.LoadedHoverState?.token === hoverState?.token) return
-        this.LoadedHoverState = hoverState
+    UpdateHoverBox(hoverState: JpHoverTooltipState | undefined) {
         if (!hoverState) {
             this.hoverRectangle.classList.add("hide")
             return
         }
         const parent = this.hoverRectangle.parentElement
         if (!parent) return
+        const vocab = hoverState.vocab
 
         // remove all other classes
         this.hoverRectangle.className = "hover-rectangle"
@@ -120,60 +119,12 @@ export default class SubtitleViewer {
         const parentRect = parent.getBoundingClientRect()
 
         if (vocab) this.AddStateClass(this.hoverRectangle, vocab)
-        const rect = hoverState.range.getBoundingClientRect()
+        const rect = hoverState.target.getBoundingClientRect()
 
         this.hoverRectangle.style.width = rect.width + "px"
         this.hoverRectangle.style.height = rect.height + "px"
         this.hoverRectangle.style.top = rect.top - parentRect.top + "px"
         this.hoverRectangle.style.left = rect.left - parentRect.left + "px"
-    }
-
-    LoadedPopoverVocab: JpdbVocabulary | undefined
-
-    SetHoverState(hoverState: HoverState | undefined, vocab: JpdbVocabulary | undefined, shift: boolean) {
-        this.UpdateHoverBox(hoverState, vocab)
-        if (!shift && vocab && vocab !== this.LoadedPopoverVocab) vocab = undefined
-        if (this.LoadedPopoverVocab === vocab) return
-        this.LoadedPopoverVocab = vocab
-
-        if (vocab && hoverState) {
-            this.popover ??= new JpHoverTooltip(this.Node)
-            this.popover.Target(hoverState.range, vocab)
-        } else {
-            this.popover?.Close()
-        }
-    }
-
-    UpdateHoverInfo(shift: boolean) {
-        const jpdb = this.subtitles.jpdbParse
-        if (!jpdb || !this.MouseX || !this.MouseY) return
-        const res = getHoveredCharacterIndex(this.MouseX, this.MouseY)
-        if (!res) {
-            this.SetHoverState(undefined, undefined, shift)
-            return
-        }
-        const htmlElement = res[0].parentElement!
-        const subtitles = htmlElement.closest<HTMLElement>(".subtitles")
-        if (!subtitles) return
-        const entry = subtitles.closest<HTMLElement>(".subtitle-entry")?.subtitleEntry
-        if (!entry) return
-        const indexInParent = getCharacterIndex(subtitles, res[0], res[1])
-        const offset = entry.characterOffset + indexInParent
-        let token: JpdbParseResponse["tokens"][number] | undefined = undefined
-        // this is probably really slow, could do binary search
-        for (const e of jpdb.tokens) {
-            if (e[0] <= offset && e[0] + e[1] > offset) {
-                token = e
-                break
-            }
-        }
-        if (token) {
-            const start = token[0] - entry.characterOffset
-            const range = getSelectionRange(subtitles, start, start + token[1])
-            this.SetHoverState({ token, range }, jpdb.vocabulary[token[3]], shift)
-        } else {
-            this.SetHoverState(undefined, undefined, shift)
-        }
     }
 
     updateBlock() {

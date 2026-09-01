@@ -182,7 +182,6 @@ export default class SubtitlesPage extends PageComponent {
     }
 
     DocumentKeydown = (ev: KeyboardEvent) => {
-        this.LoadedSubtitles?.DocumentKeydown(ev)
         if (disallowGlobalInput(ev)) return
         if (handleKeyDown(ev)) return
         const key = ev.key.toLowerCase()

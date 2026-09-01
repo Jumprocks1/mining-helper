@@ -79,25 +79,21 @@ export default class JpHoverTooltip extends JsPopover {
 
 
 
-// TODO would love to share this with SubtitleViewer
-// Not quite as simple as I wanted since SubtitleViewer also relies on the hover state for underlining
-// We'll need to change loadedTooltip to also work for returning the currently hovered characters (even if there's no tooltip present)
-
-interface TooltipHandler {
+export interface JpHoverTooltipHandler {
     body: HTMLElement,
-    getTargetAndVocab: (node: Node) => [HTMLElement | Range, JpdbVocabulary] | undefined,
+    getTargetAndVocab: (hovered: readonly [Node, number]) => [HTMLElement | Range, JpdbVocabulary] | undefined,
     invert: boolean
-    onChange?: (hoverState: HoverState | undefined) => void
+    onChange?: (hoverState: JpHoverTooltipState | undefined) => void
 }
-const kanjiTooltipHandlers: TooltipHandler[] = []
+const kanjiTooltipHandlers: JpHoverTooltipHandler[] = []
 let globalHandlerRegistered = false
-interface HoverState {
+export interface JpHoverTooltipState {
     vocab: JpdbVocabulary,
-    handler: TooltipHandler,
+    handler: JpHoverTooltipHandler,
     tooltip: boolean
     target: HTMLElement | Range
 }
-let loadedHover: HoverState | undefined
+let loadedHover: JpHoverTooltipState | undefined
 let popover: JpHoverTooltip | undefined // this can end up set but with open false
 let mouseX: number | undefined
 let mouseY: number | undefined
@@ -117,22 +113,28 @@ function mousemove(ev: MouseEvent) {
 }
 function keyupdown(ev: KeyboardEvent) {
     if (ev.key !== "Shift") return
+    UpdateJpHover(ev.shiftKey)
+}
+
+// Assumes no mouse movement
+export function UpdateJpHover(shiftKey: boolean) {
     if (loadedHover?.tooltip) {
         // in a normal scenario, this means we have an open tooltip (opened by holding shift)
         // if we are no longer holding shift, that tooltip cannot be dismissed by a keypress
-        const showTooltip = ev.shiftKey !== loadedHover.handler.invert
+        const showTooltip = shiftKey !== loadedHover.handler.invert
         if (!showTooltip) return
     }
-    UpdateHoverState(ev.shiftKey)
+    UpdateHoverState(shiftKey)
 }
 
-function setHoverState(state: HoverState | undefined, shiftKey: boolean) {
+function setHoverState(state: JpHoverTooltipState | undefined, shiftKey: boolean) {
+    if (targetsEqual(state?.target, loadedHover?.target) && state?.tooltip === loadedHover?.tooltip) return
     const oldHoverHandler = loadedHover?.handler
     _setHoverStateInner(state, shiftKey)
     oldHoverHandler?.onChange?.(state)
     if (loadedHover && loadedHover.handler !== oldHoverHandler) loadedHover.handler.onChange?.(state)
 }
-function _setHoverStateInner(state: HoverState | undefined, shiftKey: boolean) {
+function _setHoverStateInner(state: JpHoverTooltipState | undefined, shiftKey: boolean) {
     if (state === undefined) {
         if (loadedHover?.tooltip) {
             loadedHover = undefined
@@ -148,7 +150,6 @@ function _setHoverStateInner(state: HoverState | undefined, shiftKey: boolean) {
         return
     }
 
-    // TODO underline?
     if (!state.tooltip) {
         loadedHover = state
         if (popover?.IsOpen) {
@@ -159,6 +160,7 @@ function _setHoverStateInner(state: HoverState | undefined, shiftKey: boolean) {
     }
     loadedHover = state
     popover ??= new JpHoverTooltip()
+    if (state.target instanceof Range) popover.Anchor = state.handler.body
     popover.Target(state.target, state.vocab)
 }
 
@@ -166,12 +168,11 @@ function UpdateHoverState(shiftKey: boolean) {
     // Only call this method after confirming the event target isn't inside the popover already
     if (kanjiTooltipHandlers.length === 0) return
     if (mouseX === undefined || mouseY === undefined) return
-    const res = getHoveredCharacterIndex(mouseX, mouseY)
-    if (!res) return setHoverState(undefined, shiftKey) // if we're not hovering anything, reset everything
-    const [hoverNode, character] = res
+    const hovered = getHoveredCharacterIndex(mouseX, mouseY)
+    if (!hovered) return setHoverState(undefined, shiftKey) // if we're not hovering anything, reset everything
     let matched = false
     for (const handler of kanjiTooltipHandlers) {
-        matched = UpdateHoverStateSingle(hoverNode, handler, shiftKey)
+        matched = UpdateHoverStateSingle(hovered, handler, shiftKey)
         if (matched) break
     }
     if (!matched) {
@@ -179,9 +180,9 @@ function UpdateHoverState(shiftKey: boolean) {
         setHoverState(undefined, shiftKey)
     }
 }
-function UpdateHoverStateSingle(hoverNode: Node, handler: TooltipHandler, shiftKey: boolean): boolean {
-    if (!handler.body.contains(hoverNode)) return false
-    const targetAndVocab = handler.getTargetAndVocab(hoverNode)
+function UpdateHoverStateSingle(hovered: readonly [Node, number], handler: JpHoverTooltipHandler, shiftKey: boolean): boolean {
+    if (!handler.body.contains(hovered[0])) return false
+    const targetAndVocab = handler.getTargetAndVocab(hovered)
     if (!targetAndVocab) return false
 
     const [target, vocab] = targetAndVocab
@@ -193,14 +194,14 @@ function UpdateHoverStateSingle(hoverNode: Node, handler: TooltipHandler, shiftK
     return true
 }
 
-function targetsEqual(a: HTMLElement | Range, b: HTMLElement | Range) {
-    if (a instanceof HTMLElement || b instanceof HTMLElement) return a === b
+function targetsEqual(a: HTMLElement | Range | undefined, b: HTMLElement | Range | undefined) {
+    if (a === undefined || b === undefined || a instanceof HTMLElement || b instanceof HTMLElement) return a === b
     return a.compareBoundaryPoints(Range.START_TO_START, b) === 0 &&
         a.compareBoundaryPoints(Range.END_TO_END, b) === 0
 }
 
 // can safely modify invert in handler object
-export function RegisterJpHoverTooltip(handler: TooltipHandler) {
+export function RegisterJpHoverTooltip(handler: JpHoverTooltipHandler) {
     if (!globalHandlerRegistered) {
         globalHandlerRegistered = true
         document.addEventListener("mousemove", mousemove)
