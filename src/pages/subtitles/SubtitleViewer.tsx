@@ -15,7 +15,7 @@ declare global {
     }
 }
 
-type HoverState = { token: JpdbToken, rect: DOMRect }
+type HoverState = { token: JpdbToken, range: Range }
 
 export default class SubtitleViewer {
     Node: HTMLElement
@@ -120,11 +120,12 @@ export default class SubtitleViewer {
         const parentRect = parent.getBoundingClientRect()
 
         if (vocab) this.AddStateClass(this.hoverRectangle, vocab)
+        const rect = hoverState.range.getBoundingClientRect()
 
-        this.hoverRectangle.style.width = hoverState.rect.width + "px"
-        this.hoverRectangle.style.height = hoverState.rect.height + "px"
-        this.hoverRectangle.style.top = hoverState.rect.top - parentRect.top + "px"
-        this.hoverRectangle.style.left = hoverState.rect.left - parentRect.left + "px"
+        this.hoverRectangle.style.width = rect.width + "px"
+        this.hoverRectangle.style.height = rect.height + "px"
+        this.hoverRectangle.style.top = rect.top - parentRect.top + "px"
+        this.hoverRectangle.style.left = rect.left - parentRect.left + "px"
     }
 
     LoadedPopoverVocab: JpdbVocabulary | undefined
@@ -137,7 +138,7 @@ export default class SubtitleViewer {
 
         if (vocab && hoverState) {
             this.popover ??= new JpHoverTooltip(this.Node)
-            this.popover.TargetRect(hoverState.rect, vocab)
+            this.popover.Target(hoverState.range, vocab)
         } else {
             this.popover?.Close()
         }
@@ -169,8 +170,7 @@ export default class SubtitleViewer {
         if (token) {
             const start = token[0] - entry.characterOffset
             const range = getSelectionRange(subtitles, start, start + token[1])
-            const rect = range.getBoundingClientRect()
-            this.SetHoverState({ token, rect }, jpdb.vocabulary[token[3]], shift)
+            this.SetHoverState({ token, range }, jpdb.vocabulary[token[3]], shift)
         } else {
             this.SetHoverState(undefined, undefined, shift)
         }

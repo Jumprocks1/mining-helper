@@ -18,15 +18,32 @@ export default class JpHoverTooltip extends JsPopover {
         })
     }
 
-    Target(target: HTMLElement, vocab: JpdbVocabulary) {
+    Target(target: HTMLElement | Range, vocab: JpdbVocabulary) {
         if (!vocab.furigana) this.Close()
-        this.Anchor = target
+        if (target instanceof HTMLElement) {
+            this.Anchor = target
+            this.Node.style.left = `anchor(left)`
+            this.Node.style.top = `anchor(bottom)`
+        } else {
+            if (!this.Anchor) return
+            const parentRect = this.Anchor.getBoundingClientRect()
+            const rect = target.getBoundingClientRect()
+            const x = rect.left - parentRect.left
+            const y = rect.bottom - parentRect.top
+            this.Node.style.left = `calc(anchor(left) + ${x}px)`
+            this.Node.style.top = `calc(anchor(top) + ${y}px)`
+        }
         this.TargetBase(vocab)
-        this.Node.style.left = `anchor(left)`
-        this.Node.style.top = `anchor(bottom)`
     }
 
+    LoadedVocab: JpdbVocabulary | undefined
+
     private TargetBase(vocab: JpdbVocabulary) {
+        if (this.LoadedVocab === vocab) {
+            this.Open()
+            return
+        }
+        this.LoadedVocab = vocab
         const [vocabState, vocabNote] = getVocabStateAndNote(vocab, { trimKana: true })
 
         const vocabStateString = VocabState[vocabState].toLowerCase()
@@ -58,16 +75,6 @@ export default class JpHoverTooltip extends JsPopover {
         </>)
         this.Open()
     }
-
-    TargetRect(hoverRect: DOMRect, vocab: JpdbVocabulary) {
-        if (!this.Anchor) return
-        this.TargetBase(vocab)
-        const parentRect = this.Anchor.getBoundingClientRect()
-        const x = hoverRect.left - parentRect.left
-        const y = hoverRect.bottom - parentRect.top
-        this.Node.style.left = `calc(anchor(left) + ${x}px)`
-        this.Node.style.top = `calc(anchor(top) + ${y}px)`
-    }
 }
 
 
@@ -78,15 +85,18 @@ export default class JpHoverTooltip extends JsPopover {
 
 interface TooltipHandler {
     body: HTMLElement,
-    getTargetAndVocab: (node: Node) => [HTMLElement, JpdbVocabulary] | undefined,
+    getTargetAndVocab: (node: Node) => [HTMLElement | Range, JpdbVocabulary] | undefined,
     invert: boolean
 }
 const kanjiTooltipHandlers: TooltipHandler[] = []
 let globalHandlerRegistered = false
-let loadedTooltip: {
+interface HoverState {
     vocab: JpdbVocabulary,
-    handler: TooltipHandler
-} | undefined
+    handler: TooltipHandler,
+    tooltip: boolean
+    target: HTMLElement | Range
+}
+let loadedHover: HoverState | undefined
 let popover: JpHoverTooltip | undefined // this can end up set but with open false
 let mouseX: number | undefined
 let mouseY: number | undefined
@@ -94,55 +104,90 @@ let mouseY: number | undefined
 function mousemove(ev: MouseEvent) {
     mouseX = ev.clientX
     mouseY = ev.clientY
-    if (loadedTooltip) {
-        const showPopover = ev.shiftKey !== loadedTooltip.handler.invert
-        if (popover && !showPopover) {
+    if (loadedHover?.tooltip) {
+        // if there's a visible tooltip, don't close it when we move the mouse over it with the inverted open state
+        const showTooltip = ev.shiftKey !== loadedHover.handler.invert
+        // popover should never be undefined here
+        if (popover && !showTooltip) {
             if (popover.Node.contains(ev.target as HTMLElement)) return
         }
     }
-    UpdateHoverInfo(ev.shiftKey)
+    UpdateHoverState(ev.shiftKey)
 }
-function keydown(ev: KeyboardEvent) {
-    if (loadedTooltip) {
-        const showPopover = ev.shiftKey !== loadedTooltip.handler.invert
-        if (!showPopover) return
+function keyupdown(ev: KeyboardEvent) {
+    if (ev.key !== "Shift") return
+    if (loadedHover?.tooltip) {
+        // in a normal scenario, this means we have an open tooltip (opened by holding shift)
+        // if we are no longer holding shift, that tooltip cannot be dismissed by a keypress
+        const showTooltip = ev.shiftKey !== loadedHover.handler.invert
+        if (!showTooltip) return
     }
-    UpdateHoverInfo(ev.shiftKey)
+    UpdateHoverState(ev.shiftKey)
 }
 
-function close(shiftKey: boolean) {
-    if (!loadedTooltip) return
-    loadedTooltip = undefined
-    popover?.Close()
-    // we immediately call this since `Close` can cause a new character to become hovered
-    // have to be careful for infinite loops
-    UpdateHoverInfo(shiftKey)
+function setHoverState(state: HoverState | undefined, shiftKey: boolean) {
+    if (state === undefined) {
+        if (loadedHover?.tooltip) {
+            popover?.Close()
+            loadedHover = undefined
+            // we immediately call this since `Close` can cause a new character to become hovered
+            // have to be careful for infinite loops
+            UpdateHoverState(shiftKey)
+            return
+        }
+        loadedHover = undefined
+        return
+    }
+
+    // TODO underline?
+    if (!state.tooltip) {
+        loadedHover = state
+        if (popover?.IsOpen) {
+            popover?.Close()
+            UpdateHoverState(shiftKey)
+        }
+        return
+    }
+    loadedHover = state
+    popover ??= new JpHoverTooltip()
+    popover.Target(state.target, state.vocab)
 }
-function UpdateHoverInfo(shiftKey: boolean) {
+
+function UpdateHoverState(shiftKey: boolean) {
+    // Only call this method after confirming the event target isn't inside the popover already
+    if (kanjiTooltipHandlers.length === 0) return
+    if (mouseX === undefined || mouseY === undefined) return
+    const res = getHoveredCharacterIndex(mouseX, mouseY)
+    if (!res) return setHoverState(undefined, shiftKey) // if we're not hovering anything, reset everything
+    const [hoverNode, character] = res
+    let matched = false
     for (const handler of kanjiTooltipHandlers) {
-        // TODO this repeats the getHoveredCharacterIndex
-        UpdateHoverInfoSingle(handler, shiftKey)
+        matched = UpdateHoverStateSingle(hoverNode, handler, shiftKey)
+        if (matched) break
+    }
+    if (!matched) {
+        // If the currently hovered node has no vocab info for any handlers, close everything
+        setHoverState(undefined, shiftKey)
     }
 }
-function UpdateHoverInfoSingle(handler: TooltipHandler, shiftKey: boolean) {
-    // Only call this method after confirming the event target isn't inside the popover already
-    if (mouseX === undefined || mouseY === undefined) return
-    // We use this instead of the mouse target so it works with keyboard I think
-    // There might be other reasons too, like if there's multiple text nodes in one target
-    const showPopover = shiftKey !== handler.invert
-    if (!showPopover && !loadedTooltip) return
-    const res = getHoveredCharacterIndex(mouseX, mouseY)
-    if (!res) return close(shiftKey)
-    const targetAndVocab = handler.getTargetAndVocab(res[0])
-    if (!targetAndVocab) return close(shiftKey)
+function UpdateHoverStateSingle(hoverNode: Node, handler: TooltipHandler, shiftKey: boolean): boolean {
+    if (!handler.body.contains(hoverNode)) return false
+    const targetAndVocab = handler.getTargetAndVocab(hoverNode)
+    if (!targetAndVocab) return false
+
     const [target, vocab] = targetAndVocab
-    // if we're hovering the open target for the current popover, we don't care if we're holding shift or not
-    if (loadedTooltip?.vocab === vocab) return
-    // if we're hovering a different vocab and we don't want to show a popover, we have to close this one
-    if (!showPopover) return close(shiftKey)
-    loadedTooltip = { vocab, handler }
-    popover ??= new JpHoverTooltip()
-    popover.Target(target, vocab)
+    const showTooltip = shiftKey !== handler.invert
+        // The || means if as long as we continue hovering the same target, we keep showing the tooltip
+        || Boolean(loadedHover?.tooltip && targetsEqual(loadedHover.target, target))
+
+    setHoverState({ vocab, handler, tooltip: showTooltip, target }, shiftKey)
+    return true
+}
+
+function targetsEqual(a: HTMLElement | Range, b: HTMLElement | Range) {
+    if (a instanceof HTMLElement || b instanceof HTMLElement) return a === b
+    return a.compareBoundaryPoints(Range.START_TO_START, b) === 0 &&
+        a.compareBoundaryPoints(Range.END_TO_END, b) === 0
 }
 
 // can safely modify invert in handler object
@@ -150,7 +195,8 @@ export function RegisterJpHoverTooltip(handler: TooltipHandler) {
     if (!globalHandlerRegistered) {
         globalHandlerRegistered = true
         document.addEventListener("mousemove", mousemove)
-        document.addEventListener("keydown", keydown)
+        document.addEventListener("keyup", keyupdown)
+        document.addEventListener("keydown", keyupdown)
     }
     kanjiTooltipHandlers.push(handler)
     onDeath(handler.body, () => {
