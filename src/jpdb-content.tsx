@@ -88,8 +88,8 @@ async function afterLoad() {
         }
     }
 
-    const wordBoxes = document.querySelectorAll(".vbox .subsection-headword>.menu");
-    for (const menu of wordBoxes) {
+    const wordBoxes = document.querySelectorAll(".vbox .subsection-headword>.vocabulary-audio");
+    for (const audioButton of wordBoxes) {
         const goodAudioButton = <div className="good-audio">audio</div>
         goodAudioButton.onclick = async (ev) => {
             ev.preventDefault()
@@ -132,7 +132,7 @@ async function afterLoad() {
             }
             goodAudioButton.appendChild(menu)
         }
-        menu.parentNode!.insertBefore(goodAudioButton, menu)
+        audioButton.parentNode!.append(goodAudioButton)
     }
 }
 
