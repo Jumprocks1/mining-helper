@@ -87,6 +87,7 @@ interface TooltipHandler {
     body: HTMLElement,
     getTargetAndVocab: (node: Node) => [HTMLElement | Range, JpdbVocabulary] | undefined,
     invert: boolean
+    onChange?: (hoverState: HoverState | undefined) => void
 }
 const kanjiTooltipHandlers: TooltipHandler[] = []
 let globalHandlerRegistered = false
@@ -126,13 +127,21 @@ function keyupdown(ev: KeyboardEvent) {
 }
 
 function setHoverState(state: HoverState | undefined, shiftKey: boolean) {
+    const oldHoverHandler = loadedHover?.handler
+    _setHoverStateInner(state, shiftKey)
+    oldHoverHandler?.onChange?.(state)
+    if (loadedHover && loadedHover.handler !== oldHoverHandler) loadedHover.handler.onChange?.(state)
+}
+function _setHoverStateInner(state: HoverState | undefined, shiftKey: boolean) {
     if (state === undefined) {
         if (loadedHover?.tooltip) {
-            popover?.Close()
             loadedHover = undefined
-            // we immediately call this since `Close` can cause a new character to become hovered
-            // have to be careful for infinite loops
-            UpdateHoverState(shiftKey)
+            if (popover?.IsOpen) {
+                popover?.Close()
+                // we immediately call this since `Close` can cause a new character to become hovered
+                // have to be careful for infinite loops
+                UpdateHoverState(shiftKey)
+            }
             return
         }
         loadedHover = undefined
