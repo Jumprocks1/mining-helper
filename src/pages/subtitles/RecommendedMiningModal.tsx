@@ -14,7 +14,7 @@ import { SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt";
 import { CardData } from "../../utils/util";
 import { getDefaultSetting, getSetting, setSetting } from "../../views/SettingsModal";
 import SubtitlesPage from "./subtitles";
-import JpHoverTooltip from "./JpHoverTooltip";
+import { RegisterJpHoverTooltip } from "./JpHoverTooltip";
 import { UpdateTooltip } from "../../framework/Tooltips";
 import { onDeath } from "../../framework/Observer";
 import { getHoveredCharacterIndex } from "../../utils/CharacterHighlighter";
@@ -166,7 +166,13 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, subtitlesPag
     }
 
     RegisterKeyboardHandler(body, subtitlesPage)
-    RegisterTooltipHandler(body)
+    RegisterJpHoverTooltip(body, node => {
+        const kanji = (node.parentElement as HTMLElement).closest(".vocab-kanji") as HTMLElement
+        if (!kanji) return
+        const vocab = kanji.closest<HTMLElement>(".vocab-row")?.vocab
+        if (!vocab) return
+        return [kanji, vocab]
+    })
 
     const reload = () => {
         loadedRows = undefined
@@ -281,62 +287,5 @@ function RegisterKeyboardHandler(body: HTMLElement, subtitlesPage: SubtitlesPage
             ev.preventDefault()
             ev.stopPropagation()
         }
-    })
-}
-
-// TODO would love to share this with SubtitleViewer somehow
-// this one is slightly better than the SubtitleViewer one I think
-function RegisterTooltipHandler(body: HTMLElement) {
-    let popover: JpHoverTooltip | undefined
-    let loadedVocab: JpdbVocabulary | undefined
-    let mouseX: number | undefined
-    let mouseY: number | undefined
-    function UpdateHoverInfo(showPopover: boolean) {
-        if (mouseX === undefined || mouseY === undefined) return
-        const res = getHoveredCharacterIndex(mouseX, mouseY)
-        if (!res) {
-            loadedVocab = undefined
-            popover?.Close()
-            return
-        }
-        if (popover && !showPopover) {
-            if (popover.Node.contains(res[0])) return
-        }
-
-        const kanji = (res[0].parentElement as HTMLElement).closest(".vocab-kanji") as HTMLElement
-        if (!kanji) return
-        const vocab = kanji.closest<HTMLElement>(".vocab-row")?.vocab
-
-        if (vocab) {
-            if (loadedVocab === vocab) return
-            if (showPopover) {
-                loadedVocab = vocab
-                popover ??= new JpHoverTooltip()
-                popover.Target(kanji, vocab)
-            }
-        } else {
-            loadedVocab = undefined
-            popover?.Close()
-        }
-    }
-    function mousemove(ev: MouseEvent) {
-        mouseX = ev.clientX
-        mouseY = ev.clientY
-        const showPopover = ev.shiftKey
-        if (popover && !showPopover) {
-            if (popover.Node.contains(ev.target as HTMLElement)) return
-        }
-        UpdateHoverInfo(showPopover)
-    }
-    function keydown(ev: KeyboardEvent) {
-        const showPopover = ev.shiftKey
-        if (popover && !showPopover) return
-        UpdateHoverInfo(showPopover)
-    }
-    document.addEventListener("mousemove", mousemove)
-    document.addEventListener("keydown", keydown)
-    onDeath(body, () => {
-        document.removeEventListener("mousemove", mousemove)
-        document.removeEventListener("keydown", keydown)
     })
 }
