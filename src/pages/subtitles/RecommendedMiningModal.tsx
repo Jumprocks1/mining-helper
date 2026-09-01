@@ -16,6 +16,8 @@ import { getDefaultSetting, getSetting, setSetting } from "../../views/SettingsM
 import SubtitlesPage from "./subtitles";
 import JpHoverTooltip from "./JpHoverTooltip";
 import { UpdateTooltip } from "../../framework/Tooltips";
+import { onDeath } from "../../framework/Observer";
+import { getHoveredCharacterIndex } from "../../utils/CharacterHighlighter";
 
 
 declare global {
@@ -164,36 +166,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, subtitlesPag
     }
 
     RegisterKeyboardHandler(body, subtitlesPage)
-
-    // this isn't as good as the main subtitle body tooltip
-    // but it's pretty close, good for now
-    let popover: JpHoverTooltip | undefined
-    let loadedVocab: JpdbVocabulary | undefined
-    function updateTooltip(ev: MouseEvent) {
-        const showPopover = ev.shiftKey
-        if (popover && !showPopover) {
-            if (popover.Node.contains(ev.target as HTMLElement)) return
-        }
-        if (showPopover) {
-            const target = ev.target as HTMLElement
-            if (target.classList.contains("vocab-kanji")) {
-                const vocab = target.closest<HTMLElement>(".vocab-row")?.vocab
-                if (vocab) {
-                    if (loadedVocab === vocab) return
-                    loadedVocab = vocab
-                    popover ??= new JpHoverTooltip()
-                    popover.Target(target, vocab)
-                }
-            }
-        } else {
-            loadedVocab = undefined
-            popover?.Close()
-        }
-    }
-    // would be nice to use the same events as SubtitleViewer
-    // would be good to share the hovered character calculation, since I assume it's not super cheap
-    // would add a shared event handler, similar to onDeath
-    body.addEventListener("mousemove", updateTooltip)
+    RegisterTooltipHandler(body)
 
     const reload = () => {
         loadedRows = undefined
@@ -308,5 +281,62 @@ function RegisterKeyboardHandler(body: HTMLElement, subtitlesPage: SubtitlesPage
             ev.preventDefault()
             ev.stopPropagation()
         }
+    })
+}
+
+// TODO would love to share this with SubtitleViewer somehow
+// this one is slightly better than the SubtitleViewer one I think
+function RegisterTooltipHandler(body: HTMLElement) {
+    let popover: JpHoverTooltip | undefined
+    let loadedVocab: JpdbVocabulary | undefined
+    let mouseX: number | undefined
+    let mouseY: number | undefined
+    function UpdateHoverInfo(showPopover: boolean) {
+        if (mouseX === undefined || mouseY === undefined) return
+        const res = getHoveredCharacterIndex(mouseX, mouseY)
+        if (!res) {
+            loadedVocab = undefined
+            popover?.Close()
+            return
+        }
+        if (popover && !showPopover) {
+            if (popover.Node.contains(res[0])) return
+        }
+
+        const kanji = (res[0].parentElement as HTMLElement).closest(".vocab-kanji") as HTMLElement
+        if (!kanji) return
+        const vocab = kanji.closest<HTMLElement>(".vocab-row")?.vocab
+
+        if (vocab) {
+            if (loadedVocab === vocab) return
+            if (showPopover) {
+                loadedVocab = vocab
+                popover ??= new JpHoverTooltip()
+                popover.Target(kanji, vocab)
+            }
+        } else {
+            loadedVocab = undefined
+            popover?.Close()
+        }
+    }
+    function mousemove(ev: MouseEvent) {
+        mouseX = ev.clientX
+        mouseY = ev.clientY
+        const showPopover = ev.shiftKey
+        if (popover && !showPopover) {
+            if (popover.Node.contains(ev.target as HTMLElement)) return
+        }
+        UpdateHoverInfo(showPopover)
+    }
+    function keydown(ev: KeyboardEvent) {
+        const showPopover = ev.shiftKey
+        if (popover && !showPopover) return
+        UpdateHoverInfo(showPopover)
+    }
+    document.addEventListener("mousemove", mousemove)
+    document.addEventListener("keydown", keydown)
+    onDeath(body, () => {
+        document.removeEventListener("mousemove", mousemove)
+        document.removeEventListener("keydown", keydown)
     })
 }
