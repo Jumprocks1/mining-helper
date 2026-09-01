@@ -257,7 +257,7 @@ export function cleanSource(source: string | undefined) {
             replace: ""
         },
         {
-            match: /\./g,
+            match: /\.|_/g,
             replace: " "
         },
         {
@@ -275,6 +275,10 @@ export function cleanSource(source: string | undefined) {
         {
             match: /\(.+?\)/g,
             replace: ""
+        },
+        {
+            match: /(\d)(st|nd|rd|th) Season/g,
+            replace: "S$1"
         },
         {
             match: /\s+/g,
