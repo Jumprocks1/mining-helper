@@ -141,7 +141,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
 
 export function geti1Tokens(subtitles: Subtitles, jpdb: JpdbParseResponse, config: VocabStateConfig) {
     const { kanaUnknown } = config
-    const res = new Map<number, number[]>()
+    const res = new Map<number, JpdbToken[]>()
     for (const entry of subtitles.processedEntries) {
         let unknown: JpdbToken | undefined
         const end = entry.characterOffset + entry.text.length
@@ -164,8 +164,8 @@ export function geti1Tokens(subtitles: Subtitles, jpdb: JpdbParseResponse, confi
         if (unknown !== undefined && tokenCount >= 3) {
             const vid = jpdb.vocabulary[unknown[3]][5]
             const existing = res.get(vid)
-            if (existing) existing.push(unknown[0])
-            else res.set(vid, [unknown[0]])
+            if (existing) existing.push(unknown)
+            else res.set(vid, [unknown])
         }
     }
     return res

@@ -234,7 +234,7 @@ export default class SubtitlesPage extends PageComponent {
         const subs = this.LoadedSubtitles?.subtitles
         if (subs && !this.RecommendedMiningModalPromise) {
             this.RecommendedMiningModalPromise = (async () => {
-                const modal = await RecommendedMiningModal(subs, () => {
+                const modal = await RecommendedMiningModal(() => {
                     const main = this.LoadedSubtitles?.Node
                     if (!main) return
                     // couldn't really think of a nice way to grab this without id
