@@ -7,9 +7,9 @@ import { Modal, OpenModal } from "../../components/Modal"
 import IconButton, { IconButtonClass } from "../../components/basic/IconButton"
 import SettingsModal, { getSetting, onSettingChange, removeOnSettingChange, setSetting } from "../../views/SettingsModal"
 import { applyReplacementsTo, getReplacements } from "../../views/RegexReplacements"
-import { JpdbParseResponse, JpdbParseSubtitles } from "../../jpdb/JpdbParseText"
+import { JpdbParseResponse, JpdbParseSubtitles, JpdbToken } from "../../jpdb/JpdbParseText"
 import RecommendedMiningModal from "./RecommendedMiningModal"
-import { getCharacterIndex } from "../../utils/CharacterHighlighter"
+import { getCharacterIndex, setSelection } from "../../utils/CharacterHighlighter"
 import { PageComponent } from "../../framework/PageComponent"
 import { Children, replaceChildren } from "../../framework/createElement"
 import UserError, { ErrorDisplay } from "../../utils/UserError"
@@ -594,5 +594,13 @@ export default class SubtitlesPage extends PageComponent {
         const index = this.GetNextEntryIndex(entries, backwards)
         this.SeekToSubtitle(entries[index])
         return index
+    }
+    SeekAndHighlightToken(entry: SubtitleEntryWithCharacterOffset, token: JpdbToken) {
+        const jpdb = this.LoadedSubtitles?.subtitles.jpdbParse
+        if (!jpdb) return
+        this.SeekToSubtitle(entry)
+        const tokenStart = token[0]
+        const node = entry.node?.querySelector<HTMLDivElement>(".subtitles")
+        setSelection(node, tokenStart - entry.characterOffset, tokenStart + token[1] - entry.characterOffset)
     }
 }
