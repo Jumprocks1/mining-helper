@@ -29,6 +29,7 @@ jobs:
     
     steps:
       - uses: actions/checkout@v6
+      - uses: dw-labs-org/dart-sass-gha@v1
 
       - name: Setup Node
         uses: actions/setup-node@v6
@@ -39,6 +40,7 @@ jobs:
         run: |
           npm i
           node esbuild.mjs --prod --gh-pages
+          sass src/main.scss:dist/main.css
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
