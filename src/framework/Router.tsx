@@ -24,7 +24,7 @@ interface Props {
     fallbackPage: PageClass
     fallbackTitle: string
     fallbackLayout?: LayoutType
-    routePreference: "html" | "no-ext"
+    routePreference: "html" | "no-ext" | "p"
     spaLinks: boolean
 }
 
@@ -55,7 +55,15 @@ export function navigateTo(page: PageDefinition | string) {
     if (globalRouterProps.routePreference === "html") {
         if (!path.endsWith(".html")) path = path + ".html"
     }
-    history.pushState(undefined, "", path)
+    if (globalRouterProps.routePreference === "p") {
+        const params = new URLSearchParams(window.location.search);
+        if (path.endsWith(".html")) path = path.substring(0, path.length - 5)
+        if (path.startsWith("/")) path = path.substring(1)
+        params.set("p", path)
+        window.location.search = params.toString();
+    } else {
+        history.pushState(undefined, "", path)
+    }
     for (const e of onRouteChangeListeners) e()
 }
 
@@ -81,9 +89,10 @@ export function BindSpaRouter(props: Props) {
                 const target = ev.target as HTMLElement
                 if (target && target.tagName === "A") {
                     const anchor = target as HTMLAnchorElement
-                    if (anchor.origin === location.origin && anchor.pathname) {
+                    const href = anchor.getAttribute("href")
+                    if (anchor.origin === location.origin && href) {
                         ev.preventDefault()
-                        navigateTo(anchor.pathname)
+                        navigateTo(href)
                     }
                 }
             })

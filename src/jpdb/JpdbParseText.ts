@@ -119,7 +119,6 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
             finalRes.tokens.push(token)
         }
         for (const vocab of json.vocabulary) {
-            // TODO could dedup these if needed
             finalRes.vocabulary.push(vocab)
         }
         sentCount += 1
