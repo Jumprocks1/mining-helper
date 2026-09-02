@@ -38,7 +38,7 @@ jobs:
       - name: Build
         run: |
           npm i
-          node esbuild.mjs --prod
+          node esbuild.mjs --prod --gh-pages
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

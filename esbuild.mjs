@@ -19,7 +19,8 @@ const config = {
     outdir: "./dist/js",
     logLevel: "info",
     define: {
-        HOT_RELOAD_CSS: String(hotReloadCss)
+        HOT_RELOAD_CSS: String(hotReloadCss),
+        GITHUB_PAGES: String(process.argv.includes('--gh-pages'))
     }
 }
 
