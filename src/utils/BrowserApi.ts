@@ -28,7 +28,7 @@ interface BrowserApiI {
 
 
 function getStorageApi(): StorageApi {
-    if (chrome?.storage) return BrowserStorage
+    if (chrome?.storage) return chrome.storage
 
     const localPrefix = "storage.local_"
     const sessionPrefix = "storage.session_"

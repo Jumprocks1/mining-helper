@@ -2,6 +2,7 @@ import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { jpdbEntryUrl } from "./util";
 
 export function openTab(url: string) {
+    // TODO get rid of chrome reference
     if (chrome.tabs) {
         chrome.tabs.create({ url })
     } else {
