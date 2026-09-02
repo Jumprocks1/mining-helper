@@ -10,11 +10,14 @@ import { RegisterTooltipEvents } from "../framework/Tooltips";
 // if we store things like the modal portal in the body, they would get removed on navigation
 const pageBody = <div className="page-container" />
 
+declare var GITHUB_PAGES: boolean | undefined
+
 BindSpaRouter({
     target: () => pageBody,
     pages,
     routePreference: "html",
     fallbackPage: HomePage,
+    basePath: GITHUB_PAGES ? "mining-helper" : undefined,
     fallbackTitle: "Mining Helper",
     fallbackLayout: MainLayout,
     onInit: onPageLoad,

@@ -25,6 +25,7 @@ interface Props {
     fallbackTitle: string
     fallbackLayout?: LayoutType
     routePreference: "html" | "no-ext" | "p"
+    basePath?: string
     spaLinks: boolean
 }
 
@@ -41,6 +42,11 @@ function getRouteFromLocation() {
     if (!path.startsWith("/"))
         path = "/" + path;
 
+    const base = cleanedBase()
+    if (base && path.startsWith(base)) {
+        path = path.substring(base.length)
+    }
+
     return path
 }
 
@@ -49,6 +55,14 @@ function getRouteFromLocation() {
 let globalRouterProps: Props = undefined
 // @ts-expect-error - this gets set right away, so might as well be not-undefined
 let currentPage: PageComponent = undefined
+
+function cleanedBase() {
+    let base = globalRouterProps.basePath
+    if (!base) return
+    if (!base.startsWith("/")) base = "/" + base
+    if (!base.endsWith("/")) base = base + "/"
+    return base
+}
 
 export function navigateTo(page: PageDefinition | string) {
     let path = typeof page === "string" ? page : page.path
