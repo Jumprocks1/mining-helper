@@ -2,14 +2,13 @@ import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { jpdbEntryUrl } from "./util";
 
 export function openTab(url: string) {
-    // TODO get rid of chrome reference
-    if (chrome.tabs) {
-        chrome.tabs.create({ url })
+    if (browser) {
+        browser.tabs.create({ url })
     } else {
         if (url.startsWith("http"))
             window.open(url, "_blank", "noopener,noreferrer");
-        else {
-            chrome.runtime.sendMessage(`open:${url}`);
+        else if (browser) {
+            browser.runtime.sendMessage(`open:${url}`);
         }
     }
 }

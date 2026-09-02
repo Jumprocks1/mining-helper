@@ -1,5 +1,4 @@
-// meant to interface with `chrome` so things still work when run in SPA or Firefox
-// shouldn't reference `chrome` anywhere else
+// meant to make things run smoothly across Chrome ext/FF ext/web
 
 type GetMethod = {
     <T extends Record<string, any>>(t: T): Promise<T>;
@@ -13,7 +12,7 @@ interface SingleStorage {
     set: <T extends Record<string, any>>(t: T) => Promise<void>;
     getKeys: () => Promise<string[]>
     remove: (key: string) => Promise<void>
-    getBytesInUse: () => Promise<number>
+    getBytesInUse?: () => Promise<number>
     QUOTA_BYTES: number
 }
 
@@ -28,7 +27,9 @@ interface BrowserApiI {
 
 
 function getStorageApi(): StorageApi {
-    if (chrome?.storage) return chrome.storage
+    if (browser) return browser.storage
+    // @ts-expect-error
+    if (chrome) return chrome.storage
 
     const localPrefix = "storage.local_"
     const sessionPrefix = "storage.session_"

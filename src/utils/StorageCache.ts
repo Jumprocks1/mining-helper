@@ -39,7 +39,8 @@ export default class StorageCache {
         cacheInfo.sort((a, b) => b.time - a.time)
         const minimumAvailable = this.Props.minimumAvailableBytes ?? 1_000_000 // 1 MB spare
         const maxEntries = this.Props.maxEntries
-        while ((quota - await BrowserStorage.local.getBytesInUse()) < minimumAvailable || cacheInfo.length > maxEntries) {
+        const getBytes = BrowserStorage.local.getBytesInUse ?? (() => 0)
+        while ((quota - await getBytes()) < minimumAvailable || cacheInfo.length > maxEntries) {
             const pop = cacheInfo.pop()
             if (!pop) break
             await BrowserStorage.local.remove(this.Prefix + pop.key)

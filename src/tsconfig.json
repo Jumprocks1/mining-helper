@@ -12,7 +12,7 @@
         "jsxFragmentFactory": "createFragment",
         "noImplicitOverride": true,
         "types": [
-            "chrome"
+            "firefox-webext-browser"
         ]
     }
 }

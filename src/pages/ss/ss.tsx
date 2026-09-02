@@ -32,7 +32,7 @@ export default class SentenceSearchPage extends PageComponent {
 
     override Load = async () => {
         const audioBaseUrl = "https://receptomanijalogi.web.app/audio/"
-        const dataUrl = chrome.runtime.getURL("all_v11.json")
+        const dataUrl = browser.runtime.getURL("all_v11.json")
         const dataPromise = fetch(dataUrl)
         const query = new URLSearchParams(location.search).get("q")
         if (query) this.SearchInput.value = query;

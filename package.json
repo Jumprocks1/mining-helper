@@ -2,7 +2,7 @@
   "name": "anki-mining-helper",
   "scripts": {},
   "devDependencies": {
-    "@types/chrome": "^0.1.12",
+    "@types/firefox-webext-browser": "^143.0.0",
     "@types/node": "^26.0.1",
     "esbuild": "0.25.10",
     "typescript": "^5.9.2"

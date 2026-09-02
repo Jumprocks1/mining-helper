@@ -57,8 +57,10 @@ export default () => {
             <div className="footer-buttons">
                 <LoadingButton onClick={ClearCache}>Clear Cache</LoadingButton>
                 <LoadingButton onClick={async () => {
-                    const used = await BrowserStorage.local.getBytesInUse()
-                    console.log(`Using ${used} bytes (${Math.round(used / BrowserStorage.local.QUOTA_BYTES * 100)}%)`)
+                    if (BrowserStorage.local.getBytesInUse) {
+                        const used = await BrowserStorage.local.getBytesInUse()
+                        console.log(`Using ${used} bytes (${Math.round(used / BrowserStorage.local.QUOTA_BYTES * 100)}%)`)
+                    }
                     console.log(await BrowserStorage.local.get())
                 }}>
                     Log Storage
