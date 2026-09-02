@@ -1,9 +1,9 @@
 # Setup
 Eventually there will be guided setup instructions at https://jumprocks1.github.io/mining-helper/setup, but for now the instructions are listed here.
 
-1. Download latest release: https://github.com/Jumprocks1/mining-helper/releases - currently only Windows has official releases. To run on Linux/Mac, you'll have to run from source (until I set up builds).
+1. Download the [latest release](https://github.com/Jumprocks1/mining-helper/releases) - currently only Windows has official releases. To run on Linux/Mac, you'll have to run from source.
 
-TODO need to get the releases + GitHub pages release working before I can fill this out
+TODO need to get the release working before I can fill this out
 
 ## Running as a Chrome Extension
 There are a few extra features when running as a Chrome extension (instead of a website). I don't expect this to be necessary for most, but here's the instructions:

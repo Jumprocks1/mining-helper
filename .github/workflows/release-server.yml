@@ -5,6 +5,9 @@ on:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
 
+permissions:
+  contents: write
+
 jobs:
   build:
 
@@ -35,6 +38,6 @@ jobs:
         zip -r $BuildPrefix-win-x64.zip mining-helper-win-x64
 
     - name: Release
-      uses: softprops/action-gh-release@v2
+      uses: softprops/action-gh-release@v3
       with:
         files: ${{env.BuildPrefix}}-win-x64.zip
