@@ -40,4 +40,4 @@ jobs:
     - name: Release
       uses: softprops/action-gh-release@v3
       with:
-        files: ${{env.BuildPrefix}}-win-x64.zip
+        files: server/MiningHelper/${{env.BuildPrefix}}-win-x64.zip
