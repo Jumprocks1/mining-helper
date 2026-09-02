@@ -257,7 +257,7 @@ export function cleanSource(source: string | undefined) {
             replace: ""
         },
         {
-            match: /\.|_/g,
+            match: /\.|_|,/g,
             replace: " "
         },
         {
