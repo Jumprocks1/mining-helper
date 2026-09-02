@@ -84,7 +84,7 @@ export default class SubtitleViewer {
                 if (token) {
                     const start = token[0] - entry.characterOffset
                     const range = getSelectionRange(subtitles, start, start + token[1])
-                    return [range, jpdb.vocabulary[token[3]]]
+                    return [range, jpdb.vocabulary[token[3]], token]
                 }
             },
             invert: false,

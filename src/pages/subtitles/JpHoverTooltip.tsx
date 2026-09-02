@@ -2,11 +2,11 @@ import { JsPopover } from "../../components/basic/JsPopover";
 import { Children } from "../../framework/createElement";
 import { onDeath } from "../../framework/Observer";
 import { SmallTooltip } from "../../framework/Tooltips";
-import { JpdbVocabulary } from "../../jpdb/JpdbParseText";
+import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState";
 import AnkiConnect from "../../utils/AnkiConnect";
 import { getHoveredCharacterIndex } from "../../utils/CharacterHighlighter";
-import { furiToRuby } from "../../utils/util";
+import { furiFromToken, furiToRuby } from "../../utils/util";
 
 export default class JpHoverTooltip extends JsPopover {
 
@@ -18,8 +18,8 @@ export default class JpHoverTooltip extends JsPopover {
         })
     }
 
-    Target(target: HTMLElement | Range, vocab: JpdbVocabulary) {
-        if (!vocab.furigana) this.Close()
+    Target(target: HTMLElement | Range, vocab: JpdbVocabulary, token?: JpdbToken) {
+        if (!vocab.furigana) this.Close() // not sure what this line does
         if (target instanceof HTMLElement) {
             this.Anchor = target
             this.Node.style.left = `anchor(left)`
@@ -33,12 +33,12 @@ export default class JpHoverTooltip extends JsPopover {
             this.Node.style.left = `calc(anchor(left) + ${x}px)`
             this.Node.style.top = `calc(anchor(top) + ${y}px)`
         }
-        this.TargetBase(vocab)
+        this.TargetBase(vocab, token)
     }
 
     LoadedVocab: JpdbVocabulary | undefined
 
-    private TargetBase(vocab: JpdbVocabulary) {
+    private TargetBase(vocab: JpdbVocabulary, token?: JpdbToken) {
         if (this.LoadedVocab === vocab) {
             this.Open()
             return
@@ -59,7 +59,13 @@ export default class JpHoverTooltip extends JsPopover {
             }
         }
 
-        const ruby = furiToRuby(vocab.furigana)
+        let furi = vocab.furigana
+        if (token) {
+            const tokenFuri = furiFromToken(vocab[0], token)
+            if (tokenFuri.includes("[")) furi = tokenFuri
+        }
+
+        const ruby = furiToRuby(furi)
 
         this.SetContent(<>
             <div className="header">
@@ -81,7 +87,8 @@ export default class JpHoverTooltip extends JsPopover {
 
 export interface JpHoverTooltipHandler {
     body: HTMLElement,
-    getTargetAndVocab: (hovered: readonly [Node, number]) => [HTMLElement | Range, JpdbVocabulary] | undefined,
+    getTargetAndVocab: (hovered: readonly [Node, number]) =>
+        [HTMLElement | Range, JpdbVocabulary, JpdbToken?] | undefined,
     invert: boolean
     onChange?: (hoverState: JpHoverTooltipState | undefined) => void
 }
@@ -92,6 +99,7 @@ export interface JpHoverTooltipState {
     handler: JpHoverTooltipHandler,
     tooltip: boolean
     target: HTMLElement | Range
+    token?: JpdbToken
 }
 let loadedHover: JpHoverTooltipState | undefined
 let popover: JpHoverTooltip | undefined // this can end up set but with open false
@@ -161,7 +169,7 @@ function _setHoverStateInner(state: JpHoverTooltipState | undefined, shiftKey: b
     loadedHover = state
     popover ??= new JpHoverTooltip()
     if (state.target instanceof Range) popover.Anchor = state.handler.body
-    popover.Target(state.target, state.vocab)
+    popover.Target(state.target, state.vocab, state.token)
 }
 
 function UpdateHoverState(shiftKey: boolean) {
@@ -185,12 +193,12 @@ function UpdateHoverStateSingle(hovered: readonly [Node, number], handler: JpHov
     const targetAndVocab = handler.getTargetAndVocab(hovered)
     if (!targetAndVocab) return false
 
-    const [target, vocab] = targetAndVocab
+    const [target, vocab, token] = targetAndVocab
     const showTooltip = shiftKey !== handler.invert
         // The || means if as long as we continue hovering the same target, we keep showing the tooltip
         || Boolean(loadedHover?.tooltip && targetsEqual(loadedHover.target, target))
 
-    setHoverState({ vocab, handler, tooltip: showTooltip, target }, shiftKey)
+    setHoverState({ vocab, handler, tooltip: showTooltip, target, token }, shiftKey)
     return true
 }
 
