@@ -39,13 +39,14 @@ function getRouteFromLocation() {
         if (dot >= 0) path = path.substring(0, dot)
     }
 
-    if (!path.startsWith("/"))
-        path = "/" + path;
-
     const base = cleanedBase()
     if (base && path.startsWith(base)) {
         path = path.substring(base.length)
     }
+
+    if (!path.startsWith("/"))
+        path = "/" + path;
+
 
     return path
 }
