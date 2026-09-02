@@ -1,3 +1,5 @@
+import { BrowserStorage } from "./BrowserApi"
+
 interface Props {
     prefix: string
     maxEntries: number
@@ -33,7 +35,7 @@ export default class StorageCache {
 
     async CleanNoSave() {
         const quota = chrome.storage.local.QUOTA_BYTES
-        const cacheInfo = (await chrome.storage.local.get({ [this.InfoKey]: [] }))[this.InfoKey] as CacheInfo[]
+        const cacheInfo = (await BrowserStorage.local.get({ [this.InfoKey]: [] }))[this.InfoKey] as CacheInfo[]
         cacheInfo.sort((a, b) => b.time - a.time)
         const minimumAvailable = this.Props.minimumAvailableBytes ?? 1_000_000 // 1 MB spare
         const maxEntries = this.Props.maxEntries
@@ -55,7 +57,7 @@ export default class StorageCache {
             }
         }
         if (!found) cacheInfo.push({ key, time: Date.now() })
-        await chrome.storage.local.set({ [this.Prefix + key]: value, [this.InfoKey]: cacheInfo })
+        await BrowserStorage.local.set({ [this.Prefix + key]: value, [this.InfoKey]: cacheInfo })
     }
 
     async Get<T>(key: string | number, get: () => Promise<T>, forceRefresh?: boolean): Promise<T>;
@@ -71,7 +73,7 @@ export default class StorageCache {
             this.Store(key, value)
             return value
         }
-        const found = (await chrome.storage.local.get(cacheKey))[cacheKey] as T | undefined
+        const found = (await BrowserStorage.local.get(cacheKey))[cacheKey] as T | undefined
         if (!found) {
             if (get === undefined) return undefined
             const value = await get()

@@ -6,6 +6,7 @@ import { OpenModal } from "../components/Modal"
 import { BindSpaRouter, CurrentPage } from "../framework/Router";
 import { JpdbCache } from "../jpdb/JpdbParseText";
 import SubtitlesPage from "../pages/subtitles/subtitles";
+import { BrowserStorage } from "../utils/BrowserApi";
 import { getDefaultSetting, getSetting, setSetting } from "./SettingsModal";
 
 async function ClearCache() {
@@ -58,7 +59,7 @@ export default () => {
                 <LoadingButton onClick={async () => {
                     const used = await chrome.storage.local.getBytesInUse()
                     console.log(`Using ${used} bytes (${Math.round(used / chrome.storage.local.QUOTA_BYTES * 100)}%)`)
-                    console.log(await chrome.storage.local.get())
+                    console.log(await BrowserStorage.local.get())
                 }}>
                     Log Storage
                 </LoadingButton>

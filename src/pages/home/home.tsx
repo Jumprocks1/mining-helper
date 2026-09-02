@@ -1,6 +1,7 @@
 import { Children } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { saveToAnkiAndRemove, updateInAnkiAndRemove } from "../../utils/AnkiUtil"
+import { BrowserStorage } from "../../utils/BrowserApi"
 import { CardData, oldCreateElement, furiToReading } from "../../utils/util"
 
 export default class HomePage extends PageComponent {
@@ -53,7 +54,7 @@ export default class HomePage extends PageComponent {
         </>
 
         async function refresh() {
-            const cardsObject = await chrome.storage.session.get()
+            const cardsObject = await BrowserStorage.session.get()
             const cards: CardData[] = []
             for (const key in cardsObject)
                 cards.push(cardsObject[key])
@@ -79,7 +80,7 @@ export default class HomePage extends PageComponent {
                         oldCreateElement("span", {
                             className: "delete-button button", textContent: "x", onClick: async ev => {
                                 ev.preventDefault()
-                                await chrome.storage.session.remove(e.kanji)
+                                await BrowserStorage.session.remove(e.kanji)
                                 refresh()
                             }
                         }),

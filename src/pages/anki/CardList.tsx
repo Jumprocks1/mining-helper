@@ -3,6 +3,7 @@ import LoadingButton from "../../components/LoadingButton"
 import { furiganaTrimmed, simplifiedFurigana } from "../../jpdb/JpdbState"
 import AnkiConnect from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
+import { BrowserStorage } from "../../utils/BrowserApi"
 import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../../views/SettingsModal"
 import AnkiSettingsModal, { getTargetNoteFilter } from "./AnkiSettingsModal"
 
@@ -38,7 +39,7 @@ export function getAnkiFuriganaSync() { return localAnkiFurigana }
 
 export async function getAnkiFurigana(disableCache = false): Promise<string[]> {
     if (!disableCache && localAnkiFurigana) return localAnkiFurigana
-    return localAnkiFurigana = (await chrome.storage.local.get({ ankiFurigana: [] })).ankiFurigana
+    return localAnkiFurigana = (await BrowserStorage.local.get({ ankiFurigana: [] })).ankiFurigana
 }
 
 export async function addAnkiFurigana(furi: string) {
@@ -46,7 +47,7 @@ export async function addAnkiFurigana(furi: string) {
     const ankiFuri = await getAnkiFurigana(true) // can't use cache, too risky
     if (!ankiFuri.includes(furi)) {
         ankiFuri.push(furi)
-        await chrome.storage.local.set({ ankiFurigana: ankiFuri })
+        await BrowserStorage.local.set({ ankiFurigana: ankiFuri })
     }
     if (localAnkiFuriganaSet) localAnkiFuriganaSet.add(furi)
     if (localAnkiFuriganaTrimmedMap) {
@@ -78,7 +79,7 @@ export default async () => {
             localAnkiFuriganaSet = undefined
             localAnkiFuriganaTrimmedMap = undefined
             // don't need to await this
-            chrome.storage.local.set({ ankiFurigana: localAnkiFurigana })
+            BrowserStorage.local.set({ ankiFurigana: localAnkiFurigana })
             await update(false)
         }
     })

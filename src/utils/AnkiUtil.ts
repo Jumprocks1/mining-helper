@@ -1,6 +1,7 @@
 import { addAnkiFurigana } from "../pages/anki/CardList";
 import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../views/SettingsModal";
 import AnkiConnect, { MediaAdd } from "./AnkiConnect"
+import { BrowserStorage } from "./BrowserApi";
 import { TriggerEvent } from "./Events";
 import UserError from "./UserError";
 import { CardData, furiToReading } from "./util"
@@ -28,14 +29,14 @@ export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal
     const cardId = cards.length > 0 && cards[0]
     if (cardId)
         await AnkiConnect.call("guiSelectCard", { card: cardId })
-    await chrome.storage.session.remove(card.kanji)
+    await BrowserStorage.session.remove(card.kanji)
 
     TriggerEvent("vocab-mined", card)
 }
 
 export async function updateInAnkiAndRemove(card: CardData) {
     await updateInAnki(card)
-    await chrome.storage.session.remove(card.kanji)
+    await BrowserStorage.session.remove(card.kanji)
 }
 
 

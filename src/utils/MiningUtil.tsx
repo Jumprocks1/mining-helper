@@ -1,16 +1,17 @@
+import { BrowserStorage } from "./BrowserApi"
 import { CardData } from "./util"
 
 export async function getOrCreatePendingCard(word: string, checkPartial: boolean) {
     word = word.trim()
 
     if (checkPartial) {
-        const keys = await chrome.storage.session.getKeys()
+        const keys = await BrowserStorage.session.getKeys()
         const foundKey = keys.find(e => e.includes(word))
         if (foundKey) word = foundKey
     }
 
-    const res = await chrome.storage.session.get({ [word]: {} })
-    const card: CardData = res[word]
+    const res = await BrowserStorage.session.get({ [word]: {} })
+    const card = res[word] as CardData
     card.kanji = word
 
     return card
@@ -24,5 +25,5 @@ export async function mutatePendingCard(word: string, checkPartial: boolean, mut
 }
 
 export async function saveCard(card: CardData) {
-    chrome.storage.session.set({ [card.kanji]: card })
+    BrowserStorage.session.set({ [card.kanji]: card })
 }

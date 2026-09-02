@@ -4,6 +4,7 @@ import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
 import AnkiSettingsModal from "../pages/anki/AnkiSettingsModal"
 import { validateSettings } from "../pages/setup/validate"
+import { BrowserStorage } from "../utils/BrowserApi"
 import AdvancedSettingsModal from "./AdvancedSettingsModal"
 import RegexReplacements, { ReplacementEntry } from "./RegexReplacements"
 import { JpdbApiKeyField } from "./SettingsFields"
@@ -147,7 +148,7 @@ export function getSetting<K extends SettingsKey>(key: K): AllSettings[K] | Prom
         return cachedSettings[key]
     if (key in defaultLocalSettings)
         // we could probably store the results of this in cachedSettings
-        return chrome.storage.local.get({ [key]: defaultLocalSettings[key as keyof LocalSettings] }).then(e => e[key])
+        return BrowserStorage.local.get({ [key]: defaultLocalSettings[key as keyof LocalSettings] }).then(e => e[key]) as Promise<AllSettings[K]>
     throw new Error()
 }
 
@@ -161,7 +162,7 @@ export async function setSetting<K extends SettingsKey>(key: K, v: AllSettings[K
         // objects can have the same reference but still change
         if (typeof v !== "object" && key in cachedSettings && cachedSettings[key] === v) return
         cachedSettings[key] = v
-        await chrome.storage.local.set({ [key]: v })
+        await BrowserStorage.local.set({ [key]: v })
         triggerSettingChanged(key, v)
     } else if (key in cachedSettings) {
         if (typeof v !== "object" && cachedSettings[key] === v) return

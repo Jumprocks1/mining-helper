@@ -1,3 +1,4 @@
+import { BrowserStorage } from "../utils/BrowserApi"
 import { VocabState } from "./JpdbState"
 
 type Entry = number | { vid: number, word?: string, expire?: number }
@@ -10,7 +11,7 @@ let checkedForExpire = false
 
 export async function loadIgnoreList(disableCache = false) {
     if (!disableCache && localIgnoreList) return localIgnoreList
-    localIgnoreList = (await chrome.storage.local.get({ ignoreList: [] })).ignoreList
+    localIgnoreList = (await BrowserStorage.local.get({ ignoreList: [] })).ignoreList
     // only check this once per page load
     if (!checkedForExpire && localIgnoreList) {
         checkedForExpire = true
@@ -24,7 +25,7 @@ export async function loadIgnoreList(disableCache = false) {
             }
         }
         if (expired) {
-            await chrome.storage.local.set({ ignoreList: localIgnoreList })
+            await BrowserStorage.local.set({ ignoreList: localIgnoreList })
         }
     }
     return localIgnoreList!
@@ -42,7 +43,7 @@ export async function IgnoreVid(vid: number, word?: string, temp?: boolean) {
             if (temp) obj.expire = Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 days
         }
         list.push(obj)
-        await chrome.storage.local.set({ ignoreList: list })
+        await BrowserStorage.local.set({ ignoreList: list })
         if (localIgnoreLookup) localIgnoreLookup.set(vid, obj)
     }
 }
@@ -52,7 +53,7 @@ export async function UnIgnoreVid(vid: number) {
     const index = list.findIndex(e => typeof e === "number" ? e === vid : e.vid === vid)
     if (index >= 0) {
         list.splice(index, 1)
-        await chrome.storage.local.set({ ignoreList: list })
+        await BrowserStorage.local.set({ ignoreList: list })
         if (localIgnoreLookup) localIgnoreLookup.delete(vid)
     }
 }

@@ -2,6 +2,7 @@ import IconButton from "../components/basic/IconButton"
 import Loader from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
+import { BrowserStorage } from "../utils/BrowserApi"
 import { triggerSettingChanged } from "./SettingsModal"
 
 export interface ReplacementEntry {
@@ -21,7 +22,7 @@ export function applyReplacementsTo(replacements: ReplacementEntry[], s: string)
 }
 
 export async function getReplacements() {
-    return (await chrome.storage.local.get({ regexReplacements: [] })).regexReplacements as ReplacementEntry[]
+    return (await BrowserStorage.local.get({ regexReplacements: [] })).regexReplacements as ReplacementEntry[]
 }
 
 export default () => {
@@ -59,7 +60,7 @@ export default () => {
                     replacements[i].replace = row.querySelector<HTMLInputElement>(".regex-replace")!.value;
                 }
             }
-            await chrome.storage.local.set({ regexReplacements: replacements })
+            await BrowserStorage.local.set({ regexReplacements: replacements })
             triggerSettingChanged("regexReplacements", replacements)
         }} loading={load}>Save</LoadingButton></div>
     </div>
