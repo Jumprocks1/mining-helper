@@ -24,25 +24,25 @@ export default class StorageCache {
     }
 
     async Clear() {
-        const keys = await chrome.storage.local.getKeys()
+        const keys = await BrowserStorage.local.getKeys()
         for (const key of keys) {
             if (key.startsWith(this.Prefix)) {
-                await chrome.storage.local.remove(key)
+                await BrowserStorage.local.remove(key)
             }
         }
     }
 
 
     async CleanNoSave() {
-        const quota = chrome.storage.local.QUOTA_BYTES
+        const quota = BrowserStorage.local.QUOTA_BYTES
         const cacheInfo = (await BrowserStorage.local.get({ [this.InfoKey]: [] }))[this.InfoKey] as CacheInfo[]
         cacheInfo.sort((a, b) => b.time - a.time)
         const minimumAvailable = this.Props.minimumAvailableBytes ?? 1_000_000 // 1 MB spare
         const maxEntries = this.Props.maxEntries
-        while ((quota - await chrome.storage.local.getBytesInUse()) < minimumAvailable || cacheInfo.length > maxEntries) {
+        while ((quota - await BrowserStorage.local.getBytesInUse()) < minimumAvailable || cacheInfo.length > maxEntries) {
             const pop = cacheInfo.pop()
             if (!pop) break
-            await chrome.storage.local.remove(this.Prefix + pop.key)
+            await BrowserStorage.local.remove(this.Prefix + pop.key)
         }
         return cacheInfo
     }

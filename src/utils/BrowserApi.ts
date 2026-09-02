@@ -13,6 +13,8 @@ interface SingleStorage {
     set: <T extends Record<string, any>>(t: T) => Promise<void>;
     getKeys: () => Promise<string[]>
     remove: (key: string) => Promise<void>
+    getBytesInUse: () => Promise<number>
+    QUOTA_BYTES: number
 }
 
 interface StorageApi {
@@ -88,7 +90,17 @@ function getStorageApi(): StorageApi {
         },
         remove: async (key: string) => {
             storage.removeItem(prefix + key)
-        }
+        },
+        getBytesInUse: async () => {
+            let o = 0;
+            for (let i = 0; i < storage.length; i++) {
+                const key = storage.key(i)!;
+                // blob since a JP character takes more than 1 byte
+                o += new Blob([key, storage.getItem(key)!]).size
+            }
+            return o;
+        },
+        QUOTA_BYTES: 1_000_000_000 * 5 // 5 MB seems to be a good amount
     })
 
     return {
