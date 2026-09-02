@@ -2,12 +2,12 @@ import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { jpdbEntryUrl } from "./util";
 
 export function openTab(url: string) {
-    if (browser) {
+    if (typeof browser !== "undefined") {
         browser.tabs.create({ url })
     } else {
         if (url.startsWith("http"))
             window.open(url, "_blank", "noopener,noreferrer");
-        else if (browser) {
+        else if (typeof browser !== "undefined") {
             browser.runtime.sendMessage(`open:${url}`);
         }
     }

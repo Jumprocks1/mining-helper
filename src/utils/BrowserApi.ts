@@ -27,9 +27,9 @@ interface BrowserApiI {
 
 
 function getStorageApi(): StorageApi {
-    if (browser) return browser.storage
+    if (typeof browser !== "undefined") return browser.storage
     // @ts-expect-error
-    if (chrome) return chrome.storage
+    if (typeof chrome !== "undefined" && chrome.storage) return chrome.storage
 
     const localPrefix = "storage.local_"
     const sessionPrefix = "storage.session_"
