@@ -90,6 +90,7 @@ export default class SetupPage extends PageComponent {
     CheckServer = async (tester: SettingsValidator) => {
         try {
             const pingResult = await fetch(await getHttpServerAddress(), { method: "GET" })
+            // TODO if the api key is missing, add a button that opens the settings modal
             // TODO might need to check pingResult more? not sure
         } catch {
             // TODO should mention that the server might already be set up, just not running
