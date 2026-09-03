@@ -49,7 +49,7 @@ public static class Program
 
             if (Setup)
             {
-                await MiningHelper.Setup.Run();
+                await MiningHelper.Setup.Setup.Run();
                 return;
             }
             if (Server)

@@ -1,8 +1,8 @@
 using MiningHelper.Utils;
 
-namespace MiningHelper;
+namespace MiningHelper.Setup;
 
-public static class Setup
+public static partial class Setup
 {
     static HttpClient Client => field ??= new();
     public static async Task Run()
@@ -13,11 +13,6 @@ public static class Setup
         SqliteSeeder.Setup();
         await DownloadKanjiFiles();
     }
-    public static void SetupMpv()
-    {
-        // TODO check for mpv and move script (same as ps1 script)
-    }
-
     public static async Task DownloadKanjiFiles()
     {
         static async Task<bool> check(string path, string url, string sizeEstimate)

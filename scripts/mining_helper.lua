@@ -1,5 +1,5 @@
-local toggleServerKeybind = "Ctrl+d"
 local executablePath = "@EXECUTABLE_PATH"
+local toggleServerKeybind = "Ctrl+d"
 
 local pipe = mp.get_property("input-ipc-server")
 local utils = require "mp.utils"
