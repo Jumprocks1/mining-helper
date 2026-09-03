@@ -2,6 +2,7 @@
 Eventually there will be guided setup instructions at https://jumprocks1.github.io/mining-helper/setup, but for now the instructions are listed here.
 
 1. Download the [latest release](https://github.com/Jumprocks1/mining-helper/releases) - currently only Windows has official releases. To run on Linux/Mac, you'll have to run from source.
+2. Run `setup.bat`. This will walk you through the server setup process.
 
 TODO need to get the release working before I can fill this out
 

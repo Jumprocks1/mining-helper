@@ -34,7 +34,10 @@ jobs:
     - name: Publish and zip win-x64
       run: |
         cd server/MiningHelper
-        dotnet publish -c Release -o mining-helper-win-x64 -r win-x64 -p:PublishReadyToRun=true --self-contained -p:Version=$VERSION
+        dotnet publish -c Release -o mining-helper-win-x64/bin -r win-x64 -p:PublishReadyToRun=true --self-contained -p:Version=$VERSION
+        cp ../../scripts/setup.bat mining-helper-win-x64
+        cp ../appsettings.json mining-helper-win-x64
+        cp ../../scripts/mining_helper.lua mining-helper-win-x64/bin
         zip -r $BuildPrefix-win-x64.zip mining-helper-win-x64
 
     - name: Release
