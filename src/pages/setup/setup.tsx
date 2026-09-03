@@ -1,5 +1,7 @@
-import { Icon } from "../../components/basic/IconButton"
+import IconButton, { Icon } from "../../components/basic/IconButton"
+import Loader from "../../components/Loader"
 import LoadingButton from "../../components/LoadingButton"
+import { OpenModal } from "../../components/Modal"
 import { Children, replaceChildren } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { callJpdb } from "../../jpdb/JpdbParseText"
@@ -10,7 +12,7 @@ import MpvWebSocket from "../../utils/MpvWebSocket"
 import SettingsValidator, { CheckIcon } from "../../utils/SettingsValidator"
 import UserError, { userErrorMessage } from "../../utils/UserError"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
-import { getSetting } from "../../views/SettingsModal"
+import SettingsModal, { getSetting, stringSettingsField } from "../../views/SettingsModal"
 import AnkiSettingsModal from "../anki/AnkiSettingsModal"
 import { ValidateResponse } from "./validate"
 
@@ -26,11 +28,14 @@ export default class SetupPage extends PageComponent {
 
         this.Node = <>
             <h2>Setup</h2>
-            <p className="warning">This page is not yet complete. For more instructions, please see
-                {" "}<a target="_blank" rel="noopener noreferrer" href="https://github.com/Jumprocks1/mining-helper/blob/main/docs/SETUP.md">GitHub</a>.</p>
+            <p className="warning">This page is not yet complete. For more instructions, see
+                {" "}<a target="_blank" rel="noopener noreferrer" href="https://github.com/Jumprocks1/mining-helper/blob/main/docs/SETUP.md">SETUP.md</a>.</p>
             <br />
             <p>This page will walk you through setting up Anki Mining Helper. Start by using the button below.</p>
-            <LoadingButton onClick={() => this.CheckSettings()}>Check Current Settings</LoadingButton>
+            <div className="button-group">
+                <LoadingButton onClick={() => this.CheckSettings()}>Check Current Settings</LoadingButton>
+                <IconButton icon="settings" onClick={() => SettingsModal()} tooltip="Open Settings" />
+            </div>
             {this.Output}
         </>
 
@@ -90,19 +95,21 @@ export default class SetupPage extends PageComponent {
     CheckServer = async (tester: SettingsValidator) => {
         try {
             const pingResult = await fetch(await getHttpServerAddress(), { method: "GET" })
-            // TODO if the api key is missing, add a button that opens the settings modal
             // TODO might need to check pingResult more? not sure
         } catch {
             // TODO should mention that the server might already be set up, just not running
             const res = <div>
-                Failed to connect to {await getHttpServerAddress()}{"\n"}
+                Failed to connect to {await getHttpServerAddress()}.{"\n"}
+                Please ensure the Mining Helper server is running.{"\n"}
                 This connection is required in order to communicate with mpv.{"\n"}
                 {"\n"}
-                To get started, download the server <a target="_blank" rel="noopener noreferrer"
+                To setup the server, download it <a target="_blank" rel="noopener noreferrer"
                     className="colored"
                     href="https://github.com/Jumprocks1/mining-helper/releases">from GitHub</a>.{"\n"}
                 Once downloaded, unzip and run "setup.bat".{"\n"}
-                For manual setup instructions, see the included README.txt file.{"\n"}
+                For manual setup instructions, see <a target="_blank" rel="noopener noreferrer"
+                    className="colored"
+                    href="https://github.com/Jumprocks1/mining-helper/blob/main/docs/SETUP.md">SETUP.md</a>.{"\n"}
                 Once complete, check your settings again.
             </div>
             throw res
@@ -112,7 +119,16 @@ export default class SetupPage extends PageComponent {
             // the styles/formatting are also different from the jpdb validation
             const resp = await serverPost("validate")
             const json = await resp.json() as ValidateResponse
-            if (json.error) throw json.userMessage
+            if (json.error) {
+                if (json.error === "missing-key") {
+                    throw (<div>
+                        {json.userMessage}<br />
+                        To get your API key, run setup.bat and copy the key from the output.<br />
+                        <button onclick={SetApiKey}>Set API Key</button>
+                    </div>)
+                }
+                throw json.userMessage
+            }
             if (json.connected) tester.Pass("Server connected")
             else tester.Warn("Server not connected")
 
@@ -185,4 +201,12 @@ export default class SetupPage extends PageComponent {
             {CheckIcon()}Connected to jpdb.io
         </div>)
     }
+}
+
+function SetApiKey() {
+    return OpenModal({
+        header: "Server API Key",
+        body: <Loader load={() => stringSettingsField("serverApiKey", "Server API Key", "password")} />,
+        className: "settings-modal"
+    })
 }

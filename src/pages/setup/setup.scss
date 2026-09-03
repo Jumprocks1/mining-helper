@@ -45,4 +45,9 @@
             max-width: 15em;
         }
     }
+    .button-group {
+        display: flex;
+        align-items: center;
+        gap: $s1;
+    }
 }
