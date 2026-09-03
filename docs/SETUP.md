@@ -3,13 +3,16 @@ Eventually there will be guided setup instructions at https://jumprocks1.github.
 
 1. Download the [latest release](https://github.com/Jumprocks1/mining-helper/releases) - currently only Windows has official releases. To run on Linux/Mac, you'll have to run from source. Unzip the .zip file.
 2. Run `setup.bat`. This will walk you through the server setup process.
+    - The setup will output your server API key to the console. Please save this for later.
     - The first step is adding a script to mpv that allows mpv to communicate with the Mining Helper web interface.
     - The second step is downloading dictionary files for creating kanji cards in Anki.
     - The third step is for setting up a local audio database. This provides audio for vocab mined from mpv. Note, the full sentence audio will come from the media file, the local audio database is only needed for the single vocab word audio.
 3. Open mpv and start the server by pressing <kbd>Ctrl</kbd>+<kbd>d</kbd>
 4. Open the [web interface](https://jumprocks1.github.io/mining-helper/subtitles)
 5. Open the settings by clicking the gear in the top right or by pressing (<kbd>,</kbd>)
-6. There should now be a file labeled `ApiKey.txt` in the folder from step 1. Copy the contents of that file into the "Server API Key" settings field.
+6. Paste the API key from step 2 into the server API key field.
+    - If you don't have the API key copied, you can safely rerun `setup.bat` to get it again.
+    - Alternatively, there should be a file labeled `ApiKey.txt` in the folder from step 1. You can also get your API key by opening that file.
 7. TODO - need to add steps for configuring jpdb + Anki fields
 
 ## Running as a Chrome Extension

@@ -9,9 +9,18 @@ public static partial class Setup
     {
         Program.Print("Starting setup", ConsoleColor.DarkGray);
         Program.Print("Welcome to Anki Mining Helper", ConsoleColor.Green);
+        var apiKey = AppSettings.ApiKey;
+        if (apiKey != null)
+        {
+            Program.Print($"Mining Helper server API key: ", ConsoleColor.Cyan, newLine: false);
+            Program.Print(apiKey, ConsoleColor.Magenta);
+            Program.Print($"  Please copy the above API key into the web interface's 'Server API Key' setting");
+        }
         SetupMpv();
         await DownloadKanjiFiles();
         SqliteSeeder.Setup();
+        Program.Print("Setup complete, press any key to exit");
+        Console.ReadKey(true);
     }
     public static async Task DownloadKanjiFiles()
     {
