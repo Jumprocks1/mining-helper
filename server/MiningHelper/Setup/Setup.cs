@@ -10,8 +10,8 @@ public static partial class Setup
         Program.Print("Starting setup", ConsoleColor.DarkGray);
         Program.Print("Welcome to Anki Mining Helper", ConsoleColor.Green);
         SetupMpv();
-        SqliteSeeder.Setup();
         await DownloadKanjiFiles();
+        SqliteSeeder.Setup();
     }
     public static async Task DownloadKanjiFiles()
     {

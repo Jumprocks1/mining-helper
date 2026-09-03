@@ -3,6 +3,9 @@ Eventually there will be guided setup instructions at https://jumprocks1.github.
 
 1. Download the [latest release](https://github.com/Jumprocks1/mining-helper/releases) - currently only Windows has official releases. To run on Linux/Mac, you'll have to run from source.
 2. Run `setup.bat`. This will walk you through the server setup process.
+    - The first step is adding a script to mpv that allows mpv to communicate with the Mining Helper web interface.
+    - The second step is downloading dictionary files for creating kanji cards in Anki.
+    - The third step is for setting up a local audio database. This provides audio for vocab mined from mpv. Note, the full sentence audio will come from the media file, the local audio database is only needed for the single vocab word audio.
 
 TODO need to get the release working before I can fill this out
 

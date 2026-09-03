@@ -17,11 +17,14 @@ public static class SqliteSeeder
             Program.Print($"{DbFile} already exists, skipping db setup", ConsoleColor.DarkGray);
             return;
         }
-        Console.WriteLine($"{DbFile} not found, seeding");
+        Program.Print($"{DbFile} not found, seeding");
         if (!File.Exists(ZipFile))
         {
-            throw new ExitException($"{ZipFile} not found.\nIf you already have this file, please update appsettings.json to point to it.\n"
-                + "If not, please download it from Nyaa. You can find it by searching for \"Yomitan Ultimate Japanese Audio Source\".");
+            Program.Print($"{ZipFile} not found.", color: ConsoleColor.Red);
+            Program.Print("If you already have this file, please update appsettings.json to point to it.", color: ConsoleColor.Yellow);
+            Program.Print("If not, please download it from Nyaa. You can find it by searching for \"Yomitan Ultimate Japanese Audio Source\".", color: ConsoleColor.Yellow);
+            Program.Print("If you don't want local audio for Japanese vocab, you can ignore this.", color: ConsoleColor.Yellow);
+            return;
         }
         Program.Print($"{ZipFile} found", ConsoleColor.Green);
         var archive = ReadingLookup.ZipArchive;
