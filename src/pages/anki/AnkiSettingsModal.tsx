@@ -1,3 +1,4 @@
+import { Icon } from "../../components/basic/IconButton";
 import ExternalLink from "../../components/ExternalLink";
 import LoadingButton from "../../components/LoadingButton";
 import { OpenModal } from "../../components/Modal";
@@ -7,74 +8,89 @@ import SettingsValidator from "../../utils/SettingsValidator";
 import { userErrorMessage, userErrorMessage2 } from "../../utils/UserError";
 import { AnkiFieldKey, AnkiFieldInfo, getSetting, setSetting, stringSettingsField } from "../../views/SettingsModal";
 
-async function validateAnkiSettings(validator: SettingsValidator) {
+export async function validateAnkiSettings(validator: SettingsValidator, onlyAnkiSettings: boolean) {
+    const button = () => <button onclick={() => AnkiSettingsModal()}><Icon icon="settings" />Configure Anki</button>
     try {
-        const permissions = await AnkiConnect.call("requestPermission", undefined)
-        if (permissions.permission === "denied") {
-            throw userErrorMessage2(`Access to AnkiConnect from ${location.origin} denied`,
-                "Please check the AnkiConnect options inside Anki and ensure access is allowed.")
+        try {
+            const permissions = await AnkiConnect.call("requestPermission", undefined)
+            if (permissions.permission === "denied") {
+                throw userErrorMessage2(`Access to AnkiConnect from ${location.origin} denied`,
+                    "Please check the AnkiConnect options inside Anki and ensure access is allowed.")
+            }
+            const apiKey = await getSetting("ankiConnectApiKey")
+            if (permissions.requireApikey && !apiKey)
+                throw userErrorMessage2(`An API key is required. Please add one in the settings ${onlyAnkiSettings ? "above" : "below"}.`,
+                    "To find your current API key, in Anki, go to Tools > Add-ons > AnkiConnect > Config > apiKey")
+        } catch (e) {
+            if (e instanceof Error) {
+                if (String(e).includes("Failed to fetch")) {
+                    validator.Error("Failed to connect to Anki")
+                    validator.AppendOutput(<div>Please ensure Anki is open with
+                        {" "}<ExternalLink href="https://ankiweb.net/shared/info/2055492159">AnkiConnect installed</ExternalLink></div>)
+                    validator.AppendOutput(<div>The attempted connection was to {await getSetting("ankiConnectAddress")}</div>)
+                    if (!onlyAnkiSettings) validator.AppendOutput(button)
+                    return
+                } else throw userErrorMessage(e, "Error connecting to Anki")
+            }
+            else throw e
         }
-        const apiKey = await getSetting("ankiConnectApiKey")
-        if (permissions.requireApikey && !apiKey)
-            throw userErrorMessage2("An API key is required. Please add one in the settings above.",
-                "To find your current API key, in Anki, go to Tools > Add-ons > AnkiConnect > Config > apiKey")
-    } catch (e) {
-        if (e instanceof Error) throw userErrorMessage(e, "Error connecting to Anki")
-        else throw e
-    }
-    const decks = await AnkiConnect.call("deckNames", undefined)
-    if (decks.length === 0) throw "No Anki decks found"
-    validator.Pass(`Found ${decks.length} decks`)
+        const decks = await AnkiConnect.call("deckNames", undefined)
+        if (decks.length === 0) throw "No Anki decks found"
+        validator.Pass(`Found ${decks.length} decks`)
 
-    const deckName = await getSetting("targetAnkiDeck")
-    if (!decks.includes(deckName)) throw (<div>Deck <code>{deckName}</code> not found</div>)
-    let notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}"` })
-    if (notes.length === 0)
-        validator.Warn(<div>No notes found in <code>{deckName}</code></div>)
-    else
-        validator.Pass(<div>Found {notes.length} notes in <code>{deckName}</code></div>)
-
-    if (await getSetting("targetAnkiNoteFilter")) {
-        const filter = await getTargetNoteFilter()
-        notes = await AnkiConnect.call("findNotes", { query: filter })
+        const deckName = await getSetting("targetAnkiDeck")
+        if (!decks.includes(deckName)) throw (<div>Deck <code>{deckName}</code> not found</div>)
+        let notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}"` })
         if (notes.length === 0)
-            validator.Warn(<div>No notes found in <code>{filter}</code></div>)
+            validator.Warn(<div>No notes found in <code>{deckName}</code></div>)
         else
-            validator.Pass(<div>Found {notes.length} in filter <code>{filter}</code></div>)
-    }
+            validator.Pass(<div>Found {notes.length} notes in <code>{deckName}</code></div>)
 
-    const models = await AnkiConnect.call("modelNames", undefined)
-    const modelName = await getSetting("targetAnkiModel")
-    if (!models.includes(modelName)) throw (<div>Model <code>{modelName}</code> not found</div>)
-
-    notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}" "note:${modelName}"` })
-    if (notes.length === 0)
-        validator.Warn(<div>No notes with type <code>{modelName}</code></div>)
-    else
-        validator.Pass(<div>Found {notes.length} notes with type <code>{modelName}</code></div>)
-
-    const modelFields = await AnkiConnect.call("modelFieldNames", { modelName })
-    const ankiFields = await getSetting("ankiFields")
-    let seen = new Set<string>()
-    let invalidFields = 0
-    for (const _key in AnkiFieldInfo) {
-        const key = _key as AnkiFieldKey
-        const field = AnkiFieldInfo[key]
-        const current = ankiFields[key] ?? field.name
-        if (current && seen.has(current)) throw `Field name ${current} used twice`
-        seen.add(current)
-        if (!current) {
-            validator.Warn(`Field ${field.name} is unset`)
-            invalidFields += 1
-        } else if (!modelFields.includes(current)) {
-            validator.Warn(`Field ${current} (used for ${field.name}) does not exist in ${modelName}`)
-            invalidFields += 1
+        if (await getSetting("targetAnkiNoteFilter")) {
+            const filter = await getTargetNoteFilter()
+            notes = await AnkiConnect.call("findNotes", { query: filter })
+            if (notes.length === 0)
+                validator.Warn(<div>No notes found in <code>{filter}</code></div>)
+            else
+                validator.Pass(<div>Found {notes.length} in filter <code>{filter}</code></div>)
         }
-    }
-    if (invalidFields === 0)
-        validator.Pass("All fields valid")
 
-    if (!validator.HasWarnings) validator.SuccessMessage("No issues found")
+        const models = await AnkiConnect.call("modelNames", undefined)
+        const modelName = await getSetting("targetAnkiModel")
+        if (!models.includes(modelName)) throw (<div>Model <code>{modelName}</code> not found</div>)
+
+        notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}" "note:${modelName}"` })
+        if (notes.length === 0)
+            validator.Warn(<div>No notes with type <code>{modelName}</code></div>)
+        else
+            validator.Pass(<div>Found {notes.length} notes with type <code>{modelName}</code></div>)
+
+        const modelFields = await AnkiConnect.call("modelFieldNames", { modelName })
+        const ankiFields = await getSetting("ankiFields")
+        let seen = new Set<string>()
+        let invalidFields = 0
+        for (const _key in AnkiFieldInfo) {
+            const key = _key as AnkiFieldKey
+            const field = AnkiFieldInfo[key]
+            const current = ankiFields[key] ?? field.name
+            if (current && seen.has(current)) throw `Field name ${current} used twice`
+            seen.add(current)
+            if (!current) {
+                validator.Warn(`Field ${field.name} is unset`)
+                invalidFields += 1
+            } else if (!modelFields.includes(current)) {
+                validator.Warn(`Field ${current} (used for ${field.name}) does not exist in ${modelName}`)
+                invalidFields += 1
+            }
+        }
+        if (invalidFields === 0)
+            validator.Pass("All fields valid")
+
+        if (!validator.HasWarnings && onlyAnkiSettings) validator.SuccessMessage("No issues found")
+    } catch (e) {
+        validator.HandleException(e)
+        if (!onlyAnkiSettings) validator.AppendOutput(button)
+    }
 }
 
 export async function getTargetNoteFilter() {
@@ -156,7 +172,7 @@ const body = async (inner: HTMLElement) => {
         const validator = new SettingsValidator()
         validator.ShowLoading = true
         validateButton.tooltip = validator.Node
-        await validator.Test(validateAnkiSettings)
+        await validator.Test(e => validateAnkiSettings(e, true))
     }}>
         Validate Settings
     </LoadingButton>
@@ -164,8 +180,9 @@ const body = async (inner: HTMLElement) => {
     return res
 }
 
-export default () => OpenModal({
+const AnkiSettingsModal = () => OpenModal({
     className: "settings-modal",
     body,
     header: "Configuring AnkiConnect"
 })
+export default AnkiSettingsModal

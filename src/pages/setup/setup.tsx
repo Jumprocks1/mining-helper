@@ -1,19 +1,17 @@
-import IconButton, { Icon } from "../../components/basic/IconButton"
+import IconButton from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
 import LoadingButton from "../../components/LoadingButton"
-import { OpenModal } from "../../components/Modal"
 import { Children, replaceChildren } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { callJpdb } from "../../jpdb/JpdbParseText"
-import AnkiConnect from "../../utils/AnkiConnect"
 import { serverPost } from "../../utils/Audio"
 import { getHttpServerAddress } from "../../utils/httpServerUtil"
 import MpvWebSocket from "../../utils/MpvWebSocket"
-import SettingsValidator, { CheckIcon } from "../../utils/SettingsValidator"
-import UserError, { userErrorMessage } from "../../utils/UserError"
+import SettingsValidator from "../../utils/SettingsValidator"
+import { userErrorMessage } from "../../utils/UserError"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
 import SettingsModal, { getSetting, stringSettingsField } from "../../views/SettingsModal"
-import AnkiSettingsModal from "../anki/AnkiSettingsModal"
+import { validateAnkiSettings } from "../anki/AnkiSettingsModal"
 import { ValidateResponse } from "./validate"
 
 export default class SetupPage extends PageComponent {
@@ -48,16 +46,14 @@ export default class SetupPage extends PageComponent {
         this.Output.replaceChildren(tester.Node)
 
         await tester.Test(async tester => {
-            // TODO need to think carefully about the order here
-            // If these throw exceptions, it bubbles past here and other checks won't run
-            // If we throw exceptions in non-critical parts, then it's impossible to test later than those parts
+            tester.Section("jpdb")
+            await this.CheckJpdb(tester)
 
-            // Think we just need to add a fail method which doesn't replace all the output
-            //    Maybe give it "hover for more info" to avoid super clog
-
-            // await this.CheckJpdb()
+            tester.Section("Server")
             await this.CheckServer(tester)
-            // await this.CheckAnki()
+
+            tester.Section("Anki")
+            await validateAnkiSettings(tester, false)
         })
     }
 
@@ -80,24 +76,13 @@ export default class SetupPage extends PageComponent {
         }
     }
 
-    CheckAnki = async () => {
-        // TODO should be able to call the same validate as in AnkiSettingsModal
-        let decks = []
-        try {
-            decks = await AnkiConnect.call("deckNames", undefined)
-        } catch (e) {
-            throw userErrorMessage(e, <button onclick={() => AnkiSettingsModal()}><Icon icon="settings" />Configure Anki</button>)
-        }
-        if (decks.length === 0) throw new UserError("Anki connected, but no decks found")
-        this.Output.append(<div className="row">{CheckIcon()}Connected to Anki, found {decks.length} decks</div>)
-    }
-
     CheckServer = async (tester: SettingsValidator) => {
         try {
-            const pingResult = await fetch(await getHttpServerAddress(), { method: "GET" })
-            // TODO might need to check pingResult more? not sure
+            // TODO we probably don't really need this call
+            //   we intentionally aren't setting the API key for this call and are only looking if fetch throws an exception
+            //   Instead, we could probably rely on serverPost("validate") throwing an exception
+            await fetch(await getHttpServerAddress(), { method: "GET" })
         } catch {
-            // TODO should mention that the server might already be set up, just not running
             const res = <div>
                 Failed to connect to {await getHttpServerAddress()}.{"\n"}
                 Please ensure the Mining Helper server is running.{"\n"}
@@ -115,17 +100,16 @@ export default class SetupPage extends PageComponent {
             throw res
         }
         try {
-            // TODO this checks things pretty well, but it doesn't give proper advice for fixing
-            // the styles/formatting are also different from the jpdb validation
             const resp = await serverPost("validate")
             const json = await resp.json() as ValidateResponse
             if (json.error) {
-                if (json.error === "missing-key") {
-                    throw (<div>
-                        {json.userMessage}<br />
-                        To get your API key, run setup.bat and copy the key from the output.<br />
-                        <button onclick={SetApiKey}>Set API Key</button>
+                if (json.error === "missing-key" || json.error === "bad-key") {
+                    tester.ErrorIcon(json.userMessage)
+                    tester.AppendOutput(<div>
+                        To get your API key, run setup.bat and copy the key from the output.
+                        <Loader load={() => stringSettingsField("serverApiKey", "Server API Key", "password")} />
                     </div>)
+                    return
                 }
                 throw json.userMessage
             }
@@ -168,23 +152,10 @@ export default class SetupPage extends PageComponent {
         }
     }
 
-    CheckJpdb = async () => {
-        const o = <div id="jpdb-result">
-            <div className="row">
-                <span className="loading-icon" />Checking jpdb.io connection
-            </div>
-        </div>
-        this.AddReplace(o)
-
+    CheckJpdb = async (tester: SettingsValidator) => {
         const setError = async (message: string) => {
-            o.replaceChildren(<div className="spaced">
-                <div className="row">
-                    {<Icon icon="error" className="error" />}
-                    {message}
-                </div>
-                {await JpdbApiKeyField()}
-                {this.Recheck(this.CheckJpdb)}
-            </div>)
+            tester.ErrorIcon(message)
+            tester.AppendOutput(await JpdbApiKeyField())
         }
 
         const apiKey = await getSetting("jpdbApiKey")
@@ -194,19 +165,9 @@ export default class SetupPage extends PageComponent {
 
         const resp = await callJpdb("ping", {})
         if (resp.error === "bad_key") {
-            return setError("Invalid jpdb API key, please add one below")
+            return setError("Invalid jpdb API key, please set one below")
         }
 
-        o.replaceChildren(<div className="row">
-            {CheckIcon()}Connected to jpdb.io
-        </div>)
+        tester.Pass("Connected to jpdb.io")
     }
-}
-
-function SetApiKey() {
-    return OpenModal({
-        header: "Server API Key",
-        body: <Loader load={() => stringSettingsField("serverApiKey", "Server API Key", "password")} />,
-        className: "settings-modal"
-    })
 }

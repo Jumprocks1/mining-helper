@@ -15,6 +15,12 @@
     .error {
         color: $error;
     }
+    h3 {
+        border-bottom: $border0;
+        margin-bottom: 0.2em;
+        width: 30em;
+        max-width: 100%;
+    }
 
     .loading-icon {
         position: relative;
@@ -32,16 +38,10 @@
 
 #setup-page {
     .output {
-        .spaced {
-            display: flex;
-            flex-direction: column;
-            gap: $s1;
-            align-items: flex-start;
-        }
         margin-top: $s1 * 2;
         font-size: 0.8em;
 
-        .jpdb-key-field {
+        .field {
             max-width: 15em;
         }
     }

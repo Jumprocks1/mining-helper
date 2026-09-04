@@ -38,8 +38,37 @@ export default class SettingsValidator {
         appendChild(this.Container, <div className="warning">{e}</div>)
     }
 
+    Error(e: Children) {
+        this.HasErrors = true
+        appendChild(this.Container, <div className="error">{e}</div>)
+    }
+    ErrorIcon(e: Children) {
+        this.HasErrors = true
+        appendChild(this.Container, <div className="row">
+            <Icon icon="error" className="error" />
+            {e}
+        </div>)
+    }
+
     AppendOutput(e: Children) {
         appendChild(this.Container, e)
+    }
+
+    HandleException(e: unknown) {
+        this.HasErrors = true
+        let node: Children
+        if (typeof e === "string")
+            node = <div className="error">{e}</div>
+        else
+            node = userErrorMessage(e)
+        if (this.ReplaceOutputOnError)
+            this.ReplaceEntireOutput(node)
+        else
+            this.AppendOutput(node)
+    }
+
+    Section(title: string) {
+        this.AppendOutput(<h3>{title}</h3>)
     }
 
     async Test(testMethod: (tester: SettingsValidator) => void | Promise<void> | Children | Promise<Children>) {
@@ -49,16 +78,7 @@ export default class SettingsValidator {
             const res = await testMethod(this)
             if (res) this.ReplaceEntireOutput(res)
         } catch (e) {
-            this.HasErrors = true
-            let node: Children
-            if (typeof e === "string")
-                node = <div className="error">{e}</div>
-            else
-                node = userErrorMessage(e)
-            if (this.ReplaceOutputOnError)
-                this.ReplaceEntireOutput(node)
-            else
-                this.AppendOutput(node)
+            this.HandleException(e)
         }
         loader?.remove()
     }
