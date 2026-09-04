@@ -14,6 +14,7 @@ public static class AppSettings
     public static int Port { get; private set; } = 4012;
 
     public static string SettingsFolder { get => field ?? throw new Exception("Settings not loaded"); private set; }
+    public static string LibFolder => Path.Join(SettingsFolder, "lib");
 
     public static T Get<T>(string key) => (Settings[key] ?? throw new Exception($"Setting key '{key}' not found")).AsValue().GetValue<T>();
     public static T? GetOptional<T>(string key) => (Settings[key]?.AsValue().TryGetValue<T>(out var v) ?? false) ? v : default;

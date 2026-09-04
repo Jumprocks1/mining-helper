@@ -24,7 +24,7 @@ public static class FfmpegUtil
     // returns full path
     public static string? LocateExecutable(params string[] locations)
     {
-        var libPath = Path.Join(AppSettings.SettingsFolder, "lib");
+        var libPath = AppSettings.LibFolder;
         const string extension = ".exe";
         foreach (var location in locations)
         {
