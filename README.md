@@ -4,18 +4,17 @@ This is a collection of tools for mining Anki cards from media viewed through mp
 ## Setup Guide
 Go to https://jumprocks1.github.io/mining-helper/setup - this will guide you through the setup process.
 
+You can also see [SETUP.md](https://github.com/Jumprocks1/mining-helper/blob/main/docs/SETUP.md) for more instructions.
+
 Here's a rough outline of what it will help you set up:
 
-1. Set up background server - this bridges communication from mpv <=> web interface. It only runs when manually started.
-2. Add mpv script for launching the background server when requested
-3. Add hotkey to mpv for launching the background server
-4. Download local word audio database (not needed if you prefer Yomitan for word audio)
-5. Configure AnkiConnect + Anki field mappings
-6. Add jpdb API key
-7. Ensure `ffmpeg` is installed and in the system path
-
-### TODO
-- Actually add that setup page
+1. Background server - this bridges communication from mpv <=> web interface. It only runs when manually started.
+2. mpv script for launching the background server when requested (default hotkey Ctrl+d)
+3. Download local word audio database (not needed if you prefer Yomitan for word audio)
+4. Configure AnkiConnect + Anki field mappings
+5. Add jpdb API key
+6. Ensure `ffmpeg` is installed and in the system path
+7. Download kanji dictionary files (if you want to make kanji cards)
 
 ## Advantages over existing tools
 - Doesn't rely on mpv for parsing the subtitles, allowing it to load the entire subtitle file at once
