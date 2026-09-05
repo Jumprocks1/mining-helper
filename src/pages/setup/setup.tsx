@@ -1,4 +1,5 @@
 import IconButton from "../../components/basic/IconButton"
+import ExternalLink from "../../components/ExternalLink"
 import LoadingButton from "../../components/LoadingButton"
 import { Children, replaceChildren } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
@@ -20,12 +21,10 @@ export default class SetupPage extends PageComponent {
 
         this.Node = <>
             <h2>Setup</h2>
-            {/* TODO this page is probably better than the instructions now */}
-            {/* Should improve instructions to match and then reword this warning */}
-            <p className="warning">This page is not yet complete. For more instructions, see
-                {" "}<a target="_blank" rel="noopener noreferrer" href="https://github.com/Jumprocks1/mining-helper/blob/main/docs/SETUP.md">SETUP.md</a>.</p>
-            <br />
             <p>This page will walk you through setting up Anki Mining Helper. Start by using the button below.</p>
+            <p>For additional instructions, see
+                {" "}<ExternalLink href="https://github.com/Jumprocks1/mining-helper/blob/main/docs/SETUP.md">SETUP.md</ExternalLink>.</p>
+            <br />
             <div className="button-group">
                 <LoadingButton onClick={() => this.CheckSettings()}>Check Current Settings</LoadingButton>
                 <IconButton icon="settings" onClick={() => SettingsModal()} tooltip="Open Settings" />
