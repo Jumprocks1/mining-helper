@@ -50,6 +50,9 @@
         &.kanji {
             background-color: rgba(255, 255, 255, 0.1);
         }
+        &.reader {
+            background-color: rgba(0, 255, 115, 0.2);
+        }
         &:hover {
             border: 1px solid rgb(255, 255, 255, 50%);
         }
