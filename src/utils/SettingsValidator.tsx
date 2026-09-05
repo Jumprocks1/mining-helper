@@ -67,6 +67,7 @@ export default class SettingsValidator {
             this.AppendOutput(node)
     }
 
+    // TODO this could take a lambda with another try-catch
     Section(title: string) {
         this.AppendOutput(<h3>{title}</h3>)
     }
