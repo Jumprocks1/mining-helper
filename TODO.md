@@ -82,6 +82,7 @@
     - Probably add advanced search modal, let you enter whatever you want for audio
 
 # Not really necessary
+- JSZip doubles the bundle size...
 - Chapter filtering doesn't account for offset
 - Built in video player so mpv isn't technically needed? Probably not since anyone with the media files would have mpv
 - Hook into other video sites like asbplayer does
