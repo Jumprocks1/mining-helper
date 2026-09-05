@@ -25,7 +25,7 @@ interface PingResponse {
     allowOrigin: boolean
     origin: string
 }
-// intetionally doesn't send API key
+// intentionally doesn't send API key
 export async function serverPing() {
     const serverAddress = await getSetting("serverAddress")
     const httpServer = `http://${serverAddress}/ping`
@@ -72,15 +72,16 @@ export async function validateJpdb(tester: SettingsValidator, showField: boolean
 
 export async function validateServerConnection(tester: SettingsValidator, showField: boolean) {
     tester.Section("Server")
-    // TODO check what bad origin looks like
     try {
-        // TODO we probably don't really need this call
-        //   we intentionally aren't setting the API key for this call and are only looking if fetch throws an exception
-        //   Instead, we could probably rely on serverPost("validate") throwing an exception
-        await fetch(await getHttpServerAddress(), { method: "GET" })
+        const ping = await serverPing()
+        if (ping.success && !ping.allowOrigin) {
+            tester.ErrorIcon(`Server connected, but origin "${ping.origin}" is not allowed`)
+            tester.AppendOutput("You can set \"AllowOrigin\" in the server appsettings.json file to fix this.")
+            return
+        }
     } catch {
+        tester.Error(`Failed to connect to ${await getHttpServerAddress()}`)
         const res = <div>
-            Failed to connect to {await getHttpServerAddress()}.{"\n"}
             Please ensure the Mining Helper server is running.{"\n"}
             This connection is required in order to communicate with mpv.{"\n"}
             {"\n"}
@@ -90,10 +91,10 @@ export async function validateServerConnection(tester: SettingsValidator, showFi
             Once downloaded, unzip and run "setup.bat".{"\n"}
             For manual setup instructions, see <a target="_blank" rel="noopener noreferrer"
                 className="colored"
-                href="https://github.com/Jumprocks1/mining-helper/blob/main/docs/SETUP.md">SETUP.md</a>.{"\n"}
-            Once complete, check your settings again.
+                href="https://github.com/Jumprocks1/mining-helper/blob/main/docs/SETUP.md">SETUP.md</a>.
         </div>
-        throw res
+        tester.AppendOutput(res)
+        return
     }
     try {
         const resp = await serverPost("validate")

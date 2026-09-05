@@ -4,6 +4,7 @@
 
 .validation-result {
     white-space: pre-wrap;
+    display: flex;
     .row {
         display: flex;
         align-items: center;
@@ -17,9 +18,9 @@
     }
     h3 {
         border-bottom: $border0;
-        margin-bottom: 0.2em;
-        width: 30em;
-        max-width: 100%;
+        margin-bottom: $s1;
+        padding-left: $s1;
+        padding-right: $s1;
     }
 
     .loading-icon {
