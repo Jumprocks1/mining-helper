@@ -31,7 +31,9 @@ export function getHoveredCharacterIndex(x: number, y: number) {
     const hitAfter = afterRect && afterRect.left <= x && afterRect.right >= x && afterRect.top <= y && afterRect.bottom >= y
 
     const hitIndex = hitBefore ? offset - 1 : hitAfter ? offset : undefined
-    if (hitIndex === undefined) return
+    // not sure if this is a good idea
+    // returning undefined here causes ~1px gaps to sometimes drop hover info
+    if (hitIndex === undefined) return [node, offset - 1] as const
     return [node, hitIndex] as const
 }
 

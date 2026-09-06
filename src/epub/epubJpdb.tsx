@@ -9,19 +9,22 @@ export interface JpdbParseResponseWithNodes extends JpdbParseResponse {
 export default async (page: EpubPage, cacheOnly?: true): Promise<JpdbParseResponseWithNodes | undefined> => {
     loadIgnoreList()
     if (page.jpdb) return page.jpdb
-    const nodes = getLinesIn(page) // takes ~1ms for large pages, could probably make it faster but oh well
-    let s = ""
-    const lines = []
-    for (let i = 0; i < nodes.length; i++) {
-        const e = nodes[i]
-        if (e === newLine) {
-            lines.push(s)
-            s = ""
+    const nodes = getEpubTextNodes(page) // takes ~1ms for large pages, could probably make it faster but oh well
+    let res: JpdbParseResponseWithNodes | undefined
+    if (nodes.length === 0) res = { tokens: [], vocabulary: [], nodes: [] }
+    else {
+        let s = ""
+        const lines = []
+        for (let i = 0; i < nodes.length; i++) {
+            const e = nodes[i]
+            if (e === newLine) {
+                lines.push(s)
+                s = ""
+            }
+            else s += e.nodeValue!
         }
-        else s += e.nodeValue!
+        res = await JpdbParseText(lines, cacheOnly) as JpdbParseResponseWithNodes | undefined
     }
-    if (nodes.length === 0) return { tokens: [], vocabulary: [], nodes: [] }
-    const res = await JpdbParseText(lines, cacheOnly) as JpdbParseResponseWithNodes | undefined
     if (res) {
         page.jpdb = res
         res.nodes = nodes
@@ -40,13 +43,13 @@ const blockTags = new Set([
     "NAV", "OL", "P", "PRE", "SECTION", "TABLE", "TFOOT", "UL"
 ])
 
-function getLinesIn(page: EpubPage) {
+function getEpubTextNodes(page: EpubPage) {
     const o: Text[] = []
     visit(page, o)
     return o
 }
 
-export const newLine = new Text("\n")
+const newLine = new Text("\n")
 
 function visit(element: Element, nodes: Text[]) {
     const flush = () => {
