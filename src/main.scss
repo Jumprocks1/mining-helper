@@ -14,8 +14,10 @@
 @use "views/settings";
 @use "sass:color";
 
-#body-container {
-    padding: 16px;
+@layer elements {
+    #body-container {
+        padding: 16px;
+    }
 }
 
 #mh-header {
@@ -296,6 +298,7 @@ div#result {
 }
 
 
+// TODO move to separate file
 @layer pages {
     #kanji-page {
         #refresh-container {

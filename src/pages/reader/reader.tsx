@@ -1,21 +1,51 @@
+import IconButton from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
+import { OpenModal } from "../../components/Modal"
 import { EpubReader } from "../../epub/epub"
-import { appendChild, replaceChildren } from "../../framework/createElement"
+import { replaceWith } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
+import { ActionTooltip } from "../../framework/Tooltips"
 import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
+import { JpdbApiKeyField } from "../../views/SettingsFields"
+
+const currentPageKey = "reader-current-page"
 
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
     override Title = "Mining Helper - Reader"
     override Node: HTMLElement
 
+    CurrentPageNode: HTMLElement = <div>Drop .epub here</div>
+    PageIndicator: HTMLElement = <div id="page-indicator">0 / 0</div>
+    Reader?: EpubReader
+
     constructor() {
         super()
 
 
-        const body = <div>
-            Drop .epub here
-        </div>
+        const body = <>
+            <div id="status-info">
+                <div className="row">
+                    <IconButton icon="settings" onClick={() => OpenReaderSettings()} tooltip={ActionTooltip("Open Settings", ",")} />
+                </div>
+                <div className="row">
+                    {this.PageIndicator}
+                </div>
+                <div className="row">
+                    <IconButton onClick={async () => {
+                        if (!this.Reader) return
+                        await this.LoadPage(this.Reader.CurrentPage - 1)
+                    }} icon="arrow_back" />
+                    <IconButton onClick={async () => {
+                        if (!this.Reader) return
+                        this.LoadPage(this.Reader.CurrentPage + 1)
+                    }} icon="arrow_forward" />
+                </div>
+            </div>
+            <div id="epub-viewer">
+                {this.CurrentPageNode}
+            </div>
+        </>
         this.Node = body
 
 
@@ -42,13 +72,29 @@ export default class ReaderPage extends PageComponent {
         }
     }
 
+    SetPageNode(node: HTMLElement) {
+        replaceWith(this.CurrentPageNode!, node)
+        this.CurrentPageNode = node
+    }
+
     async LoadBlob(blob: Blob) {
-        replaceChildren(this.Node, <Loader load={async () => {
-            const reader = new EpubReader({ trimWhitespace: false })
-            const epub = await reader.read(blob)
-            const page = await epub.readPage(11)
-            return page
-        }} />)
+        this.SetPageNode(<div className="loader" />)
+        this.Reader = new EpubReader({ trimWhitespace: false })
+        await this.Reader.read(blob)
+        const recentPage = parseInt(localStorage.getItem(currentPageKey) ?? "")
+        this.Reader.CurrentPage = isNaN(recentPage) ? 0 : recentPage
+        await this.LoadPage(this.Reader.CurrentPage)
+    }
+
+    // TODO need to support TOC somewhere (sidebar)
+
+    async LoadPage(page: number) {
+        if (!this.Reader) return
+        const totalPages = this.Reader.spine.length
+        if (page < 0 || page >= totalPages) return
+        this.PageIndicator.textContent = `${page + 1} / ${totalPages}`
+        localStorage.setItem(currentPageKey, page.toString())
+        this.SetPageNode(await this.Reader.readPage(page))
     }
 
     override Dispose() {
@@ -77,5 +123,24 @@ export default class ReaderPage extends PageComponent {
     DocumentKeydown = (ev: KeyboardEvent) => {
         if (disallowGlobalInput(ev)) return
         if (handleKeyDown(ev)) return
+
+        const key = ev.key.toLowerCase()
+        if (key === ",") {
+            OpenReaderSettings()
+        }
     }
+}
+
+
+function OpenReaderSettings() {
+    const body = <Loader load={async () => {
+        return <>
+            {await JpdbApiKeyField()}
+        </>
+    }} />
+
+    return OpenModal({
+        header: "Reader Settings",
+        body
+    })
 }

@@ -1,10 +1,57 @@
+@use "../../styles/variables" as *;
+
 @layer pages {
     #reader-page {
-        .epub-page {
+        .row {
+            display: flex;
+            align-items: center;
+            gap: $s1;
+        }
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        #body-container {
+            padding: 0;
+            position: relative;
+            flex: 1 1 0;
+            display: flex;
+            flex-direction: column;
+        }
+        #status-info {
+            position: absolute;
+            right: 0;
+            padding: $s1 * 1;
+            padding-right: $s1 * 2;
             font-size: 1.3em;
-            max-width: 30em;
-            p~p {
-                margin-bottom: 0.5em;
+            display: flex;
+            align-items: flex-end;
+            flex-direction: column;
+            #page-indicator {
+                font-size: 0.5em;
+            }
+        }
+        #epub-viewer {
+            flex: 1 1 0;
+            padding: 16px;
+            @include vertical-scroll;
+            .epub-page {
+                font-size: 1.3em;
+                max-width: 30em;
+                svg {
+                    display: block;
+                }
+                a {
+                    text-decoration: none;
+                    color: $linkColor
+                }
+                p {
+                    margin-bottom: $s1*2;
+                    padding-left: $s1 * 2;
+                    border-left: $border0;
+                }
+                hr {
+                    margin: $s1 * 2 0;
+                }
             }
         }
     }

@@ -17,6 +17,7 @@ interface EpubToc {
 interface EpubSettings {
     trimWhitespace?: boolean
 }
+const svgNS = "http://www.w3.org/2000/svg"
 
 export class EpubReader {
     DOMParser: DOMParser = new DOMParser()
@@ -31,6 +32,8 @@ export class EpubReader {
         this.settings = settings ?? {}
         this.setupSanitizer()
     }
+
+    CurrentPage = 0
 
     manifest: Record<string, EpubItem> = {}
     spine: EpubItem[] = []
@@ -110,6 +113,11 @@ export class EpubReader {
         const containerText = await file.async("string")
         return this.DOMParser.parseFromString(containerText, xhtml ? "application/xhtml+xml" : "application/xml")
     }
+    LiveBlobUrls: string[] = []
+    ClearBlobUrls() {
+        for (const url of this.LiveBlobUrls) URL.revokeObjectURL(url)
+        this.LiveBlobUrls.length = 0
+    }
 
     // We sanitize in here to avoid accidentally dumping directly into page
     async readPage(page: number) {
@@ -118,6 +126,7 @@ export class EpubReader {
         const item = this.spine[page]
         if (!item) throw new EpubReaderError(`Page ${page} not found`)
         if (item.type !== "application/xhtml+xml") throw new EpubReaderError(`Expected xhtml, got ${item.type}`)
+        this.ClearBlobUrls()
         const o = document.createElement("div")
         o.classList.add("epub-page")
         const file = await this.readXML(item.href, true)
@@ -131,10 +140,60 @@ export class EpubReader {
             }
         }
 
+        for (const e of htmlNode.querySelectorAll("svg[preserveAspectRatio=none]")) {
+            e.removeAttribute("preserveAspectRatio")
+        }
+
+        const referenceElements = new Map<string, Node>()
+
+        const images = htmlNode.querySelectorAll("img, image")
+        for (const image of images) {
+            const id = referenceElements.size.toString()
+            referenceElements.set(id, image)
+            const placeholder = image instanceof SVGElement ? file.createElementNS(svgNS, "g") : <div />
+            placeholder.setAttribute("data-epub-ref-id", id)
+            image.replaceWith(placeholder)
+        }
         o.setHTML(htmlNode.getHTML(), { sanitizer: this.sanitizer })
+        for (const el of o.querySelectorAll("*[data-epub-ref-id]")) {
+            const refId = el.getAttribute("data-epub-ref-id")
+            if (!refId) continue
+            const oldEl = referenceElements.get(refId)
+            if (!oldEl) continue
+            if (oldEl instanceof HTMLImageElement) {
+                const src = oldEl.getAttribute("src")
+                if (!src) continue
+                const url = new URL(src, "zip:/" + item.href).href.substring(5)
+                const file = this.zip.file(url)
+                if (file) {
+                    const img = <img /> as HTMLImageElement
+                    const url = URL.createObjectURL(await file.async("blob"))
+                    this.LiveBlobUrls.push(url)
+                    img.src = url
+                    el.replaceWith(img)
+                }
+            } else if (oldEl instanceof SVGImageElement) {
+                const src = oldEl.getAttribute("href") ?? oldEl.getAttribute("xlink:href")
+                if (!src) continue
+                const url = new URL(src, "zip:/" + item.href).href.substring(5)
+                const file = this.zip.file(url)
+                if (file) {
+                    const img = document.createElementNS(svgNS, "image");
+                    const url = URL.createObjectURL(await file.async("blob"))
+                    this.LiveBlobUrls.push(url)
+                    img.setAttribute("href", url)
+                    img.setAttribute("width", oldEl.getAttribute("width")!)
+                    img.setAttribute("height", oldEl.getAttribute("height")!)
+                    el.replaceWith(img)
+                }
+            }
+        }
+        this.CurrentPage = page
         return o
     }
     setupSanitizer() {
+        this.sanitizer.allowElement({ name: "div", attributes: ["data-epub-ref-id"] })
+        this.sanitizer.allowElement({ name: "g", attributes: ["data-epub-ref-id"], namespace: svgNS })
     }
 }
 
