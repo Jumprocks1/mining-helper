@@ -174,6 +174,7 @@ export class EpubReader {
                     const url = URL.createObjectURL(await file.async("blob"))
                     this.LiveBlobUrls.push(url)
                     img.src = url
+                    await img.decode()
                     el.replaceWith(img)
                 }
             } else if (oldEl instanceof SVGImageElement) {
@@ -183,6 +184,9 @@ export class EpubReader {
                 const file = this.zip.file(url)
                 if (file) {
                     const img = document.createElementNS(svgNS, "image");
+                    // TODO couldn't get img.decode to work here
+                    // MDN says it should work fine. I tried with src too
+                    // https://developer.mozilla.org/en-US/docs/Web/API/SVGImageElement/decode
                     const url = URL.createObjectURL(await file.async("blob"))
                     this.LiveBlobUrls.push(url)
                     img.setAttribute("href", url)
