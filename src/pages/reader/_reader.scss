@@ -30,6 +30,14 @@
                 font-size: 0.5em;
             }
         }
+        #toc {
+            .toc-point {
+                text-decoration: none;
+                &:not(.active) {
+                    color: white;
+                }
+            }
+        }
         #epub-viewer {
             flex: 1 1 0;
             padding: 16px;

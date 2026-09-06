@@ -2,7 +2,7 @@ import IconButton from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
 import { OpenModal } from "../../components/Modal"
 import { EpubReader } from "../../epub/epub"
-import { replaceWith } from "../../framework/createElement"
+import { replaceChildren, replaceWith } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { ActionTooltip } from "../../framework/Tooltips"
 import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
@@ -16,7 +16,11 @@ export default class ReaderPage extends PageComponent {
     override Node: HTMLElement
 
     CurrentPageNode: HTMLElement = <div>Drop .epub here</div>
-    PageIndicator: HTMLElement = <div id="page-indicator">0 / 0</div>
+    ViewerNode: HTMLElement = <div id="epub-viewer">
+        {this.CurrentPageNode}
+    </div>
+    PageIndicator: HTMLElement = <div id="page-indicator" tooltip={() => this.PageTooltip()}>0 / 0</div>
+    ToC: HTMLElement = <div id="toc" />
     Reader?: EpubReader
 
     constructor() {
@@ -41,10 +45,10 @@ export default class ReaderPage extends PageComponent {
                         this.LoadPage(this.Reader.CurrentPage + 1)
                     }} icon="arrow_forward" />
                 </div>
+                {/* TODO ToC gets squish on small screen */}
+                {this.ToC}
             </div>
-            <div id="epub-viewer">
-                {this.CurrentPageNode}
-            </div>
+            {this.ViewerNode}
         </>
         this.Node = body
 
@@ -64,11 +68,18 @@ export default class ReaderPage extends PageComponent {
 
     Cache?: Cache
 
+    PageTooltip() {
+        if (!this.Reader) return
+        const currentPage = this.Reader.CurrentPage
+        const spine = this.Reader.spine[currentPage]
+        return spine.href
+    }
+
     override Load = async () => {
         this.Cache = await caches.open("reader")
         const response = await this.Cache.match(`https://jumprocks1.github.io/_/epub/recent`)
         if (response) {
-            this.LoadBlob(await response.blob())
+            this.LoadEpubFileBlob(await response.blob())
         }
     }
 
@@ -77,24 +88,49 @@ export default class ReaderPage extends PageComponent {
         this.CurrentPageNode = node
     }
 
-    async LoadBlob(blob: Blob) {
+    async LoadEpubFileBlob(blob: Blob) {
         this.SetPageNode(<div className="loader" />)
         this.Reader = new EpubReader({ trimWhitespace: false })
         await this.Reader.read(blob)
         const recentPage = parseInt(localStorage.getItem(currentPageKey) ?? "")
         this.Reader.CurrentPage = isNaN(recentPage) ? 0 : recentPage
+        this.LoadToC()
         await this.LoadPage(this.Reader.CurrentPage)
     }
-
-    // TODO need to support TOC somewhere (sidebar)
 
     async LoadPage(page: number) {
         if (!this.Reader) return
         const totalPages = this.Reader.spine.length
-        if (page < 0 || page >= totalPages) return
+        page = Math.max(Math.min(page, totalPages - 1), 0)
         this.PageIndicator.textContent = `${page + 1} / ${totalPages}`
         localStorage.setItem(currentPageKey, page.toString())
         this.SetPageNode(await this.Reader.readPage(page))
+        this.ViewerNode.scrollTo({ top: 0 })
+        const tocPoints = this.ToC.querySelectorAll(".toc-point")
+        const toc = this.Reader.toc
+        for (let i = 0; i < tocPoints.length; i++) {
+            const e = toc.points[i]
+            const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : this.Reader.spine.length - 1
+            const p = tocPoints.item(i)
+            p.classList.toggle("active", page >= e.spinePage && page < nextTocPage)
+        }
+    }
+
+    LoadToC() {
+        const reader = this.Reader
+        if (!reader) return
+        const toc = reader.toc
+        const o: Node[] = []
+        for (let i = 0; i < toc.points.length; i++) {
+            const e = toc.points[i]
+            const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : reader.spine.length - 1
+            o.push(<div className="link-button toc-point"
+                onclick={() => this.LoadPage(e.spinePage)}
+                tooltip={`Click to view\nPages ${e.spinePage + 1}-${nextTocPage + 1}`}>
+                {e.label}
+            </div>)
+        }
+        replaceChildren(this.ToC, o)
     }
 
     override Dispose() {
@@ -115,7 +151,7 @@ export default class ReaderPage extends PageComponent {
                     }
                 })
                 await this.Cache.put(key, response)
-                await this.LoadBlob(file)
+                await this.LoadEpubFileBlob(file)
             }
         }
     }

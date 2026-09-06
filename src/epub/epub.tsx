@@ -11,6 +11,7 @@ interface EpubToc {
         order?: number
         label: string
         href: string
+        spinePage: number
     }[]
 }
 
@@ -72,11 +73,6 @@ export class EpubReader {
         this.spine = []
         const spine = this.opfXML.querySelector("package > spine")
         if (!spine) return
-        const tocId = spine.getAttribute("toc")
-        if (tocId) {
-            const toc = this.manifest[tocId]
-            if (toc) await this.loadToc(toc)
-        }
         const nodes = spine.querySelectorAll(":scope > itemref")
         for (const node of nodes) {
             const idref = node.getAttribute("idref")
@@ -84,6 +80,11 @@ export class EpubReader {
                 const item = this.manifest[idref]
                 if (item) this.spine.push(item)
             }
+        }
+        const tocId = spine.getAttribute("toc")
+        if (tocId) {
+            const toc = this.manifest[tocId]
+            if (toc) await this.loadToc(toc)
         }
     }
 
@@ -94,14 +95,17 @@ export class EpubReader {
         const navPoints = xml.querySelectorAll("ncx > navMap > navPoint")
         for (const navPoint of navPoints) {
             const label = navPoint.querySelector("navLabel")!.textContent.trim()
-            const href = navPoint.querySelector("content")!.getAttribute("src")!
+            let href = navPoint.querySelector("content")!.getAttribute("src")!
+            const spl = href.split("#")
+            href = spl[0]
             const playOrder = navPoint.getAttribute("playOrder")
             this.toc.points.push({
                 label,
                 href,
                 id: navPoint.id,
                 order: playOrder ? parseInt(playOrder) : undefined,
-                type: navPoint.className
+                type: navPoint.className,
+                spinePage: this.spine.findIndex(e => e.href === href)
             })
         }
         this.toc.points.sort((a, b) => (a.order ?? 0) - (b.order ?? 0))
