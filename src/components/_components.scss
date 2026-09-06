@@ -79,3 +79,20 @@
         }
     }
 }
+
+@layer components {
+    .hover-rectangle {
+        border-bottom: 2px dashed $red;
+        &.known {
+            border-bottom: 2px dashed $green;
+        }
+        &.similar {
+            border-bottom: 2px dashed $yellow;
+        }
+        &.ignore {
+            border-bottom: 2px dashed $blue;
+        }
+        position: absolute;
+        pointer-events: none;
+    }
+}

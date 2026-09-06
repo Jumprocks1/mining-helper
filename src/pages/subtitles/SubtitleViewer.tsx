@@ -1,12 +1,11 @@
 import { getAnkiFurigana } from "../../pages/anki/CardList"
-import { JpdbParseResponse, JpdbVocabulary } from "../../jpdb/JpdbParseText"
-import { getVocabState, VocabState } from "../../jpdb/JpdbState"
+import { JpdbParseResponse } from "../../jpdb/JpdbParseText"
 import { getCharacterIndex, getSelectionRange } from "../../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt"
 import { setSetting } from "../../views/SettingsModal"
 import SubtitlesPage from "./subtitles"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
-import { JpHoverTooltipHandler, JpHoverTooltipState, RegisterJpHoverTooltip, UpdateJpHover } from "./JpHoverTooltip"
+import { AddStateClass, JpHoverTooltipHandler, JpHoverTooltipState, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "./JpHoverTooltip"
 
 declare global {
     interface HTMLElement {
@@ -88,7 +87,7 @@ export default class SubtitleViewer {
                 }
             },
             invert: false,
-            onChange: state => this.UpdateHoverBox(state)
+            onChange: state => UpdateHoverBox(this.hoverRectangle, state)
         })
 
         // make sure anki words are loaded for later, this caches the result
@@ -102,29 +101,6 @@ export default class SubtitleViewer {
     ToggleShift() {
         this.TooltipHandler.invert = !this.TooltipHandler.invert
         UpdateJpHover(false)
-    }
-
-    UpdateHoverBox(hoverState: JpHoverTooltipState | undefined) {
-        if (!hoverState) {
-            this.hoverRectangle.classList.add("hide")
-            return
-        }
-        const parent = this.hoverRectangle.parentElement
-        if (!parent) return
-        const vocab = hoverState.vocab
-
-        // remove all other classes
-        this.hoverRectangle.className = "hover-rectangle"
-
-        const parentRect = parent.getBoundingClientRect()
-
-        if (vocab) this.AddStateClass(this.hoverRectangle, vocab)
-        const rect = hoverState.target.getBoundingClientRect()
-
-        this.hoverRectangle.style.width = rect.width + "px"
-        this.hoverRectangle.style.height = rect.height + "px"
-        this.hoverRectangle.style.top = rect.top - parentRect.top + "px"
-        this.hoverRectangle.style.left = rect.left - parentRect.left + "px"
     }
 
     updateBlock() {
@@ -217,16 +193,6 @@ export default class SubtitleViewer {
         }
     }
 
-    AddStateClass(el: HTMLElement, vocab: JpdbVocabulary) {
-        const state = getVocabState(vocab, { trimKana: true })
-        if (state === VocabState.Known)
-            el.classList.add("known")
-        else if (state === VocabState.Similar || state === VocabState.AltSpelling)
-            el.classList.add("similar")
-        else if (state !== VocabState.New)
-            el.classList.add("ignore")
-    }
-
     async UnderlineWords() {
         await getAnkiFurigana() // needed for AddStateClass
         const jpdb = this.subtitles.jpdbParse
@@ -253,7 +219,7 @@ export default class SubtitleViewer {
                             i += s.length
                         } else {
                             s = <span className="underline">{entry.text.substring(i, i + tokens[nextToken][1])}</span>
-                            this.AddStateClass(s, jpdb.vocabulary[tokens[nextToken][3]])
+                            AddStateClass(s, jpdb.vocabulary[tokens[nextToken][3]])
                             i += tokens[nextToken][1]
                             nextToken += 1;
                         }

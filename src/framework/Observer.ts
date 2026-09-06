@@ -3,6 +3,7 @@ let awaitingDeath: [node: Node, callback: (node: Node) => void][] = []
 
 // pretty sure this is signficantly cheaper than most other ways of tracking this sort of thing
 // childlist mutations are pretty rare and usually they come in batches, which this already handles as a single event
+// be careful, if the node isn't connected when this is called, it can end up marked dead
 export function onDeath(node: Node, callback: (node: Node) => void) {
     if (!observer) {
         observer ??= new MutationObserver(() => {
@@ -22,5 +23,6 @@ export function onDeath(node: Node, callback: (node: Node) => void) {
         // issue is if multiple parents up is removed, it wouldn't trigger any events lower down
         observer.observe(document, { childList: true, subtree: true })
     }
+    // if (!node.isConnected) console.error("onDeath called on disconnected node")
     awaitingDeath.push([node, callback])
 }

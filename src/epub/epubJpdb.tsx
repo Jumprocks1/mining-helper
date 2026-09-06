@@ -2,22 +2,27 @@ import { loadIgnoreList } from "../jpdb/IgnoreList";
 import JpdbParseText, { JpdbParseResponse } from "../jpdb/JpdbParseText";
 import { EpubPage } from "./epub";
 
-export default async (page: EpubPage, cacheOnly?: true): Promise<JpdbParseResponse | undefined> => {
+export interface JpdbParseResponseWithNodes extends JpdbParseResponse {
+    nodes: Text[]
+}
+
+export default async (page: EpubPage, cacheOnly?: true): Promise<JpdbParseResponseWithNodes | undefined> => {
     loadIgnoreList()
     if (page.jpdb) return page.jpdb
-    const nodeLines = getLinesIn(page) // takes ~1ms for large pages, could probably make it faster but oh well
+    const nodes = getLinesIn(page) // takes ~1ms for large pages, could probably make it faster but oh well
     let s = ""
     const lines = []
-    for (let i = 0; i < nodeLines.length; i++) {
-        const e = nodeLines[i]
+    for (let i = 0; i < nodes.length; i++) {
+        const e = nodes[i]
         if (e === newLine) {
             lines.push(s)
             s = ""
         }
         else s += e.nodeValue!
     }
-    if (nodeLines.length === 0) return { tokens: [], vocabulary: [] }
-    const res = await JpdbParseText(lines, cacheOnly)
+    if (nodes.length === 0) return { tokens: [], vocabulary: [], nodes: [] }
+    const res = (await JpdbParseText(lines, cacheOnly) as JpdbParseResponseWithNodes)
+    res.nodes = nodes
     if (res) page.jpdb = res
     return res
 }
@@ -34,23 +39,21 @@ const blockTags = new Set([
 ])
 
 function getLinesIn(page: EpubPage) {
-    const o: JpdbParseNode[] = []
+    const o: Text[] = []
     visit(page, o)
     return o
 }
 
-const newLine = Symbol("\\n")
+export const newLine = new Text("\n")
 
-type JpdbParseNode = Node | typeof newLine
-
-function visit(element: Element, nodes: JpdbParseNode[]) {
+function visit(element: Element, nodes: Text[]) {
     const flush = () => {
         if (nodes.length > 0 && nodes[nodes.length - 1] != newLine) nodes.push(newLine)
     }
 
     for (const e of element.childNodes) {
         if (e.nodeType === Node.TEXT_NODE) {
-            if (e.nodeValue?.trim()) nodes.push(e)
+            if (e.nodeValue?.trim()) nodes.push(e as Text)
         } else if (e.nodeType === Node.ELEMENT_NODE) {
             const element = e as Element
             const tag = element.tagName
@@ -72,10 +75,10 @@ function visit(element: Element, nodes: JpdbParseNode[]) {
 }
 
 // Inline elements are assumed to have no block content in them
-function inlineText(element: Element, nodes: JpdbParseNode[]) {
+function inlineText(element: Element, nodes: Text[]) {
     for (const e of element.childNodes) {
         if (e.nodeType === Node.TEXT_NODE) {
-            if (e.nodeValue?.trim()) nodes.push(e)
+            if (e.nodeValue?.trim()) nodes.push(e as Text)
         } else if (e.nodeType === Node.ELEMENT_NODE) {
             const element = e as Element
             if (!ignoreTags.has(element.tagName)) {

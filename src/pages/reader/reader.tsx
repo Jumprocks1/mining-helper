@@ -6,8 +6,11 @@ import epubJpdb from "../../epub/epubJpdb"
 import { replaceChildren, replaceWith } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { ActionTooltip } from "../../framework/Tooltips"
+import { JpdbToken } from "../../jpdb/JpdbParseText"
 import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
+import { getAnkiFurigana } from "../anki/CardList"
+import { RegisterJpHoverTooltip, UpdateHoverBox } from "../subtitles/JpHoverTooltip"
 
 const currentPageKey = "reader-current-page"
 
@@ -17,8 +20,10 @@ export default class ReaderPage extends PageComponent {
     override Node: HTMLElement
 
     CurrentPageNode: EpubPage = <div>Drop .epub here</div> as EpubPage
+    hoverRectangle: HTMLElement = <div className="hover-rectangle" />
     ViewerNode: HTMLElement = <div id="epub-viewer">
         {this.CurrentPageNode}
+        {this.hoverRectangle}
     </div>
     PageIndicator: HTMLElement = <div id="page-indicator" tooltip={() => this.PageTooltip()}>0 / 0</div>
     ToC: HTMLElement = <div id="toc" />
@@ -65,6 +70,7 @@ export default class ReaderPage extends PageComponent {
             ev.preventDefault()
             return this.HandleDataTransfer(ev.dataTransfer)
         })
+        getAnkiFurigana()
     }
 
     Cache?: Cache
@@ -80,8 +86,50 @@ export default class ReaderPage extends PageComponent {
         this.Cache = await caches.open("reader")
         const response = await this.Cache.match(`https://jumprocks1.github.io/_/epub/recent`)
         if (response) {
-            this.LoadEpubFileBlob(await response.blob())
+            await this.LoadEpubFileBlob(await response.blob())
         }
+
+        // if this is called before the page is synchronously loaded,
+        //  it risks getting unbound due to how onDeath works
+        RegisterJpHoverTooltip({
+            body: this.ViewerNode,
+            getTargetAndVocab: hovered => {
+                const jpdb = this.CurrentPageNode?.jpdb
+                if (!jpdb) return
+                // ends up 1 longer than the jpdb parse text if no match due to extra newline at end
+                let found = false
+                let n = 0
+                for (let i = 0; i < jpdb.nodes.length; i++) {
+                    const e = jpdb.nodes[i]
+                    if (e === hovered[0]) {
+                        found = true
+                        break
+                    }
+                    n += e.textContent.length;
+                }
+                if (!found) return
+                const offset = n + hovered[1] // exact position we are hovering
+                let token: JpdbToken | undefined = undefined
+                // this could be sped up with binary search
+                for (let i = 0; i < jpdb.tokens.length; i++) {
+                    const e = jpdb.tokens[i]
+                    if (e[0] <= offset && e[0] + e[1] > offset) {
+                        token = e
+                    }
+                }
+                if (!token) return
+                // TODO definitely possible for token to be split across 2 inline elements
+                // ie. <ruby>父</ruby>さん
+                // This would happen whenever start + token[1] > hovered[0].textContent.length
+                const start = token[0] - n
+                const range = document.createRange()
+                range.setStart(hovered[0], start)
+                range.setEnd(hovered[0], start + token[1])
+                return [range, jpdb.vocabulary[token[3]], token]
+            },
+            invert: false,
+            onChange: state => UpdateHoverBox(this.hoverRectangle, state)
+        })
     }
 
     SetPageNode(node: EpubPage) {
@@ -113,7 +161,10 @@ export default class ReaderPage extends PageComponent {
             const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : this.Reader.spine.length
             tocPoints.item(i).classList.toggle("active", page >= e.spinePage && page < nextTocPage)
         }
-        console.log(await epubJpdb(this.CurrentPageNode))
+        // TODO add hotkey/button to trigger this
+        // Since this is cache only, it's fine to await this
+        // If we were hitting the network, definitely not
+        await epubJpdb(this.CurrentPageNode, true)
     }
 
     LoadToC() {

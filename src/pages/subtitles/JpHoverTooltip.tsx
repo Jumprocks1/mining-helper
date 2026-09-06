@@ -3,7 +3,7 @@ import { Children } from "../../framework/createElement";
 import { onDeath } from "../../framework/Observer";
 import { SmallTooltip } from "../../framework/Tooltips";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
-import { getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState";
+import { getVocabState, getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState";
 import AnkiConnect from "../../utils/AnkiConnect";
 import { getHoveredCharacterIndex } from "../../utils/CharacterHighlighter";
 import { furiFromToken, furiToRuby } from "../../utils/util";
@@ -225,4 +225,38 @@ export function RegisterJpHoverTooltip(handler: JpHoverTooltipHandler) {
         }
     })
     return handler
+}
+
+
+export function UpdateHoverBox(hoverRectangle: HTMLElement, hoverState: JpHoverTooltipState | undefined) {
+    if (!hoverState) {
+        hoverRectangle.classList.add("hide")
+        return
+    }
+    const parent = hoverRectangle.parentElement
+    if (!parent) return
+    const vocab = hoverState.vocab
+
+    // remove all other classes
+    hoverRectangle.className = "hover-rectangle"
+
+    const parentRect = parent.getBoundingClientRect()
+
+    if (vocab) AddStateClass(hoverRectangle, vocab)
+    const rect = hoverState.target.getBoundingClientRect()
+
+    hoverRectangle.style.width = rect.width + "px"
+    hoverRectangle.style.height = rect.height + "px"
+    hoverRectangle.style.top = rect.top - parentRect.top + "px"
+    hoverRectangle.style.left = rect.left - parentRect.left + "px"
+}
+
+export function AddStateClass(el: HTMLElement, vocab: JpdbVocabulary) {
+    const state = getVocabState(vocab, { trimKana: true })
+    if (state === VocabState.Known)
+        el.classList.add("known")
+    else if (state === VocabState.Similar || state === VocabState.AltSpelling)
+        el.classList.add("similar")
+    else if (state !== VocabState.New)
+        el.classList.add("ignore")
 }
