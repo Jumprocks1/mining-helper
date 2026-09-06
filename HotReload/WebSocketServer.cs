@@ -82,11 +82,19 @@ public class WebSocketServer : IDisposable
         foreach (var (client, _) in Clients)
             await SendMessage(client, message);
     }
-    public static Task SendMessage(WebSocket webSocket, byte[] message, bool binary)
-           => webSocket.SendAsync(
-                   message,
-                   binary ? WebSocketMessageType.Binary : WebSocketMessageType.Text,
-                   endOfMessage: true,
-                   CancellationToken.None);
+    static readonly SemaphoreSlim _sendLock = new(1, 1);
+    public static async Task SendMessage(WebSocket webSocket, byte[] message, bool binary)
+    {
+        await _sendLock.WaitAsync();
+        try
+        {
+            await webSocket.SendAsync(
+                    message,
+                    binary ? WebSocketMessageType.Binary : WebSocketMessageType.Text,
+                    endOfMessage: true,
+                    CancellationToken.None);
+        }
+        finally { _sendLock.Release(); }
+    }
     static Task SendMessage(WebSocket webSocket, string message) => SendMessage(webSocket, Encoding.UTF8.GetBytes(message), false);
 }

@@ -25,7 +25,7 @@ public static class Program
         if (!Directory.Exists(path)) throw new DirectoryNotFoundException($"Folder {path} not found. CWD: {Environment.CurrentDirectory}");
 
         var queuedChanges = new Dictionary<string, CancellationTokenSource>();
-        using var watcher = new FileSystemWatcher(path) { EnableRaisingEvents = true };
+        using var watcher = new FileSystemWatcher(path) { EnableRaisingEvents = true, IncludeSubdirectories = true };
         watcher.Changed += (_, ev) =>
         {
             var cts = new CancellationTokenSource();
@@ -40,7 +40,6 @@ public static class Program
             {
                 try
                 {
-
                     await Task.Delay(Debounce, cts.Token);
                     await server.BroadcastMessage($"changed:{path}");
                 }
