@@ -20,6 +20,10 @@ interface EpubSettings {
 }
 const svgNS = "http://www.w3.org/2000/svg"
 
+declare const brandSymbol: unique symbol
+type Brand<T, Name extends string> = T & { readonly [brandSymbol]: Name }
+export type EpubPage = Brand<HTMLDivElement, "epub-page">
+
 export class EpubReader {
     DOMParser: DOMParser = new DOMParser()
     _opfXML?: Document
@@ -197,7 +201,7 @@ export class EpubReader {
             }
         }
         this.CurrentPage = page
-        return o
+        return o as EpubPage
     }
     setupSanitizer() {
         this.sanitizer.allowElement({ name: "div", attributes: ["data-epub-ref-id"] })

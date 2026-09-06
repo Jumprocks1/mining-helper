@@ -1,7 +1,8 @@
 import IconButton from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
 import { OpenModal } from "../../components/Modal"
-import { EpubReader } from "../../epub/epub"
+import { EpubPage, EpubReader } from "../../epub/epub"
+import epubJpdb from "../../epub/epubJpdb"
 import { replaceChildren, replaceWith } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { ActionTooltip } from "../../framework/Tooltips"
@@ -15,7 +16,7 @@ export default class ReaderPage extends PageComponent {
     override Title = "Mining Helper - Reader"
     override Node: HTMLElement
 
-    CurrentPageNode: HTMLElement = <div>Drop .epub here</div>
+    CurrentPageNode: EpubPage = <div>Drop .epub here</div> as EpubPage
     ViewerNode: HTMLElement = <div id="epub-viewer">
         {this.CurrentPageNode}
     </div>
@@ -83,13 +84,13 @@ export default class ReaderPage extends PageComponent {
         }
     }
 
-    SetPageNode(node: HTMLElement) {
+    SetPageNode(node: EpubPage) {
         replaceWith(this.CurrentPageNode!, node)
         this.CurrentPageNode = node
     }
 
     async LoadEpubFileBlob(blob: Blob) {
-        this.SetPageNode(<div className="loader" />)
+        this.SetPageNode(<div className="loader" /> as EpubPage)
         this.Reader = new EpubReader({ trimWhitespace: false })
         await this.Reader.read(blob)
         const recentPage = parseInt(localStorage.getItem(currentPageKey) ?? "")
@@ -112,6 +113,7 @@ export default class ReaderPage extends PageComponent {
             const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : this.Reader.spine.length
             tocPoints.item(i).classList.toggle("active", page >= e.spinePage && page < nextTocPage)
         }
+        console.log(await epubJpdb(this.CurrentPageNode))
     }
 
     LoadToC() {

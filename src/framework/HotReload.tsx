@@ -64,7 +64,7 @@ class HotReloadWebSocket {
             this._openPromiseResolve = undefined
             if (this.Connection) this.Connection.onmessage = e => this.onMessage?.(e)
             this.onOpen?.();
-            console.log("🟢 Hot reload CSS connected")
+            console.log(`🟢 Hot reload CSS${HOT_RELOAD_JS ? "+JS" : ""} connected`)
         };
         this.Connection.onclose = () => {
             this._openPromiseResolve = undefined
