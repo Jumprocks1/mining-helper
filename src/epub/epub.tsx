@@ -34,7 +34,7 @@ export class EpubReader {
         this.setupSanitizer()
     }
 
-    CurrentPage = 0
+    CurrentPage = -1
 
     manifest: Record<string, EpubItem> = {}
     spine: EpubItem[] = []
@@ -198,6 +198,8 @@ export class EpubReader {
     setupSanitizer() {
         this.sanitizer.allowElement({ name: "div", attributes: ["data-epub-ref-id"] })
         this.sanitizer.allowElement({ name: "g", attributes: ["data-epub-ref-id"], namespace: svgNS })
+        // TODO could support links with href but really doesn't feel worth it
+        this.sanitizer.removeAttribute("href")
     }
 }
 

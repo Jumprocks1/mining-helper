@@ -93,9 +93,8 @@ export default class ReaderPage extends PageComponent {
         this.Reader = new EpubReader({ trimWhitespace: false })
         await this.Reader.read(blob)
         const recentPage = parseInt(localStorage.getItem(currentPageKey) ?? "")
-        this.Reader.CurrentPage = isNaN(recentPage) ? 0 : recentPage
         this.LoadToC()
-        await this.LoadPage(this.Reader.CurrentPage)
+        await this.LoadPage(isNaN(recentPage) ? 0 : recentPage)
     }
 
     async LoadPage(page: number) {
@@ -104,15 +103,14 @@ export default class ReaderPage extends PageComponent {
         page = Math.max(Math.min(page, totalPages - 1), 0)
         this.PageIndicator.textContent = `${page + 1} / ${totalPages}`
         localStorage.setItem(currentPageKey, page.toString())
-        this.SetPageNode(await this.Reader.readPage(page))
+        if (page !== this.Reader?.CurrentPage) this.SetPageNode(await this.Reader.readPage(page))
         this.ViewerNode.scrollTo({ top: 0 })
         const tocPoints = this.ToC.querySelectorAll(".toc-point")
         const toc = this.Reader.toc
         for (let i = 0; i < tocPoints.length; i++) {
             const e = toc.points[i]
-            const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : this.Reader.spine.length - 1
-            const p = tocPoints.item(i)
-            p.classList.toggle("active", page >= e.spinePage && page < nextTocPage)
+            const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : this.Reader.spine.length
+            tocPoints.item(i).classList.toggle("active", page >= e.spinePage && page < nextTocPage)
         }
     }
 
@@ -123,10 +121,10 @@ export default class ReaderPage extends PageComponent {
         const o: Node[] = []
         for (let i = 0; i < toc.points.length; i++) {
             const e = toc.points[i]
-            const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : reader.spine.length - 1
+            const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : reader.spine.length
             o.push(<div className="link-button toc-point"
                 onclick={() => this.LoadPage(e.spinePage)}
-                tooltip={`Click to view\nPages ${e.spinePage + 1}-${nextTocPage + 1}`}>
+                tooltip={`Click to view\nPages ${e.spinePage + 1}-${nextTocPage}`}>
                 {e.label}
             </div>)
         }
