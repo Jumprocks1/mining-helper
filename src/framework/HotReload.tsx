@@ -1,6 +1,7 @@
 let ran = false
 
 declare var HOT_RELOAD_CSS: boolean | undefined
+declare var HOT_RELOAD_JS: boolean | undefined
 
 export default () => {
     if (!HOT_RELOAD_CSS || ran) return
@@ -21,6 +22,8 @@ export default () => {
                         link.href = `${rootHref}?v=${new Date().getTime()}`
                     }
                 }
+            } else if (path === "dist/js/pages/spa.js") {
+                if (HOT_RELOAD_JS) document.location.reload()
             }
         }
     }
