@@ -97,18 +97,18 @@ export default class ReaderPage extends PageComponent {
                 const jpdb = this.CurrentPageNode?.jpdb
                 if (!jpdb) return
                 // ends up 1 longer than the jpdb parse text if no match due to extra newline at end
-                let found = false
+                let found: number | undefined
                 let n = 0
                 for (let i = 0; i < jpdb.nodes.length; i++) {
                     const e = jpdb.nodes[i]
                     if (e === hovered[0]) {
-                        found = true
+                        found = i
                         break
                     }
                     n += e.textContent.length;
                 }
-                if (!found) return
-                const offset = n + hovered[1] // exact position we are hovering
+                if (found === undefined) return
+                const offset = n + hovered[1] // exact position we are hovering in jpdb parse string
                 let token: JpdbToken | undefined = undefined
                 // this could be sped up with binary search
                 for (let i = 0; i < jpdb.tokens.length; i++) {
@@ -118,13 +118,35 @@ export default class ReaderPage extends PageComponent {
                     }
                 }
                 if (!token) return
-                // TODO definitely possible for token to be split across 2 inline elements
-                // ie. <ruby>父</ruby>さん
-                // This would happen whenever start + token[1] > hovered[0].textContent.length
-                const start = token[0] - n
                 const range = document.createRange()
-                range.setStart(hovered[0], start)
-                range.setEnd(hovered[0], start + token[1])
+                // Goal here is to figure out which nodes the token belongs to
+                // At this point, we know the hovered node (index `found`) is part of the token
+                // We don't know if other nodes before/after `found` are also part of the token
+                const tokenStart = token[0]
+                const tokenEnd = tokenStart + token[1]
+                let p = n
+                for (let i = found; i >= 0; i--) {
+                    const e = jpdb.nodes[i]
+                    if (p <= tokenStart && tokenStart < p + e.textContent.length) {
+                        range.setStart(e, tokenStart - p)
+                        break
+                    }
+                    p -= e.textContent.length
+                }
+                p = n
+                for (let i = found; i < jpdb.nodes.length; i++) {
+                    const e = jpdb.nodes[i]
+                    if (p < tokenEnd && tokenEnd <= p + e.textContent.length) {
+                        range.setEnd(e, tokenEnd - p)
+                        break
+                    }
+                    p += e.textContent.length
+                }
+
+                if (range.startContainer === document || range.endContainer === document) {
+                    console.error("failed to locate nodes")
+                    return
+                }
                 return [range, jpdb.vocabulary[token[3]], token]
             },
             invert: false,
