@@ -2,13 +2,24 @@ import { loadIgnoreList } from "../jpdb/IgnoreList";
 import JpdbParseText, { JpdbParseResponse } from "../jpdb/JpdbParseText";
 import { EpubPage } from "./epub";
 
-export default async (page: EpubPage, cacheOnly?: true) => {
+export default async (page: EpubPage, cacheOnly?: true): Promise<JpdbParseResponse | undefined> => {
     loadIgnoreList()
-    const lines = getLinesIn(page) // takes ~1ms for large pages, could probably make it faster but oh well
-    if (lines.length === 0) return { tokens: [], vocab: [] }
-
-    // TODO parse
-    return lines
+    if (page.jpdb) return page.jpdb
+    const nodeLines = getLinesIn(page) // takes ~1ms for large pages, could probably make it faster but oh well
+    let s = ""
+    const lines = []
+    for (let i = 0; i < nodeLines.length; i++) {
+        const e = nodeLines[i]
+        if (e === newLine) {
+            lines.push(s)
+            s = ""
+        }
+        else s += e.nodeValue!
+    }
+    if (nodeLines.length === 0) return { tokens: [], vocabulary: [] }
+    const res = await JpdbParseText(lines, cacheOnly)
+    if (res) page.jpdb = res
+    return res
 }
 
 
@@ -23,56 +34,53 @@ const blockTags = new Set([
 ])
 
 function getLinesIn(page: EpubPage) {
-    return visit(page, [])
+    const o: JpdbParseNode[] = []
+    visit(page, o)
+    return o
 }
 
-function visit(element: Element, lines: string[]): string[] {
-    let text = ""
+const newLine = Symbol("\\n")
 
+type JpdbParseNode = Node | typeof newLine
+
+function visit(element: Element, nodes: JpdbParseNode[]) {
     const flush = () => {
-        if (text.trim()) lines.push(text)
-        text = ""
+        if (nodes.length > 0 && nodes[nodes.length - 1] != newLine) nodes.push(newLine)
     }
 
     for (const e of element.childNodes) {
         if (e.nodeType === Node.TEXT_NODE) {
-            if (e.nodeValue?.trim())
-                text += e.nodeValue
+            if (e.nodeValue?.trim()) nodes.push(e)
         } else if (e.nodeType === Node.ELEMENT_NODE) {
             const element = e as Element
             const tag = element.tagName
-
             if (ignoreTags.has(tag))
                 continue
-            if (element.tagName === "BR") {
+            if (tag === "BR") {
                 flush()
                 continue
             }
-            if (blockTags.has(element.tagName)) {
+            if (blockTags.has(tag)) {
                 flush()
-                visit(element, lines)
+                visit(element, nodes)
             } else {
-                text += inlineText(element)
+                inlineText(element, nodes)
             }
         }
     }
-
     flush()
-    return lines
 }
 
 // Inline elements are assumed to have no block content in them
-function inlineText(element: Element): string {
-    let text = ""
+function inlineText(element: Element, nodes: JpdbParseNode[]) {
     for (const e of element.childNodes) {
         if (e.nodeType === Node.TEXT_NODE) {
-            text += e.nodeValue ?? ""
+            if (e.nodeValue?.trim()) nodes.push(e)
         } else if (e.nodeType === Node.ELEMENT_NODE) {
             const element = e as Element
             if (!ignoreTags.has(element.tagName)) {
-                text += inlineText(element)
+                inlineText(element, nodes)
             }
         }
     }
-    return text
 }
