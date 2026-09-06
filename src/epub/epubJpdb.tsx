@@ -21,9 +21,11 @@ export default async (page: EpubPage, cacheOnly?: true): Promise<JpdbParseRespon
         else s += e.nodeValue!
     }
     if (nodes.length === 0) return { tokens: [], vocabulary: [], nodes: [] }
-    const res = (await JpdbParseText(lines, cacheOnly) as JpdbParseResponseWithNodes)
-    res.nodes = nodes
-    if (res) page.jpdb = res
+    const res = await JpdbParseText(lines, cacheOnly) as JpdbParseResponseWithNodes | undefined
+    if (res) {
+        page.jpdb = res
+        res.nodes = nodes
+    }
     return res
 }
 

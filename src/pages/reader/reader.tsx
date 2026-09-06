@@ -21,10 +21,11 @@ export default class ReaderPage extends PageComponent {
 
     CurrentPageNode: EpubPage = <div>Drop .epub here</div> as EpubPage
     hoverRectangle: HTMLElement = <div className="hover-rectangle" />
-    ViewerNode: HTMLElement = <div id="epub-viewer">
+    PageWrapper = <div id="epub-page-wrapper">
         {this.CurrentPageNode}
         {this.hoverRectangle}
     </div>
+    ViewerNode: HTMLElement = <div id="epub-viewer">{this.PageWrapper}</div>
     PageIndicator: HTMLElement = <div id="page-indicator" tooltip={() => this.PageTooltip()}>0 / 0</div>
     ToC: HTMLElement = <div id="toc" />
     Reader?: EpubReader
@@ -48,7 +49,7 @@ export default class ReaderPage extends PageComponent {
                     }} icon="arrow_back" />
                     <IconButton onClick={async () => {
                         if (!this.Reader) return
-                        this.LoadPage(this.Reader.CurrentPage + 1)
+                        await this.LoadPage(this.Reader.CurrentPage + 1)
                     }} icon="arrow_forward" />
                 </div>
                 {/* TODO ToC gets squish on small screen */}
@@ -92,7 +93,7 @@ export default class ReaderPage extends PageComponent {
         // if this is called before the page is synchronously loaded,
         //  it risks getting unbound due to how onDeath works
         RegisterJpHoverTooltip({
-            body: this.ViewerNode,
+            body: this.PageWrapper,
             getTargetAndVocab: hovered => {
                 const jpdb = this.CurrentPageNode?.jpdb
                 if (!jpdb) return
