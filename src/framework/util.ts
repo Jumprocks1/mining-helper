@@ -1,5 +1,8 @@
 import { LoadableChildren } from "../components/Loader"
 
+declare const brandSymbol: unique symbol
+export type Brand<T, Name extends string> = T & { readonly [brandSymbol]: Name }
+
 export interface BaseComponentProps {
     className?: string
     id?: string

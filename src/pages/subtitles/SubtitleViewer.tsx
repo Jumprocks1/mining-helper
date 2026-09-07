@@ -5,7 +5,7 @@ import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subti
 import { setSetting } from "../../views/SettingsModal"
 import SubtitlesPage from "./subtitles"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
-import { AddStateClass, JpHoverTooltipHandler, JpHoverTooltipState, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "./JpHoverTooltip"
+import { AddStateClass, HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "./JpHoverTooltip"
 
 declare global {
     interface HTMLElement {
@@ -18,7 +18,7 @@ export default class SubtitleViewer {
     subtitles: Subtitles
     pointer: HTMLElement = <div className="pointer">-&gt;</div>
 
-    hoverRectangle: HTMLElement = <div className="hover-rectangle" />
+    HoverRectangleContainer = HoverRectangleContainer()
 
     Page: SubtitlesPage
 
@@ -30,7 +30,7 @@ export default class SubtitleViewer {
         this.Node = <div className="subtitle-viewer">
             {this.pointer}
             <div className="inner"></div>
-            {this.hoverRectangle}
+            {this.HoverRectangleContainer}
         </div>
         this.subtitles = subtitles
         this.Node.addEventListener("click", ev => {
@@ -87,7 +87,7 @@ export default class SubtitleViewer {
                 }
             },
             invert: false,
-            onChange: state => UpdateHoverBox(this.hoverRectangle, state)
+            onChange: state => UpdateHoverBox(this.HoverRectangleContainer, state)
         })
 
         // make sure anki words are loaded for later, this caches the result

@@ -10,7 +10,7 @@ import { JpdbToken } from "../../jpdb/JpdbParseText"
 import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
 import { getAnkiFurigana } from "../anki/CardList"
-import { RegisterJpHoverTooltip, UpdateHoverBox } from "../subtitles/JpHoverTooltip"
+import { HoverRectangleContainer, RegisterJpHoverTooltip, UpdateHoverBox } from "../subtitles/JpHoverTooltip"
 import { AddFurigana } from "./furigana"
 
 const currentPageKey = "reader-current-page"
@@ -21,10 +21,10 @@ export default class ReaderPage extends PageComponent {
     override Node: HTMLElement
 
     CurrentPageNode: EpubPage = <div>Drop .epub here</div> as EpubPage
-    hoverRectangle: HTMLElement = <div className="hover-rectangle" />
+    HoverRectangleContainer = HoverRectangleContainer()
     PageWrapper = <div id="epub-page-wrapper">
         {this.CurrentPageNode}
-        {this.hoverRectangle}
+        {this.HoverRectangleContainer}
     </div>
     ViewerNode: HTMLElement = <div id="epub-viewer">{this.PageWrapper}</div>
     PageIndicator: HTMLElement = <div id="page-indicator" tooltip={() => this.PageTooltip()}>0 / 0</div>
@@ -150,7 +150,7 @@ export default class ReaderPage extends PageComponent {
                 return [range, jpdb.vocabulary[token[3]], token]
             },
             invert: false,
-            onChange: state => UpdateHoverBox(this.hoverRectangle, state)
+            onChange: state => UpdateHoverBox(this.HoverRectangleContainer, state)
         })
     }
 

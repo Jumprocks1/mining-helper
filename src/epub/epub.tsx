@@ -1,5 +1,6 @@
 import JSZip from 'jszip' // I'm not a fan of importing this directly. It doubles the bundle size...
 import type { JpdbParseResponseWithNodes } from './epubJpdb'
+import { Brand } from '../framework/util'
 
 interface EpubItem {
     href: string
@@ -21,8 +22,6 @@ interface EpubSettings {
 }
 const svgNS = "http://www.w3.org/2000/svg"
 
-declare const brandSymbol: unique symbol
-type Brand<T, Name extends string> = T & { readonly [brandSymbol]: Name }
 export type EpubPage = Brand<HTMLDivElement, "epub-page"> & { jpdb?: JpdbParseResponseWithNodes }
 
 export class EpubReader {

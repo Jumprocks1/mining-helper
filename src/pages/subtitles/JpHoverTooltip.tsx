@@ -2,6 +2,7 @@ import { JsPopover } from "../../components/basic/JsPopover";
 import { Children } from "../../framework/createElement";
 import { onDeath } from "../../framework/Observer";
 import { SmallTooltip } from "../../framework/Tooltips";
+import { Brand } from "../../framework/util";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabState, getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState";
 import AnkiConnect from "../../utils/AnkiConnect";
@@ -227,28 +228,43 @@ export function RegisterJpHoverTooltip(handler: JpHoverTooltipHandler) {
     return handler
 }
 
+type HoverRectangleContainer = Brand<HTMLDivElement, "hover-rectangle-container">
 
-export function UpdateHoverBox(hoverRectangle: HTMLElement, hoverState: JpHoverTooltipState | undefined) {
-    if (!hoverState) {
-        hoverRectangle.classList.add("hide")
-        return
-    }
-    const parent = hoverRectangle.parentElement
+export function HoverRectangleContainer() {
+    return <div className="hover-rectangle-container" /> as HoverRectangleContainer
+}
+
+
+export function UpdateHoverBox(hoverRectangleContainer: HoverRectangleContainer, hoverState: JpHoverTooltipState | undefined) {
+    hoverRectangleContainer.classList.toggle("hide", !hoverState)
+    if (!hoverState) return
+    const parent = hoverRectangleContainer.parentElement
     if (!parent) return
+
     const vocab = hoverState.vocab
 
-    // remove all other classes
-    hoverRectangle.className = "hover-rectangle"
-
     const parentRect = parent.getBoundingClientRect()
+    const target = hoverState.target
+    const rects = getTextRects(target)
+    const children = hoverRectangleContainer.children
+    while (children.length < rects.length) {
+        hoverRectangleContainer.append(<div className="hover-rectangle" />)
+    }
+    for (let i = 0; i < children.length; i++) {
+        const hoverRectangle = children[i] as HTMLElement
+        if (i >= rects.length) {
+            hoverRectangle.classList.add("hide")
+            continue
+        }
 
-    if (vocab) AddStateClass(hoverRectangle, vocab)
-    const rect = hoverState.target.getBoundingClientRect()
-
-    hoverRectangle.style.width = rect.width + "px"
-    hoverRectangle.style.height = rect.height + "px"
-    hoverRectangle.style.top = rect.top - parentRect.top + "px"
-    hoverRectangle.style.left = rect.left - parentRect.left + "px"
+        hoverRectangle.className = "hover-rectangle" // remove all other classes
+        const rect = rects[i]
+        if (vocab) AddStateClass(hoverRectangle, vocab)
+        hoverRectangle.style.width = rect.width + "px"
+        hoverRectangle.style.height = rect.height + "px"
+        hoverRectangle.style.top = rect.top - parentRect.top + "px"
+        hoverRectangle.style.left = rect.left - parentRect.left + "px"
+    }
 }
 
 export function AddStateClass(el: HTMLElement, vocab: JpdbVocabulary) {
@@ -259,4 +275,73 @@ export function AddStateClass(el: HTMLElement, vocab: JpdbVocabulary) {
         el.classList.add("similar")
     else if (state !== VocabState.New)
         el.classList.add("ignore")
+}
+
+function combineRectangles(rects: DOMRect[] | DOMRectList) {
+    if (rects.length === 1) return rects
+    const o: DOMRect[] = []
+    for (const a of rects) {
+        let found = false
+        for (let i = 0; i < o.length; i++) {
+            const b = o[i]
+            if (a.y === b.y && a.height === b.height
+                && a.left <= b.right && b.left <= a.right
+            ) {
+                const x = Math.min(a.left, b.left)
+                o[i] = new DOMRect(x, a.y, Math.max(a.right, b.right) - x, a.height)
+                found = true
+                break
+            }
+        }
+        if (!found) {
+            o.push(a)
+        }
+    }
+    return o
+}
+
+function getTextRects(target: HTMLElement | Range) {
+    if (target instanceof HTMLElement) return combineRectangles(target.getClientRects())
+    else {
+        return combineRectangles(getTextRectsRange(target))
+    }
+}
+
+function getTextRectsRange(range: Range) {
+    // This walks all text nodes in the common ancestor for `range`, skipping <rt>
+    // For each node that overlaps the range, it select the part of the node inside of the input range
+    // It then adds that text node's range to the output
+    const rects: DOMRect[] = []
+
+    function handle(text: Text) {
+        const nodeRange = document.createRange()
+        nodeRange.selectNodeContents(text)
+
+        // Skip ranges with no overlap
+        if (range.compareBoundaryPoints(Range.END_TO_START, nodeRange) >= 0 ||
+            range.compareBoundaryPoints(Range.START_TO_END, nodeRange) <= 0)
+            return
+
+        if (text === range.startContainer)
+            nodeRange.setStart(text, range.startOffset)
+        if (text === range.endContainer)
+            nodeRange.setEnd(text, range.endOffset)
+        rects.push(...nodeRange.getClientRects())
+    }
+
+    const parent = range.commonAncestorContainer
+    if (parent instanceof Text) {
+        handle(parent)
+        return rects
+    }
+
+    const walker = document.createTreeWalker(parent, NodeFilter.SHOW_TEXT)
+    let node: Node | null
+    while ((node = walker.nextNode())) {
+        if (node.parentElement?.closest("rt"))
+            continue
+        handle(node as Text)
+    }
+
+    return rects;
 }
