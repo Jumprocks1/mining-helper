@@ -27,14 +27,20 @@ export function getHoveredCharacterIndex(x: number, y: number) {
 
     // not really sure if it's possible to have both of these
     // maybe if there's weird overlapping characters, but I think it's fine to prefer the left one in those cases
-    const hitBefore = beforeRect && beforeRect.left <= x && beforeRect.right >= x && beforeRect.top <= y && beforeRect.bottom >= y
-    const hitAfter = afterRect && afterRect.left <= x && afterRect.right >= x && afterRect.top <= y && afterRect.bottom >= y
 
+    // we extend the hitbox of these by 1 pixel to help prevent gaps
+    // the gaps don't seem to happen for regular text nodes, but when there's furigana it's very common
+    const hitBefore = inRect(x, y, beforeRect, 1)
+    const hitAfter = inRect(x, y, afterRect, 1)
     const hitIndex = hitBefore ? offset - 1 : hitAfter ? offset : undefined
-    // not sure if this is a good idea
-    // returning undefined here causes ~1px gaps to sometimes drop hover info
-    if (hitIndex === undefined) return [node, offset - 1] as const
+    // we can't return one of the hit nodes because the cursor can be very far away
+    if (hitIndex === undefined) return undefined
     return [node, hitIndex] as const
+}
+
+function inRect(x: number, y: number, rect: DOMRect | undefined, epsilon: number) {
+    if (!rect) return false
+    return rect.left - epsilon <= x && rect.right + epsilon >= x && rect.top - epsilon <= y && rect.bottom + epsilon >= y
 }
 
 export function getCharacterIndex(parent: HTMLElement, node: Node, offset: number) {
