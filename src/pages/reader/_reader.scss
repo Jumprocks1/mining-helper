@@ -42,10 +42,13 @@
                 &:not(.active) {
                     color: white;
                 }
+                &:hover {
+                    background: #FFFFFF10
+                }
+                padding-left: 2em+$s1*2;
+                text-indent: -2em;
             }
             padding: $s1 * 2;
-            padding-left: 2em+$s1 * 2;
-            text-indent: -2em;
             max-width: 25vw;
             min-width: 15em;
             font-size: 0.75em;

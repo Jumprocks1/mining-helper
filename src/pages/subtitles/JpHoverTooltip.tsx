@@ -140,8 +140,12 @@ function setHoverState(state: JpHoverTooltipState | undefined, shiftKey: boolean
     if (targetsEqual(state?.target, loadedHover?.target) && state?.tooltip === loadedHover?.tooltip) return
     const oldHoverHandler = loadedHover?.handler
     _setHoverStateInner(state, shiftKey)
-    oldHoverHandler?.onChange?.(state)
-    if (loadedHover && loadedHover.handler !== oldHoverHandler) loadedHover.handler.onChange?.(state)
+    // Careful: for these onChange handlers, we have to use loadedHover, not state
+    // State can be out of date at this point since _setHoverStateInner can loadedHover
+    // If that happens, we can end up calling these onChange handlers twice with the same loadedHover object
+    // I think this could be fixed by refactor inner/outer setHoverState or maybe adding a third __ inner inner
+    oldHoverHandler?.onChange?.(loadedHover)
+    if (loadedHover && loadedHover.handler !== oldHoverHandler) loadedHover.handler.onChange?.(loadedHover)
 }
 function _setHoverStateInner(state: JpHoverTooltipState | undefined, shiftKey: boolean) {
     if (state === undefined) {
