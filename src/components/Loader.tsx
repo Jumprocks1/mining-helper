@@ -11,6 +11,7 @@ type LoadOverload = {
 
 interface LoaderProps {
     showFullError?: boolean
+    afterLoad?: () => void
 }
 
 // slightly nicer than <Loader /> since it feels more like a regular function
@@ -32,7 +33,10 @@ export const Load: LoadOverload = (load: LoadableChildren<any>, props?: any, loa
     if (!(children instanceof Promise)) return children
 
     const node = <div className="loader" />
-    children.then(e => replaceWith(node, e)).catch(e => {
+    children.then(e => {
+        replaceWith(node, e)
+        if (loaderProps?.afterLoad) loaderProps.afterLoad()
+    }).catch(e => {
         console.error(e)
         if (loaderProps?.showFullError) {
             node.replaceWith(<div className="error-text-display">{userErrorMessage(e)}</div>)
@@ -46,4 +50,4 @@ export const Load: LoadOverload = (load: LoadableChildren<any>, props?: any, loa
 
 // cast isn't perfect but it's close enough, needed for JSX to work
 // if JSX didn't have awful typing it'd be fine
-export default ({ load, showFullError }: LoaderProps & { load: LoadableChildren }) => Load(load, undefined, { showFullError }) as HTMLElement
+export default ({ load, showFullError, afterLoad }: LoaderProps & { load: LoadableChildren }) => Load(load, undefined, { showFullError, afterLoad }) as HTMLElement

@@ -144,7 +144,8 @@ export function BindSpaRouter(props: Props) {
 
             const load = instance.Load
             if (load) {
-                children = <Loader load={async () => {
+                children = <Loader afterLoad={() => instance.LoadComplete()} load={async () => {
+                    instance.StartLoad()
                     await load()
                     return instance.Node
                 }} />

@@ -18,3 +18,23 @@ declare function createElement<T extends keyof HTMLElementTagNameMap>(
 declare function createElement<T extends (props: Record<string, any>) => JSX.Element>(
     element: T, properties?: Parameters<T>[0], ...children: any[]): JSX.Element
 declare function createFragment(): DocumentFragment
+
+// Ideally we can remove this once the feature is better supported
+interface Sanitizer {
+    new(): Sanitizer
+    allowElement: (element: string | { name: string, attributes?: string[], namespace?: string }) => void
+    removeElement: (element: string) => void
+    allowAttribute: (attribute: string) => void
+    removeAttribute: (attribute: string) => void
+    replaceElementWithChildren: (element: string) => void
+}
+
+interface Element {
+    setHTML(html: string, options?: { sanitizer?: Sanitizer }): void
+}
+
+interface Window {
+    Sanitizer: Sanitizer
+}
+
+declare var Sanitizer: Sanitizer

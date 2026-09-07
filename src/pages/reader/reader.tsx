@@ -13,7 +13,7 @@ import { getAnkiFurigana } from "../anki/CardList"
 import { HoverRectangleContainer, RegisterJpHoverTooltip, UpdateHoverBox } from "../subtitles/JpHoverTooltip"
 import { AddFurigana } from "./furigana"
 
-const currentPageKey = "reader-current-page"
+const currentPositionKey = "reader-current-position"
 
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
@@ -187,9 +187,24 @@ export default class ReaderPage extends PageComponent {
         this.SetPageNode(<div className="loader" /> as EpubPage)
         this.Reader = new EpubReader({ trimWhitespace: false })
         await this.Reader.read(blob)
-        const recentPage = parseInt(localStorage.getItem(currentPageKey) ?? "")
         this.LoadToC()
-        await this.LoadPage(isNaN(recentPage) ? 0 : recentPage)
+        await this.LoadPage(this.PageState.page)
+    }
+
+    PageState: { page: number, paragraph: number } = this.GetSavedState()
+
+    GetSavedState() {
+        const o = { page: 0, paragraph: 0 }
+        const s = localStorage.getItem(currentPositionKey) ?? ""
+        if (!s) return o
+        const spl = s.split(",").map(e => parseInt(e))
+        if (spl.some(e => !Number.isInteger(e))) return o
+        if (spl[0]) o.page = spl[0]
+        if (spl[1]) o.paragraph = spl[1]
+        return o
+    }
+    SavePageState() {
+        localStorage.setItem(currentPositionKey, this.PageState.page + "," + this.PageState.paragraph)
     }
 
     async LoadPage(page: number) {
@@ -199,9 +214,12 @@ export default class ReaderPage extends PageComponent {
         const totalPages = this.Reader.spine.length
         page = Math.max(Math.min(page, totalPages - 1), 0)
         this.PageIndicator.textContent = `${page + 1} / ${totalPages}`
-        localStorage.setItem(currentPageKey, page.toString())
+        if (this.PageState.page !== page) {
+            this.PageState.page = page
+            this.PageState.paragraph = 0
+            this.SavePageState()
+        }
         if (page !== this.Reader?.CurrentPage) this.SetPageNode(await this.Reader.readPage(page))
-        this.ViewerNode.scrollTo({ top: 0 })
         const tocPoints = this.ToC.querySelectorAll(".toc-point")
         const toc = this.Reader.toc
         for (let i = 0; i < tocPoints.length; i++) {
@@ -212,6 +230,11 @@ export default class ReaderPage extends PageComponent {
         await epubJpdb(this.CurrentPageNode, true)
         this.JpdbLoadButton.Disabled = Boolean(this.CurrentPageNode.jpdb)
         this.FuriganaButton.Disabled = false
+        if (this.PageState.paragraph === 0) {
+            this.ViewerNode.scrollTo({ top: 0 })
+        } else {
+            this.OnAfterLoad(() => this.CurrentPageNode.querySelector("p.saved-position")?.scrollIntoView())
+        }
     }
 
     LoadToC() {
@@ -263,13 +286,32 @@ export default class ReaderPage extends PageComponent {
             OpenReaderSettings()
         } else if (key === "f") this.FuriganaButton.Click(undefined)
         else if (key === "t") this.JpdbLoadButton.Click(undefined)
+        else if (key === "s") this.SaveParagraph()
+    }
+
+    SaveParagraph() {
+        if (!this.Reader) return
+        // This is a bit sketchy, but that's the fun part
+        const target = document.querySelector(".epub-page p:hover")
+        if (!target) return
+        const index = (target as HTMLElement).paragraphIndex
+        if (index !== undefined) {
+            this.PageState.paragraph = index
+            for (const p of this.CurrentPageNode.querySelectorAll("p"))
+                p.classList.toggle("saved-position", p === target)
+            this.SavePageState()
+        }
     }
 
     // Stuff that doesn't really belong in the epub reader
     EnhancePageNode(node: EpubPage) {
         let i = 0;
         for (const p of node.querySelectorAll("p")) {
+            p.paragraphIndex = i
             p.appendChild(<div className="paragraph-index">{i + 1}</div>)
+            if (i === this.PageState.paragraph) {
+                p.classList.add("saved-position")
+            }
             i += 1
         }
     }

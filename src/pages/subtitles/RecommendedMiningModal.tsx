@@ -16,16 +16,7 @@ import { getDefaultSetting, getSetting, setSetting } from "../../views/SettingsM
 import SubtitlesPage from "./subtitles";
 import { RegisterJpHoverTooltip } from "./JpHoverTooltip";
 import { UpdateTooltip } from "../../framework/Tooltips";
-import { onDeath } from "../../framework/Observer";
-import { getHoveredCharacterIndex } from "../../utils/CharacterHighlighter";
 
-
-declare global {
-    interface HTMLElement {
-        vocab?: JpdbVocabulary
-        tokenUsages?: JpdbToken[]
-    }
-}
 
 export default async (getMinimizeTarget: () => DOMRect | undefined, subtitlesPage: SubtitlesPage) => {
     const subtitles = subtitlesPage.LoadedSubtitles?.subtitles

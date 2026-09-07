@@ -27,6 +27,25 @@ export abstract class PageComponent extends Component {
 
     Load?: () => Promise<void> // could consider returning something from this?
 
+    get IsLoaded() {
+        return this.loadHandlers === undefined
+    }
+    StartLoad() {
+        this.loadHandlers = []
+    }
+    private loadHandlers: (() => void)[] | undefined = []
+    OnAfterLoad(handler: () => void) {
+        if (this.loadHandlers === undefined) handler()
+        else this.loadHandlers.push(handler)
+    }
+    LoadComplete() {
+        if (this.loadHandlers) {
+            for (const handler of this.loadHandlers)
+                handler()
+            this.loadHandlers = undefined
+        }
+    }
+
     // TODO would be nice if we had a way for handling global key events here
     // main issue is it's easy to forget to unbind when the page changes, which leaks memory
 }
