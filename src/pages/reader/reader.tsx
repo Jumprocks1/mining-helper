@@ -10,7 +10,7 @@ import { JpdbToken } from "../../jpdb/JpdbParseText"
 import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
 import { getAnkiFurigana } from "../anki/CardList"
-import { HoverRectangleContainer, RegisterJpHoverTooltip, UpdateHoverBox } from "../subtitles/JpHoverTooltip"
+import { HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "../subtitles/JpHoverTooltip"
 import { AddFurigana } from "./furigana"
 
 const currentPositionKey = "reader-current-position"
@@ -114,7 +114,9 @@ export default class ReaderPage extends PageComponent {
 
         // if this is called before the page is synchronously loaded,
         //  it risks getting unbound due to how onDeath works
-        RegisterJpHoverTooltip({
+        // would prefer to call this during the constructor if I fix that issue
+        // that would allow TooltipHandler to be non-undefined
+        this.TooltipHandler = RegisterJpHoverTooltip({
             body: this.PageWrapper,
             getTargetAndVocab: hovered => {
                 const jpdb = this.CurrentPageNode?.jpdb
@@ -277,6 +279,7 @@ export default class ReaderPage extends PageComponent {
         }
     }
 
+    TooltipHandler?: JpHoverTooltipHandler
     DocumentKeydown = (ev: KeyboardEvent) => {
         if (disallowGlobalInput(ev)) return
         if (handleKeyDown(ev)) return
@@ -287,6 +290,12 @@ export default class ReaderPage extends PageComponent {
         } else if (key === "f") this.FuriganaButton.Click(undefined)
         else if (key === "t") this.JpdbLoadButton.Click(undefined)
         else if (key === "s") this.SaveParagraph()
+        else if (key === "i") {
+            if (this.TooltipHandler) {
+                this.TooltipHandler.invert = !this.TooltipHandler.invert
+                UpdateJpHover(false)
+            }
+        }
     }
 
     // TODO shouldn't completely kill this on page turn in-case we go back
