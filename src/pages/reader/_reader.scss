@@ -58,12 +58,13 @@
             padding: 16px;
             padding-bottom: max(16px, 50vh); // for tooltip + scrolling
             @include vertical-scroll;
-            max-width: 40em;
+            flex: 1; // this just pushing the scrollbar to the right, which is nice so we can scroll with mouse on side
             #epub-page-wrapper {
                 // this doesn't do much but from what I can tell it's still necessary
                 // could probably remove it by adjusting the JpHoverTooltip code
                 // would also probably have to remove 1 of the wrapper on the subtitles page
                 position: relative;
+                max-width: 40em;
             }
             .epub-page {
                 font-size: 1.3em;
