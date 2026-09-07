@@ -49,6 +49,12 @@
             }
             .epub-page {
                 font-size: 1.3em;
+                ruby:not(.ruby-auto-gen) {
+                    rt {
+                        // highlight readings we're more confident in
+                        color: #FCC;
+                    }
+                }
                 svg {
                     display: block;
                 }

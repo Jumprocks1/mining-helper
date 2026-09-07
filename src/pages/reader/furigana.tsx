@@ -1,8 +1,9 @@
 import { JpdbParseResponseWithNodes } from "../../epub/epubJpdb";
-import { furiFromToken, furiToRuby } from "../../utils/util";
+import { JpdbToken } from "../../jpdb/JpdbParseText";
 
 export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
     const newNodes: Text[] = []
+    // This should no-op when everything is already inside ruby tags
 
     let tokenI = 0;
     let currentPos = 0
@@ -28,12 +29,11 @@ export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
                 }
                 if (token[0] >= nodeStart) {
                     pushTo(token[0])
-                    hasReplacement = true
-                    // TODO would be better to do this in 1 step
-                    // Sending the furi as a string can mess up
-                    const furi = furiFromToken(nodeContent.substring(token[0] - nodeStart, token[0] + token[1] - nodeStart), token)
-                    if (furi.includes("[")) {
-                        replacement.push(furiToRuby(furi))
+                    const tokenWord = nodeContent.substring(token[0] - nodeStart, token[0] + token[1] - nodeStart)
+                    const ruby = rubyFuriFromToken(tokenWord, token)
+                    if (ruby) {
+                        hasReplacement = true
+                        replacement.push(...ruby)
                         currentPos = token[0] + token[1]
                     }
                 }
@@ -66,4 +66,28 @@ export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
     // this recalculates the text node positions after we butcher the nodes with furigana
     // since the furigana shouldn't modify the string for jpdb, this should work fine
     jpdb.nodes = newNodes
+}
+
+export function rubyFuriFromToken(word: string, token: JpdbToken) {
+    if (Array.isArray(token[2])) {
+        let i = 0
+        let o: (Node | string)[] = []
+        for (const reading of token[2]) {
+            if (Array.isArray(reading)) {
+                const ruby = document.createElement("ruby")
+                ruby.className = "ruby-auto-gen"
+                ruby.append(reading[0])
+                i += reading[0].length
+                const rt = document.createElement("rt")
+                rt.innerText = reading[1]
+                ruby.append(rt)
+                o.push(ruby)
+            } else {
+                o.push(reading)
+                i += reading.length
+            }
+        }
+        if (i < word.length) o.push(word.substring(i))
+        return o
+    }
 }
