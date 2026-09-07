@@ -8,6 +8,6 @@
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "jszip": "^3.10.1"
+    "@zip.js/zip.js": "^2.11.2"
   }
 }

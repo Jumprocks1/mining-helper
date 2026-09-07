@@ -1,6 +1,6 @@
-import JSZip from 'jszip' // I'm not a fan of importing this directly. It doubles the bundle size...
 import type { JpdbParseResponseWithNodes } from './epubJpdb'
 import { Brand } from '../framework/util'
+import { BlobReader, BlobWriter, type FileEntry, TextWriter, ZipReader } from '@zip.js/zip.js/lib/zip-core.js'
 
 interface EpubItem {
     href: string
@@ -47,12 +47,15 @@ export class EpubReader {
         if (!this._zip) throw new EpubReaderError("No zip archive loaded")
         return this._zip
     }
-    _zip?: JSZip
+    _zip?: Record<string, FileEntry>
 
     async read(blob: Blob) {
         if (blob.type !== "application/epub+zip") throw new EpubReaderError(`Expected epub, got ${blob.type}`)
-        this._zip = new JSZip()
-        await this.zip.loadAsync(blob)
+        const reader = new ZipReader(new BlobReader(blob))
+        this._zip = {}
+        for (const entry of await reader.getEntries()) {
+            if (!entry.directory) this._zip[entry.filename] = entry
+        }
         const container = await this.readXML("META-INF/container.xml")
         const rootFile = container.querySelector("container > rootfiles > rootfile")
         const opfPath = rootFile?.getAttribute("full-path")
@@ -116,9 +119,9 @@ export class EpubReader {
     }
 
     async readXML(href: string, xhtml = false) {
-        const file = this.zip.file(href)
+        const file = this.zip[href]
         if (!file) throw new EpubReaderError(`Failed to open ${href}`)
-        const containerText = await file.async("string")
+        const containerText = await file.getData(new TextWriter())
         return this.DOMParser.parseFromString(containerText, xhtml ? "application/xhtml+xml" : "application/xml")
     }
     LiveBlobUrls: string[] = []
@@ -172,10 +175,10 @@ export class EpubReader {
                 const src = oldEl.getAttribute("src")
                 if (!src) continue
                 const url = new URL(src, "zip:/" + item.href).href.substring(5)
-                const file = this.zip.file(url)
+                const file = this.zip[url]
                 if (file) {
                     const img = <img /> as HTMLImageElement
-                    const url = URL.createObjectURL(await file.async("blob"))
+                    const url = URL.createObjectURL(await file.getData(new BlobWriter()))
                     this.LiveBlobUrls.push(url)
                     img.src = url
                     await img.decode()
@@ -185,13 +188,13 @@ export class EpubReader {
                 const src = oldEl.getAttribute("href") ?? oldEl.getAttribute("xlink:href")
                 if (!src) continue
                 const url = new URL(src, "zip:/" + item.href).href.substring(5)
-                const file = this.zip.file(url)
+                const file = this.zip[url]
                 if (file) {
                     const img = document.createElementNS(svgNS, "image");
                     // TODO couldn't get img.decode to work here
                     // MDN says it should work fine. I tried with src too
                     // https://developer.mozilla.org/en-US/docs/Web/API/SVGImageElement/decode
-                    const url = URL.createObjectURL(await file.async("blob"))
+                    const url = URL.createObjectURL(await file.getData(new BlobWriter()))
                     this.LiveBlobUrls.push(url)
                     img.setAttribute("href", url)
                     img.setAttribute("width", oldEl.getAttribute("width")!)

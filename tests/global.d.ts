@@ -1,1 +1,1 @@
-/// <reference path="../src/components/global.d.ts" />
+/// <reference path="../src/framework/global.d.ts" />
