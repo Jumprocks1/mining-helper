@@ -233,7 +233,7 @@ export default class ReaderPage extends PageComponent {
         if (this.PageState.paragraph === 0) {
             this.ViewerNode.scrollTo({ top: 0 })
         } else {
-            this.OnAfterLoad(() => this.CurrentPageNode.querySelector("p.saved-position")?.scrollIntoView())
+            this.OnAfterLoad(() => this.CurrentPageNode.querySelector("p.saved-position")?.scrollIntoView({ block: "center" }))
         }
     }
 
@@ -289,6 +289,7 @@ export default class ReaderPage extends PageComponent {
         else if (key === "s") this.SaveParagraph()
     }
 
+    // TODO shouldn't completely kill this on page turn in-case we go back
     SaveParagraph() {
         if (!this.Reader) return
         // This is a bit sketchy, but that's the fun part

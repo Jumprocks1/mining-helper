@@ -57,7 +57,9 @@
             @include vertical-scroll;
             max-width: 40em;
             #epub-page-wrapper {
-                // Not sure if I need this element anymore
+                // this doesn't do much but from what I can tell it's still necessary
+                // could probably remove it by adjusting the JpHoverTooltip code
+                // would also probably have to remove 1 of the wrapper on the subtitles page
                 position: relative;
             }
             .epub-page {
@@ -99,6 +101,9 @@
                     }
                     &.saved-position {
                         border-color: $green;
+                        .paragraph-index {
+                            display: block;
+                        }
                     }
                     position: relative;
                 }
