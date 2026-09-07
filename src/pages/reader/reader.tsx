@@ -1,4 +1,4 @@
-import IconButton from "../../components/basic/IconButton"
+import IconButton, { IconButtonClass } from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
 import { OpenModal } from "../../components/Modal"
 import { EpubPage, EpubReader } from "../../epub/epub"
@@ -30,6 +30,26 @@ export default class ReaderPage extends PageComponent {
     PageIndicator: HTMLElement = <div id="page-indicator" tooltip={() => this.PageTooltip()}>0 / 0</div>
     ToC: HTMLElement = <div id="toc" />
     Reader?: EpubReader
+    FullscreenButton = <IconButton icon="fullscreen" onClick={() => this.ToggleFullscreen()}
+        tooltip={ActionTooltip("Fullscreen")} />
+
+    JpdbLoadButton = IconButtonClass({
+        icon: "document_search", onClick: async () => {
+            await epubJpdb(this.CurrentPageNode)
+            if (this.CurrentPageNode.jpdb) this.JpdbLoadButton.Disabled = true
+        },
+        tooltip: ActionTooltip("Parse File", "T", "Parses the current page using jpdb's API")
+    })
+    FuriganaButton = IconButtonClass({
+        icon: "text_select_move_up", onClick: async () => {
+            await this.JpdbLoadButton.Click(undefined)
+            const jpdb = this.CurrentPageNode.jpdb
+            if (!jpdb) return
+            await AddFurigana(jpdb)
+            this.FuriganaButton.Disabled = true
+        },
+        tooltip: ActionTooltip("Add Furigana", "F", "Adds furigana above kanji")
+    })
 
     constructor() {
         super()
@@ -37,6 +57,9 @@ export default class ReaderPage extends PageComponent {
         const body = <>
             <div id="status-info">
                 <div className="row">
+                    {this.FuriganaButton}
+                    {this.JpdbLoadButton}
+                    {this.FullscreenButton}
                     <IconButton icon="settings" onClick={() => OpenReaderSettings()} tooltip={ActionTooltip("Open Settings", ",")} />
                 </div>
                 <div className="row">
@@ -170,6 +193,8 @@ export default class ReaderPage extends PageComponent {
     }
 
     async LoadPage(page: number) {
+        this.JpdbLoadButton.Disabled = true
+        this.FuriganaButton.Disabled = true
         if (!this.Reader) return
         const totalPages = this.Reader.spine.length
         page = Math.max(Math.min(page, totalPages - 1), 0)
@@ -184,10 +209,9 @@ export default class ReaderPage extends PageComponent {
             const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : this.Reader.spine.length
             tocPoints.item(i).classList.toggle("active", page >= e.spinePage && page < nextTocPage)
         }
-        // TODO add hotkey/button to trigger this
-        // Since this is cache only, it's fine to await this
-        // If we were hitting the network, definitely not
         await epubJpdb(this.CurrentPageNode, true)
+        this.JpdbLoadButton.Disabled = Boolean(this.CurrentPageNode.jpdb)
+        this.FuriganaButton.Disabled = false
     }
 
     LoadToC() {
@@ -237,16 +261,8 @@ export default class ReaderPage extends PageComponent {
         const key = ev.key.toLowerCase()
         if (key === ",") {
             OpenReaderSettings()
-        } else if (key === "f") {
-            this.AddFuriganaToPage() // TODO add button
-        }
-    }
-
-    async AddFuriganaToPage() {
-        await epubJpdb(this.CurrentPageNode)
-        const jpdb = this.CurrentPageNode.jpdb
-        if (!jpdb) return
-        await AddFurigana(jpdb)
+        } else if (key === "f") this.FuriganaButton.Click(undefined)
+        else if (key === "t") this.JpdbLoadButton.Click(undefined)
     }
 
     // Stuff that doesn't really belong in the epub reader
@@ -255,6 +271,20 @@ export default class ReaderPage extends PageComponent {
         for (const p of node.querySelectorAll("p")) {
             p.appendChild(<div className="paragraph-index">{i + 1}</div>)
             i += 1
+        }
+    }
+
+    async ToggleFullscreen() {
+        const fullscreen = this.FullscreenButton.textContent === "fullscreen"
+        this.ViewerNode.classList.toggle("fullscreen", fullscreen)
+        if (fullscreen) {
+            // This doesn't work for some reason, might be Chrome extension bug
+            // document.documentElement.requestFullscreen({ navigationUI: "hide" })
+            this.FullscreenButton.textContent = "fullscreen_exit"
+            this.FullscreenButton.tooltip = ActionTooltip("Exit Fullscreen")
+        } else {
+            this.FullscreenButton.textContent = "fullscreen"
+            this.FullscreenButton.tooltip = ActionTooltip("Fullscreen")
         }
     }
 }

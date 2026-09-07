@@ -15,6 +15,8 @@ export const MaterialIcons = [
     "edit",
     "error",
     "format_list_numbered",
+    "fullscreen",
+    "fullscreen_exit",
     "help",
     "info",
     "maximize",
@@ -28,7 +30,8 @@ export const MaterialIcons = [
     "star",
     "stat_1",
     "stat_minus_1",
-    "subtitles_gear"
+    "subtitles_gear",
+    "text_select_move_up"
 ] as const satisfies string[]
 
 export default () => {

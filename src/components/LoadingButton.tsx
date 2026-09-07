@@ -19,8 +19,7 @@ export default class LoadingButton extends Component {
     set Loading(loading: boolean) {
         if (this._loading === loading) return
         this._loading = loading
-        if (loading) this.Node.classList.add("loading")
-        else this.Node.classList.remove("loading")
+        this.Node.classList.toggle("loading", loading)
     }
 
     get Loading() { return this._loading }
@@ -34,13 +33,15 @@ export default class LoadingButton extends Component {
     }
     get Disabled() { return this._disabled }
 
+    private pendingPromise?: Promise<unknown>
     waitFor(maybePromise: unknown, canRetry: boolean) {
         if (maybePromise instanceof Promise) {
+            this.pendingPromise = maybePromise
             this.Loading = true;
             this.Node.classList.add("loading")
             this.Node.classList.remove("errored")
             this.Node.tooltipError = undefined
-            maybePromise.catch(error => {
+            return maybePromise.catch(error => {
                 console.error({ message: "error in promise", error })
                 const message = userErrorMessage(error)
                 this.Node.classList.add("errored")
@@ -49,9 +50,23 @@ export default class LoadingButton extends Component {
             }).then(() => {
                 this.Loading = false;
                 this.Node.classList.remove("loading")
+                this.pendingPromise = undefined
             })
         }
     }
+
+    Click(ev: MouseEvent | undefined) {
+        if (this.Loading || this.Disabled) return
+        if (this.Node.tooltipError) {
+            this.Node.classList.remove("errored")
+            this.Node.tooltipError = undefined
+        }
+        if (this.onClick) {
+            return this.waitFor(this.onClick(ev ?? new MouseEvent("click")), true)
+        }
+    }
+
+    private onClick: LoadingButtonProps["onClick"]
 
     constructor(props: LoadingButtonProps) {
         super()
@@ -60,23 +75,8 @@ export default class LoadingButton extends Component {
         if (props.disabled) this.Disabled = true
         applyBaseComponentProps(this.Node, props)
         const eventName = props.onDown ? "mousedown" : "click"
-        this.Node.addEventListener(eventName, ev => {
-            if (this.Loading || this.Disabled) return
-            if (this.Node.tooltipError) {
-                this.Node.classList.remove("errored")
-                this.Node.tooltipError = undefined
-            }
-            if (props.onClick) {
-                try {
-                    this.waitFor(props.onClick(ev), true)
-                } catch (error: unknown) {
-                    console.error(error)
-                    const message = userErrorMessage(error)
-                    this.Node.classList.add("errored")
-                    this.Node.tooltipError = message
-                }
-            }
-        })
+        this.onClick = props.onClick
+        this.Node.addEventListener(eventName, ev => this.Click(ev))
         this.waitFor(props.loading, false)
     }
 }

@@ -2,6 +2,11 @@
 
 @layer pages {
     #reader-page {
+        &:has(#epub-viewer.fullscreen) {
+            #mh-header {
+                display: none !important;
+            }
+        }
         .row {
             display: flex;
             align-items: center;
