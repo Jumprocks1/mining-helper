@@ -72,7 +72,26 @@
                 p {
                     margin-bottom: $s1*2;
                     padding-left: $s1 * 2;
-                    border-left: $border0;
+                    border-left: 1px solid #FFFFFF40;
+
+                    .paragraph-index {
+                        position: absolute;
+                        display: none;
+                        right: 100%;
+                        padding-right: 0.5em;
+                        top: 0;
+                        font-size: 0.3em;
+                        user-select: none;
+                    }
+                    &:hover {
+                        // this is fun, but I think I want to change it to only show if hovering the far left side of a paragraph
+                        // that way we can add other controls like a bookmark
+                        border-left: $border0;
+                        .paragraph-index {
+                            display: block;
+                        }
+                    }
+                    position: relative;
                 }
                 hr {
                     margin: $s1 * 2 0;

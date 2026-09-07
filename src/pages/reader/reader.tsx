@@ -155,6 +155,7 @@ export default class ReaderPage extends PageComponent {
     }
 
     SetPageNode(node: EpubPage) {
+        this.EnhancePageNode(node)
         replaceWith(this.CurrentPageNode!, node)
         this.CurrentPageNode = node
     }
@@ -246,6 +247,15 @@ export default class ReaderPage extends PageComponent {
         const jpdb = this.CurrentPageNode.jpdb
         if (!jpdb) return
         await AddFurigana(jpdb)
+    }
+
+    // Stuff that doesn't really belong in the epub reader
+    EnhancePageNode(node: EpubPage) {
+        let i = 0;
+        for (const p of node.querySelectorAll("p")) {
+            p.appendChild(<div className="paragraph-index">{i + 1}</div>)
+            i += 1
+        }
     }
 }
 
