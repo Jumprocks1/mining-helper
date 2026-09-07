@@ -15,7 +15,7 @@
             position: relative;
             flex: 1 1 0;
             display: flex;
-            flex-direction: column;
+            min-height: 0; // I don't really understand why this helps, but it fixes some scrollbar stuff
         }
         #status-info {
             position: absolute;
@@ -37,15 +37,22 @@
                     color: white;
                 }
             }
+            padding: $s1 * 2;
+            padding-left: 2em+$s1 * 2;
+            text-indent: -2em;
+            max-width: 25vw;
+            min-width: 15em;
+            font-size: 0.75em;
+            @include vertical-scroll;
         }
         #epub-viewer {
-            flex: 1 1 0;
             padding: 16px;
             padding-bottom: max(16px, 50vh); // for tooltip + scrolling
             @include vertical-scroll;
+            max-width: 40em;
             #epub-page-wrapper {
+                // Not sure if I need this element anymore
                 position: relative;
-                max-width: 30em;
             }
             .epub-page {
                 font-size: 1.3em;

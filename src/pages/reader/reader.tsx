@@ -52,9 +52,8 @@ export default class ReaderPage extends PageComponent {
                         await this.LoadPage(this.Reader.CurrentPage + 1)
                     }} icon="arrow_forward" />
                 </div>
-                {/* TODO ToC gets squish on small screen */}
-                {this.ToC}
             </div>
+            {this.ToC}
             {this.ViewerNode}
         </>
         this.Node = body
