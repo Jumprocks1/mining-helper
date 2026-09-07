@@ -12,11 +12,10 @@ import { tryPlayAudio } from "../../utils/Audio";
 import { ClearEventHandler, RegisterEventHandler } from "../../utils/Events";
 import { SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt";
 import { CardData } from "../../utils/util";
-import { getDefaultSetting, getSetting, setSetting } from "../../views/SettingsModal";
 import SubtitlesPage from "./subtitles";
 import { RegisterJpHoverTooltip } from "./JpHoverTooltip";
 import { UpdateTooltip } from "../../framework/Tooltips";
-
+import { getSetting, setSetting, getDefaultSetting } from "../../core/Settings";
 
 export default async (getMinimizeTarget: () => DOMRect | undefined, subtitlesPage: SubtitlesPage) => {
     const subtitles = subtitlesPage.LoadedSubtitles?.subtitles

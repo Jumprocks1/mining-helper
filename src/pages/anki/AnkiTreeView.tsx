@@ -1,7 +1,7 @@
 import Loader from "../../components/Loader"
 import LoadingButton from "../../components/LoadingButton"
+import { getSetting,AnkiFieldKey,AnkiFieldInfo } from "../../core/Settings"
 import AnkiConnect, { AnkiNote } from "../../utils/AnkiConnect"
-import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../../views/SettingsModal"
 import { getTargetNoteFilter } from "./AnkiSettingsModal"
 
 interface GroupingInfo<T> {

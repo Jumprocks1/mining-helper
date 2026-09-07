@@ -3,10 +3,11 @@ import ExternalLink from "../../components/ExternalLink";
 import LoadingButton from "../../components/LoadingButton";
 import { OpenModal } from "../../components/Modal";
 import Select from "../../components/Select";
+import { getSetting, AnkiFieldInfo, AnkiFieldKey, setSetting } from "../../core/Settings";
 import AnkiConnect from "../../utils/AnkiConnect";
 import SettingsValidator from "../../utils/SettingsValidator";
 import { userErrorMessage, userErrorMessage2 } from "../../utils/UserError";
-import { AnkiFieldKey, AnkiFieldInfo, getSetting, setSetting, stringSettingsField } from "../../views/SettingsModal";
+import { stringSettingsField } from "../../views/SettingsModal";
 
 export async function validateAnkiSettings(validator: SettingsValidator, onlyAnkiSettings: boolean) {
     const button = () => <button onclick={() => AnkiSettingsModal()}><Icon icon="settings" />Configure Anki</button>

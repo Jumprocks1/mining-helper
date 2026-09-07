@@ -1,4 +1,5 @@
 import Loader from "../../components/Loader"
+import { getSetting } from "../../core/Settings"
 import { callJpdb } from "../../jpdb/JpdbParseText"
 import { serverPost } from "../../utils/Audio"
 import { getHttpServerAddress } from "../../utils/httpServerUtil"
@@ -6,7 +7,7 @@ import MpvWebSocket from "../../utils/MpvWebSocket"
 import SettingsValidator from "../../utils/SettingsValidator"
 import { userErrorMessage } from "../../utils/UserError"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
-import { getSetting, stringSettingsField } from "../../views/SettingsModal"
+import { stringSettingsField } from "../../views/SettingsModal"
 
 export interface ValidateResponse {
     ffmpegFound?: boolean

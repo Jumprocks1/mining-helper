@@ -16,10 +16,10 @@ import UpDownButtons from "./basic/UpDownButtons"
 import Loader, { Load } from "./Loader"
 import LoadingButton from "./LoadingButton"
 import { Modal } from "./Modal"
-import { getSetting } from "../views/SettingsModal"
 import DropdownMenu from "./DropdownMenu"
 import { JsPopover } from "./basic/JsPopover"
 import AnkiConnect from "../utils/AnkiConnect"
+import { getSetting } from "../core/Settings"
 
 interface Props {
     word: string

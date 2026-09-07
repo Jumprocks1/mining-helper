@@ -1,6 +1,6 @@
 import { JsPopover } from "../components/basic/JsPopover"
 import { LoadableChildren } from "../components/Loader";
-import { getSettingSync } from "../views/SettingsModal";
+import { getSettingSync } from "../core/Settings";
 
 declare global {
     interface HTMLElement {

@@ -2,10 +2,10 @@ import { getAnkiFurigana } from "../../pages/anki/CardList"
 import { JpdbParseResponse } from "../../jpdb/JpdbParseText"
 import { getCharacterIndex, getSelectionRange } from "../../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt"
-import { setSetting } from "../../views/SettingsModal"
 import SubtitlesPage from "./subtitles"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { AddStateClass, HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "./JpHoverTooltip"
+import { setSetting } from "../../core/Settings"
 
 declare global {
     interface HTMLElement {

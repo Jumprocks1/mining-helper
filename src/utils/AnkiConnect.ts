@@ -1,4 +1,4 @@
-import { getSetting } from "../views/SettingsModal"
+import { getSetting } from "../core/Settings"
 import UserError, { ThrowUserError } from "./UserError"
 
 export default {

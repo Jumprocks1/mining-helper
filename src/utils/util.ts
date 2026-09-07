@@ -1,7 +1,15 @@
 import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { ensureNoJpdbError, JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText";
 import { applyReplacementsTo, ReplacementEntry } from "../views/RegexReplacements";
-import { getSetting } from "../views/SettingsModal";
+import { getSetting } from "../core/Settings";
+
+declare global {
+    interface HTMLElement {
+        vocab?: JpdbVocabulary
+        tokenUsages?: JpdbToken[]
+        paragraphIndex?: number
+    }
+}
 
 export function jpdbEntryUrl(word: string) {
     return `https://jpdb.io/search?q=${encodeURIComponent(word)}&lang=english`

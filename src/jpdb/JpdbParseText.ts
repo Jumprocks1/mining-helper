@@ -2,8 +2,8 @@ import { hash, Subtitles } from "../utils/srt";
 import { delay, furiFromToken } from "../utils/util";
 import StorageCache from "../utils/StorageCache";
 import { loadIgnoreList } from "./IgnoreList";
-import { getSetting } from "../views/SettingsModal";
 import { ThrowUserError } from "../utils/UserError";
+import { getSetting } from "../core/Settings";
 
 export type JpdbVocabulary = [
     spelling: string,

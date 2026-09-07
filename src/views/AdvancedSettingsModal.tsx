@@ -3,11 +3,11 @@ import NumberField from "../components/basic/NumberField";
 import Loader from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
-import { BindSpaRouter, CurrentPage } from "../framework/Router";
+import { getSetting, setSetting, getDefaultSetting } from "../core/Settings";
+import { CurrentPage } from "../framework/Router";
 import { JpdbCache } from "../jpdb/JpdbParseText";
 import SubtitlesPage from "../pages/subtitles/subtitles";
 import { BrowserStorage } from "../utils/BrowserApi";
-import { getDefaultSetting, getSetting, setSetting } from "./SettingsModal";
 
 async function ClearCache() {
     await JpdbCache.Clear();

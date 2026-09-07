@@ -1,7 +1,7 @@
+import { getDefaultSetting, setSetting, type AllSettings, type SettingsKey } from "../../core/Settings"
 import { onDeath } from "../../framework/Observer"
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util"
 import Effects from "../../utils/Effects"
-import { AllSettings, getDefaultSetting, setSetting, type SettingsKey } from "../../views/SettingsModal"
 import { Load, LoadableChildren } from "../Loader"
 import UpDownButtons from "./UpDownButtons"
 

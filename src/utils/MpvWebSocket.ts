@@ -1,4 +1,4 @@
-import { getSetting } from "../views/SettingsModal"
+import { getSetting } from "../core/Settings"
 
 export default class MpvWebSocket {
     Connection: WebSocket | undefined

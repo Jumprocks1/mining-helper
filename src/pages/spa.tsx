@@ -3,21 +3,12 @@ import HomePage from "./home/home";
 import MainLayout from "./MainLayout";
 import pages from "./pages";
 import { debounce } from "../utils/util"
-import { getSetting, onSettingChange } from "../views/SettingsModal"
 import { RegisterTooltipEvents } from "../framework/Tooltips";
-import { JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText";
+import { onSettingChange, getSetting } from "../core/Settings";
 
 // we could target body directly, but that has issues since we clear the body on each page load
 // if we store things like the modal portal in the body, they would get removed on navigation
 const pageBody = <div className="page-container" />
-
-declare global {
-    interface HTMLElement {
-        vocab?: JpdbVocabulary
-        tokenUsages?: JpdbToken[]
-        paragraphIndex?: number
-    }
-}
 
 declare var GITHUB_PAGES: boolean | undefined
 

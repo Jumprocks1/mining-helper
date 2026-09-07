@@ -5,7 +5,7 @@ import { Children, replaceChildren } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import SettingsValidator from "../../utils/SettingsValidator"
 import { userErrorMessage } from "../../utils/UserError"
-import SettingsModal, { } from "../../views/SettingsModal"
+import SettingsModal from "../../views/SettingsModal"
 import { validateAnkiSettings } from "../anki/AnkiSettingsModal"
 import { validateJpdb, validateServerConnection } from "./validate"
 

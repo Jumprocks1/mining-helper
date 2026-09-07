@@ -2,8 +2,8 @@ import IconButton from "../components/basic/IconButton"
 import Loader from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
+import { triggerSettingChanged } from "../core/Settings"
 import { BrowserStorage } from "../utils/BrowserApi"
-import { triggerSettingChanged } from "./SettingsModal"
 
 export interface ReplacementEntry {
     match: string | RegExp

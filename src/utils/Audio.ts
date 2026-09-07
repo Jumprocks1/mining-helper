@@ -1,5 +1,5 @@
+import { getSetting } from "../core/Settings"
 import { JpdbVocabulary } from "../jpdb/JpdbParseText"
-import { getSetting } from "../views/SettingsModal"
 import { urlToArrayBuffer } from "./util"
 
 let audioContext: AudioContext | undefined = undefined

@@ -1,11 +1,11 @@
 import IconButton, { Icon } from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
+import { getSetting } from "../../core/Settings"
 import { Children } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import AnkiConnect, { AnkiNote, NoteBase } from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { serverPostJson } from "../../utils/Audio"
-import { getSetting } from "../../views/SettingsModal"
 import { getAnkiFurigana } from "../anki/CardList"
 
 const deckName = "Mining Helper Kanji"

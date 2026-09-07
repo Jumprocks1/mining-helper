@@ -1,5 +1,5 @@
+import { getSetting, AnkiFieldKey, AnkiFieldInfo } from "../core/Settings";
 import { addAnkiFurigana } from "../pages/anki/CardList";
-import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../views/SettingsModal";
 import AnkiConnect, { MediaAdd } from "./AnkiConnect"
 import { BrowserStorage } from "./BrowserApi";
 import { TriggerEvent } from "./Events";

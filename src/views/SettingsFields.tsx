@@ -1,5 +1,5 @@
 import { Icon } from "../components/basic/IconButton"
-import { getSetting, setSetting } from "./SettingsModal"
+import { getSetting, setSetting } from "../core/Settings"
 
 export const JpdbApiKeyField = async () => <div className="field jpdb-key-field">
     <label>jpdb API Key
