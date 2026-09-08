@@ -59,7 +59,9 @@
             @include vertical-scroll;
         }
         #epub-viewer {
-            padding: 16px;
+            padding-top: 16px;
+            padding-right: 16px;
+            padding-left: 1.5em; // need extra room for the paragraph numbers
             padding-bottom: max(16px, 50vh); // for tooltip + scrolling
             @include vertical-scroll;
             flex: 1; // this just pushing the scrollbar to the right, which is nice so we can scroll with mouse on side

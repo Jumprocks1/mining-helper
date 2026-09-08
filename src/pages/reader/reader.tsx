@@ -185,14 +185,10 @@ export default class ReaderPage extends PageComponent {
         })
     }
 
-    SetPageNode(node: EpubPage) {
-        this.EnhancePageNode(node)
+    async LoadEpubFileBlob(blob: Blob) {
+        const node = <div className="loader" /> as EpubPage
         replaceWith(this.CurrentPageNode!, node)
         this.CurrentPageNode = node
-    }
-
-    async LoadEpubFileBlob(blob: Blob) {
-        this.SetPageNode(<div className="loader" /> as EpubPage)
         this.Reader = new EpubReader({ trimWhitespace: false })
         await this.Reader.read(blob)
         this.LoadToC()
@@ -231,7 +227,16 @@ export default class ReaderPage extends PageComponent {
             this.ProgressState.page = page
             this.SavePageState()
         }
-        if (page !== this.Reader?.CurrentPage) this.SetPageNode(await this.Reader.readPage(page))
+        let pageNode: EpubPage
+        // this.Reader.CurrentPage starts at -1
+        if (page !== this.Reader.CurrentPage) {
+            pageNode = await this.Reader.readPage(page)
+            this.EnhancePageNode(pageNode)
+            // Make there's no important awaits after this call, otherwise we'll get a layout shift
+            replaceWith(this.CurrentPageNode, pageNode)
+            this.CurrentPageNode = pageNode
+        } else pageNode = this.CurrentPageNode
+
         const tocPoints = this.ToC.querySelectorAll(".toc-point")
         const toc = this.Reader.toc
         for (let i = 0; i < tocPoints.length; i++) {
@@ -239,15 +244,15 @@ export default class ReaderPage extends PageComponent {
             const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : this.Reader.spine.length
             tocPoints.item(i).classList.toggle("active", page >= e.spinePage && page < nextTocPage)
         }
-        await epubJpdb(this.CurrentPageNode, true)
-        this.JpdbLoadButton.Disabled = Boolean(this.CurrentPageNode.jpdb)
-        this.FuriganaButton.Disabled = false
         const paragraph = this.ProgressState.paragraphs[page] ?? 0
         if (paragraph === 0) {
             this.ViewerNode.scrollTo({ top: 0 })
         } else {
-            this.OnAfterLoad(() => this.CurrentPageNode.querySelector("p.saved-position")?.scrollIntoView({ block: "center" }))
+            this.OnAfterLoad(() => pageNode.querySelector("p.saved-position")?.scrollIntoView({ block: "center" }))
         }
+        await epubJpdb(pageNode, true)
+        this.JpdbLoadButton.Disabled = Boolean(pageNode.jpdb)
+        this.FuriganaButton.Disabled = false
     }
 
     async NextParagraph(invert: boolean) {
