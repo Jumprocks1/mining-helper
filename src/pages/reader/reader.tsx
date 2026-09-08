@@ -15,7 +15,7 @@ import { getAnkiFurigana } from "../anki/CardList"
 import { HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "../subtitles/JpHoverTooltip"
 import { AddFurigana } from "./furigana"
 
-const currentPositionKey = "reader-current-position"
+const currentPositionKey = "reader-progress"
 
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
@@ -196,23 +196,28 @@ export default class ReaderPage extends PageComponent {
         this.Reader = new EpubReader({ trimWhitespace: false })
         await this.Reader.read(blob)
         this.LoadToC()
-        await this.LoadPage(this.PageState.page)
+        await this.LoadPage(this.ProgressState.page)
     }
 
-    PageState: { page: number, paragraph: number } = this.GetSavedState()
+    ProgressState = this.GetSavedState()
 
-    GetSavedState() {
-        const o = { page: 0, paragraph: 0 }
-        const s = localStorage.getItem(currentPositionKey) ?? ""
-        if (!s) return o
-        const spl = s.split(",").map(e => parseInt(e))
-        if (spl.some(e => !Number.isInteger(e))) return o
-        if (spl[0]) o.page = spl[0]
-        if (spl[1]) o.paragraph = spl[1]
-        return o
+    GetSavedState(): {
+        page: number,
+        paragraphs: Record<number, number> // map of page => paragraph progress
+    } {
+        // TODO this will need something per epub file
+        const s = localStorage.getItem(currentPositionKey)
+        if (s) {
+            try {
+                const o = JSON.parse(s)
+                if (!o.paragraphs) o.paragraphs = {}
+                return o
+            } catch { }
+        }
+        return { page: 0, paragraphs: {} }
     }
     SavePageState() {
-        localStorage.setItem(currentPositionKey, this.PageState.page + "," + this.PageState.paragraph)
+        localStorage.setItem(currentPositionKey, JSON.stringify(this.ProgressState))
     }
 
     async LoadPage(page: number) {
@@ -222,9 +227,8 @@ export default class ReaderPage extends PageComponent {
         const totalPages = this.Reader.spine.length
         page = Math.max(Math.min(page, totalPages - 1), 0)
         this.PageIndicator.textContent = `${page + 1} / ${totalPages}`
-        if (this.PageState.page !== page) {
-            this.PageState.page = page
-            this.PageState.paragraph = 0
+        if (this.ProgressState.page !== page) {
+            this.ProgressState.page = page
             this.SavePageState()
         }
         if (page !== this.Reader?.CurrentPage) this.SetPageNode(await this.Reader.readPage(page))
@@ -238,7 +242,8 @@ export default class ReaderPage extends PageComponent {
         await epubJpdb(this.CurrentPageNode, true)
         this.JpdbLoadButton.Disabled = Boolean(this.CurrentPageNode.jpdb)
         this.FuriganaButton.Disabled = false
-        if (this.PageState.paragraph === 0) {
+        const paragraph = this.ProgressState.paragraphs[page] ?? 0
+        if (paragraph === 0) {
             this.ViewerNode.scrollTo({ top: 0 })
         } else {
             this.OnAfterLoad(() => this.CurrentPageNode.querySelector("p.saved-position")?.scrollIntoView({ block: "center" }))
@@ -304,7 +309,6 @@ export default class ReaderPage extends PageComponent {
         }
     }
 
-    // TODO shouldn't completely kill this on page turn in-case we go back
     SaveParagraph() {
         if (!this.Reader) return
         // This is a bit sketchy, but that's the fun part
@@ -312,7 +316,7 @@ export default class ReaderPage extends PageComponent {
         if (!target) return
         const index = (target as HTMLElement).paragraphIndex
         if (index !== undefined) {
-            this.PageState.paragraph = index
+            this.ProgressState.paragraphs[this.Reader.CurrentPage] = index
             for (const p of this.CurrentPageNode.querySelectorAll("p"))
                 p.classList.toggle("saved-position", p === target)
             this.SavePageState()
@@ -322,10 +326,11 @@ export default class ReaderPage extends PageComponent {
     // Stuff that doesn't really belong in the epub reader
     EnhancePageNode(node: EpubPage) {
         let i = 0;
+        const paragraph = this.ProgressState.paragraphs[this.Reader?.CurrentPage ?? 0] ?? 0
         for (const p of node.querySelectorAll("p")) {
             p.paragraphIndex = i
             p.appendChild(<div className="paragraph-index">{i + 1}</div>)
-            if (i === this.PageState.paragraph) {
+            if (i === paragraph) {
                 p.classList.add("saved-position")
             }
             i += 1
