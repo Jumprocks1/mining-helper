@@ -1,3 +1,4 @@
+import { FuriganaMode, getSetting } from "../../core/Settings";
 import { JpdbParseResponseWithNodes } from "../../epub/epubJpdb";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabState, VocabState } from "../../jpdb/JpdbState";
@@ -6,9 +7,11 @@ import { loadKanjiSet } from "../../utils/KanjiSet";
 
 // This should no-op when everything is already inside ruby tags
 export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
+    const mode = await getSetting("furiganaMode")
+    if (mode === "none") return
     const knownKanji = await loadKanjiSet()
     const newNodes: Text[] = []
-    const unknownTokens = jpdb.tokens.filter(e => needsFurigana(e, jpdb.vocabulary[e[3]], knownKanji))
+    const unknownTokens = jpdb.tokens.filter(e => needsFurigana(mode, e, jpdb.vocabulary[e[3]], knownKanji))
 
     // const knownTokens = jpdb.tokens.filter(e => e[2] && !needsFurigana(e, jpdb.vocabulary[e[3]], knownKanji)).length
     // console.log(`${knownTokens} / ${unknownTokens.length + knownTokens} / ${jpdb.tokens.length}`)
@@ -77,21 +80,24 @@ export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
     jpdb.nodes = newNodes
 }
 
-function needsFurigana(token: JpdbToken, vocab: JpdbVocabulary, knownKanji: Set<string>) {
+function needsFurigana(mode: FuriganaMode, token: JpdbToken, vocab: JpdbVocabulary, knownKanji: Set<string>) {
     // As this is currently setup, requires a the vocab to be in our audio deck and all the kanji to be in the kanji deck
-    const reading = token[2]
-    if (reading) {
-        // we could probably do all this without the `token` parameter, but this feels nice
-        for (let i = 0; i < reading.length; i++) {
-            if (Array.isArray(reading[i])) {
-                const kanji = reading[i][0]
-                if (unicodeType(kanji) === UnicodeCharacterType.Kanji) {
-                    // if the reading has any unknown kanji, we show it
-                    // note if there's an unknown kanji but it doesn't have a reading, we don't end up returning true necessarily
-                    if (!knownKanji.has(kanji)) return true
-                }
+    const reading = token[2] // if there's no reading from jpdb, we always say "no furi needed"
+    if (mode === "none" || !reading) return false
+    if (mode === "always") return true
+    const unknownVocab = mode === "kanjiOrVocab" || mode === "unknownVocab"
+    const unknownKanji = mode === "kanjiOrVocab" || mode === "unknownKanji"
+
+    // we could probably do all this without the `token` parameter, but this feels nice
+    for (let i = 0; i < reading.length; i++) {
+        if (Array.isArray(reading[i])) {
+            const kanji = reading[i][0]
+            if (unicodeType(kanji) === UnicodeCharacterType.Kanji) {
+                if (unknownKanji && !knownKanji.has(kanji)) return true
             }
         }
+    }
+    if (unknownVocab) {
         const vocabState = getVocabState(vocab, { trimKana: true })
         if (vocabState === VocabState.New) return true
     }

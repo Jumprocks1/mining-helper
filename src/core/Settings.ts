@@ -1,3 +1,4 @@
+import { SelectOption } from "../components/Select"
 import { BrowserStorage } from "../utils/BrowserApi"
 import type { ReplacementEntry } from "../views/RegexReplacements"
 
@@ -30,6 +31,16 @@ export const AnkiFieldInfo = applyType({
 
 export type AnkiFieldKey = keyof typeof AnkiFieldInfo
 
+export const furiganaModes = [
+    ["kanjiOrVocab", "Kanji or Vocab"],
+    ["unknownKanji", "Unknown Kanji"],
+    ["unknownVocab", "Unknown Vocab"],
+    // Could add `Kanji and Vocab` meaning it counts as needing furigana only if it's missing from both kanji and vocab
+    ["always", "Always"],
+    ["none", "None"],
+] as const satisfies SelectOption[]
+export type FuriganaMode = (typeof furiganaModes)[number][0]
+
 export interface LocalSettings {
     regexReplacements: ReplacementEntry[]
     skipChapterRegex: string
@@ -58,6 +69,8 @@ export interface LocalSettings {
     defaultEndOffset: Milliseconds
 
     defaultTooltipDelay: Milliseconds
+
+    furiganaMode: FuriganaMode
 }
 
 export const defaultLocalSettings: LocalSettings = {
@@ -85,7 +98,8 @@ export const defaultLocalSettings: LocalSettings = {
     defaultStartOffset: 0,
     defaultEndOffset: 100,
 
-    defaultTooltipDelay: 300
+    defaultTooltipDelay: 300,
+    furiganaMode: "kanjiOrVocab"
 }
 
 // make sure none of these settings are needed on immediately page load

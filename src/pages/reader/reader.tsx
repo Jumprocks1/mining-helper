@@ -1,6 +1,8 @@
 import IconButton, { IconButtonClass } from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
 import { OpenModal } from "../../components/Modal"
+import Select from "../../components/Select"
+import { furiganaModes, getSetting, setSetting } from "../../core/Settings"
 import { EpubPage, EpubReader } from "../../epub/epub"
 import epubJpdb from "../../epub/epubJpdb"
 import { replaceChildren, replaceWith } from "../../framework/createElement"
@@ -52,9 +54,7 @@ export default class ReaderPage extends PageComponent {
             await AddFurigana(jpdb)
             this.FuriganaButton.Disabled = true
         },
-        tooltip: ActionTooltip("Add Furigana", "F", "Adds furigana above kanji\nOnly shows furigana for unknown kanji/vocab"
-            + "\n\nTODO make this configurable in the config"
-        )
+        tooltip: ActionTooltip("Add Furigana", "F", "Adds furigana above kanji\nOnly shows furigana for unknown kanji/vocab")
     })
 
     constructor() {
@@ -352,11 +352,20 @@ function OpenReaderSettings() {
     const body = <Loader load={async () => {
         return <>
             {await JpdbApiKeyField()}
+            <div className="field">
+                <label>Furigana Mode</label>
+                {Select({
+                    defaultValue: await getSetting("furiganaMode"),
+                    options: furiganaModes,
+                    onChange: v => setSetting("furiganaMode", v as any)
+                })}
+            </div>
         </>
     }} />
 
     return OpenModal({
         header: "Reader Settings",
-        body
+        body,
+        id: "reader-settings-modal"
     })
 }

@@ -68,10 +68,10 @@
                 // could probably remove it by adjusting the JpHoverTooltip code
                 // would also probably have to remove 1 of the wrapper on the subtitles page
                 position: relative;
-                max-width: 40em;
+                font-size: 1.3em;
+                max-width: 30em;
             }
             .epub-page {
-                font-size: 1.3em;
                 ruby:not(.ruby-auto-gen) {
                     rt {
                         // highlight readings we're more confident in

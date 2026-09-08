@@ -1,14 +1,18 @@
+import { Children } from "../framework/createElement"
 import { userErrorMessage } from "../utils/UserError"
 
+export type SelectOption = string | [value: string, display: Children]
+
 interface Props {
-    loadOptions?: () => Promise<string[]>
+    loadOptions?: () => Promise<readonly SelectOption[]>
+    options?: readonly SelectOption[]
     defaultValue?: string
     onChange?: (value: string) => void
     includeEmpty?: true
-    unsetLabel?: string
+    unsetLabel?: Children
 }
 
-export default ({ defaultValue = "", unsetLabel = "Unset", onChange, loadOptions, includeEmpty }: Props) => {
+export default ({ defaultValue = "", unsetLabel = "Unset", onChange, options, loadOptions, includeEmpty }: Props) => {
     let selected = defaultValue
     const select = <select onchange={ev => {
         selected = (ev.currentTarget as any).value
@@ -16,21 +20,27 @@ export default ({ defaultValue = "", unsetLabel = "Unset", onChange, loadOptions
     }} />
     let loaded = false
 
-    function addOption(value: string) {
+    function addOption(option: SelectOption) {
+        const value = typeof option === "string" ? option : option[0]
+        const label = typeof option === "string" ? option : option[1]
         select.append(<option hidden={!loaded && !value && !includeEmpty} value={value}
+            selected={value === selected}
             className={value ? undefined : "unset"}>
-            {value || unsetLabel}
+            {label || unsetLabel}
         </option>)
     }
-
-    addOption(selected)
 
     const res: {
         Node: HTMLElement
         Reset?: () => void
     } = { Node: select, }
 
-    if (loadOptions) {
+    if (options) {
+        options.forEach(addOption)
+        if (!options.some(e => typeof e === "string" ? e === selected : e[0] === selected))
+            addOption(selected)
+    } else if (loadOptions) {
+        addOption(selected)
         const message = <option disabled></option> as HTMLOptionElement
         select.append(message)
         async function load() {
@@ -44,7 +54,7 @@ export default ({ defaultValue = "", unsetLabel = "Unset", onChange, loadOptions
                 if (includeEmpty && selected !== "" && !options.includes("")) addOption("")
                 message.hidden = true
                 for (const option of options) {
-                    if (option === selected) continue
+                    if (typeof option === "string" ? option === selected : option[0] === selected) continue
                     addOption(option)
                 }
             } catch (e) {
@@ -66,6 +76,8 @@ export default ({ defaultValue = "", unsetLabel = "Unset", onChange, loadOptions
                 }
             }
         }
+    } else {
+        addOption(selected)
     }
     return res
 }
