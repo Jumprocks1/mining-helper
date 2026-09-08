@@ -25,15 +25,8 @@ export class HtmlReader extends BaseReader {
         const o = document.createElement("div")
         o.classList.add("epub-page")
         const file = this.DOMParser.parseFromString(await blob.text(), blob.type)
-        let root = file.documentElement
-        // TODO allow configuring the target selector
-        // would probably split on `;`
-        // could probably do it without that for example:
-        // main article, main:not(:has(article))
-        // but a priority list with `;` is much easier
-        root = root.querySelector("main") ?? root
-        root = root.querySelector("article") ?? root
-        o.setHTML(root.getHTML(), { sanitizer: this.sanitizer })
+        const bodyNode = await this.SelectPageBodyNode(file)
+        o.setHTML(bodyNode.getHTML(), { sanitizer: this.sanitizer })
         this.page = o as EpubPage
     }
     setupSanitizer() {

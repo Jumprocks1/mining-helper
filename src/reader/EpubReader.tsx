@@ -135,23 +135,23 @@ export class EpubReader extends BaseReader {
         const o = document.createElement("div")
         o.classList.add("epub-page")
         const file = await this.readXML(item.href, true)
-        const rootNode = file.documentElement
+        const bodyNode = await this.SelectPageBodyNode(file)
 
         if (this.settings.trimWhitespace) {
-            const walker = file.createTreeWalker(rootNode, NodeFilter.SHOW_TEXT);
+            const walker = file.createTreeWalker(bodyNode, NodeFilter.SHOW_TEXT);
             let node;
             while (node = walker.nextNode()) {
                 if (node.nodeValue) node.nodeValue = node.nodeValue.trim()
             }
         }
 
-        for (const e of rootNode.querySelectorAll("svg[preserveAspectRatio=none]")) {
+        for (const e of bodyNode.querySelectorAll("svg[preserveAspectRatio=none]")) {
             e.removeAttribute("preserveAspectRatio")
         }
 
         const referenceElements = new Map<string, Node>()
 
-        const images = rootNode.querySelectorAll("img, image")
+        const images = bodyNode.querySelectorAll("img, image")
         for (const image of images) {
             const id = referenceElements.size.toString()
             referenceElements.set(id, image)
@@ -159,7 +159,7 @@ export class EpubReader extends BaseReader {
             placeholder.setAttribute("data-epub-ref-id", id)
             image.replaceWith(placeholder)
         }
-        o.setHTML(rootNode.getHTML(), { sanitizer: this.sanitizer })
+        o.setHTML(bodyNode.getHTML(), { sanitizer: this.sanitizer })
         for (const el of o.querySelectorAll("*[data-epub-ref-id]")) {
             const refId = el.getAttribute("data-epub-ref-id")
             if (!refId) continue

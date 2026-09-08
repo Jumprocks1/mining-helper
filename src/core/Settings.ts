@@ -71,6 +71,7 @@ export interface LocalSettings {
     defaultTooltipDelay: Milliseconds
 
     furiganaMode: FuriganaMode
+    readerBodySelector: string
 }
 
 export const defaultLocalSettings: LocalSettings = {
@@ -99,7 +100,8 @@ export const defaultLocalSettings: LocalSettings = {
     defaultEndOffset: 100,
 
     defaultTooltipDelay: 300,
-    furiganaMode: "kanjiOrVocab"
+    furiganaMode: "kanjiOrVocab",
+    readerBodySelector: ""
 }
 
 // make sure none of these settings are needed on immediately page load

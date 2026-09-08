@@ -16,6 +16,7 @@ import { HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip,
 import { AddFurigana } from "./furigana"
 import { BaseReader, EpubPage } from "../../reader/BaseReader"
 import readBlob, { BlobLike, blobLikeToBlob } from "../../reader/readBlob"
+import { stringSettingsField } from "../../views/SettingsModal"
 
 const currentPositionKey = "reader-progress"
 
@@ -414,6 +415,11 @@ function OpenReaderSettings() {
     const body = <Loader load={async () => {
         return <>
             {await JpdbApiKeyField()}
+            {await stringSettingsField("readerBodySelector", "Body Selector", undefined,
+                <div>CSS selector for filtering what content is displayed in the reader.{"\n"}
+                    Separate multiple selectors with <em>;</em>. Earlier selectors are prioritized.{"\n\n"}
+                    Ex: <em>main article; main</em>
+                </div>)}
             <div className="field">
                 <label>Furigana Mode</label>
                 {Select({
