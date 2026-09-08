@@ -54,7 +54,7 @@ export default class ReaderPage extends PageComponent {
             await AddFurigana(jpdb)
             this.FuriganaButton.Disabled = true
         },
-        tooltip: ActionTooltip("Add Furigana", "F", "Adds furigana above kanji\nOnly shows furigana for unknown kanji/vocab")
+        tooltip: ActionTooltip("Add Furigana", "F", "Adds furigana above kanji\nBy default, only shows furigana for unknown kanji/vocab\nCan be configured in settings")
     })
 
     constructor() {
@@ -75,11 +75,11 @@ export default class ReaderPage extends PageComponent {
                     <IconButton onClick={async () => {
                         if (!this.Reader) return
                         await this.LoadPage(this.Reader.CurrentPage - 1)
-                    }} icon="arrow_back" />
+                    }} icon="arrow_back" tooltip={ActionTooltip("Previous Page", "←")} />
                     <IconButton onClick={async () => {
                         if (!this.Reader) return
                         await this.LoadPage(this.Reader.CurrentPage + 1)
-                    }} icon="arrow_forward" />
+                    }} icon="arrow_forward" tooltip={ActionTooltip("Next Page", "→")} />
                 </div>
             </div>
             {this.ToC}
@@ -203,7 +203,7 @@ export default class ReaderPage extends PageComponent {
 
     GetSavedState(): {
         page: number,
-        paragraphs: Record<number, number> // map of page => paragraph progress
+        paragraphs: Record<number, number | undefined> // map of page => paragraph progress
     } {
         // TODO this will need something per epub file
         const s = localStorage.getItem(currentPositionKey)
@@ -248,6 +248,29 @@ export default class ReaderPage extends PageComponent {
         } else {
             this.OnAfterLoad(() => this.CurrentPageNode.querySelector("p.saved-position")?.scrollIntoView({ block: "center" }))
         }
+    }
+
+    async NextParagraph(invert: boolean) {
+        if (!this.Reader) return
+        const oldParagraph = this.ProgressState.paragraphs[this.ProgressState.page] ?? 0
+        const newParagraph = oldParagraph + (invert ? -1 : 1)
+        const totalParagraphs = this.CurrentPageNode.querySelectorAll("p")
+        if (newParagraph < 0)
+            return this.LoadPage(this.ProgressState.page - 1)
+        if (newParagraph >= totalParagraphs.length)
+            return this.LoadPage(this.ProgressState.page + 1)
+        this.ProgressState.paragraphs[this.Reader.CurrentPage] = newParagraph
+        let oldParagraphNode: HTMLElement | undefined
+        let newParagraphNode: HTMLElement | undefined
+        for (const p of this.CurrentPageNode.querySelectorAll("p")) {
+            p.classList.toggle("saved-position", p.paragraphIndex === newParagraph)
+            if (p.paragraphIndex === oldParagraph) oldParagraphNode = p
+            else if (p.paragraphIndex === newParagraph) newParagraphNode = p
+        }
+        if (oldParagraphNode && newParagraphNode) {
+            this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldParagraphNode.getBoundingClientRect().top)
+        }
+        this.SavePageState()
     }
 
     LoadToC() {
@@ -296,6 +319,7 @@ export default class ReaderPage extends PageComponent {
         if (handleKeyDown(ev)) return
 
         const key = ev.key.toLowerCase()
+        let handled = true
         if (key === ",") {
             OpenReaderSettings()
         } else if (key === "f") this.FuriganaButton.Click(undefined)
@@ -306,7 +330,19 @@ export default class ReaderPage extends PageComponent {
                 this.TooltipHandler.invert = !this.TooltipHandler.invert
                 UpdateJpHover(false)
             }
+        } else if (key === "arrowleft") {
+            if (!this.Reader) return
+            this.LoadPage(this.ProgressState.page - 1)
+        } else if (key === "arrowright") {
+            this.LoadPage(this.ProgressState.page + 1)
+        } else if (key === "arrowdown") {
+            this.NextParagraph(false)
+        } else if (key === "arrowup") {
+            this.NextParagraph(true)
+        } else {
+            handled = false
         }
+        if (handled) ev.preventDefault()
     }
 
     SaveParagraph() {
@@ -326,7 +362,7 @@ export default class ReaderPage extends PageComponent {
     // Stuff that doesn't really belong in the epub reader
     EnhancePageNode(node: EpubPage) {
         let i = 0;
-        const paragraph = this.ProgressState.paragraphs[this.Reader?.CurrentPage ?? 0] ?? 0
+        const paragraph = this.ProgressState.paragraphs[this.ProgressState.page] ?? 0
         for (const p of node.querySelectorAll("p")) {
             p.paragraphIndex = i
             p.appendChild(<div className="paragraph-index">{i + 1}</div>)
