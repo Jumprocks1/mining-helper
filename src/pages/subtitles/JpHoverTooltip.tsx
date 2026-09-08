@@ -1,3 +1,4 @@
+import IconButton from "../../components/basic/IconButton";
 import { JsPopover } from "../../components/basic/JsPopover";
 import { Children } from "../../framework/createElement";
 import { onDeath } from "../../framework/Observer";
@@ -6,6 +7,7 @@ import { Brand } from "../../framework/util";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabState, getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState";
 import AnkiConnect from "../../utils/AnkiConnect";
+import { playAudioThrow } from "../../utils/Audio";
 import { getHoveredCharacterIndex } from "../../utils/CharacterHighlighter";
 import { furiFromToken, furiToRuby } from "../../utils/util";
 
@@ -71,6 +73,7 @@ export default class JpHoverTooltip extends JsPopover {
         this.SetContent(<>
             <div className="header">
                 {ruby}
+                <IconButton icon="play_arrow" onClick={() => playAudioThrow(vocab)} />
                 <span className={"vocab-state " + vocabStateString}>
                     {vocabStateNode}{vocabNote ? <> - {vocabNote}</> : undefined}
                 </span>

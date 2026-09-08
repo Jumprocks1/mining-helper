@@ -63,6 +63,8 @@ export async function serverPost(body: string) {
     if (apiKey) headers["X-Api-Key"] = apiKey
     const serverAddress = await getSetting("serverAddress")
     const httpServer = `http://${serverAddress}`
+    // TODO think it would be nice to wrap fetch everywhere for better exceptions
+    // Main change would be including the URL in the error
     return await fetch(httpServer, {
         method: "POST", body, headers
     })
@@ -79,18 +81,22 @@ export async function serverPostJson<T>(body: string) {
     return res.json() as T
 }
 
+export async function getAudioBytesThrow(vocab: JpdbVocabulary | string) {
+    let audioBytes: Response
+    if (typeof vocab === "string") {
+        audioBytes = await serverPost(`audio-bytes-kanji:${vocab}`)
+    } else {
+        const kanji = vocab[0]
+        audioBytes = await serverPost(`audio-bytes-kanji:${kanji}:${vocab[1]}`)
+    }
+    if (!audioBytes.ok) throw `Audio server returned ${audioBytes.statusText}`
+    const buffer = await audioBytes.arrayBuffer()
+    return buffer.byteLength > 0 ? buffer : undefined
+}
+
 export async function tryGetAudioBytes(vocab: JpdbVocabulary | string) {
     try {
-        let audioBytes: Response
-        if (typeof vocab === "string") {
-            audioBytes = await serverPost(`audio-bytes-kanji:${vocab}`)
-        } else {
-            const kanji = vocab[0]
-            audioBytes = await serverPost(`audio-bytes-kanji:${kanji}:${vocab[1]}`)
-        }
-        if (!audioBytes.ok) return
-        const buffer = await audioBytes.arrayBuffer()
-        return buffer.byteLength > 0 ? buffer : undefined
+        return await getAudioBytesThrow(vocab)
     } catch (e: unknown) {
         console.error(e)
         return
@@ -98,6 +104,9 @@ export async function tryGetAudioBytes(vocab: JpdbVocabulary | string) {
 }
 export async function tryPlayAudio(vocab: JpdbVocabulary) {
     await playAudio(vocab[0], tryGetAudioBytes(vocab))
+}
+export async function playAudioThrow(vocab: JpdbVocabulary) {
+    await playAudio(vocab[0], getAudioBytesThrow(vocab))
 }
 
 export interface AudioEntry {
