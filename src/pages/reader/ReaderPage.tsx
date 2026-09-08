@@ -17,6 +17,7 @@ import { AddFurigana } from "./furigana"
 import { BaseReader, ReaderPageNode } from "../../reader/BaseReader"
 import readBlob, { BlobLike, blobLikeToBlob } from "../../reader/readBlob"
 import { stringSettingsField } from "../../views/SettingsModal"
+import AdvancedSettingsModal from "../../views/AdvancedSettingsModal"
 
 const currentPositionKey = "reader-progress"
 
@@ -102,16 +103,57 @@ export default class ReaderPage extends PageComponent {
             ev.preventDefault()
             return this.HandleDataTransfer(ev.dataTransfer)
         })
+
+        let hoverParagraph: HTMLElement | undefined
+        let hoverElement: HTMLElement | undefined
+        const setHoverState = (p: HTMLElement | undefined) => {
+            if (hoverParagraph === p) return
+            hoverParagraph = p
+            if (!p) {
+                hoverElement?.remove()
+                return
+            }
+            if (hoverElement === undefined) {
+                const bookmarkButton = <IconButton icon="bookmark" tooltip={ActionTooltip("Bookmark", "S")}
+                    onClick={() => {
+                        const index = hoverParagraph?.paragraphIndex
+                        if (index === undefined) return
+                        this.BookmarkParagraph(index)
+                    }} />
+                bookmarkButton.tooltipConfig = { delay: 500 } // this one is really annoying without a delay
+                hoverElement = <div id="paragraph-buttons">
+                    {bookmarkButton}
+                </div>
+            }
+            p.append(hoverElement)
+        }
+        this.ViewerNode.addEventListener("mousemove", ev => {
+            const target = ev.target
+            if (!target || !(target instanceof HTMLElement)) return
+            if (hoverElement?.contains(target)) return
+            const p = target.closest<HTMLElement>(".reader-page-node p")
+            if (!p) {
+                setHoverState(undefined)
+                return
+            }
+            const style = window.getComputedStyle(target)
+            const x = p.getBoundingClientRect().x
+            const pLeft = parseFloat(style.paddingLeft)
+            if (ev.clientX > x + pLeft) setHoverState(undefined)
+            else setHoverState(p)
+        })
         getAnkiFurigana()
     }
 
     Cache?: Cache
 
     PageTooltip() {
-        if (!this.Reader || !(this.Reader instanceof EpubReader)) return
-        const currentPage = this.ProgressState.page
-        const spine = this.Reader.spine[currentPage]
-        return spine.href
+        if (!this.Reader) return
+        if (this.Reader instanceof EpubReader) {
+            const currentPage = this.ProgressState.page
+            const spine = this.Reader.spine[currentPage]
+            return spine.href
+        } else return "Single page view"
     }
 
     override Load = async () => {
@@ -373,12 +415,14 @@ export default class ReaderPage extends PageComponent {
         const target = document.querySelector(".reader-page-node p:hover")
         if (!target) return
         const index = (target as HTMLElement).paragraphIndex
-        if (index !== undefined) {
-            this.ProgressState.paragraphs[this.ProgressState.page] = index
-            for (const p of this.CurrentPageNode.querySelectorAll("p"))
-                p.classList.toggle("saved-position", p === target)
-            this.SavePageState()
-        }
+        if (index !== undefined) this.BookmarkParagraph(index)
+    }
+
+    BookmarkParagraph(index: number) {
+        this.ProgressState.paragraphs[this.ProgressState.page] = index
+        for (const p of this.CurrentPageNode.querySelectorAll("p"))
+            p.classList.toggle("saved-position", p.paragraphIndex === index)
+        this.SavePageState()
     }
 
     // Stuff that doesn't really belong in the Reader classes
@@ -431,9 +475,16 @@ function OpenReaderSettings() {
         </>
     }} />
 
-    return OpenModal({
+    const modal = OpenModal({
         header: "Reader Settings",
         body,
-        id: "reader-settings-modal"
+        id: "reader-settings-modal",
+        footer: <button onclick={() => {
+            modal.Close()
+            AdvancedSettingsModal()
+        }}>
+            Advanced Settings
+        </button>
     })
+    return modal
 }

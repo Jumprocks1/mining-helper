@@ -125,6 +125,7 @@ div#result {
         // gets rid of regular button styles
         background: none;
         border: none;
+        display: block;
 
         padding: variables.$s1;
         border-radius: 30%;

@@ -8,6 +8,7 @@ export const MaterialIcons = [
     "add",
     "arrow_back",
     "arrow_forward",
+    "bookmark",
     "check",
     "close",
     "delete",
