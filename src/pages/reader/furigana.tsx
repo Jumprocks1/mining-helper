@@ -1,9 +1,18 @@
 import { JpdbParseResponseWithNodes } from "../../epub/epubJpdb";
-import { JpdbToken } from "../../jpdb/JpdbParseText";
+import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
+import { getVocabState, VocabState } from "../../jpdb/JpdbState";
+import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil";
+import { loadKanjiSet } from "../../utils/KanjiSet";
 
+// This should no-op when everything is already inside ruby tags
 export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
+    const knownKanji = await loadKanjiSet()
     const newNodes: Text[] = []
-    // This should no-op when everything is already inside ruby tags
+    const unknownTokens = jpdb.tokens.filter(e => needsFurigana(e, jpdb.vocabulary[e[3]], knownKanji))
+
+    // const knownTokens = jpdb.tokens.filter(e => e[2] && !needsFurigana(e, jpdb.vocabulary[e[3]], knownKanji)).length
+    // console.log(`${knownTokens} / ${unknownTokens.length + knownTokens} / ${jpdb.tokens.length}`)
+
 
     let tokenI = 0;
     let currentPos = 0
@@ -20,8 +29,8 @@ export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
             currentPos = pushTo
         }
         if (!node.parentElement?.closest("ruby, rt")) {
-            while (tokenI < jpdb.tokens.length) {
-                const token = jpdb.tokens[tokenI]
+            while (tokenI < unknownTokens.length) {
+                const token = unknownTokens[tokenI]
                 if (token[0] + token[1] > nodeEnd) {
                     // We stop trying to add furigana if the end of the next token is outside of this node
                     // Even if the token starts inside us, we don't try to do a cross-node furigana
@@ -66,6 +75,27 @@ export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
     // this recalculates the text node positions after we butcher the nodes with furigana
     // since the furigana shouldn't modify the string for jpdb, this should work fine
     jpdb.nodes = newNodes
+}
+
+function needsFurigana(token: JpdbToken, vocab: JpdbVocabulary, knownKanji: Set<string>) {
+    // As this is currently setup, requires a the vocab to be in our audio deck and all the kanji to be in the kanji deck
+    const reading = token[2]
+    if (reading) {
+        // we could probably do all this without the `token` parameter, but this feels nice
+        for (let i = 0; i < reading.length; i++) {
+            if (Array.isArray(reading[i])) {
+                const kanji = reading[i][0]
+                if (unicodeType(kanji) === UnicodeCharacterType.Kanji) {
+                    // if the reading has any unknown kanji, we show it
+                    // note if there's an unknown kanji but it doesn't have a reading, we don't end up returning true necessarily
+                    if (!knownKanji.has(kanji)) return true
+                }
+            }
+        }
+        const vocabState = getVocabState(vocab, { trimKana: true })
+        if (vocabState === VocabState.New) return true
+    }
+    return false
 }
 
 export function rubyFuriFromToken(word: string, token: JpdbToken) {

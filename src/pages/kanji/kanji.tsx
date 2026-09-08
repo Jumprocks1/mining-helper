@@ -6,6 +6,7 @@ import { PageComponent } from "../../framework/PageComponent"
 import AnkiConnect, { AnkiNote, NoteBase } from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { serverPostJson } from "../../utils/Audio"
+import { addKnownKanji } from "../../utils/KanjiSet"
 import { getAnkiFurigana } from "../anki/CardList"
 
 const deckName = "Mining Helper Kanji"
@@ -108,7 +109,9 @@ async function getNoteInfo(kanji: string): Promise<NoteBase> {
     const res = await serverPostJson<KanjiInfo>(`kanji-info:${kanji}`)
     const vocabDeckName = await getSetting("targetAnkiDeck")
 
-    const cardIds = await AnkiConnect.call("findCards", { query: `deck:\"${vocabDeckName}\" word:*${kanji}*` })
+    const ankiFields = await getSetting("ankiFields")
+
+    const cardIds = await AnkiConnect.call("findCards", { query: `deck:\"${vocabDeckName}\" ${ankiFields["word"]}:*${kanji}*` })
     const noteIds = await AnkiConnect.call("cardsToNotes", { cards: cardIds })
     const noteInfo = await AnkiConnect.call("notesInfo", { notes: noteIds })
     const intervals = await AnkiConnect.call("getIntervals", { cards: cardIds })
@@ -172,12 +175,13 @@ async function updateAllKanjiNotes() {
 }
 
 async function createKanjiCard(kanji: string) {
-    return AnkiConnect.call("addNote", {
+    await AnkiConnect.call("addNote", {
         note: {
             ...await getNoteInfo(kanji),
             deckName, modelName: deckName
         }
     })
+    await addKnownKanji(kanji)
 }
 
 async function updateKanjiNote(kanji: string) {
