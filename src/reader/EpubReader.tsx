@@ -1,5 +1,5 @@
 import { BlobReader, BlobWriter, type FileEntry, TextWriter, ZipReader } from '@zip.js/zip.js/lib/zip-core.js'
-import { BaseReader, EpubPage, ReaderError } from './BaseReader'
+import { BaseReader, ReaderPageNode, ReaderError } from './BaseReader'
 
 interface EpubItem {
     href: string
@@ -133,7 +133,7 @@ export class EpubReader extends BaseReader {
         if (item.type !== "application/xhtml+xml") throw new ReaderError(`Expected xhtml, got ${item.type}`)
         this.ClearBlobUrls()
         const o = document.createElement("div")
-        o.classList.add("epub-page")
+        o.classList.add("reader-page-node")
         const file = await this.readXML(item.href, true)
         const bodyNode = await this.SelectPageBodyNode(file)
 
@@ -197,7 +197,7 @@ export class EpubReader extends BaseReader {
                 }
             }
         }
-        return o as EpubPage
+        return o as ReaderPageNode
     }
     setupSanitizer() {
         this.sanitizer.allowElement({ name: "div", attributes: ["data-epub-ref-id"] })

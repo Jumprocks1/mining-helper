@@ -1,13 +1,12 @@
 import { getSetting } from "../core/Settings";
 import { type Brand } from "../framework/util";
-import { type JpdbParseResponseWithNodes } from "./epubJpdb";
+import { type JpdbParseResponseWithNodes } from "./readerPageJpdb";
 
-// TODO need to change this to generic name
-export type EpubPage = Brand<HTMLDivElement, "epub-page"> & { jpdb?: JpdbParseResponseWithNodes }
+export type ReaderPageNode = Brand<HTMLDivElement, "reader-page-node"> & { jpdb?: JpdbParseResponseWithNodes }
 
 export abstract class BaseReader {
     abstract get PageCount(): number
-    abstract ReadPage(page: number): Promise<EpubPage>
+    abstract ReadPage(page: number): Promise<ReaderPageNode>
 
     async SelectPageBodyNode(document: Document) {
         try {

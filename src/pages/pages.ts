@@ -2,7 +2,7 @@ import { type Pages } from "../framework/Router";
 import AnkiPage from "./anki/anki";
 import HomePage from "./home/home";
 import KanjiPage from "./kanji/kanji";
-import ReaderPage from "./reader/reader";
+import ReaderPage from "./reader/ReaderPage";
 import SetupPage from "./setup/setup";
 import SentenceSearchPage from "./ss/ss";
 import SubtitlesPage from "./subtitles/subtitles";

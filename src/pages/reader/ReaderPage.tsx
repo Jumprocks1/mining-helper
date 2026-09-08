@@ -4,7 +4,7 @@ import { OpenModal } from "../../components/Modal"
 import Select from "../../components/Select"
 import { furiganaModes, getSetting, setSetting } from "../../core/Settings"
 import { EpubReader } from "../../reader/EpubReader"
-import epubJpdb from "../../reader/epubJpdb"
+import readerPageJpdb from "../../reader/readerPageJpdb"
 import { replaceChildren, replaceWith } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { ActionTooltip } from "../../framework/Tooltips"
@@ -14,7 +14,7 @@ import { JpdbApiKeyField } from "../../views/SettingsFields"
 import { getAnkiFurigana } from "../anki/CardList"
 import { HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "../subtitles/JpHoverTooltip"
 import { AddFurigana } from "./furigana"
-import { BaseReader, EpubPage } from "../../reader/BaseReader"
+import { BaseReader, ReaderPageNode } from "../../reader/BaseReader"
 import readBlob, { BlobLike, blobLikeToBlob } from "../../reader/readBlob"
 import { stringSettingsField } from "../../views/SettingsModal"
 
@@ -25,13 +25,13 @@ export default class ReaderPage extends PageComponent {
     override Title = "Mining Helper - Reader"
     override Node: HTMLElement
 
-    CurrentPageNode: EpubPage = <div>Drop .epub here</div> as EpubPage
+    CurrentPageNode: ReaderPageNode = <div>Drop .epub here</div> as ReaderPageNode
     HoverRectangleContainer = HoverRectangleContainer()
-    PageWrapper = <div id="epub-page-wrapper">
+    PageWrapper = <div id="reader-page-node-wrapper">
         {this.CurrentPageNode}
         {this.HoverRectangleContainer}
     </div>
-    ViewerNode: HTMLElement = <div id="epub-viewer">{this.PageWrapper}</div>
+    ViewerNode: HTMLElement = <div id="reader-page-viewer">{this.PageWrapper}</div>
     PageIndicator: HTMLElement = <div id="page-indicator" tooltip={() => this.PageTooltip()}>0 / 0</div>
     ToCBody: HTMLElement = <div />
     ToC: HTMLElement = <div id="toc">
@@ -44,7 +44,7 @@ export default class ReaderPage extends PageComponent {
 
     JpdbLoadButton = IconButtonClass({
         icon: "document_search", onClick: async () => {
-            await epubJpdb(this.CurrentPageNode)
+            await readerPageJpdb(this.CurrentPageNode)
             if (this.CurrentPageNode.jpdb) this.JpdbLoadButton.Disabled = true
         },
         tooltip: ActionTooltip("Parse File", "T", "Parses the current page using jpdb's API")
@@ -116,9 +116,9 @@ export default class ReaderPage extends PageComponent {
 
     override Load = async () => {
         this.Cache = await caches.open("reader")
-        const response = await this.Cache.match(`https://jumprocks1.github.io/_/epub/recent`)
+        const response = await this.Cache.match(`https://jumprocks1.github.io/_/reader/recent`)
         if (response) {
-            await this.LoadEpubFileBlob(await response.blob())
+            await this.LoadFileBlob(await response.blob())
         }
 
         // if this is called before the page is synchronously loaded,
@@ -188,11 +188,11 @@ export default class ReaderPage extends PageComponent {
         })
     }
 
-    // TODO rename all epub stuff in this file
-    async LoadEpubFileBlob(blob: Blob) {
+    // currently supports epub/html
+    async LoadFileBlob(blob: Blob) {
         // TODO would be good to use an actual Loader call here - this would give support for error handling on page load
         // Might be weird if it's nested within an outer loader on inital page load though
-        const node = <div className="loader" /> as EpubPage
+        const node = <div className="loader" /> as ReaderPageNode
         replaceWith(this.CurrentPageNode!, node)
         this.CurrentPageNode = node
         this.Reader = await readBlob(blob)
@@ -206,7 +206,7 @@ export default class ReaderPage extends PageComponent {
         page: number,
         paragraphs: Record<number, number | undefined> // map of page => paragraph progress
     } {
-        // TODO this will need something per epub file
+        // TODO this will need something per file
         const s = localStorage.getItem(currentPositionKey)
         if (s) {
             try {
@@ -254,7 +254,7 @@ export default class ReaderPage extends PageComponent {
         } else {
             this.OnAfterLoad(() => pageNode.querySelector("p.saved-position")?.scrollIntoView({ block: "center" }))
         }
-        await epubJpdb(pageNode, true)
+        await readerPageJpdb(pageNode, true)
         this.JpdbLoadButton.Disabled = Boolean(pageNode.jpdb)
         this.FuriganaButton.Disabled = false
     }
@@ -322,7 +322,7 @@ export default class ReaderPage extends PageComponent {
         const type = blob.type
         if (type === "application/epub+zip" || type === "text/html") {
             if (this.Cache) {
-                const key = `https://jumprocks1.github.io/_/epub/recent`
+                const key = `https://jumprocks1.github.io/_/reader/recent`
                 const response = new Response(blob, {
                     headers: {
                         "Content-Type": blob.type,
@@ -330,7 +330,7 @@ export default class ReaderPage extends PageComponent {
                     }
                 })
                 await this.Cache.put(key, response)
-                await this.LoadEpubFileBlob(blob)
+                await this.LoadFileBlob(blob)
             }
         }
     }
@@ -370,7 +370,7 @@ export default class ReaderPage extends PageComponent {
     SaveParagraph() {
         if (!this.Reader) return
         // This is a bit sketchy, but that's the fun part
-        const target = document.querySelector(".epub-page p:hover")
+        const target = document.querySelector(".reader-page-node p:hover")
         if (!target) return
         const index = (target as HTMLElement).paragraphIndex
         if (index !== undefined) {
@@ -381,8 +381,8 @@ export default class ReaderPage extends PageComponent {
         }
     }
 
-    // Stuff that doesn't really belong in the epub reader
-    EnhancePageNode(node: EpubPage) {
+    // Stuff that doesn't really belong in the Reader classes
+    EnhancePageNode(node: ReaderPageNode) {
         let i = 0;
         const paragraph = this.ProgressState.paragraphs[this.ProgressState.page] ?? 0
         for (const p of node.querySelectorAll("p")) {

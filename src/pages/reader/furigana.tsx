@@ -1,5 +1,5 @@
 import { FuriganaMode, getSetting } from "../../core/Settings";
-import { JpdbParseResponseWithNodes } from "../../reader/epubJpdb";
+import { JpdbParseResponseWithNodes } from "../../reader/readerPageJpdb";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabState, VocabState } from "../../jpdb/JpdbState";
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil";

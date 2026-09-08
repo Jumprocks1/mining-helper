@@ -1,15 +1,15 @@
 import { loadIgnoreList } from "../jpdb/IgnoreList";
 import JpdbParseText, { JpdbParseResponse } from "../jpdb/JpdbParseText";
-import { EpubPage } from "./EpubReader";
+import { ReaderPageNode } from "./BaseReader";
 
 export interface JpdbParseResponseWithNodes extends JpdbParseResponse {
     nodes: Text[]
 }
 
-export default async (page: EpubPage, cacheOnly?: true): Promise<JpdbParseResponseWithNodes | undefined> => {
+export default async (page: ReaderPageNode, cacheOnly?: true): Promise<JpdbParseResponseWithNodes | undefined> => {
     loadIgnoreList()
     if (page.jpdb) return page.jpdb
-    const nodes = getEpubTextNodes(page) // takes ~1ms for large pages, could probably make it faster but oh well
+    const nodes = getReaderPageTextNodes(page) // takes ~1ms for large pages, could probably make it faster but oh well
     let res: JpdbParseResponseWithNodes | undefined
     if (nodes.length === 0) res = { tokens: [], vocabulary: [], nodes: [] }
     else {
@@ -43,7 +43,7 @@ const blockTags = new Set([
     "NAV", "OL", "P", "PRE", "SECTION", "TABLE", "TFOOT", "UL"
 ])
 
-function getEpubTextNodes(page: EpubPage) {
+function getReaderPageTextNodes(page: ReaderPageNode) {
     const o: Text[] = []
     visit(page, o)
     return o
