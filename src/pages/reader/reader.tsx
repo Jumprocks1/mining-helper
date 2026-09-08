@@ -28,7 +28,11 @@ export default class ReaderPage extends PageComponent {
     </div>
     ViewerNode: HTMLElement = <div id="epub-viewer">{this.PageWrapper}</div>
     PageIndicator: HTMLElement = <div id="page-indicator" tooltip={() => this.PageTooltip()}>0 / 0</div>
-    ToC: HTMLElement = <div id="toc" />
+    ToCBody: HTMLElement = <div />
+    ToC: HTMLElement = <div id="toc">
+        <h3>Table of Contents</h3>
+        {this.ToCBody}
+    </div>
     Reader?: EpubReader
     FullscreenButton = <IconButton icon="fullscreen" onClick={() => this.ToggleFullscreen()}
         tooltip={ActionTooltip("Fullscreen")} />
@@ -48,7 +52,9 @@ export default class ReaderPage extends PageComponent {
             await AddFurigana(jpdb)
             this.FuriganaButton.Disabled = true
         },
-        tooltip: ActionTooltip("Add Furigana", "F", "Adds furigana above kanji")
+        tooltip: ActionTooltip("Add Furigana", "F", "Adds furigana above kanji\nOnly shows furigana for unknown kanji/vocab"
+            + "\n\nTODO make this configurable in the config"
+        )
     })
 
     constructor() {
@@ -253,7 +259,7 @@ export default class ReaderPage extends PageComponent {
                 {e.label}
             </div>)
         }
-        replaceChildren(this.ToC, o)
+        replaceChildren(this.ToCBody, o)
     }
 
     override Dispose() {

@@ -37,6 +37,10 @@
             }
         }
         #toc {
+            h3 {
+                padding-left: $s1;
+                border-bottom: $border0;
+            }
             .toc-point {
                 text-decoration: none;
                 &:not(.active) {
