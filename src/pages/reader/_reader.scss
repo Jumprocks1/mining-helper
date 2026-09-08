@@ -1,6 +1,7 @@
 @use "../../styles/variables" as *;
 
 @layer pages {
+    // TODO redo all classes so they don't mention epub
     #reader-page {
         &:has(#epub-viewer.fullscreen) {
             #mh-header {

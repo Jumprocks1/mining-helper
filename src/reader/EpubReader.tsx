@@ -1,6 +1,5 @@
-import type { JpdbParseResponseWithNodes } from './epubJpdb'
-import { Brand } from '../framework/util'
 import { BlobReader, BlobWriter, type FileEntry, TextWriter, ZipReader } from '@zip.js/zip.js/lib/zip-core.js'
+import { BaseReader, EpubPage, ReaderError } from './BaseReader'
 
 interface EpubItem {
     href: string
@@ -22,35 +21,32 @@ interface EpubSettings {
 }
 const svgNS = "http://www.w3.org/2000/svg"
 
-export type EpubPage = Brand<HTMLDivElement, "epub-page"> & { jpdb?: JpdbParseResponseWithNodes }
-
-export class EpubReader {
+export class EpubReader extends BaseReader {
     DOMParser: DOMParser = new DOMParser()
     _opfXML?: Document
     get opfXML() {
-        if (!this._opfXML) throw new EpubReaderError("Missing OPF xml")
+        if (!this._opfXML) throw new ReaderError("Missing OPF xml")
         return this._opfXML
     }
     settings: EpubSettings
     sanitizer: Sanitizer = new Sanitizer()
     constructor(settings?: EpubSettings) {
+        super()
         this.settings = settings ?? {}
         this.setupSanitizer()
     }
-
-    CurrentPage = -1
 
     manifest: Record<string, EpubItem> = {}
     spine: EpubItem[] = []
     toc: EpubToc = { points: [] }
     get zip() {
-        if (!this._zip) throw new EpubReaderError("No zip archive loaded")
+        if (!this._zip) throw new ReaderError("No zip archive loaded")
         return this._zip
     }
     _zip?: Record<string, FileEntry>
 
     async read(blob: Blob) {
-        if (blob.type !== "application/epub+zip") throw new EpubReaderError(`Expected epub, got ${blob.type}`)
+        if (blob.type !== "application/epub+zip") throw new ReaderError(`Expected epub, got ${blob.type}`)
         const reader = new ZipReader(new BlobReader(blob))
         this._zip = {}
         for (const entry of await reader.getEntries()) {
@@ -59,7 +55,7 @@ export class EpubReader {
         const container = await this.readXML("META-INF/container.xml")
         const rootFile = container.querySelector("container > rootfiles > rootfile")
         const opfPath = rootFile?.getAttribute("full-path")
-        if (!opfPath) throw new EpubReaderError("Failed to find rootfile")
+        if (!opfPath) throw new ReaderError("Failed to find rootfile")
         this._opfXML = await this.readXML(opfPath)
         this.loadManifest()
         await this.loadSpine()
@@ -96,7 +92,7 @@ export class EpubReader {
     }
 
     async loadToc(toc: EpubItem) {
-        if (toc.type !== "application/x-dtbncx+xml") throw new EpubReaderError(`Unexpected TOC type '${toc.type}'`)
+        if (toc.type !== "application/x-dtbncx+xml") throw new ReaderError(`Unexpected TOC type '${toc.type}'`)
         this.toc = { points: [] }
         const xml = await this.readXML(toc.href)
         const navPoints = xml.querySelectorAll("ncx > navMap > navPoint")
@@ -120,7 +116,7 @@ export class EpubReader {
 
     async readXML(href: string, xhtml = false) {
         const file = this.zip[href]
-        if (!file) throw new EpubReaderError(`Failed to open ${href}`)
+        if (!file) throw new ReaderError(`Failed to open ${href}`)
         const containerText = await file.getData(new TextWriter())
         return this.DOMParser.parseFromString(containerText, xhtml ? "application/xhtml+xml" : "application/xml")
     }
@@ -131,33 +127,31 @@ export class EpubReader {
     }
 
     // We sanitize in here to avoid accidentally dumping directly into page
-    async readPage(page: number) {
-        // I think for images, we'll replace them with some sort of special node
-        // after running those special nodes through the sanitizer, we'll replace them with images again
+    override async ReadPage(page: number) {
         const item = this.spine[page]
-        if (!item) throw new EpubReaderError(`Page ${page} not found`)
-        if (item.type !== "application/xhtml+xml") throw new EpubReaderError(`Expected xhtml, got ${item.type}`)
+        if (!item) throw new ReaderError(`Page ${page} not found`)
+        if (item.type !== "application/xhtml+xml") throw new ReaderError(`Expected xhtml, got ${item.type}`)
         this.ClearBlobUrls()
         const o = document.createElement("div")
         o.classList.add("epub-page")
         const file = await this.readXML(item.href, true)
-        const htmlNode = file.querySelector("html")!
+        const rootNode = file.documentElement
 
         if (this.settings.trimWhitespace) {
-            const walker = file.createTreeWalker(htmlNode, NodeFilter.SHOW_TEXT);
+            const walker = file.createTreeWalker(rootNode, NodeFilter.SHOW_TEXT);
             let node;
             while (node = walker.nextNode()) {
                 if (node.nodeValue) node.nodeValue = node.nodeValue.trim()
             }
         }
 
-        for (const e of htmlNode.querySelectorAll("svg[preserveAspectRatio=none]")) {
+        for (const e of rootNode.querySelectorAll("svg[preserveAspectRatio=none]")) {
             e.removeAttribute("preserveAspectRatio")
         }
 
         const referenceElements = new Map<string, Node>()
 
-        const images = htmlNode.querySelectorAll("img, image")
+        const images = rootNode.querySelectorAll("img, image")
         for (const image of images) {
             const id = referenceElements.size.toString()
             referenceElements.set(id, image)
@@ -165,7 +159,7 @@ export class EpubReader {
             placeholder.setAttribute("data-epub-ref-id", id)
             image.replaceWith(placeholder)
         }
-        o.setHTML(htmlNode.getHTML(), { sanitizer: this.sanitizer })
+        o.setHTML(rootNode.getHTML(), { sanitizer: this.sanitizer })
         for (const el of o.querySelectorAll("*[data-epub-ref-id]")) {
             const refId = el.getAttribute("data-epub-ref-id")
             if (!refId) continue
@@ -203,7 +197,6 @@ export class EpubReader {
                 }
             }
         }
-        this.CurrentPage = page
         return o as EpubPage
     }
     setupSanitizer() {
@@ -212,7 +205,7 @@ export class EpubReader {
         // TODO could support links with href but really doesn't feel worth it
         this.sanitizer.removeAttribute("href")
     }
+    override get PageCount(): number {
+        return this.spine.length
+    }
 }
-
-
-class EpubReaderError extends Error { }

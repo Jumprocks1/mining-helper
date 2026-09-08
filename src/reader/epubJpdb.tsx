@@ -1,6 +1,6 @@
 import { loadIgnoreList } from "../jpdb/IgnoreList";
 import JpdbParseText, { JpdbParseResponse } from "../jpdb/JpdbParseText";
-import { EpubPage } from "./epub";
+import { EpubPage } from "./EpubReader";
 
 export interface JpdbParseResponseWithNodes extends JpdbParseResponse {
     nodes: Text[]

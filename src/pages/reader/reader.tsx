@@ -3,8 +3,8 @@ import Loader from "../../components/Loader"
 import { OpenModal } from "../../components/Modal"
 import Select from "../../components/Select"
 import { furiganaModes, getSetting, setSetting } from "../../core/Settings"
-import { EpubPage, EpubReader } from "../../epub/epub"
-import epubJpdb from "../../epub/epubJpdb"
+import { EpubReader } from "../../reader/EpubReader"
+import epubJpdb from "../../reader/epubJpdb"
 import { replaceChildren, replaceWith } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { ActionTooltip } from "../../framework/Tooltips"
@@ -14,6 +14,8 @@ import { JpdbApiKeyField } from "../../views/SettingsFields"
 import { getAnkiFurigana } from "../anki/CardList"
 import { HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "../subtitles/JpHoverTooltip"
 import { AddFurigana } from "./furigana"
+import { BaseReader, EpubPage } from "../../reader/BaseReader"
+import readBlob, { BlobLike, blobLikeToBlob } from "../../reader/readBlob"
 
 const currentPositionKey = "reader-progress"
 
@@ -35,7 +37,7 @@ export default class ReaderPage extends PageComponent {
         <h3>Table of Contents</h3>
         {this.ToCBody}
     </div>
-    Reader?: EpubReader
+    Reader?: BaseReader
     FullscreenButton = <IconButton icon="fullscreen" onClick={() => this.ToggleFullscreen()}
         tooltip={ActionTooltip("Fullscreen")} />
 
@@ -74,11 +76,11 @@ export default class ReaderPage extends PageComponent {
                 <div className="row">
                     <IconButton onClick={async () => {
                         if (!this.Reader) return
-                        await this.LoadPage(this.Reader.CurrentPage - 1)
+                        await this.LoadPage(this.ProgressState.page - 1)
                     }} icon="arrow_back" tooltip={ActionTooltip("Previous Page", "←")} />
                     <IconButton onClick={async () => {
                         if (!this.Reader) return
-                        await this.LoadPage(this.Reader.CurrentPage + 1)
+                        await this.LoadPage(this.ProgressState.page + 1)
                     }} icon="arrow_forward" tooltip={ActionTooltip("Next Page", "→")} />
                 </div>
             </div>
@@ -91,11 +93,11 @@ export default class ReaderPage extends PageComponent {
         document.addEventListener("keydown", this.DocumentKeydown)
 
         // TODO can share a lot of this with subtitles.tsx
-        body.addEventListener("dragover", ev => {
+        this.ViewerNode.addEventListener("dragover", ev => {
             ev.preventDefault()
             if (ev.dataTransfer) ev.dataTransfer.dropEffect = "link"
         })
-        body.addEventListener("drop", ev => {
+        this.ViewerNode.addEventListener("drop", ev => {
             ev.preventDefault()
             return this.HandleDataTransfer(ev.dataTransfer)
         })
@@ -105,8 +107,8 @@ export default class ReaderPage extends PageComponent {
     Cache?: Cache
 
     PageTooltip() {
-        if (!this.Reader) return
-        const currentPage = this.Reader.CurrentPage
+        if (!this.Reader || !(this.Reader instanceof EpubReader)) return
+        const currentPage = this.ProgressState.page
         const spine = this.Reader.spine[currentPage]
         return spine.href
     }
@@ -185,14 +187,16 @@ export default class ReaderPage extends PageComponent {
         })
     }
 
+    // TODO rename all epub stuff in this file
     async LoadEpubFileBlob(blob: Blob) {
+        // TODO would be good to use an actual Loader call here - this would give support for error handling on page load
+        // Might be weird if it's nested within an outer loader on inital page load though
         const node = <div className="loader" /> as EpubPage
         replaceWith(this.CurrentPageNode!, node)
         this.CurrentPageNode = node
-        this.Reader = new EpubReader({ trimWhitespace: false })
-        await this.Reader.read(blob)
+        this.Reader = await readBlob(blob)
         this.LoadToC()
-        await this.LoadPage(this.ProgressState.page)
+        await this.LoadPage(this.ProgressState.page, true)
     }
 
     ProgressState = this.GetSavedState()
@@ -216,33 +220,32 @@ export default class ReaderPage extends PageComponent {
         localStorage.setItem(currentPositionKey, JSON.stringify(this.ProgressState))
     }
 
-    async LoadPage(page: number) {
+    async LoadPage(page: number, initial: boolean = false) {
+        if (!this.Reader) return
+        const totalPages = this.Reader.PageCount
+        page = Math.max(Math.min(page, totalPages - 1), 0)
+        if (page === this.ProgressState.page && !initial) return
         this.JpdbLoadButton.Disabled = true
         this.FuriganaButton.Disabled = true
-        if (!this.Reader) return
-        const totalPages = this.Reader.spine.length
-        page = Math.max(Math.min(page, totalPages - 1), 0)
         this.PageIndicator.textContent = `${page + 1} / ${totalPages}`
         if (this.ProgressState.page !== page) {
             this.ProgressState.page = page
             this.SavePageState()
         }
-        let pageNode: EpubPage
-        // this.Reader.CurrentPage starts at -1
-        if (page !== this.Reader.CurrentPage) {
-            pageNode = await this.Reader.readPage(page)
-            this.EnhancePageNode(pageNode)
-            // Make there's no important awaits after this call, otherwise we'll get a layout shift
-            replaceWith(this.CurrentPageNode, pageNode)
-            this.CurrentPageNode = pageNode
-        } else pageNode = this.CurrentPageNode
+        const pageNode = await this.Reader.ReadPage(page)
+        this.EnhancePageNode(pageNode)
+        // Make there's no important awaits after this call, otherwise we'll get a layout shift
+        replaceWith(this.CurrentPageNode, pageNode)
+        this.CurrentPageNode = pageNode
 
-        const tocPoints = this.ToC.querySelectorAll(".toc-point")
-        const toc = this.Reader.toc
-        for (let i = 0; i < tocPoints.length; i++) {
-            const e = toc.points[i]
-            const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : this.Reader.spine.length
-            tocPoints.item(i).classList.toggle("active", page >= e.spinePage && page < nextTocPage)
+        if (this.Reader instanceof EpubReader) {
+            const tocPoints = this.ToC.querySelectorAll(".toc-point")
+            const toc = this.Reader.toc
+            for (let i = 0; i < tocPoints.length; i++) {
+                const e = toc.points[i]
+                const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : this.Reader.spine.length
+                tocPoints.item(i).classList.toggle("active", page >= e.spinePage && page < nextTocPage)
+            }
         }
         const paragraph = this.ProgressState.paragraphs[page] ?? 0
         if (paragraph === 0) {
@@ -264,7 +267,7 @@ export default class ReaderPage extends PageComponent {
             return this.LoadPage(this.ProgressState.page - 1)
         if (newParagraph >= totalParagraphs.length)
             return this.LoadPage(this.ProgressState.page + 1)
-        this.ProgressState.paragraphs[this.Reader.CurrentPage] = newParagraph
+        this.ProgressState.paragraphs[this.ProgressState.page] = newParagraph
         let oldParagraphNode: HTMLElement | undefined
         let newParagraphNode: HTMLElement | undefined
         for (const p of this.CurrentPageNode.querySelectorAll("p")) {
@@ -275,12 +278,12 @@ export default class ReaderPage extends PageComponent {
         if (oldParagraphNode && newParagraphNode) {
             this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldParagraphNode.getBoundingClientRect().top)
         }
-        this.SavePageState()
+        this.SavePageState() // TODO this is also called inside LoadPage
     }
 
     LoadToC() {
         const reader = this.Reader
-        if (!reader) return
+        if (!reader || !(reader instanceof EpubReader)) return
         const toc = reader.toc
         const o: Node[] = []
         for (let i = 0; i < toc.points.length; i++) {
@@ -300,20 +303,33 @@ export default class ReaderPage extends PageComponent {
     }
 
     async HandleDataTransfer(dt: DataTransfer | null) {
-        const files = dt?.files
-        if (!files || files.length === 0) return
-        const file = files[0]
-        if (file.name.endsWith(".epub")) {
+        if (dt === null) return
+        const files = dt.files
+        if (files.length === 0) {
+            const uri = dt.getData("text/uri-list")
+            // This doesn't end up working most of the time due to CORS
+            if (uri && uri.startsWith("https://")) {
+                return this.CacheAndLoadBlobLike(uri)
+            }
+            return
+        }
+        return this.CacheAndLoadBlobLike(files[0])
+    }
+
+    async CacheAndLoadBlobLike(blobLike: BlobLike) {
+        const blob = await blobLikeToBlob(blobLike)
+        const type = blob.type
+        if (type === "application/epub+zip" || type === "text/html") {
             if (this.Cache) {
                 const key = `https://jumprocks1.github.io/_/epub/recent`
-                const response = new Response(file, {
+                const response = new Response(blob, {
                     headers: {
-                        "Content-Type": file.type,
-                        "Content-Length": file.size.toString()
+                        "Content-Type": blob.type,
+                        "Content-Length": blob.size.toString()
                     }
                 })
                 await this.Cache.put(key, response)
-                await this.LoadEpubFileBlob(file)
+                await this.LoadEpubFileBlob(blob)
             }
         }
     }
@@ -357,7 +373,7 @@ export default class ReaderPage extends PageComponent {
         if (!target) return
         const index = (target as HTMLElement).paragraphIndex
         if (index !== undefined) {
-            this.ProgressState.paragraphs[this.Reader.CurrentPage] = index
+            this.ProgressState.paragraphs[this.ProgressState.page] = index
             for (const p of this.CurrentPageNode.querySelectorAll("p"))
                 p.classList.toggle("saved-position", p === target)
             this.SavePageState()
