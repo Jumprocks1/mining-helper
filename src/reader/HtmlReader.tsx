@@ -21,11 +21,10 @@ export class HtmlReader extends BaseReader {
     DOMParser: DOMParser = new DOMParser()
     sanitizer: Sanitizer = new Sanitizer()
 
-    async read(blob: Blob) {
-        if (blob.type !== "text/html") throw new ReaderError(`Expected html, got ${blob.type}`)
+    async read(s: string, type: DOMParserSupportedType) {
         const o = document.createElement("div")
         o.classList.add("reader-page-node")
-        const file = this.DOMParser.parseFromString(await blob.text(), blob.type)
+        const file = this.DOMParser.parseFromString(s, type)
         const bodyNode = await this.SelectPageBodyNode(file)
         o.setHTML(bodyNode.getHTML(), { sanitizer: this.sanitizer })
         this.page = o as ReaderPageNode

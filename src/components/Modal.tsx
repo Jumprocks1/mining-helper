@@ -35,6 +35,7 @@ export class Modal extends Component {
         this.OnCloseHandlers ??= []
         this.OnCloseHandlers.push(onClose)
     }
+    Body: HTMLElement = <div className="body" />
 
     constructor(props: ModalProps) {
         super()
@@ -42,19 +43,17 @@ export class Modal extends Component {
 
         const closeButton = <IconButton icon="close" onClick={() => this.Close()} />
 
-
-        const body = <div className="body"></div>
         const inner = <div className="inner-modal">
             <div className="header">
                 <div>{props.header}</div>
                 {this.MinimizeButton}
                 {closeButton}
             </div>
-            {body}
+            {this.Body}
             {props.footer && <div className="footer">{Load(props.footer)}</div>}
         </div>
 
-        appendChild(body, Load(props.body, inner))
+        appendChild(this.Body, Load(props.body, inner))
 
         if (props.getMinimizeTarget) {
             this.getMinimizeTarget = props.getMinimizeTarget

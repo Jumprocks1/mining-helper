@@ -18,6 +18,7 @@ import { BaseReader, ReaderPageNode } from "../../reader/BaseReader"
 import { stringSettingsField } from "../../views/SettingsModal"
 import AdvancedSettingsModal from "../../views/AdvancedSettingsModal"
 import { Library, LibraryBook } from "../../reader/Library"
+import LibraryModal from "./LibraryModal"
 
 const currentPositionKey = "reader-progress"
 
@@ -71,6 +72,7 @@ export default class ReaderPage extends PageComponent {
                     {this.FuriganaButton}
                     {this.JpdbLoadButton}
                     {this.FullscreenButton}
+                    <IconButton icon="local_library" onClick={() => LibraryModal()} tooltip={ActionTooltip("View Library")} />
                     <IconButton icon="settings" onClick={() => OpenReaderSettings()} tooltip={ActionTooltip("Open Settings", ",")} />
                 </div>
                 <div className="row">
@@ -228,9 +230,9 @@ export default class ReaderPage extends PageComponent {
             ev.preventDefault()
             if (ev.dataTransfer) ev.dataTransfer.dropEffect = "link"
         })
-        this.ViewerNode.addEventListener("drop", ev => {
+        this.ViewerNode.addEventListener("drop", async ev => {
             ev.preventDefault()
-            const book = this.Library.BookFromDataTransfer(ev.dataTransfer)
+            const book = await this.Library.BookFromDataTransfer(ev.dataTransfer)
             if (!book) return
             return this.LoadBook(book)
         })
@@ -391,7 +393,7 @@ export default class ReaderPage extends PageComponent {
         }
         if (isEditable(ev.target as HTMLElement)) return
         ev.preventDefault()
-        const book = this.Library.BookFromDataTransfer(ev.clipboardData)
+        const book = await this.Library.BookFromDataTransfer(ev.clipboardData)
         if (!book) return
         return this.LoadBook(book)
     }

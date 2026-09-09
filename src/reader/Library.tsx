@@ -18,6 +18,7 @@ interface LibraryBookBase {
     data?: string | Blob
     cacheKey?: string
     contentType?: "application/epub+zip" | "text/html" | "text/plain"
+    pageCount?: number
 
     progress?: BookProgress
 }
@@ -104,7 +105,7 @@ export class Library {
         if (!book.cacheKey) {
             const blob = getBlob(book)
             if (blob.size < 100_000_000) {
-                book.cacheKey = `https://jumprocks1.github.io/_/reader/blob/${book.key}`
+                book.cacheKey = `https://jumprocks1.github.io/_/reader/blob/${await getBlobHash(blob)}`
                 const response = new Response(blob, {
                     headers: {
                         "Content-Type": blob.type,
@@ -124,9 +125,22 @@ export class Library {
         }
         if (!found) this.books.push(book)
         this.lastBook = book.key
-        await this.Save() // save cache related updates
         this.CurrentBook = book
-        return this.GetReaderForBook(book)
+        const reader = await this.GetReaderForBook(book)
+        book.pageCount = reader.PageCount
+        await this.Save() // save cache related updates
+        return reader
+    }
+
+    async RemoveBook(book: LibraryBook) {
+        for (let i = this.books.length - 1; i >= 0; i--) {
+            if (this.books[i].key === book.key)
+                this.books.splice(i, 1)
+        }
+        const keys = new Set((await this.Cache.keys()).map(e => e.url))
+        for (const book of this.books) if (book.cacheKey) keys.delete(book.cacheKey)
+        for (const e of keys) this.Cache.delete(e)
+        this.Save()
     }
 
     async GetReaderForBook(book: LibraryBook): Promise<BaseReader> {
@@ -137,7 +151,7 @@ export class Library {
             return reader
         } else if (book.contentType === "text/html") {
             const reader = new HtmlReader(book)
-            await reader.read(getBlob(book))
+            await reader.read(await getString(book), book.contentType)
             return reader
         } else if (book.contentType === "text/plain") {
             const d = document.implementation.createHTMLDocument()
@@ -147,14 +161,14 @@ export class Library {
                 e.textContent = l
                 d.body.append(e)
             }
-            book.contentType = "text/html"
-            book.data = d.documentElement.getHTML()
-            return this.GetReaderForBook(book)
+            const reader = new HtmlReader(book)
+            await reader.read(d.documentElement.getHTML(), "text/html")
+            return reader
         }
         throw new Error(`No reader for ${book.contentType}`)
     }
 
-    BookFromDataTransfer(dt: DataTransfer | null): LibraryBook | undefined {
+    async BookFromDataTransfer(dt: DataTransfer | null): Promise<LibraryBook | undefined> {
         if (dt === null) return
         const files = dt.files
         if (files.length === 0) {
@@ -163,11 +177,11 @@ export class Library {
                 if (uri.startsWith("https://")) return { key: uri, source: "url" }
             }
             const html = dt.getData("text/html")
-            if (html) return { key: hash(html), source: "clipboard", contentType: "text/html", data: html }
+            if (html) return { key: await getStringHash(html), source: "clipboard", contentType: "text/html", data: html }
             const text = dt.getData("text/plain")
             if (text) {
                 if (text.startsWith("https://")) return { key: text, source: "url" }
-                return { key: hash(text), data: text, source: "clipboard", contentType: "text/plain" }
+                return { key: await getStringHash(text), data: text, source: "clipboard", contentType: "text/plain" }
             }
         }
         for (let i = 0; i < files.length; i++) {
@@ -202,4 +216,16 @@ async function urlToBlob(url: string) {
     }
     const resp = await fetch(u)
     return resp.blob()
+}
+
+async function getStringHash(s: string): Promise<string> {
+    const enc = new TextEncoder()
+    const hashBuffer = await crypto.subtle.digest("SHA-256", enc.encode(s))
+    // @ts-expect-error toHex was added in 2025
+    return new Uint8Array(hashBuffer).toHex()
+}
+async function getBlobHash(blob: Blob): Promise<string> {
+    const hashBuffer = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer())
+    // @ts-expect-error toHex was added in 2025
+    return new Uint8Array(hashBuffer).toHex()
 }

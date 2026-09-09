@@ -289,6 +289,7 @@ export default class SubtitlesPage extends PageComponent {
     })
     ChangeSubs = IconButtonClass({
         icon: "subtitles_gear", onClick: async () => {
+            // TODO should be able to pick the translation (english) track too
             const tracks = await this.MpvWebSocket.SubtitleTrackList()
             if (tracks) {
                 const modal = OpenModal({
