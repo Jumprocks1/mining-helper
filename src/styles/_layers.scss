@@ -3,3 +3,12 @@
 //    but if we apply that to an element that has `display: flex` outside of a layer, it won't work
 // keep in mind stuff outside of a layer always has priority, even if it would normally have a stronger condition (id vs class)
 @layer base, icons, elements, components, pages, utilities; // TODO move everything into these layers
+
+
+// Currently defining these as:
+// base: stuff that is so basic/fundamental it doesn't need a classname
+// icons: stuff for the Material Icons - only used in AddIcons.tsx
+// elements: classnames that are fundmental but not really components
+// components: reusable classes that are quite powerful
+// pages: styles for a single page
+// utilties: stronger elements - can't really be overriden, so each class should only have a single use

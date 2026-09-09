@@ -18,6 +18,11 @@
     #body-container {
         padding: 16px;
     }
+
+    .clickable {
+        user-select: unset;
+        cursor: pointer;
+    }
 }
 
 #mh-header {

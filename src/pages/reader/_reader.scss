@@ -32,8 +32,11 @@
             display: flex;
             align-items: flex-end;
             flex-direction: column;
-            #page-indicator {
+            #page-indicator-wrapper {
                 font-size: 0.5em;
+                input {
+                    field-sizing: content;
+                }
             }
         }
         #toc {

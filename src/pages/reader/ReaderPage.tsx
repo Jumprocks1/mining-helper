@@ -33,7 +33,8 @@ export default class ReaderPage extends PageComponent {
         {this.HoverRectangleContainer}
     </div>
     ViewerNode: HTMLElement = <div id="reader-page-viewer">{this.PageWrapper}</div>
-    PageIndicator: HTMLElement = <div id="page-indicator" tooltip={() => this.PageTooltip()}>0 / 0</div>
+    PageIndicator: HTMLElement = <div id="page-indicator" onclick={() => this.JumpToPage()} className="clickable" tooltip={() => this.PageTooltip()}>0 / 0</div>
+    PageIndicatorWrapper: HTMLElement = <div id="page-indicator-wrapper">{this.PageIndicator}</div>
     ToCBody: HTMLElement = <div />
     ToC: HTMLElement = <div id="toc">
         <h3>Table of Contents</h3>
@@ -73,7 +74,7 @@ export default class ReaderPage extends PageComponent {
                     <IconButton icon="settings" onClick={() => OpenReaderSettings()} tooltip={ActionTooltip("Open Settings", ",")} />
                 </div>
                 <div className="row">
-                    {this.PageIndicator}
+                    {this.PageIndicatorWrapper}
                 </div>
                 <div className="row">
                     <IconButton onClick={async () => {
@@ -150,11 +151,12 @@ export default class ReaderPage extends PageComponent {
 
     PageTooltip() {
         if (!this.Reader) return
+        if (this.Reader.PageCount === 1) return "Pagination unavailable"
+        let description: string | undefined
         if (this.Reader instanceof EpubReader) {
-            const currentPage = this.ProgressState.page
-            const spine = this.Reader.spine[currentPage]
-            return spine.href
-        } else return "Single page view"
+            description = this.Reader.spine[this.ProgressState.page].href
+        }
+        return ActionTooltip("Click to jump", undefined, description)
     }
 
     override Load = async () => {
@@ -467,6 +469,19 @@ export default class ReaderPage extends PageComponent {
             this.FullscreenButton.textContent = "fullscreen"
             this.FullscreenButton.tooltip = ActionTooltip("Fullscreen")
         }
+    }
+
+    JumpToPage() {
+        const commit = () => {
+            this.PageIndicatorWrapper.replaceChildren(this.PageIndicator)
+            const value = Math.floor(parseInt(input.value)) - 1
+            if (isFinite(value)) this.LoadPage(value)
+        }
+        const input = <input type="string" defaultValue={(this.ProgressState.page + 1).toString()}
+            onblur={commit} onkeydown={ev => { if (ev.key === "Enter") commit() }} /> as HTMLInputElement
+        this.PageIndicatorWrapper.replaceChildren(input)
+        input.focus()
+        input.select()
     }
 }
 
