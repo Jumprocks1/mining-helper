@@ -129,7 +129,11 @@ async function getNoteInfo(kanji: string): Promise<NoteBase> {
                 hasKana = true
 
         }
-        return [kanjiCount > 1 ? 1 : 0, hasKana ? 1 : 0, intervals[i]] as const
+        // when there's multiple kanji, we don't really care if it has kana or not
+        // 1 kanji no kana = 0
+        // 1 kanji has kana = 1
+        // multiple kanji = 2
+        return [kanjiCount > 1 ? 2 : hasKana ? 1 : 0, intervals[i]] as const
     })
     const sortedNotesIndices: number[] = []
     for (let i = 0; i < noteInfo.length; i++)
@@ -137,8 +141,8 @@ async function getNoteInfo(kanji: string): Promise<NoteBase> {
     sortedNotesIndices.sort((ai, bi) => {
         const a = sortInfo[ai]
         const b = sortInfo[bi]
-        // 3rd one is intentionally inverted
-        return (a[0] - b[0] || a[1] - b[1] || b[2] - a[2])
+        // 2nd one is intentionally inverted
+        return (a[0] - b[0] || b[1] - a[1])
     })
     return noteInfoToKanjiNote(kanji, sortedNotesIndices.map(e => noteInfo[e]), res)
 }
