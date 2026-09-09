@@ -1,6 +1,6 @@
 import IconButton, { Icon } from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
-import { getSetting } from "../../core/Settings"
+import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../../core/Settings"
 import { Children } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import AnkiConnect, { AnkiNote, NoteBase } from "../../utils/AnkiConnect"
@@ -104,43 +104,68 @@ const main = async () => {
 }
 
 async function getNoteInfo(kanji: string): Promise<NoteBase> {
-    // TODO this assumes some fields in the vocab deck when we could be pulling those from settings
-
     const res = await serverPostJson<KanjiInfo>(`kanji-info:${kanji}`)
     const vocabDeckName = await getSetting("targetAnkiDeck")
 
     const ankiFields = await getSetting("ankiFields")
+    function fieldName(key: AnkiFieldKey) {
+        return ankiFields[key] ?? AnkiFieldInfo[key].name
+    }
 
-    const cardIds = await AnkiConnect.call("findCards", { query: `deck:\"${vocabDeckName}\" ${ankiFields["word"]}:*${kanji}*` })
+    const cardIds = await AnkiConnect.call("findCards", { query: `deck:\"${vocabDeckName}\" ${fieldName("word")}:*${kanji}*` })
     const noteIds = await AnkiConnect.call("cardsToNotes", { cards: cardIds })
     const noteInfo = await AnkiConnect.call("notesInfo", { notes: noteIds })
     const intervals = await AnkiConnect.call("getIntervals", { cards: cardIds })
-    const notesWithIntervals: [interval: number, AnkiNote][] = intervals.map((e, i) => [e, noteInfo[i]])
-    notesWithIntervals.sort((a, b) => b[0] - a[0])
-    return noteInfoToKanjiNote(kanji, notesWithIntervals, res)
+
+    const sortInfo = noteInfo.map((e, i) => {
+        let kanjiCount = 0
+        let hasKana = false
+        const kanji = e.fields[fieldName("word")]!.value
+        for (let i = 0; i < kanji.length; i++) {
+            const type = unicodeType(kanji, i)
+            if (type === UnicodeCharacterType.Kanji)
+                kanjiCount += 1
+            else if (type === UnicodeCharacterType.Kana)
+                hasKana = true
+
+        }
+        return [kanjiCount > 1 ? 1 : 0, hasKana ? 1 : 0, intervals[i]] as const
+    })
+    const sortedNotesIndices: number[] = []
+    for (let i = 0; i < noteInfo.length; i++)
+        sortedNotesIndices.push(i)
+    sortedNotesIndices.sort((ai, bi) => {
+        const a = sortInfo[ai]
+        const b = sortInfo[bi]
+        // 3rd one is intentionally inverted
+        return (a[0] - b[0] || a[1] - b[1] || b[2] - a[2])
+    })
+    return noteInfoToKanjiNote(kanji, sortedNotesIndices.map(e => noteInfo[e]), res)
 }
 
+// TODO this method doesn't actually use notesWithIntervals, it really needs sortedNotes
 // This method shouldn't do anything expensive (network calls, large filters) so it can be bulk called
-function noteInfoToKanjiNote(kanji: string, notesWithIntervals: [interval: number, AnkiNote][], kanjiInfo: KanjiInfo): NoteBase {
+function noteInfoToKanjiNote(kanji: string, sortedNotes: AnkiNote[], kanjiInfo: KanjiInfo): NoteBase {
     // these should be all different readings, if there's <5, it will pull whatever has the best interval
+    // TODO this assumes some fields in the vocab deck when we could be pulling those from settings
     const examples: AnkiNote[] = []
 
     const foundReadings = new Set<string>()
-    for (const note of notesWithIntervals) {
-        const furigana = note[1].fields["Word Furigana"]?.value
+    for (const note of sortedNotes) {
+        const furigana = note.fields["Word Furigana"]?.value
         if (furigana) {
             const reading = getReadingFor(kanji, furigana)
             if (reading) {
                 if (!foundReadings.has(reading)) {
                     foundReadings.add(reading)
-                    examples.push(note[1])
+                    examples.push(note)
                 }
             }
         }
     }
-    for (const note of notesWithIntervals) {
+    for (const note of sortedNotes) {
         if (examples.length >= 5) break
-        if (!examples.includes(note[1])) examples.push(note[1])
+        if (!examples.includes(note)) examples.push(note)
     }
 
     const simpleExamples = examples.map(e => {
