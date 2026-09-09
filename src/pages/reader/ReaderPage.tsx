@@ -93,6 +93,7 @@ export default class ReaderPage extends PageComponent {
 
 
         document.addEventListener("keydown", this.DocumentKeydown)
+        document.addEventListener("paste", this.DocumentPaste)
 
         // TODO can share a lot of this with subtitles.tsx
         this.ViewerNode.addEventListener("dragover", ev => {
@@ -343,6 +344,7 @@ export default class ReaderPage extends PageComponent {
 
     override Dispose() {
         document.removeEventListener("keydown", this.DocumentKeydown)
+        document.removeEventListener("paste", this.DocumentPaste)
     }
 
     async HandleDataTransfer(dt: DataTransfer | null) {
@@ -351,9 +353,13 @@ export default class ReaderPage extends PageComponent {
         if (files.length === 0) {
             const uri = dt.getData("text/uri-list")
             // This doesn't end up working most of the time due to CORS
-            if (uri && uri.startsWith("https://")) {
-                return this.CacheAndLoadBlobLike(uri)
+            if (uri) {
+                if (uri.startsWith("https://")) return this.CacheAndLoadBlobLike(uri)
             }
+            const html = dt.getData("text/html")
+            if (html) return this.CacheAndLoadBlobLike(new Blob([html], { type: "text/html" }))
+            const text = dt.getData("text/plain")
+            if (text) return this.CacheAndLoadBlobLike(new Blob([text], { type: "text/plain" }))
             return
         }
         return this.CacheAndLoadBlobLike(files[0])
@@ -362,7 +368,7 @@ export default class ReaderPage extends PageComponent {
     async CacheAndLoadBlobLike(blobLike: BlobLike) {
         const blob = await blobLikeToBlob(blobLike)
         const type = blob.type
-        if (type === "application/epub+zip" || type === "text/html") {
+        if (type === "application/epub+zip" || type === "text/html" || type === "text/plain") {
             if (this.Cache) {
                 const key = `https://jumprocks1.github.io/_/reader/recent`
                 const response = new Response(blob, {
@@ -381,6 +387,8 @@ export default class ReaderPage extends PageComponent {
     DocumentKeydown = (ev: KeyboardEvent) => {
         if (disallowGlobalInput(ev)) return
         if (handleKeyDown(ev)) return
+
+        if (ev.ctrlKey || ev.shiftKey || ev.altKey || ev.metaKey) return
 
         const key = ev.key.toLowerCase()
         let handled = true
@@ -407,6 +415,14 @@ export default class ReaderPage extends PageComponent {
             handled = false
         }
         if (handled) ev.preventDefault()
+    }
+    DocumentPaste = (ev: ClipboardEvent) => {
+        function isEditable(el: HTMLElement) {
+            return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el.isContentEditable
+        }
+        if (isEditable(ev.target as HTMLElement)) return
+        ev.preventDefault()
+        return this.HandleDataTransfer(ev.clipboardData)
     }
 
     SaveParagraph() {
