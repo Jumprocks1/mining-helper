@@ -252,6 +252,8 @@ export default class ReaderPage extends PageComponent {
         paragraphs: Record<number, number | undefined> // map of page => paragraph progress
     } {
         // TODO this will need something per file
+        // Think we move away from Blob's and instead have an object like
+        // {key,name?,blob,type}
         const s = localStorage.getItem(currentPositionKey)
         if (s) {
             try {
@@ -361,7 +363,10 @@ export default class ReaderPage extends PageComponent {
             const html = dt.getData("text/html")
             if (html) return this.CacheAndLoadBlobLike(new Blob([html], { type: "text/html" }))
             const text = dt.getData("text/plain")
-            if (text) return this.CacheAndLoadBlobLike(new Blob([text], { type: "text/plain" }))
+            if (text) {
+                if (text.startsWith("https://")) return this.CacheAndLoadBlobLike(text)
+                return this.CacheAndLoadBlobLike(new Blob([text], { type: "text/plain" }))
+            }
             return
         }
         return this.CacheAndLoadBlobLike(files[0])

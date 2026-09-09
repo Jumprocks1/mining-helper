@@ -7,7 +7,7 @@ export default () => {
         <a className="button anki" href="anki.html">Anki</a>
         <a className="button kanji" href="kanji.html">Kanji</a>
         {!GITHUB_PAGES && <a className="button ss" href="ss.html">Sentences</a>}
-        {!GITHUB_PAGES && <a className="button reader" href="reader.html">Reader</a>}
+        <a className="button reader" href="reader.html">Reader</a>
         <a className="button setup-link" href="setup.html">Setup</a>
     </div>
 }

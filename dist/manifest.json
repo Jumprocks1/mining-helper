@@ -24,6 +24,9 @@
   "host_permissions": [
     "https://receptomanijalogi.web.app/*"
   ],
+  "optional_host_permissions": [
+    "*://*/*"
+  ],
   "content_scripts": [
     {
       "matches": [
