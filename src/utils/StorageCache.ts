@@ -78,7 +78,7 @@ export default class StorageCache {
         if (!found) {
             if (get === undefined) return undefined
             const value = await get()
-            this.Store(key, value) // not awaited
+            await this.Store(key, value) // await since otherwise modifications to `value` would get saved here
             return value
         } else {
             return found

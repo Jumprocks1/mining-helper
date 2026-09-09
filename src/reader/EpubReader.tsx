@@ -1,5 +1,6 @@
 import { BlobReader, BlobWriter, type FileEntry, TextWriter, ZipReader } from '@zip.js/zip.js/lib/zip-core.js'
 import { BaseReader, ReaderPageNode, ReaderError } from './BaseReader'
+import { LibraryBook } from './Library'
 
 interface EpubItem {
     href: string
@@ -30,8 +31,8 @@ export class EpubReader extends BaseReader {
     }
     settings: EpubSettings
     sanitizer: Sanitizer = new Sanitizer()
-    constructor(settings?: EpubSettings) {
-        super()
+    constructor(book: LibraryBook, settings?: EpubSettings) {
+        super(book)
         this.settings = settings ?? {}
         this.setupSanitizer()
     }

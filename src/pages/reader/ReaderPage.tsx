@@ -15,9 +15,9 @@ import { getAnkiFurigana } from "../anki/CardList"
 import { HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "../subtitles/JpHoverTooltip"
 import { AddFurigana } from "./furigana"
 import { BaseReader, ReaderPageNode } from "../../reader/BaseReader"
-import readBlob, { BlobLike, blobLikeToBlob } from "../../reader/readBlob"
 import { stringSettingsField } from "../../views/SettingsModal"
 import AdvancedSettingsModal from "../../views/AdvancedSettingsModal"
+import { Library, LibraryBook } from "../../reader/Library"
 
 const currentPositionKey = "reader-progress"
 
@@ -79,11 +79,11 @@ export default class ReaderPage extends PageComponent {
                 <div className="row">
                     <IconButton onClick={async () => {
                         if (!this.Reader) return
-                        await this.LoadPage(this.ProgressState.page - 1)
+                        await this.LoadPage(this.Reader.Page - 1)
                     }} icon="arrow_back" tooltip={ActionTooltip("Previous Page", "←")} />
                     <IconButton onClick={async () => {
                         if (!this.Reader) return
-                        await this.LoadPage(this.ProgressState.page + 1)
+                        await this.LoadPage(this.Reader.Page + 1)
                     }} icon="arrow_forward" tooltip={ActionTooltip("Next Page", "→")} />
                 </div>
             </div>
@@ -91,20 +91,6 @@ export default class ReaderPage extends PageComponent {
             {this.ViewerNode}
         </>
         this.Node = body
-
-
-        document.addEventListener("keydown", this.DocumentKeydown)
-        document.addEventListener("paste", this.DocumentPaste)
-
-        // TODO can share a lot of this with subtitles.tsx
-        this.ViewerNode.addEventListener("dragover", ev => {
-            ev.preventDefault()
-            if (ev.dataTransfer) ev.dataTransfer.dropEffect = "link"
-        })
-        this.ViewerNode.addEventListener("drop", ev => {
-            ev.preventDefault()
-            return this.HandleDataTransfer(ev.dataTransfer)
-        })
 
         let hoverParagraph: HTMLElement | undefined
         let hoverElement: HTMLElement | undefined
@@ -117,10 +103,10 @@ export default class ReaderPage extends PageComponent {
             }
             if (hoverElement === undefined) {
                 const bookmarkButton = <IconButton icon="bookmark" tooltip={ActionTooltip("Bookmark", "S")}
-                    onClick={() => {
+                    onClick={async () => {
                         const index = hoverParagraph?.paragraphIndex
                         if (index === undefined) return
-                        this.BookmarkParagraph(index)
+                        await this.BookmarkParagraph(index)
                     }} />
                 bookmarkButton.tooltipConfig = { delay: 500 } // this one is really annoying without a delay
                 hoverElement = <div id="paragraph-buttons">
@@ -147,23 +133,25 @@ export default class ReaderPage extends PageComponent {
         getAnkiFurigana()
     }
 
-    Cache?: Cache
-
     PageTooltip() {
         if (!this.Reader) return
         if (this.Reader.PageCount === 1) return "Pagination unavailable"
         let description: string | undefined
         if (this.Reader instanceof EpubReader) {
-            description = this.Reader.spine[this.ProgressState.page].href
+            description = this.Reader.spine[this.Reader.Page].href
         }
         return ActionTooltip("Click to jump", undefined, description)
     }
 
+    Library: Library = undefined!
+
     override Load = async () => {
-        this.Cache = await caches.open("reader")
-        const response = await this.Cache.match(`https://jumprocks1.github.io/_/reader/recent`)
-        if (response) {
-            await this.LoadFileBlob(await response.blob())
+        this.Library = await Library.Instance()
+        if (this.Library.lastBook) {
+            const book = await this.Library.LoadBook(this.Library.lastBook)
+            if (book && book.data) {
+                await this.LoadBook(book)
+            }
         }
 
         // if this is called before the page is synchronously loaded,
@@ -231,21 +219,34 @@ export default class ReaderPage extends PageComponent {
             invert: false,
             onChange: state => UpdateHoverBox(this.HoverRectangleContainer, state)
         })
+
+        document.addEventListener("keydown", this.DocumentKeydown)
+        document.addEventListener("paste", this.DocumentPaste)
+
+        // TODO can share a lot of this with subtitles.tsx
+        this.ViewerNode.addEventListener("dragover", ev => {
+            ev.preventDefault()
+            if (ev.dataTransfer) ev.dataTransfer.dropEffect = "link"
+        })
+        this.ViewerNode.addEventListener("drop", ev => {
+            ev.preventDefault()
+            const book = this.Library.BookFromDataTransfer(ev.dataTransfer)
+            if (!book) return
+            return this.LoadBook(book)
+        })
     }
 
-    // currently supports epub/html
-    async LoadFileBlob(blob: Blob) {
+    async LoadBook(book: LibraryBook) {
+        if (book === undefined) return
         // TODO would be good to use an actual Loader call here - this would give support for error handling on page load
         // Might be weird if it's nested within an outer loader on inital page load though
         const node = <div className="loader" /> as ReaderPageNode
         replaceWith(this.CurrentPageNode!, node)
         this.CurrentPageNode = node
-        this.Reader = await readBlob(blob)
+        this.Reader = await this.Library.OpenBook(book)
         this.LoadToC()
-        await this.LoadPage(this.ProgressState.page, true)
+        await this.LoadPage(book.progress?.page ?? 0, true)
     }
-
-    ProgressState = this.GetSavedState()
 
     GetSavedState(): {
         page: number,
@@ -264,21 +265,18 @@ export default class ReaderPage extends PageComponent {
         }
         return { page: 0, paragraphs: {} }
     }
-    SavePageState() {
-        localStorage.setItem(currentPositionKey, JSON.stringify(this.ProgressState))
-    }
 
     async LoadPage(page: number, initial: boolean = false) {
         if (!this.Reader) return
         const totalPages = this.Reader.PageCount
         page = Math.max(Math.min(page, totalPages - 1), 0)
-        if (page === this.ProgressState.page && !initial) return
+        if (page === this.Reader.ProgressState.page && !initial) return
         this.JpdbLoadButton.Disabled = true
         this.FuriganaButton.Disabled = true
         this.PageIndicator.textContent = `${page + 1} / ${totalPages}`
-        if (this.ProgressState.page !== page) {
-            this.ProgressState.page = page
-            this.SavePageState()
+        if (this.Reader.ProgressState.page !== page) {
+            this.Reader.ProgressState.page = page
+            await this.Library.Save()
         }
         const pageNode = await this.Reader.ReadPage(page)
         this.EnhancePageNode(pageNode)
@@ -295,7 +293,7 @@ export default class ReaderPage extends PageComponent {
                 tocPoints.item(i).classList.toggle("active", page >= e.spinePage && page < nextTocPage)
             }
         }
-        const paragraph = this.ProgressState.paragraphs[page] ?? 0
+        const paragraph = this.Reader.Paragraph
         if (paragraph === 0) {
             this.ViewerNode.scrollTo({ top: 0 })
         } else {
@@ -308,14 +306,14 @@ export default class ReaderPage extends PageComponent {
 
     async NextParagraph(invert: boolean) {
         if (!this.Reader) return
-        const oldParagraph = this.ProgressState.paragraphs[this.ProgressState.page] ?? 0
+        const oldParagraph = this.Reader.Paragraph
         const newParagraph = oldParagraph + (invert ? -1 : 1)
         const totalParagraphs = this.CurrentPageNode.querySelectorAll("p")
         if (newParagraph < 0)
-            return this.LoadPage(this.ProgressState.page - 1)
+            return this.LoadPage(this.Reader.Page - 1)
         if (newParagraph >= totalParagraphs.length)
-            return this.LoadPage(this.ProgressState.page + 1)
-        this.ProgressState.paragraphs[this.ProgressState.page] = newParagraph
+            return this.LoadPage(this.Reader.Page + 1)
+        this.Reader.ProgressState.paragraphs[this.Reader.Page] = newParagraph
         let oldParagraphNode: HTMLElement | undefined
         let newParagraphNode: HTMLElement | undefined
         for (const p of this.CurrentPageNode.querySelectorAll("p")) {
@@ -326,22 +324,24 @@ export default class ReaderPage extends PageComponent {
         if (oldParagraphNode && newParagraphNode) {
             this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldParagraphNode.getBoundingClientRect().top)
         }
-        this.SavePageState() // TODO this is also called inside LoadPage
+        await this.Library.Save() // TODO this is also called inside LoadPage
     }
 
     LoadToC() {
         const reader = this.Reader
-        if (!reader || !(reader instanceof EpubReader)) return
-        const toc = reader.toc
+        if (!reader) return
         const o: Node[] = []
-        for (let i = 0; i < toc.points.length; i++) {
-            const e = toc.points[i]
-            const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : reader.spine.length
-            o.push(<div className="link-button toc-point"
-                onclick={() => this.LoadPage(e.spinePage)}
-                tooltip={`Click to view\nPages ${e.spinePage + 1}-${nextTocPage}`}>
-                {e.label}
-            </div>)
+        if (reader instanceof EpubReader) {
+            const toc = reader.toc
+            for (let i = 0; i < toc.points.length; i++) {
+                const e = toc.points[i]
+                const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : reader.spine.length
+                o.push(<div className="link-button toc-point"
+                    onclick={() => this.LoadPage(e.spinePage)}
+                    tooltip={`Click to view\nPages ${e.spinePage + 1}-${nextTocPage}`}>
+                    {e.label}
+                </div>)
+            }
         }
         replaceChildren(this.ToCBody, o)
     }
@@ -349,45 +349,6 @@ export default class ReaderPage extends PageComponent {
     override Dispose() {
         document.removeEventListener("keydown", this.DocumentKeydown)
         document.removeEventListener("paste", this.DocumentPaste)
-    }
-
-    async HandleDataTransfer(dt: DataTransfer | null) {
-        if (dt === null) return
-        const files = dt.files
-        if (files.length === 0) {
-            const uri = dt.getData("text/uri-list")
-            // This doesn't end up working most of the time due to CORS
-            if (uri) {
-                if (uri.startsWith("https://")) return this.CacheAndLoadBlobLike(uri)
-            }
-            const html = dt.getData("text/html")
-            if (html) return this.CacheAndLoadBlobLike(new Blob([html], { type: "text/html" }))
-            const text = dt.getData("text/plain")
-            if (text) {
-                if (text.startsWith("https://")) return this.CacheAndLoadBlobLike(text)
-                return this.CacheAndLoadBlobLike(new Blob([text], { type: "text/plain" }))
-            }
-            return
-        }
-        return this.CacheAndLoadBlobLike(files[0])
-    }
-
-    async CacheAndLoadBlobLike(blobLike: BlobLike) {
-        const blob = await blobLikeToBlob(blobLike)
-        const type = blob.type
-        if (type === "application/epub+zip" || type === "text/html" || type === "text/plain") {
-            if (this.Cache) {
-                const key = `https://jumprocks1.github.io/_/reader/recent`
-                const response = new Response(blob, {
-                    headers: {
-                        "Content-Type": blob.type,
-                        "Content-Length": blob.size.toString()
-                    }
-                })
-                await this.Cache.put(key, response)
-                await this.LoadFileBlob(blob)
-            }
-        }
     }
 
     TooltipHandler?: JpHoverTooltipHandler
@@ -411,9 +372,10 @@ export default class ReaderPage extends PageComponent {
             }
         } else if (key === "arrowleft") {
             if (!this.Reader) return
-            this.LoadPage(this.ProgressState.page - 1)
+            this.LoadPage(this.Reader.Page - 1)
         } else if (key === "arrowright") {
-            this.LoadPage(this.ProgressState.page + 1)
+            if (!this.Reader) return
+            this.LoadPage(this.Reader.Page + 1)
         } else if (key === "arrowdown") {
             this.NextParagraph(false)
         } else if (key === "arrowup") {
@@ -423,35 +385,39 @@ export default class ReaderPage extends PageComponent {
         }
         if (handled) ev.preventDefault()
     }
-    DocumentPaste = (ev: ClipboardEvent) => {
+    DocumentPaste = async (ev: ClipboardEvent) => {
         function isEditable(el: HTMLElement) {
             return el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement || el.isContentEditable
         }
         if (isEditable(ev.target as HTMLElement)) return
         ev.preventDefault()
-        return this.HandleDataTransfer(ev.clipboardData)
+        const book = this.Library.BookFromDataTransfer(ev.clipboardData)
+        if (!book) return
+        return this.LoadBook(book)
     }
 
-    SaveParagraph() {
+    async SaveParagraph() {
         if (!this.Reader) return
         // This is a bit sketchy, but that's the fun part
         const target = document.querySelector(".reader-page-node p:hover")
         if (!target) return
         const index = (target as HTMLElement).paragraphIndex
-        if (index !== undefined) this.BookmarkParagraph(index)
+        if (index !== undefined) await this.BookmarkParagraph(index)
     }
 
-    BookmarkParagraph(index: number) {
-        this.ProgressState.paragraphs[this.ProgressState.page] = index
+    async BookmarkParagraph(index: number) {
+        if (!this.Reader) return
+        this.Reader.ProgressState.paragraphs[this.Reader.Page] = index
         for (const p of this.CurrentPageNode.querySelectorAll("p"))
             p.classList.toggle("saved-position", p.paragraphIndex === index)
-        this.SavePageState()
+        await this.Library.Save()
     }
 
     // Stuff that doesn't really belong in the Reader classes
     EnhancePageNode(node: ReaderPageNode) {
+        if (!this.Reader) return
         let i = 0;
-        const paragraph = this.ProgressState.paragraphs[this.ProgressState.page] ?? 0
+        const paragraph = this.Reader.Paragraph ?? 0
         for (const p of node.querySelectorAll("p")) {
             p.paragraphIndex = i
             p.appendChild(<div className="paragraph-index">{i + 1}</div>)
@@ -482,7 +448,7 @@ export default class ReaderPage extends PageComponent {
             const value = Math.floor(parseInt(input.value)) - 1
             if (isFinite(value)) this.LoadPage(value)
         }
-        const input = <input type="string" defaultValue={(this.ProgressState.page + 1).toString()}
+        const input = <input type="string" defaultValue={(this.Reader?.Page ?? 0 + 1).toString()}
             onblur={commit} onkeydown={ev => { if (ev.key === "Enter") commit() }} /> as HTMLInputElement
         this.PageIndicatorWrapper.replaceChildren(input)
         input.focus()

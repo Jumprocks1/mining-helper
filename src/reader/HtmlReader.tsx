@@ -1,4 +1,5 @@
 import { BaseReader, ReaderPageNode, ReaderError } from './BaseReader'
+import { LibraryBook } from './Library'
 
 
 export class HtmlReader extends BaseReader {
@@ -12,8 +13,8 @@ export class HtmlReader extends BaseReader {
 
     page?: ReaderPageNode
 
-    constructor() {
-        super()
+    constructor(book: LibraryBook) {
+        super(book)
         this.setupSanitizer()
     }
 
