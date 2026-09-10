@@ -95,6 +95,7 @@ export interface JpHoverTooltipHandler {
         [HTMLElement | Range, JpdbVocabulary, JpdbToken?] | undefined,
     invert: boolean
     onChange?: (hoverState: JpHoverTooltipState | undefined) => void
+    forceSetHoverState?: (hoverState: JpHoverTooltipState) => void
 }
 const kanjiTooltipHandlers: JpHoverTooltipHandler[] = []
 let globalHandlerRegistered = false
@@ -224,6 +225,7 @@ export function RegisterJpHoverTooltip(handler: JpHoverTooltipHandler) {
         document.addEventListener("keyup", keyupdown)
         document.addEventListener("keydown", keyupdown)
     }
+    handler.forceSetHoverState = state => setHoverState(state, false)
     kanjiTooltipHandlers.push(handler)
     onDeath(handler.body, () => {
         for (let i = kanjiTooltipHandlers.length - 1; i >= 0; i--) {
@@ -257,6 +259,7 @@ export function UpdateHoverBox(hoverRectangleContainer: HoverRectangleContainer,
     while (children.length < rects.length) {
         hoverRectangleContainer.append(<div className="hover-rectangle" />)
     }
+    const state = getVocabState(vocab, { trimKana: true })
     for (let i = 0; i < children.length; i++) {
         const hoverRectangle = children[i] as HTMLElement
         if (i >= rects.length) {
@@ -266,16 +269,20 @@ export function UpdateHoverBox(hoverRectangleContainer: HoverRectangleContainer,
 
         hoverRectangle.className = "hover-rectangle" // remove all other classes
         const rect = rects[i]
-        if (vocab) AddStateClass(hoverRectangle, vocab)
+        AddStateClassFromState(hoverRectangle, state)
         hoverRectangle.style.width = rect.width + "px"
         hoverRectangle.style.height = rect.height + "px"
         hoverRectangle.style.top = rect.top - parentRect.top + "px"
         hoverRectangle.style.left = rect.left - parentRect.left + "px"
     }
+    return state
 }
 
 export function AddStateClass(el: HTMLElement, vocab: JpdbVocabulary) {
     const state = getVocabState(vocab, { trimKana: true })
+    AddStateClassFromState(el, state)
+}
+function AddStateClassFromState(el: HTMLElement, state: VocabState) {
     if (state === VocabState.Known)
         el.classList.add("known")
     else if (state === VocabState.Similar || state === VocabState.AltSpelling)
