@@ -117,6 +117,10 @@
                     align-items: center;
                 }
             }
+            input {
+                field-sizing: content;
+                min-width: 10em;
+            }
         }
     }
 }

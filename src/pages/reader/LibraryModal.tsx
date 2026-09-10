@@ -50,6 +50,23 @@ export default () => {
                     const type = e.contentType === "text/html" ? "HTML" :
                         e.contentType === "application/epub+zip" ? "EPUB" :
                             e.contentType === "text/plain" ? "Text" : e.contentType
+                    const nameCell = <td className="clickable" onclick={() => {
+                        // TODO I like this pattern, should make it reusable
+                        if (nameCell.querySelector("input")) return
+                        let committed = false
+                        const commit = async () => {
+                            if (committed) return
+                            committed = true
+                            e.name = input.value.trim()
+                            input.replaceWith(e.name)
+                            await library.Save()
+                        }
+                        const input = <input type="string" onblur={commit} onkeydown={ev => { if (ev.key === "Enter") commit() }} /> as HTMLInputElement
+                        input.value = nameCell.textContent
+                        nameCell.replaceChildren(input)
+                        input.focus()
+                        input.select()
+                    }}>{name}</td>
                     const row = <tr>
                         <td>
                             <div className="button-row">
@@ -68,7 +85,7 @@ export default () => {
                                     disabled={!canOpen} tooltip={canOpen ? "Open" : "Can't open, missing from cache"} />
                             </div>
                         </td>
-                        <td>{name}</td>
+                        {nameCell}
                         <td>{progress}</td>
                         <td>{type}</td>
                         <td>{e.source}</td>
@@ -85,17 +102,16 @@ export default () => {
     }
 
     const addUrlNode = <button onclick={() => {
-        let adding = false
+        let committed = false
         const commit = async () => {
-            if (adding) return
-            adding = true
+            if (committed) return
+            committed = true
             const value = input.value
             input.replaceWith(addUrlNode)
             const library = await Library.Instance()
             library.books.push({ key: value, source: value.includes("$page") ? "url-template" : "url" })
             await library.Save()
             modal.Body.replaceChildren(<Loader load={loadBody} />)
-            adding = false
         }
         const input = <input type="string" onblur={commit} onkeydown={ev => { if (ev.key === "Enter") commit() }} /> as HTMLInputElement
         addUrlNode.replaceWith(input)

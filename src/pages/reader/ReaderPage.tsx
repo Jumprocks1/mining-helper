@@ -436,7 +436,10 @@ export default class ReaderPage extends PageComponent {
     }
 
     JumpToPage() {
+        let committed = false
         const commit = () => {
+            if (committed) return
+            committed = true
             this.PageIndicatorWrapper.replaceChildren(this.PageIndicator)
             const value = Math.floor(parseInt(input.value)) - 1
             if (isFinite(value)) this.LoadPage(value)
