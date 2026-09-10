@@ -1,5 +1,5 @@
 import IconButton, { Icon } from "../../components/basic/IconButton"
-import Loader, { Load } from "../../components/Loader"
+import Loader from "../../components/Loader"
 import { OpenModal } from "../../components/Modal"
 import { CurrentPage } from "../../framework/Router"
 import { Library } from "../../reader/Library"
@@ -11,11 +11,11 @@ export default () => {
         const library = await Library.Instance()
         const books = library.books
         if (books.length === 0) return "No books loaded. Drag + drop on reader page to load."
-        const cacheKeys = new Map<string, string>()
+        const cacheKeys = new Map<string, number>()
         for (const e of (await library.Cache.keys())) {
             const request = await library.Cache.match(e.url)
             if (!request) continue
-            cacheKeys.set(e.url, byteFormat(request.headers.get("content-length")) ?? "N/A")
+            cacheKeys.set(e.url, parseInt(request.headers.get("content-length") ?? "0"))
         }
         return <table>
             <thead>
@@ -25,13 +25,21 @@ export default () => {
                     <th>Page</th>
                     <th>Type</th>
                     <th>Source</th>
-                    <th>Cached?</th>
+                    <th>Cached</th>
                 </tr>
             </thead>
             <tbody>
                 {books.map(e => {
-                    const cached = e.cacheKey && cacheKeys.get(e.cacheKey)
-                    const canOpen = (e.cacheKey && cacheKeys.has(e.cacheKey)) || e.source === "url"
+                    let cachedSize = e.cacheKey !== undefined && cacheKeys.get(e.cacheKey)
+                    if (cachedSize !== undefined && cachedSize !== false && e.source === "url-template") {
+                        const key = e.key.toString()
+                        const replaceIndex = key.indexOf("$page")
+                        if (replaceIndex !== -1) {
+                            const s = key.substring(0, replaceIndex)
+                            for (const k of cacheKeys) if (k[0].startsWith(s)) cachedSize += k[1]
+                        }
+                    }
+                    const canOpen = (e.cacheKey && cacheKeys.has(e.cacheKey)) || e.source === "url" || e.source === "url-template"
                     let name = e.name
                     // Could name these like 1/2/3 as they come in eventually
                     if (!name && e.source === "clipboard") name = "Clipboard"
@@ -65,8 +73,7 @@ export default () => {
                         <td>{e.source}</td>
                         <td className="cached">
                             <div>
-                                {!cached && <Icon className="error" icon="close" />}
-                                {cached}
+                                {cachedSize ? byteFormat(cachedSize) : <Icon className="error" icon="close" />}
                             </div>
                         </td>
                     </tr>
@@ -83,9 +90,7 @@ export default () => {
     return modal
 }
 
-function byteFormat(s: string | null | undefined) {
-    if (!s) return
-    const bytes = parseInt(s)
+function byteFormat(bytes: number) {
     if (isNaN(bytes)) return
     const sizes = ["B", "KB", "MB", "GB"]
     let k = 1

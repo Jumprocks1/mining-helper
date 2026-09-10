@@ -7,6 +7,7 @@ export type ReaderPageNode = Brand<HTMLDivElement, "reader-page-node"> & { jpdb?
 
 export abstract class BaseReader {
     abstract get PageCount(): number
+    get PageLimit() { return this.PageCount }
     abstract ReadPage(page: number): Promise<ReaderPageNode>
 
     Book: LibraryBook

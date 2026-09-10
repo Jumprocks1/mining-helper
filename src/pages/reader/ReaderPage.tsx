@@ -250,37 +250,20 @@ export default class ReaderPage extends PageComponent {
         await this.LoadPage(book.progress?.page ?? 0, true)
     }
 
-    GetSavedState(): {
-        page: number,
-        paragraphs: Record<number, number | undefined> // map of page => paragraph progress
-    } {
-        // TODO this will need something per file
-        // Think we move away from Blob's and instead have an object like
-        // {key,name?,blob,type}
-        const s = localStorage.getItem(currentPositionKey)
-        if (s) {
-            try {
-                const o = JSON.parse(s)
-                if (!o.paragraphs) o.paragraphs = {}
-                return o
-            } catch { }
-        }
-        return { page: 0, paragraphs: {} }
-    }
-
     async LoadPage(page: number, initial: boolean = false) {
         if (!this.Reader) return
-        const totalPages = this.Reader.PageCount
-        page = Math.max(Math.min(page, totalPages - 1), 0)
+        const limit = this.Reader.PageLimit
+        page = Math.max(Math.min(page, limit - 1), 0)
         if (page === this.Reader.ProgressState.page && !initial) return
         this.JpdbLoadButton.Disabled = true
         this.FuriganaButton.Disabled = true
-        this.PageIndicator.textContent = `${page + 1} / ${totalPages}`
+        this.PageIndicator.textContent = `${page + 1} / ${this.Reader.PageCount}`
         if (this.Reader.ProgressState.page !== page) {
             this.Reader.ProgressState.page = page
             await this.Library.Save()
         }
         const pageNode = await this.Reader.ReadPage(page)
+        this.PageIndicator.textContent = `${page + 1} / ${this.Reader.PageCount}` // for url-template this can update after ReadPage is called
         this.EnhancePageNode(pageNode)
         // Make there's no important awaits after this call, otherwise we'll get a layout shift
         replaceWith(this.CurrentPageNode, pageNode)
@@ -450,7 +433,7 @@ export default class ReaderPage extends PageComponent {
             const value = Math.floor(parseInt(input.value)) - 1
             if (isFinite(value)) this.LoadPage(value)
         }
-        const input = <input type="string" defaultValue={(this.Reader?.Page ?? 0 + 1).toString()}
+        const input = <input type="string" defaultValue={((this.Reader?.Page ?? 0) + 1).toString()}
             onblur={commit} onkeydown={ev => { if (ev.key === "Enter") commit() }} /> as HTMLInputElement
         this.PageIndicatorWrapper.replaceChildren(input)
         input.focus()

@@ -1,8 +1,8 @@
 import { BrowserStorage } from "../utils/BrowserApi"
-import { hash } from "../utils/srt"
 import { BaseReader } from "./BaseReader"
 import { EpubReader } from "./EpubReader"
 import { HtmlReader } from "./HtmlReader"
+import { UrlTemplateReader } from "./UrlTemplateReader"
 
 // this gets serialized, don't include any blobs here
 interface LibraryData {
@@ -13,7 +13,7 @@ interface LibraryData {
 interface LibraryBookBase {
     // Most of this should be "throwaway" other than progress
     key: BookKey
-    source: "url" | "file" | "clipboard"
+    source: "url" | "file" | "clipboard" | "url-template"
     name?: string
     data?: string | Blob
     cacheKey?: string
@@ -101,6 +101,10 @@ export class Library {
                 book.data = await urlToBlob(book.key)
                 book.contentType = book.data.type as LibraryBook["contentType"]
             }
+            if (book.source === "url-template") {
+                // These don't really need any meaningful data for now
+                book.data = "{}"
+            }
         }
         if (!book.cacheKey) {
             const blob = getBlob(book)
@@ -138,14 +142,28 @@ export class Library {
                 this.books.splice(i, 1)
         }
         const keys = new Set((await this.Cache.keys()).map(e => e.url))
-        for (const book of this.books) if (book.cacheKey) keys.delete(book.cacheKey)
+        for (const book of this.books) {
+            if (book.cacheKey) keys.delete(book.cacheKey)
+            if (book.source === "url-template") {
+                const key = book.key.toString()
+                const replaceIndex = key.indexOf("$page")
+                if (replaceIndex !== -1) {
+                    const s = key.substring(0, replaceIndex)
+                    const d: string[] = []
+                    for (const e of keys) if (e.startsWith(s)) d.push(e)
+                    for (const e of d) keys.delete(e)
+                }
+            }
+        }
         for (const e of keys) this.Cache.delete(e)
         this.Save()
     }
 
     async GetReaderForBook(book: LibraryBook): Promise<BaseReader> {
         if (!book.data) throw new Error("Book missing data")
-        if (book.contentType === "application/epub+zip") {
+        if (book.source === "url-template") {
+            return new UrlTemplateReader(book, this.Cache)
+        } else if (book.contentType === "application/epub+zip") {
             const reader = new EpubReader(book, { trimWhitespace: false })
             await reader.read(getBlob(book))
             return reader
@@ -205,7 +223,7 @@ async function getString(book: LibraryBook) {
     return book.data
 }
 
-async function urlToBlob(url: string) {
+export async function urlToBlob(url: string) {
     const u = new URL(url)
     if (typeof browser !== "undefined") {
         if (u.origin) {
@@ -218,7 +236,7 @@ async function urlToBlob(url: string) {
     return resp.blob()
 }
 
-async function getStringHash(s: string): Promise<string> {
+export async function getStringHash(s: string): Promise<string> {
     const enc = new TextEncoder()
     const hashBuffer = await crypto.subtle.digest("SHA-256", enc.encode(s))
     // @ts-expect-error toHex was added in 2025
