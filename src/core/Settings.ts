@@ -72,6 +72,7 @@ export interface LocalSettings {
 
     furiganaMode: FuriganaMode
     readerBodySelector: string
+    showUnknownVocabOnHover: boolean
 }
 
 export const defaultLocalSettings: LocalSettings = {
@@ -101,11 +102,12 @@ export const defaultLocalSettings: LocalSettings = {
 
     defaultTooltipDelay: 300,
     furiganaMode: "kanjiOrVocab",
-    readerBodySelector: ""
+    readerBodySelector: "",
+    showUnknownVocabOnHover: false
 }
 
 // make sure none of these settings are needed on immediately page load
-const syncSettings = ["defaultTooltipDelay"] satisfies (keyof LocalSettings)[]
+const syncSettings = ["defaultTooltipDelay", "showUnknownVocabOnHover"] satisfies (keyof LocalSettings)[]
 const cachedSettings: { [key in keyof LocalSettings]?: LocalSettings[key] } & TemporarySettings = {
     ...defaultTemporarySettings
 }
@@ -157,7 +159,7 @@ export function getSetting<K extends SettingsKey>(key: K): AllSettings[K] | Prom
 
 // could be nice to have a promise ensuring these are loaded
 for (const key of syncSettings) {
-    getSetting(key).then(v => cachedSettings[key] = v)
+    getSetting(key).then(v => cachedSettings[key] = v as any)
 }
 
 export async function setSetting<K extends SettingsKey>(key: K, v: AllSettings[K]) {

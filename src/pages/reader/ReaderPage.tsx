@@ -2,7 +2,7 @@ import IconButton, { IconButtonClass } from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
 import { OpenModal } from "../../components/Modal"
 import Select from "../../components/Select"
-import { furiganaModes, getSetting, setSetting } from "../../core/Settings"
+import { furiganaModes, getSetting, getSettingSync, setSetting } from "../../core/Settings"
 import { EpubReader } from "../../reader/EpubReader"
 import readerPageJpdb from "../../reader/readerPageJpdb"
 import { replaceChildren, replaceWith } from "../../framework/createElement"
@@ -19,6 +19,7 @@ import { stringSettingsField } from "../../views/SettingsModal"
 import AdvancedSettingsModal from "../../views/AdvancedSettingsModal"
 import { Library, LibraryBook } from "../../reader/Library"
 import LibraryModal from "./LibraryModal"
+import { VocabState } from "../../jpdb/JpdbState"
 
 const currentPositionKey = "reader-progress"
 
@@ -219,7 +220,14 @@ export default class ReaderPage extends PageComponent {
                 return [range, jpdb.vocabulary[token[3]], token]
             },
             invert: false,
-            onChange: state => UpdateHoverBox(this.HoverRectangleContainer, state)
+            onChange: state => {
+                const vocabState = UpdateHoverBox(this.HoverRectangleContainer, state)
+                if (state && vocabState !== undefined) {
+                    if (getSettingSync("showUnknownVocabOnHover") && vocabState === VocabState.New) {
+                        this.TooltipHandler?.forceSetHoverState?.({ ...state, tooltip: true })
+                    }
+                }
+            }
         })
 
         document.addEventListener("keydown", this.DocumentKeydown)
@@ -457,6 +465,14 @@ function OpenReaderSettings() {
                     defaultValue: await getSetting("furiganaMode"),
                     options: furiganaModes,
                     onChange: v => setSetting("furiganaMode", v as any)
+                })}
+            </div>
+            <div className="field">
+                <label>Unknown Vocab On Hover</label>
+                {Select({
+                    defaultValue: (await getSetting("showUnknownVocabOnHover") ? "true" : "false"),
+                    options: [["false", "Same as other vocab"], ["true", "Always show tooltip"]],
+                    onChange: v => setSetting("showUnknownVocabOnHover", v === "true")
                 })}
             </div>
         </>
