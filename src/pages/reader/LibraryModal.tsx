@@ -82,10 +82,30 @@ export default () => {
             </tbody>
         </table>
     }
+
+    const addUrlNode = <button onclick={() => {
+        let adding = false
+        const commit = async () => {
+            if (adding) return
+            adding = true
+            const value = input.value
+            input.replaceWith(addUrlNode)
+            const library = await Library.Instance()
+            library.books.push({ key: value, source: value.includes("$page") ? "url-template" : "url" })
+            await library.Save()
+            modal.Body.replaceChildren(<Loader load={loadBody} />)
+            adding = false
+        }
+        const input = <input type="string" onblur={commit} onkeydown={ev => { if (ev.key === "Enter") commit() }} /> as HTMLInputElement
+        addUrlNode.replaceWith(input)
+        input.focus()
+    }} tooltip={<div>Replace the page number with <em>$page</em> to enable pagination.{"\n"}
+        Ex: https://ncode.syosetu.com/n2267be/$page/</div>}>Add URL</button>
     const modal = OpenModal({
         header: "Library",
         id: "library-modal",
-        body: <Loader load={loadBody} />
+        body: <Loader load={loadBody} />,
+        footer: <div>{addUrlNode}</div>
     })
     return modal
 }
