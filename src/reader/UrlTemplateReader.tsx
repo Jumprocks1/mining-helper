@@ -13,7 +13,7 @@ export class UrlTemplateReader extends BaseReader {
 
     override async ReadPage(page: number): Promise<ReaderPageNode> {
         let url = this.Book.key.toString()
-        url = url.replace("$page", (page + 1).toString())
+        url = url.replaceAll("$page", (page + 1).toString())
 
         const tempBook: LibraryBook = { key: url, source: "url" }
         // note, this is different from other book caching

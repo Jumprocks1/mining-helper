@@ -33,10 +33,11 @@ export default () => {
                     let cachedSize = e.cacheKey !== undefined && cacheKeys.get(e.cacheKey)
                     if (cachedSize !== undefined && cachedSize !== false && e.source === "url-template") {
                         const key = e.key.toString()
-                        const replaceIndex = key.indexOf("$page")
-                        if (replaceIndex !== -1) {
-                            const s = key.substring(0, replaceIndex)
-                            for (const k of cacheKeys) if (k[0].startsWith(s)) cachedSize += k[1]
+                        if (e.pageCount && key.includes("$page")) {
+                            for (let i = 1; i <= e.pageCount; i++) {
+                                const url = key.replaceAll("$page", i.toString())
+                                cachedSize += cacheKeys.get(url) ?? 0
+                            }
                         }
                     }
                     const canOpen = (e.cacheKey && cacheKeys.has(e.cacheKey)) || e.source === "url" || e.source === "url-template"

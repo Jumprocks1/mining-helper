@@ -146,12 +146,11 @@ export class Library {
             if (book.cacheKey) keys.delete(book.cacheKey)
             if (book.source === "url-template") {
                 const key = book.key.toString()
-                const replaceIndex = key.indexOf("$page")
-                if (replaceIndex !== -1) {
-                    const s = key.substring(0, replaceIndex)
-                    const d: string[] = []
-                    for (const e of keys) if (e.startsWith(s)) d.push(e)
-                    for (const e of d) keys.delete(e)
+                if (book.pageCount && key.includes("$page")) {
+                    for (let i = 1; i <= book.pageCount; i++) {
+                        const url = key.replaceAll("$page", i.toString())
+                        keys.delete(url)
+                    }
                 }
             }
         }
