@@ -1,6 +1,7 @@
 import { JsPopover } from "../components/basic/JsPopover"
 import { LoadableChildren } from "../components/Loader";
 import { getSettingSync } from "../core/Settings";
+import { Children } from "./createElement";
 
 declare global {
     interface HTMLElement {
@@ -58,7 +59,7 @@ class Tooltip extends JsPopover {
     }
 }
 
-export function ActionTooltip(action: string, binding?: string, description?: string | (() => string)) {
+export function ActionTooltip(action: string, binding?: string, description?: Children) {
     return () => <span className="action-tooltip">
         <div className="row">
             <span className="action">{action}</span>

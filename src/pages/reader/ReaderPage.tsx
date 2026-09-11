@@ -141,6 +141,13 @@ export default class ReaderPage extends PageComponent {
         if (this.Reader instanceof EpubReader) {
             description = this.Reader.spine[this.Reader.Page].href
         }
+        let characterCount = this.CurrentPageNode.characterCount
+        if (!characterCount) {
+            this.CurrentPageNode.characterCount = characterCount = this.CurrentPageNode.textContent.replace(/\s/g, '').length
+        }
+        if (characterCount) {
+            description += "\n" + "Characters: " + characterCount
+        }
         return ActionTooltip("Click to jump", undefined, description)
     }
 

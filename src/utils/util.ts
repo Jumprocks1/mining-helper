@@ -8,6 +8,7 @@ declare global {
         vocab?: JpdbVocabulary
         tokenUsages?: JpdbToken[]
         paragraphIndex?: number
+        characterCount?: number
     }
 }
 
