@@ -21,8 +21,6 @@ import { Library, LibraryBook } from "../../reader/Library"
 import LibraryModal from "./LibraryModal"
 import { VocabState } from "../../jpdb/JpdbState"
 
-const currentPositionKey = "reader-progress"
-
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
     override Title = "Mining Helper - Reader"
@@ -34,7 +32,7 @@ export default class ReaderPage extends PageComponent {
         {this.CurrentPageNode}
         {this.HoverRectangleContainer}
     </div>
-    ViewerNode: HTMLElement = <div id="reader-page-viewer">{this.PageWrapper}</div>
+    ViewerNode: HTMLElement = <div id="reader-page-viewer" lang="ja">{this.PageWrapper}</div>
     PageIndicator: HTMLElement = <div id="page-indicator" onclick={() => this.JumpToPage()} className="clickable" tooltip={() => this.PageTooltip()}>0 / 0</div>
     PageIndicatorWrapper: HTMLElement = <div id="page-indicator-wrapper">{this.PageIndicator}</div>
     ToCBody: HTMLElement = <div />

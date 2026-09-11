@@ -97,6 +97,8 @@
                     position: relative;
 
                     #paragraph-buttons {
+                        // There's a bug in Chrome that makes these affect the layout computations when there's … in some cases/fonts
+                        // see chrome-bug2.html
                         position: absolute;
                         left: 0;
                         top: 0;
@@ -115,8 +117,6 @@
                         user-select: none;
                     }
                     &:hover {
-                        // this is fun, but I think I want to change it to only show if hovering the far left side of a paragraph
-                        // that way we can add other controls like a bookmark
                         border-left: $border0;
                         .paragraph-index {
                             display: block;
