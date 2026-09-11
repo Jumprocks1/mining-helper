@@ -10,11 +10,12 @@ export class UrlTemplateReader extends BaseReader {
     override get PageLimit() {
         return Infinity
     }
+    urlFor(page: number) {
+        return this.Book.key.toString().replaceAll("$page", (page + 1).toString())
+    }
 
     override async ReadPage(page: number): Promise<ReaderPageNode> {
-        let url = this.Book.key.toString()
-        url = url.replaceAll("$page", (page + 1).toString())
-
+        const url = this.urlFor(page)
         const tempBook: LibraryBook = { key: url, source: "url" }
         // note, this is different from other book caching
         const response = await this.Cache.match(url)

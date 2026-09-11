@@ -20,6 +20,7 @@ import AdvancedSettingsModal from "../../views/AdvancedSettingsModal"
 import { Library, LibraryBook } from "../../reader/Library"
 import LibraryModal from "./LibraryModal"
 import { VocabState } from "../../jpdb/JpdbState"
+import { UrlTemplateReader } from "../../reader/UrlTemplateReader"
 
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
@@ -137,18 +138,15 @@ export default class ReaderPage extends PageComponent {
     PageTooltip() {
         if (!this.Reader) return
         if (this.Reader.PageCount === 1) return "Pagination unavailable"
-        let description: string | undefined
+        let description: string[] = []
         if (this.Reader instanceof EpubReader) {
-            description = this.Reader.spine[this.Reader.Page].href
+            description.push(this.Reader.spine[this.Reader.Page].href)
+        } else if (this.Reader instanceof UrlTemplateReader) {
+            description.push(this.Reader.urlFor(this.Reader.Page))
         }
         let characterCount = this.CurrentPageNode.characterCount
-        if (!characterCount) {
-            this.CurrentPageNode.characterCount = characterCount = this.CurrentPageNode.textContent.replace(/\s/g, '').length
-        }
-        if (characterCount) {
-            description += "\n" + "Characters: " + characterCount
-        }
-        return ActionTooltip("Click to jump", undefined, description)
+        if (characterCount) description.push("Characters: " + characterCount)
+        return ActionTooltip("Click to jump", undefined, description.join("\n"))
     }
 
     Library: Library = undefined!
@@ -414,6 +412,7 @@ export default class ReaderPage extends PageComponent {
     // Stuff that doesn't really belong in the Reader classes
     EnhancePageNode(node: ReaderPageNode) {
         if (!this.Reader) return
+        node.characterCount = node.textContent.replace(/\s/g, '').length
         let i = 0;
         const paragraph = this.Reader.Paragraph ?? 0
         for (const p of node.querySelectorAll("p")) {
