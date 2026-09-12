@@ -26,6 +26,11 @@ export abstract class BaseReader {
         return 0
     }
 
+    async SelectAndCleanPageBodyNode(document: Document) {
+        const node = await this.SelectPageBodyNode(document)
+        await this.CleanBodyNode(node)
+        return node
+    }
     async SelectPageBodyNode(document: Document) {
         try {
             const selectors = await getSetting("readerBodySelector")
@@ -35,10 +40,17 @@ export abstract class BaseReader {
                     return match
                 }
             }
-        } catch (e) {
-            console.error(e, "Failed to find body node")
-        }
+        } catch (e) { console.error(e, "Failed to find body node") }
         return document.documentElement
+    }
+    async CleanBodyNode(node: Element) {
+        try {
+            const selectors = await getSetting("readerIgnoreSelector")
+            for (const e of selectors.split(";")) {
+                const match = node.querySelectorAll(e.trim())
+                match.forEach(e => e.remove())
+            }
+        } catch (e) { console.error(e, "Failed to clean body node") }
     }
 }
 

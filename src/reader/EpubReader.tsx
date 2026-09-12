@@ -136,7 +136,7 @@ export class EpubReader extends BaseReader {
         const o = document.createElement("div")
         o.classList.add("reader-page-node")
         const file = await this.readXML(item.href, true)
-        const bodyNode = await this.SelectPageBodyNode(file)
+        const bodyNode = await this.SelectAndCleanPageBodyNode(file)
 
         if (this.settings.trimWhitespace) {
             const walker = file.createTreeWalker(bodyNode, NodeFilter.SHOW_TEXT);

@@ -72,6 +72,7 @@ export interface LocalSettings {
 
     furiganaMode: FuriganaMode
     readerBodySelector: string
+    readerIgnoreSelector: string
     showUnknownVocabOnHover: boolean
 }
 
@@ -103,6 +104,7 @@ export const defaultLocalSettings: LocalSettings = {
     defaultTooltipDelay: 300,
     furiganaMode: "kanjiOrVocab",
     readerBodySelector: "",
+    readerIgnoreSelector: "",
     showUnknownVocabOnHover: false
 }
 

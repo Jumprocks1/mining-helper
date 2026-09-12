@@ -466,6 +466,9 @@ function OpenReaderSettings() {
                     Separate multiple selectors with <em>;</em>. Earlier selectors are prioritized.{"\n\n"}
                     Ex: <em>main article; main</em>
                 </div>)}
+            {await stringSettingsField("readerIgnoreSelector", "Ignore Selector", undefined,
+                <div>Ignore elements matching these selectors.{"\n"}
+                    Ex: <em>.p-novel__number; .c-pager</em></div>)}
             <div className="field">
                 <label>Furigana Mode</label>
                 {Select({

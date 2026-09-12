@@ -25,7 +25,7 @@ export class HtmlReader extends BaseReader {
         const o = document.createElement("div")
         o.classList.add("reader-page-node")
         const file = this.DOMParser.parseFromString(s, type)
-        const bodyNode = await this.SelectPageBodyNode(file)
+        const bodyNode = await this.SelectAndCleanPageBodyNode(file)
         o.setHTML(bodyNode.getHTML(), { sanitizer: this.sanitizer })
         this.page = o as ReaderPageNode
     }
