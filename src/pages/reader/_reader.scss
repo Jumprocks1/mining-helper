@@ -99,7 +99,7 @@
                     color: $linkColor
                 }
                 p {
-                    scroll-margin-top: calc(1em + 20vh);
+                    scroll-margin-block: 20vh;
                     margin-bottom: $s1*2;
                     padding-left: 1em;
                     border-left: 1px solid #FFFFFF40;

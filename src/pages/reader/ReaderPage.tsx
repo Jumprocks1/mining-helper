@@ -344,6 +344,7 @@ export default class ReaderPage extends PageComponent {
         }
         if (oldParagraphNode && newParagraphNode) {
             this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldParagraphNode.getBoundingClientRect().top)
+            newParagraphNode.scrollIntoView({ block: "nearest" })
         }
         await this.Library.Save() // TODO this is also called inside LoadPage
     }
