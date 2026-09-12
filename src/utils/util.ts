@@ -294,6 +294,10 @@ export function cleanSource(source: string | undefined) {
             replace: " "
         },
         {
+            match: /(?<= S\d+E\d+)v\d/g,
+            replace: ""
+        },
+        {
             match: /(?<= S\d+E\d+) .+/g,
             replace: ""
         },
