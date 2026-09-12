@@ -2,8 +2,9 @@ import IconButton from "../../components/basic/IconButton";
 import { JsPopover } from "../../components/basic/JsPopover";
 import { Children } from "../../framework/createElement";
 import { onDeath } from "../../framework/Observer";
-import { SmallTooltip } from "../../framework/Tooltips";
+import { ActionTooltip, SmallTooltip } from "../../framework/Tooltips";
 import { Brand } from "../../framework/util";
+import { IgnoreVid, UnIgnoreVid } from "../../jpdb/IgnoreList";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabState, getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState";
 import AnkiConnect from "../../utils/AnkiConnect";
@@ -70,6 +71,20 @@ export default class JpHoverTooltip extends JsPopover {
 
         const ruby = furiToRuby(furi)
 
+        let ignored = vocabState === VocabState.Ignored || vocabState === VocabState.TemporarilyIgnored
+        const makeIgnoreButton = () => <IconButton icon={ignored ? "restore_from_trash" : "delete"}
+            className="ignore-button"
+            tooltip={ActionTooltip(ignored ? "Restore" : "Ignore", undefined, ignored ? undefined :
+                "Hold ctrl to ignore for 30 days\nUseful for names/locations.")}
+            onClick={async ev => {
+                if (ignored) await UnIgnoreVid(vocab[5])
+                else await IgnoreVid(vocab[5], vocab[0], ev.ctrlKey);
+                this.LoadedVocab = undefined
+                this.TargetBase(vocab, token)
+            }} />
+        let ignoreButton = (ignored || vocabState === VocabState.New) && makeIgnoreButton()
+
+
         this.SetContent(<>
             <div className="header">
                 {ruby}
@@ -77,6 +92,7 @@ export default class JpHoverTooltip extends JsPopover {
                 <span className={"vocab-state " + vocabStateString}>
                     {vocabStateNode}{vocabNote ? <> - {vocabNote}</> : undefined}
                 </span>
+                {ignoreButton}
                 <span className="frequency">{vocab[2]}</span>
             </div>
             {vocab[3].map((e, i) => <div>
