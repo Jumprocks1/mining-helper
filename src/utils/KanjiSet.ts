@@ -9,7 +9,7 @@ const knownKanjiAnkiQuery = `"deck:Mining Helper Kanji" -is:suspended`
 
 export async function loadKanjiSet(disableCache = false) {
     if (!disableCache && localKanjiSet) return localKanjiSet
-    const list = (await BrowserStorage.local.get({ knownKanjiList: [] })).knownKanjiList
+    const list = (await BrowserStorage.local.get({ knownKanjiList: "" })).knownKanjiList
     localKanjiSet = new Set(list)
     return localKanjiSet
 }
@@ -17,7 +17,7 @@ export async function loadKanjiSet(disableCache = false) {
 export async function addKnownKanji(kanji: string) {
     const set = await loadKanjiSet()
     set.add(kanji)
-    await BrowserStorage.local.set({ knownKanjiList: [...set] })
+    await BrowserStorage.local.set({ knownKanjiList: [...set].join("") })
 }
 
 // TODO need a button to call this somewhere
@@ -29,5 +29,5 @@ export async function reloadKanjiSet() {
         const kanji = note.fields["Kanji"]?.value
         if (kanji) localKanjiSet.add(kanji)
     }
-    await BrowserStorage.local.set({ knownKanjiList: [...localKanjiSet] })
+    await BrowserStorage.local.set({ knownKanjiList: [...localKanjiSet].join("") })
 }
