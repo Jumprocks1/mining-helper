@@ -56,7 +56,7 @@ export default class LoadingButton extends Component {
     }
 
     Click(ev: MouseEvent | undefined) {
-        if (this.Loading || this.Disabled) return
+        if (this.Loading || this.Disabled) return this.pendingPromise
         if (this.Node.tooltipError) {
             this.Node.classList.remove("errored")
             this.Node.tooltipError = undefined
