@@ -44,6 +44,11 @@ export default class ReaderPage extends PageComponent {
     Reader?: BaseReader
     FullscreenButton = <IconButton icon="fullscreen" onClick={() => this.ToggleFullscreen()}
         tooltip={ActionTooltip("Fullscreen")} />
+    LibraryButton = IconButtonClass({
+        icon: "local_library",
+        onClick: () => LibraryModal(),
+        tooltip: ActionTooltip("View Library", "L")
+    })
 
     JpdbLoadButton = IconButtonClass({
         icon: "document_search", onClick: async () => {
@@ -72,7 +77,7 @@ export default class ReaderPage extends PageComponent {
                     {this.FuriganaButton}
                     {this.JpdbLoadButton}
                     {this.FullscreenButton}
-                    <IconButton icon="local_library" onClick={() => LibraryModal()} tooltip={ActionTooltip("View Library")} />
+                    {this.LibraryButton}
                     <IconButton icon="settings" onClick={() => OpenReaderSettings()} tooltip={ActionTooltip("Open Settings", ",")} />
                 </div>
                 <div className="row">
@@ -360,6 +365,7 @@ export default class ReaderPage extends PageComponent {
             OpenReaderSettings()
         } else if (key === "f") this.FuriganaButton.Click(undefined)
         else if (key === "t") this.JpdbLoadButton.Click(undefined)
+        else if (key === "l") this.LibraryButton.Click(undefined)
         else if (key === "s") this.SaveParagraph()
         else if (key === "i") {
             if (this.TooltipHandler) {
