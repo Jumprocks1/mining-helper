@@ -22,6 +22,7 @@ import LibraryModal from "./LibraryModal"
 import { VocabState } from "../../jpdb/JpdbState"
 import { UrlTemplateReader } from "../../reader/UrlTemplateReader"
 import Draggable from "../../components/Draggable"
+import RecommendedMiningModal from "../subtitles/RecommendedMiningModal"
 
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
@@ -59,11 +60,16 @@ export default class ReaderPage extends PageComponent {
         onClick: () => LibraryModal(),
         tooltip: ActionTooltip("View Library", "L")
     })
+    RecommendedMiningButton = IconButtonClass({
+        icon: "format_list_numbered", onClick: () => this._RecommendedMiningClick(), disabled: true,
+        tooltip: ActionTooltip("Recommended Mining", "Y", "Recommends words/sentences to mine from the loaded book."
+            + "\nRelies on word frequency (jpdb) and your existing Anki cards.")
+    })
 
     JpdbLoadButton = IconButtonClass({
         icon: "document_search", onClick: async () => {
             await readerPageJpdb(this.CurrentPageNode)
-            if (this.CurrentPageNode.jpdb) this.JpdbLoadButton.Disabled = true
+            this.JpdbLoadButton.Disabled = true
         },
         tooltip: ActionTooltip("Parse File", "T", "Parses the current page using jpdb's API")
     })
@@ -86,6 +92,7 @@ export default class ReaderPage extends PageComponent {
                 <div className="row">
                     {this.FuriganaButton}
                     {this.JpdbLoadButton}
+                    {this.RecommendedMiningButton}
                     {this.FullscreenButton}
                     {this.LibraryButton}
                     <IconButton icon="settings" onClick={() => OpenReaderSettings()} tooltip={ActionTooltip("Open Settings", ",")} />
@@ -283,6 +290,7 @@ export default class ReaderPage extends PageComponent {
         page = Math.max(Math.min(page, limit - 1), 0)
         if (page === this.Reader.ProgressState.page && !initial) return
         this.JpdbLoadButton.Disabled = true
+        this.RecommendedMiningButton.Disabled = true
         this.FuriganaButton.Disabled = true
         this.PageIndicator.textContent = `${page + 1} / ${this.Reader.PageCount}`
         if (this.Reader.ProgressState.page !== page) {
@@ -313,6 +321,7 @@ export default class ReaderPage extends PageComponent {
         }
         await readerPageJpdb(pageNode, true)
         this.JpdbLoadButton.Disabled = Boolean(pageNode.jpdb)
+        this.RecommendedMiningButton.Disabled = false
         this.FuriganaButton.Disabled = false
     }
 
@@ -355,7 +364,6 @@ export default class ReaderPage extends PageComponent {
                 </div>)
             }
         }
-        this.ToC.classList.remove("hide")
         replaceChildren(this.ToCBody, o)
     }
 
@@ -379,6 +387,7 @@ export default class ReaderPage extends PageComponent {
         else if (key === "t") this.JpdbLoadButton.Click(undefined)
         else if (key === "l") this.LibraryButton.Click(undefined)
         else if (key === "s") this.SaveParagraph()
+        else if (key === "y") this.RecommendedMiningButton.Click(undefined)
         else if (key === "i") {
             if (this.TooltipHandler) {
                 this.TooltipHandler.invert = !this.TooltipHandler.invert
@@ -471,6 +480,62 @@ export default class ReaderPage extends PageComponent {
         this.PageIndicatorWrapper.replaceChildren(input)
         input.focus()
         input.select()
+    }
+
+    private async _RecommendedMiningClick() {
+        if (!this.Reader) return
+        await this.JpdbLoadButton.Click(undefined)
+        const jpdb = this.CurrentPageNode.jpdb
+        if (!jpdb) return
+        const modal = await RecommendedMiningModal(() => {
+            const header = document.getElementById("mh-header")
+            if (!header) return
+            const mainRect = this.PageWrapper.getBoundingClientRect()
+            const headerRect = header.getBoundingClientRect()
+            const full = document.body.getBoundingClientRect()
+            const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
+            return rect
+        }, {
+            jpdb,
+            seekTo: token => {
+                let i = 0;
+                const tokenStart = token[0]
+                const tokenEnd = tokenStart + token[1]
+                let focusTarget: Element | undefined = undefined
+                let range = new Range()
+                for (const text of jpdb.nodes) {
+                    const element = text.parentElement
+                    const l = text.textContent.length
+                    if (element) {
+                        if (i <= tokenStart && i + l > tokenStart) {
+                            focusTarget = element
+                            range.setStart(text, tokenStart - i)
+                        }
+                        if (i <= tokenEnd && i + l > tokenEnd) {
+                            range.setEnd(text, tokenEnd - i)
+                            break
+                        }
+                    }
+                    i += l
+                }
+                if (focusTarget) {
+                    focusTarget = focusTarget.closest("p") ?? focusTarget
+                    focusTarget.scrollIntoView({ block: "start" })
+                    const selection = window.getSelection()
+                    if (selection) {
+                        selection.removeAllRanges()
+                        selection.addRange(range)
+                    }
+                }
+            },
+        })
+        this.ToC.classList.add("shrink")
+        this.ViewerNode.classList.add("shrink")
+        modal.RegisterOnClose(() => {
+            this.ToC.classList.remove("shrink")
+            this.ViewerNode.classList.remove("shrink")
+        })
+        modal.Minimize()
     }
 }
 

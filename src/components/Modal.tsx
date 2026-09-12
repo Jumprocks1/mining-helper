@@ -19,7 +19,7 @@ export class Modal extends Component {
 
     IsOpen = false;
 
-    OnClose: () => void
+    private OnClose: () => void
 
     IsMinimized = false;
     MinimizeButton?: HTMLElement

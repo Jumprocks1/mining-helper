@@ -19,7 +19,7 @@ import { getSetting, setSetting, getDefaultSetting } from "../../core/Settings";
 interface RecommendedMiningModalProps {
     jpdb: JpdbParseResponse
     seekTo: (token: JpdbToken) => void
-    seekToNext: (tokens: JpdbToken[], down: boolean) => void
+    seekToNext?: (tokens: JpdbToken[], down: boolean) => void
     subtitles?: Subtitles // used for i1 tokens
 }
 
@@ -114,7 +114,16 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
                 <td className="frequency"><div>{vocab[2] ?? "N/A"}</div></td>
                 <td><div>
                     <UpDownButtons onClick={(_, down) => {
-                        props.seekToNext(tokenUsages, down)
+                        if (props.seekToNext) props.seekToNext(tokenUsages, down)
+                        else {
+                            if (keyboardState?.vocab !== vocab) keyboardState = { vocab, tokenUsages }
+                            if (keyboardState.index === undefined) {
+                                keyboardState.index = down ? 0 : tokenUsages.length - 1
+                            } else {
+                                keyboardState.index = Math.max(Math.min(keyboardState.index + (down ? 1 : -1), tokenUsages.length - 1), 0)
+                            }
+                            props.seekTo(keyboardState.tokenUsages[keyboardState.index])
+                        }
                         row.focus()
                     }}>
                         <span className="usage-count">{tokenUsages.length}</span>
@@ -146,7 +155,39 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
         return body
     }
 
-    RegisterKeyboardHandler(body, props)
+
+    let keyboardState: { vocab: JpdbVocabulary, tokenUsages: JpdbToken[], index?: number } | undefined = undefined
+    function updateKeyboardState(up: boolean): true | undefined {
+        const focusRow = document.activeElement?.closest<HTMLElement>(".vocab-row")
+        if (!focusRow || !body.contains(focusRow)) return
+        const vocab = focusRow?.vocab
+        if (!vocab) return
+        if (vocab === keyboardState?.vocab && keyboardState.index !== undefined) {
+            keyboardState.index = keyboardState.index + (up ? -1 : 1)
+            if (keyboardState.index >= 0 && keyboardState.index < keyboardState.tokenUsages.length)
+                return true
+        }
+        const next = (up ? focusRow.previousElementSibling : focusRow.nextElementSibling) as HTMLElement | null
+        if (next?.vocab) {
+            const tokenUsages = next.tokenUsages
+            if (!tokenUsages) return
+            keyboardState = { vocab: next.vocab, tokenUsages, index: up ? tokenUsages.length - 1 : 0 }
+            next.focus()
+            return true
+        }
+        keyboardState = undefined
+    }
+    body.addEventListener("keydown", ev => {
+        if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
+            ev.preventDefault()
+            ev.stopPropagation()
+            const valid = updateKeyboardState(ev.key === "ArrowUp")
+            if (!keyboardState || keyboardState.index === undefined || !valid) return
+            props.seekTo(keyboardState.tokenUsages[keyboardState.index])
+        }
+    })
+
+
     RegisterJpHoverTooltip({
         body, invert: false,
         getTargetAndVocab: hovered => {
@@ -184,14 +225,15 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
                         showKana = v
                         reload()
                     }} />
-                <CheckboxField label="i+1" tooltip={() =>
+                {/* i+1 not supported for reader page yet */}
+                {props.subtitles && <CheckboxField label="i+1" tooltip={() =>
                     `Filters vocab to subtitle entries with only 1 new vocab in them.\n\nSomewhat limited because:\n`
                     + `1. Names often count as unknown vocab, despite not having a relevant meaning.\n`
                     + `2. More than a single subtitle entry is often needed for context.`}
                     onChange={v => {
                         i1 = v
                         reload()
-                    }} />
+                    }} />}
                 <CheckboxField tooltip={() => <>
                     Trims kana before checking if a word is already mined.<br />
                     Ex:<br />
@@ -216,7 +258,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
                     setSetting("miningMaxRecommendedCount", v)
                     reload()
                 }} defaultValue={getDefaultSetting("miningMaxRecommendedCount")}
-                    extraTooltip={() => "\nCurrently loaded: " + loadedCount} />}
+                    extraTooltip={() => "\nCurrently showing: " + loadedCount} />}
             </div>
             {body}
         </>,
@@ -226,37 +268,4 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
     })
     RegisterEventHandler("vocab-mined", mineHandler)
     return res
-}
-
-function RegisterKeyboardHandler(body: HTMLElement, props: RecommendedMiningModalProps) {
-    let keyboardState: { vocab: JpdbVocabulary, tokenUsages: JpdbToken[], index?: number } | undefined = undefined
-    function updateKeyboardState(up: boolean): true | undefined {
-        const focusRow = document.activeElement?.closest<HTMLElement>(".vocab-row")
-        if (!focusRow || !body.contains(focusRow)) return
-        const vocab = focusRow?.vocab
-        if (!vocab) return
-        if (vocab === keyboardState?.vocab && keyboardState.index !== undefined) {
-            keyboardState.index = keyboardState.index + (up ? -1 : 1)
-            if (keyboardState.index >= 0 && keyboardState.index < keyboardState.tokenUsages.length)
-                return true
-        }
-        const next = (up ? focusRow.previousElementSibling : focusRow.nextElementSibling) as HTMLElement | null
-        if (next?.vocab) {
-            const tokenUsages = next.tokenUsages
-            if (!tokenUsages) return
-            keyboardState = { vocab: next.vocab, tokenUsages, index: up ? tokenUsages.length - 1 : 0 }
-            next.focus()
-            return true
-        }
-        keyboardState = undefined
-    }
-    body.addEventListener("keydown", ev => {
-        if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
-            const valid = updateKeyboardState(ev.key === "ArrowUp")
-            if (!keyboardState || keyboardState.index === undefined || !valid) return
-            props.seekTo(keyboardState.tokenUsages[keyboardState.index])
-            ev.preventDefault()
-            ev.stopPropagation()
-        }
-    })
 }
