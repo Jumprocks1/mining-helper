@@ -13,6 +13,7 @@ export const MaterialIcons = [
     "close",
     "delete",
     "document_search",
+    "drag_indicator",
     "edit",
     "error",
     "format_list_numbered",

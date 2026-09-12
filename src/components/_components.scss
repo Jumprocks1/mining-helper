@@ -123,6 +123,13 @@
             }
         }
     }
+
+    .draggable {
+        cursor: grab;
+        &.dragging {
+            cursor: grabbing;
+        }
+    }
 }
 
 // TODO move inside layer once we also move .js-tooltip and .popover

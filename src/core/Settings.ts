@@ -74,6 +74,7 @@ export interface LocalSettings {
     readerBodySelector: string
     readerIgnoreSelector: string
     showUnknownVocabOnHover: boolean
+    tocWidth: number
 }
 
 export const defaultLocalSettings: LocalSettings = {
@@ -105,7 +106,8 @@ export const defaultLocalSettings: LocalSettings = {
     furiganaMode: "kanjiOrVocab",
     readerBodySelector: "",
     readerIgnoreSelector: "",
-    showUnknownVocabOnHover: false
+    showUnknownVocabOnHover: false,
+    tocWidth: 0
 }
 
 // make sure none of these settings are needed on immediately page load
@@ -177,6 +179,14 @@ export async function setSetting<K extends SettingsKey>(key: K, v: AllSettings[K
         triggerSettingChanged(key, v)
     }
     else throw new Error()
+}
+export async function resetSetting<K extends keyof LocalSettings>(key: K) {
+    if (key in defaultLocalSettings) {
+        delete cachedSettings[key]
+        await BrowserStorage.local.remove(key)
+        // @ts-expect-error Key is already check, so this is fine
+        triggerSettingChanged(key, defaultLocalSettings[key])
+    } else throw new Error()
 }
 export function triggerSettingChanged<K extends SettingsKey>(key: K, v: AllSettings[K]) {
     for (const listener of listeners) {

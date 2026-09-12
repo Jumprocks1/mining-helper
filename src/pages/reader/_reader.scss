@@ -43,6 +43,11 @@
             h3 {
                 padding-left: $s1;
                 border-bottom: $border0;
+                display: flex;
+                align-items: flex-end;
+                .draggable {
+                    margin-left: auto;
+                }
             }
             .toc-point {
                 text-decoration: none;
@@ -57,7 +62,7 @@
             }
             padding: $s1 * 2;
             max-width: 25vw;
-            min-width: 15em;
+            min-width: 10em;
             font-size: 0.75em;
             @include vertical-scroll;
         }

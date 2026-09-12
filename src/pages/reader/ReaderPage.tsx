@@ -2,7 +2,7 @@ import IconButton, { IconButtonClass } from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
 import { OpenModal } from "../../components/Modal"
 import Select from "../../components/Select"
-import { furiganaModes, getSetting, getSettingSync, setSetting } from "../../core/Settings"
+import { furiganaModes, getSetting, getSettingSync, resetSetting, setSetting } from "../../core/Settings"
 import { EpubReader } from "../../reader/EpubReader"
 import readerPageJpdb from "../../reader/readerPageJpdb"
 import { replaceChildren, replaceWith } from "../../framework/createElement"
@@ -21,6 +21,7 @@ import { Library, LibraryBook } from "../../reader/Library"
 import LibraryModal from "./LibraryModal"
 import { VocabState } from "../../jpdb/JpdbState"
 import { UrlTemplateReader } from "../../reader/UrlTemplateReader"
+import Draggable from "../../components/Draggable"
 
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
@@ -37,8 +38,17 @@ export default class ReaderPage extends PageComponent {
     PageIndicator: HTMLElement = <div id="page-indicator" onclick={() => this.JumpToPage()} className="clickable" tooltip={() => this.PageTooltip()}>0 / 0</div>
     PageIndicatorWrapper: HTMLElement = <div id="page-indicator-wrapper">{this.PageIndicator}</div>
     ToCBody: HTMLElement = <div />
+
+    tocWidth = 0
     ToC: HTMLElement = <div id="toc">
-        <h3>Table of Contents</h3>
+        <h3>Table of Contents<Draggable
+            onDoubleClick={() => {
+                resetSetting("tocWidth")
+                this.ToC.style.removeProperty("width")
+            }}
+            onStart={() => this.tocWidth = this.ToC.clientWidth}
+            onDrop={x => setSetting("tocWidth", this.tocWidth! + x)}
+            onMove={x => this.ToC.style.width = (this.tocWidth! + x) + "px"} /></h3>
         {this.ToCBody}
     </div>
     Reader?: BaseReader
@@ -98,6 +108,7 @@ export default class ReaderPage extends PageComponent {
             {this.ViewerNode}
         </>
         this.Node = body
+        getSetting("tocWidth").then(e => { if (e) this.ToC.style.width = e + "px" })
 
         let hoverParagraph: HTMLElement | undefined
         let hoverElement: HTMLElement | undefined
@@ -344,6 +355,7 @@ export default class ReaderPage extends PageComponent {
                 </div>)
             }
         }
+        this.ToC.classList.remove("hide")
         replaceChildren(this.ToCBody, o)
     }
 
