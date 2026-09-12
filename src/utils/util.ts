@@ -1,7 +1,6 @@
 import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
-import { ensureNoJpdbError, JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText";
+import { callJpdb, ensureNoJpdbError, JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText";
 import { applyReplacementsTo, ReplacementEntry } from "../views/RegexReplacements";
-import { getSetting } from "../core/Settings";
 
 declare global {
     interface HTMLElement {
@@ -92,23 +91,15 @@ export function furiToRuby(furi: string) {
 
 export async function lookupFuri(jp: string | undefined, highlight?: string) {
     if (!jp) return jp
-    const res = await fetch("https://jpdb.io/api/v1/parse", {
-        method: "POST",
-        headers: {
-            Authorization: `Bearer ${await getSetting("jpdbApiKey")}`,
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            text: jp,
-            token_fields: [
-                "position",
-                "length",
-                "furigana"
-            ],
-            position_length_encoding: "utf16"
-        })
-    })
-    const json = await res.json() as JpdbParseResponse
+    const json = await callJpdb("parse", {
+        text: jp,
+        token_fields: [
+            "position",
+            "length",
+            "furigana"
+        ],
+        position_length_encoding: "utf16"
+    }) as JpdbParseResponse
     ensureNoJpdbError(json)
     return tokensToFuri(jp, json.tokens, highlight)
 }

@@ -199,6 +199,7 @@ div#result {
         }
     }
 }
+// TODO should put this inside elements layer instead of components layer
 // we don't actually have any .popover outside of #popover-portal, but the `#` makes the specificity too high
 .popover {
     .header {

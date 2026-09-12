@@ -9,7 +9,7 @@ import { replaceChildren, replaceWith } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { ActionTooltip } from "../../framework/Tooltips"
 import { JpdbToken } from "../../jpdb/JpdbParseText"
-import { disallowGlobalInput, handleKeyDown } from "../../utils/GlobalHotkeys"
+import { disallowGlobalInput, handleKeyDown, handleTranslate } from "../../utils/GlobalHotkeys"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
 import { getAnkiFurigana } from "../anki/CardList"
 import { HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "../subtitles/JpHoverTooltip"
@@ -384,7 +384,10 @@ export default class ReaderPage extends PageComponent {
         if (key === ",") {
             OpenReaderSettings()
         } else if (key === "f") this.FuriganaButton.Click(undefined)
-        else if (key === "t") this.JpdbLoadButton.Click(undefined)
+        else if (key === "t") {
+            if (!handleTranslate())
+                this.JpdbLoadButton.Click(undefined)
+        }
         else if (key === "l") this.LibraryButton.Click(undefined)
         else if (key === "s") this.SaveParagraph()
         else if (key === "y") this.RecommendedMiningButton.Click(undefined)

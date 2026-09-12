@@ -1,3 +1,5 @@
+import { JsPopover } from "../components/basic/JsPopover";
+import { jpdbTranslate } from "../jpdb/JpdbParseText";
 import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { jpdbEntryUrl } from "./util";
 
@@ -65,6 +67,27 @@ function isJapanese(s: string) {
             return true
     }
     return false
+}
+
+export function handleTranslate(): Promise<unknown> | false {
+    const selection = getSelection()
+    const hasSelection = selection !== null && !selection.isCollapsed
+    if (hasSelection) {
+        const s = getCleanSelectionString(selection)
+        if (isJapanese(s)) return showTranslation(selection, s)
+    }
+    document.getSelection()
+    return false
+}
+
+async function showTranslation(selection: Selection, s: string) {
+    const view = new JsPopover({
+        type: "info-popup",
+        className: "translation-popup",
+        hydrate: () => jpdbTranslate(s)
+    })
+    view.AnchorTo(selection.getRangeAt(0))
+    view.Open()
 }
 
 export function disallowGlobalInput(ev: KeyboardEvent) {

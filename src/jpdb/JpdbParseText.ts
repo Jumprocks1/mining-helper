@@ -85,33 +85,25 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
         }
         console.log(`Fetching ${start}-${end} / ${s.length} lines, ${len} / ${fullJoin.length} characters`)
         const text = s.slice(start, end).join("\n")
-        const res = await fetch("https://jpdb.io/api/v1/parse", {
-            method: "POST",
-            headers: {
-                Authorization: `Bearer ${await getSetting("jpdbApiKey")}`,
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                text,
-                token_fields: [
-                    "position",
-                    "length",
-                    "furigana",
-                    "vocabulary_index"
-                ],
-                vocabulary_fields: [
-                    "spelling",
-                    "reading",
-                    "frequency_rank",
-                    "meanings",
-                    "part_of_speech",
-                    "vid",
-                    "alt_spellings"
-                ],
-                position_length_encoding: "utf16"
-            })
+        const json = await callJpdb<JpdbParseResponse>("parse", {
+            text,
+            token_fields: [
+                "position",
+                "length",
+                "furigana",
+                "vocabulary_index"
+            ],
+            vocabulary_fields: [
+                "spelling",
+                "reading",
+                "frequency_rank",
+                "meanings",
+                "part_of_speech",
+                "vid",
+                "alt_spellings"
+            ],
+            position_length_encoding: "utf16"
         })
-        const json = await res.json() as JpdbParseResponse
         ensureNoJpdbError(json)
         for (const token of json.tokens) {
             token[0] += responseOffset
@@ -187,8 +179,6 @@ export function furiganaFromFullReading(base: string, reading: string) {
     return o
 }
 
-
-// TODO should use in more places
 export async function callJpdb<T extends JpdbResponse>(endpoint: string, body: any) {
     const res = await fetch(`https://jpdb.io/api/v1/${endpoint}`, {
         method: "POST",
@@ -199,4 +189,19 @@ export async function callJpdb<T extends JpdbResponse>(endpoint: string, body: a
         body: JSON.stringify(body)
     })
     return res.json() as Promise<T>
+}
+
+interface TranslateResponse extends JpdbParseResponse {
+    text?: string
+}
+const translationCache = new Map<string, string>()
+export async function jpdbTranslate(text: string) {
+    const cache = translationCache.get(text)
+    if (cache) return cache
+    if (text.length > 1000) throw "Text too long"
+    console.log(`translating ${text.length} characters...`)
+    const res = await callJpdb<TranslateResponse>("ja2en", { text })
+    if (!res.text) throw "Failed to translate.\n" + JSON.stringify(res)
+    translationCache.set(text, res.text)
+    return res.text
 }

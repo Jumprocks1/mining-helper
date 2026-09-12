@@ -87,3 +87,72 @@ export function setSelection(parent: HTMLElement | null | undefined, start: numb
     selection.removeAllRanges()
     selection.addRange(range)
 }
+
+export function combineRectangles(rects: DOMRect[] | DOMRectList) {
+    if (rects.length === 1) return rects
+    const o: DOMRect[] = []
+    for (const a of rects) {
+        let found = false
+        for (let i = 0; i < o.length; i++) {
+            const b = o[i]
+            if (a.y === b.y && a.height === b.height
+                && a.left <= b.right && b.left <= a.right
+            ) {
+                const x = Math.min(a.left, b.left)
+                o[i] = new DOMRect(x, a.y, Math.max(a.right, b.right) - x, a.height)
+                found = true
+                break
+            }
+        }
+        if (!found) {
+            o.push(a)
+        }
+    }
+    return o
+}
+
+export function getTextRects(target: HTMLElement | Range) {
+    if (target instanceof HTMLElement) return combineRectangles(target.getClientRects())
+    else {
+        return combineRectangles(getTextRectsRange(target))
+    }
+}
+
+export function getTextRectsRange(range: Range) {
+    // This walks all text nodes in the common ancestor for `range`, skipping <rt>
+    // For each node that overlaps the range, it select the part of the node inside of the input range
+    // It then adds that text node's range to the output
+    const rects: DOMRect[] = []
+
+    function handle(text: Text) {
+        const nodeRange = document.createRange()
+        nodeRange.selectNodeContents(text)
+
+        // Skip ranges with no overlap
+        if (range.compareBoundaryPoints(Range.END_TO_START, nodeRange) >= 0 ||
+            range.compareBoundaryPoints(Range.START_TO_END, nodeRange) <= 0)
+            return
+
+        if (text === range.startContainer)
+            nodeRange.setStart(text, range.startOffset)
+        if (text === range.endContainer)
+            nodeRange.setEnd(text, range.endOffset)
+        rects.push(...nodeRange.getClientRects())
+    }
+
+    const parent = range.commonAncestorContainer
+    if (parent instanceof Text) {
+        handle(parent)
+        return rects
+    }
+
+    const walker = document.createTreeWalker(parent, NodeFilter.SHOW_TEXT)
+    let node: Node | null
+    while ((node = walker.nextNode())) {
+        if (node.parentElement?.closest("rt"))
+            continue
+        handle(node as Text)
+    }
+
+    return rects;
+}

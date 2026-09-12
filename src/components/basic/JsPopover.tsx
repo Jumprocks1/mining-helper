@@ -4,6 +4,7 @@ import { Load, LoadableChildren } from "../Loader";
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util";
 import { onDeath } from "../../framework/Observer";
 import { addRouteChangeListener } from "../../framework/Router";
+import { combineRectangles, getTextRectsRange } from "../../utils/CharacterHighlighter";
 
 interface Props extends BaseComponentProps {
     hydrate?: LoadableChildren
@@ -57,7 +58,7 @@ export function MarkPopoverClosed(popover: Closable) {
     if (index >= 0) OpenPopovers.splice(index, 1)
 }
 
-type PopoverType = "modal" | "js-tooltip" | "menu"
+type PopoverType = "modal" | "js-tooltip" | "menu" | "info-popup"
 
 // TODO maybe unify with `Modal`
 // main benefits of JsPopover vs CSS:
@@ -85,7 +86,7 @@ export class JsPopover extends Component {
         }
     }
 
-    get CloseOnClickaway() { return this.Type === "menu" }
+    get CloseOnClickaway() { return this.Type === "menu" || this.Type === "info-popup" }
 
     constructor(props: Props) {
         super()
@@ -99,6 +100,27 @@ export class JsPopover extends Component {
 
     SetContent(children: LoadableChildren) {
         replaceChildren(this.Node, Load(children))
+    }
+    AnchorTo(range: Range) {
+        let anchor: Node | null = range.commonAncestorContainer
+        if (!(anchor instanceof HTMLElement)) anchor = anchor.parentElement
+        if (!anchor) return
+        const htmlAnchor = anchor as HTMLElement
+        this.Anchor = htmlAnchor
+        const defaultPos = htmlAnchor.getBoundingClientRect()
+        const rectangles = combineRectangles(getTextRectsRange(range))
+        let desiredPos: DOMRect | undefined
+        for (const rectangle of rectangles) {
+            if (!desiredPos) desiredPos = rectangle
+            if (rectangle.bottom > desiredPos.bottom)
+                desiredPos = rectangle
+            else if (rectangle.bottom === desiredPos.bottom && rectangle.left < desiredPos.left)
+                desiredPos = rectangle
+        }
+        if (desiredPos) {
+            this.Node.style.setProperty("left", (desiredPos.left - defaultPos.left) + "px")
+            this.Node.style.setProperty("top", (desiredPos.bottom - defaultPos.bottom) + "px")
+        }
     }
 
     Toggle() {

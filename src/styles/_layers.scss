@@ -8,7 +8,11 @@
 // Currently defining these as:
 // base: stuff that is so basic/fundamental it doesn't need a classname
 // icons: stuff for the Material Icons - only used in AddIcons.tsx
-// elements: classnames that are fundmental but not really components
+// elements: classnames that are fundmental but not really components.
+//    Also for components that are likely to have overriden styles
+//    For example, popovers have a lot of varieties.
+//    The base popover sets a lot of styles that should easily be overridden
+//    To support that, we can consider popover an element instead of a component
 // components: reusable classes that are quite powerful
 // pages: styles for a single page
 // utilties: stronger elements - can't really be overriden, so each class should only have a single use
