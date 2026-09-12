@@ -6,23 +6,25 @@ import UpDownButtons from "../../components/basic/UpDownButtons";
 import Loader from "../../components/Loader";
 import { OpenModal } from "../../components/Modal";
 import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../../jpdb/IgnoreList";
-import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
+import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { geti1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../../jpdb/JpdbState";
 import { tryPlayAudio } from "../../utils/Audio";
 import { ClearEventHandler, RegisterEventHandler } from "../../utils/Events";
-import { SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt";
+import { Subtitles } from "../../utils/srt";
 import { CardData } from "../../utils/util";
-import SubtitlesPage from "./subtitles";
 import { RegisterJpHoverTooltip } from "./JpHoverTooltip";
 import { UpdateTooltip } from "../../framework/Tooltips";
 import { getSetting, setSetting, getDefaultSetting } from "../../core/Settings";
 
-export default async (getMinimizeTarget: () => DOMRect | undefined, subtitlesPage: SubtitlesPage) => {
-    const subtitles = subtitlesPage.LoadedSubtitles?.subtitles
-    if (!subtitles) return
-    if (!subtitles.jpdbParse) await subtitlesPage.TryJpdbParse();
-    const jpdb = subtitles.jpdbParse
-    if (!jpdb) return
+interface RecommendedMiningModalProps {
+    jpdb: JpdbParseResponse
+    seekTo: (token: JpdbToken) => void
+    seekToNext: (tokens: JpdbToken[], down: boolean) => void
+    subtitles?: Subtitles // used for i1 tokens
+}
+
+export default async (getMinimizeTarget: () => DOMRect | undefined, props: RecommendedMiningModalProps) => {
+    const jpdb = props.jpdb
 
     let maxCountElement: HTMLElement
 
@@ -49,7 +51,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, subtitlesPag
             kanaUnknown: showKana
         }
 
-        const i1Ids = i1 && geti1Tokens(subtitles, jpdb, stateConfig)
+        const i1Ids = i1 && props.subtitles && geti1Tokens(props.subtitles, jpdb, stateConfig)
 
         loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
@@ -112,18 +114,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, subtitlesPag
                 <td className="frequency"><div>{vocab[2] ?? "N/A"}</div></td>
                 <td><div>
                     <UpDownButtons onClick={(_, down) => {
-                        const options: [sub: SubtitleEntryWithCharacterOffset, token: JpdbToken][] = []
-                        for (const entry of subtitles.processedEntries) {
-                            const end = entry.characterOffset + entry.text.length
-                            for (const token of tokenUsages) {
-                                if (entry.characterOffset <= token[0] && token[0] < end) {
-                                    options.push([entry, token])
-                                }
-                            }
-                        }
-                        const index = subtitlesPage.GetNextEntryIndex(options.map(e => e[0]), !down)
-                        const [entry, token] = options[index]
-                        subtitlesPage.SeekAndHighlightToken(entry, token)
+                        props.seekToNext(tokenUsages, down)
                         row.focus()
                     }}>
                         <span className="usage-count">{tokenUsages.length}</span>
@@ -155,7 +146,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, subtitlesPag
         return body
     }
 
-    RegisterKeyboardHandler(body, subtitlesPage)
+    RegisterKeyboardHandler(body, props)
     RegisterJpHoverTooltip({
         body, invert: false,
         getTargetAndVocab: hovered => {
@@ -237,9 +228,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, subtitlesPag
     return res
 }
 
-function RegisterKeyboardHandler(body: HTMLElement, subtitlesPage: SubtitlesPage) {
-    const subtitles = subtitlesPage.LoadedSubtitles?.subtitles
-    if (!subtitles) return
+function RegisterKeyboardHandler(body: HTMLElement, props: RecommendedMiningModalProps) {
     let keyboardState: { vocab: JpdbVocabulary, tokenUsages: JpdbToken[], index?: number } | undefined = undefined
     function updateKeyboardState(up: boolean): true | undefined {
         const focusRow = document.activeElement?.closest<HTMLElement>(".vocab-row")
@@ -265,18 +254,7 @@ function RegisterKeyboardHandler(body: HTMLElement, subtitlesPage: SubtitlesPage
         if (ev.key === "ArrowDown" || ev.key === "ArrowUp") {
             const valid = updateKeyboardState(ev.key === "ArrowUp")
             if (!keyboardState || keyboardState.index === undefined || !valid) return
-            const options: [sub: SubtitleEntryWithCharacterOffset, token: JpdbToken][] = []
-            for (const entry of subtitles.processedEntries) {
-                const end = entry.characterOffset + entry.text.length
-                for (const token of keyboardState.tokenUsages) {
-                    if (entry.characterOffset <= token[0] && token[0] < end) {
-                        options.push([entry, token])
-                    }
-                }
-            }
-            const option = options[keyboardState.index]
-            const [entry, tokenStart] = option
-            subtitlesPage.SeekAndHighlightToken(entry, tokenStart)
+            props.seekTo(keyboardState.tokenUsages[keyboardState.index])
             ev.preventDefault()
             ev.stopPropagation()
         }

@@ -223,63 +223,72 @@ export default class SubtitlesPage extends PageComponent {
         } else if (key === "m") {
             this.TryMine()
         } else if (key === "t") {
-            this.TryJpdbParse()
+            this.JpdbLoadButton.Click(undefined)
         } else if (key === "y") {
-            this.TryRecommendedMiningModal()
+            this.RecommendedMiningButton.Click(undefined)
         }
     }
 
-    RecommendedMiningModalPromise?: Promise<void>
-    async TryRecommendedMiningModal() {
-        const subs = this.LoadedSubtitles?.subtitles
-        if (subs && !this.RecommendedMiningModalPromise) {
-            this.RecommendedMiningModalPromise = (async () => {
-                const modal = await RecommendedMiningModal(() => {
-                    const main = this.LoadedSubtitles?.Node
-                    if (!main) return
-                    // couldn't really think of a nice way to grab this without id
-                    // we could store it as a field in the layout, but we don't even have access to a layout instance here
-                    // even if we did, we can't trust that the layout would be an "instance"
-                    //   (since it could be a simple render function instance)
-                    const header = document.getElementById("mh-header")
-                    if (!header) return
-                    const mainRect = main.getBoundingClientRect()
-                    const headerRect = header.getBoundingClientRect()
-                    const full = document.body.getBoundingClientRect()
-                    const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
-                    return rect
-                }, this)
-                modal?.Minimize()
-            })().finally(() => this.RecommendedMiningModalPromise = undefined)
-            this.RecommendedMiningButton.waitFor(this.RecommendedMiningModalPromise, true)
-        }
-        return this.RecommendedMiningModalPromise
-    }
-
-    JpdbParsePromise?: Promise<JpdbParseResponse | undefined>
-    async TryJpdbParse() {
-        if (this.LoadedSubtitles) {
-            if (!this.JpdbParsePromise) {
-                this.JpdbParsePromise = JpdbParseSubtitles(this.LoadedSubtitles.subtitles)
-                    .then(e => {
-                        this.JpdbLoadButton.Disabled = true
-                        return e
-                    })
-                    .finally(() => {
-                        this.JpdbParsePromise = undefined
-                    })
-                this.JpdbLoadButton.waitFor(this.JpdbParsePromise, true)
-            }
-        }
-        return this.JpdbParsePromise
+    private async _TryRecommendedMiningModal() {
+        const subtitles = this.LoadedSubtitles?.subtitles
+        if (!subtitles) return
+        if (!subtitles.jpdbParse) await this.JpdbLoadButton.Click(undefined)
+        const jpdb = subtitles.jpdbParse
+        if (!jpdb) return
+        const modal = await RecommendedMiningModal(() => {
+            const main = this.LoadedSubtitles?.Node
+            if (!main) return
+            // couldn't really think of a nice way to grab this without id
+            // we could store it as a field in the layout, but we don't even have access to a layout instance here
+            // even if we did, we can't trust that the layout would be an "instance"
+            //   (since it could be a simple render function instance)
+            const header = document.getElementById("mh-header")
+            if (!header) return
+            const mainRect = main.getBoundingClientRect()
+            const headerRect = header.getBoundingClientRect()
+            const full = document.body.getBoundingClientRect()
+            const rect = new DOMRect(mainRect.right, headerRect.bottom, full.width - mainRect.right, full.height - headerRect.bottom)
+            return rect
+        }, {
+            jpdb,
+            seekTo: token => {
+                for (const entry of subtitles.processedEntries) {
+                    const end = entry.characterOffset + entry.text.length
+                    if (entry.characterOffset <= token[0] && token[0] < end) {
+                        this.SeekAndHighlightToken(entry, token)
+                        return
+                    }
+                }
+            },
+            seekToNext: (tokenUsages, down) => {
+                const options: [sub: SubtitleEntryWithCharacterOffset, token: JpdbToken][] = []
+                for (const entry of subtitles.processedEntries) {
+                    const end = entry.characterOffset + entry.text.length
+                    for (const token of tokenUsages) {
+                        if (entry.characterOffset <= token[0] && token[0] < end) {
+                            options.push([entry, token])
+                        }
+                    }
+                }
+                const index = this.GetNextEntryIndex(options.map(e => e[0]), !down)
+                const [entry, token] = options[index]
+                this.SeekAndHighlightToken(entry, token)
+            },
+            subtitles
+        })
+        modal?.Minimize()
     }
 
     JpdbLoadButton = IconButtonClass({
-        icon: "document_search", onClick: () => this.TryJpdbParse(), disabled: true,
+        icon: "document_search", onClick: async () => {
+            if (!this.LoadedSubtitles) return
+            await JpdbParseSubtitles(this.LoadedSubtitles.subtitles)
+            this.JpdbLoadButton.Disabled = true
+        }, disabled: true,
         tooltip: ActionTooltip("Parse File", "T", "Parses the loaded subtitle file using jpdb's API")
     })
     RecommendedMiningButton = IconButtonClass({
-        icon: "format_list_numbered", onClick: () => this.TryRecommendedMiningModal(), disabled: true,
+        icon: "format_list_numbered", onClick: () => this._TryRecommendedMiningModal(), disabled: true,
         tooltip: ActionTooltip("Recommended Mining", "Y", "Recommends words/sentences to mine from the loaded subtitle file."
             + "\nRelies on word frequency (jpdb) and your existing Anki cards.")
     })
