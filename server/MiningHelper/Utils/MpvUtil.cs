@@ -11,6 +11,7 @@ public static class MpvUtil
         public string? Title;
         public string? Filename;
         public int? FfmpegIndex;
+        public int? Frames;
         public string? Lang;
         public int Id;
         public int? SrcId;
@@ -81,6 +82,8 @@ public static class MpvUtil
             if (e.CanRead) score += 10;
             if (e.Title != null)
             {
+                // This will usually be signs instead of dialog
+                if (e.Frames.HasValue && e.Frames < 50) score -= 1;
                 if (e.Title.Contains("Songs", StringComparison.OrdinalIgnoreCase)) score -= 1;
                 if (e.Title.Contains("Signs", StringComparison.OrdinalIgnoreCase)) score -= 1;
                 if (e.Title.Contains("Dialog", StringComparison.OrdinalIgnoreCase)) score += 10;
@@ -107,6 +110,7 @@ public static class MpvUtil
                 res.Add(new SubtitleTrack
                 {
                     Title = track.Get<string>("title"),
+                    Frames = int.TryParse(track["metadata"]?.Get<string>("NUMBER_OF_FRAMES"), out var o) ? o : null,
                     Filename = track.Get<string>("external-filename"),
                     FfmpegIndex = track.Get<int?>("ff-index"),
                     Lang = track.Get<string>("lang"),
