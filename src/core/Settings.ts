@@ -36,7 +36,7 @@ export const AnkiFieldInfo = applyType({
 export type AnkiFieldKey = keyof typeof AnkiFieldInfo
 
 export const furiganaModes = [
-    ["kanjiOrVocab", "Kanji or Vocab"],
+    ["kanjiOrVocab", "Unknown Kanji or Vocab"],
     ["unknownKanji", "Unknown Kanji"],
     ["unknownVocab", "Unknown Vocab"],
     // Could add `Kanji and Vocab` meaning it counts as needing furigana only if it's missing from both kanji and vocab
