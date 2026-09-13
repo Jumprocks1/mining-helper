@@ -28,29 +28,29 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     
     steps:
-      - uses: actions/checkout@v6
-      - uses: dw-labs-org/dart-sass-gha@v1
+    - uses: actions/checkout@v6
+    - uses: dw-labs-org/dart-sass-gha@v1
 
-      - name: Setup Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: "24"
+    - name: Setup Node
+      uses: actions/setup-node@v6
+      with:
+        node-version: "24"
 
-      - name: Build
-        run: |
-          npm i
-          node esbuild.mjs --prod --gh-pages
-          sass src/main.scss:dist/main.css
+    - name: Build
+      run: |
+        npm i
+        node esbuild.mjs --prod --gh-pages
+        sass src/main.scss:dist/main.css
 
-      - name: Setup Pages
-        uses: actions/configure-pages@v6
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v5
-        with:
-          path: 'dist'
+    - name: Setup Pages
+      uses: actions/configure-pages@v6
+    - name: Upload artifact
+      uses: actions/upload-pages-artifact@v5
+      with:
+        path: 'dist'
 
-          
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v5
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v5
   

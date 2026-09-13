@@ -40,7 +40,26 @@ jobs:
         cp ../../scripts/mining_helper.lua mining-helper-win-x64/bin
         zip -r $BuildPrefix-win-x64.zip mining-helper-win-x64
 
+    - uses: dw-labs-org/dart-sass-gha@v1
+    - name: Setup Node
+      uses: actions/setup-node@v6
+      with:
+        node-version: "24"
+
+    - name: Build
+      run: |
+
+    - name: Build Extension
+      run: |
+        npm i
+        node esbuild.mjs --prod
+        sass src/main.scss:dist/main.css
+        zip -r $BuildPrefix-chromium.zip dist
+
     - name: Release
       uses: softprops/action-gh-release@v3
       with:
-        files: server/MiningHelper/${{env.BuildPrefix}}-win-x64.zip
+        files: |
+          server/MiningHelper/${{env.BuildPrefix}}-win-x64.zip
+          ${{env.BuildPrefix}}-chromium.zip
+          
