@@ -5,7 +5,8 @@ import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subti
 import SubtitlesPage from "./subtitles"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { AddStateClass, HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "./JpHoverTooltip"
-import { setSetting } from "../../core/Settings"
+import { getSettingSync, setSetting } from "../../core/Settings"
+import { VocabState } from "../../jpdb/JpdbState"
 
 declare global {
     interface HTMLElement {
@@ -87,7 +88,14 @@ export default class SubtitleViewer {
                 }
             },
             invert: false,
-            onChange: state => UpdateHoverBox(this.HoverRectangleContainer, state)
+            onChange: state => {
+                const vocabState = UpdateHoverBox(this.HoverRectangleContainer, state)
+                if (state && vocabState !== undefined) {
+                    if (getSettingSync("showUnknownVocabOnHover") && vocabState === VocabState.New) {
+                        this.TooltipHandler?.forceSetHoverState?.({ ...state, tooltip: true })
+                    }
+                }
+            }
         })
 
         // make sure anki words are loaded for later, this caches the result

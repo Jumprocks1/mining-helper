@@ -566,7 +566,7 @@ function OpenReaderSettings() {
                 })}
             </div>
             <div className="field">
-                <label>Unknown Vocab On Hover</label>
+                <label>Unknown Vocab Hover</label>
                 {Select({
                     defaultValue: (await getSetting("showUnknownVocabOnHover") ? "true" : "false"),
                     options: [["false", "Same as other vocab"], ["true", "Always show tooltip"]],

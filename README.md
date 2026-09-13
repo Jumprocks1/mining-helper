@@ -16,6 +16,16 @@ Here's a rough outline of what it will help you set up:
 6. Ensure `ffmpeg` is installed and in the system path
 7. Download kanji dictionary files (if you want to make kanji cards)
 
+## [Web](https://jumprocks1.github.io/mining-helper) vs [Extension](https://github.com/Jumprocks1/mining-helper/releases) versions
+The extension version will always have more features than the web version due to having slightly more permissions. Currently, there are the following minor differences:
+- Support for overriding CORS when fetching web pages on the [Reader](https://jumprocks1.github.io/mining-helper/reader) page
+    - For loading web pages on the web version, you can <kbd>Ctrl+A</kbd>, <kbd>Ctrl+C</kbd> on the target web page and <kbd>Ctrl+V</kbd> into the Reader page. This should look identical to loading from a URL, but is slightly inconvenient.
+- Support for https://sentencesearch.neocities.org/ if you manually load the sentence list JSON file
+- Minor jpdb.io enhancements
+    - Anki vocab state coloring on jpdb.io when browsing vocab
+    - Audio button for loading from local audio server. This also lets you update the audio file for Anki vocab cards if the original audio wasn't ideal. I'll eventually add a different way of doing this.
+- Ability to revert/stay on a specific version of the application
+
 ## Advantages over existing tools
 - Doesn't rely on mpv for parsing the subtitles, allowing it to load the entire subtitle file at once
 - Doesn't use the clipboard for transferring subtitles

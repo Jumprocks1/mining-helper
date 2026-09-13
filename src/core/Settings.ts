@@ -82,7 +82,7 @@ export const defaultLocalSettings = {
     serverApiKey: "",
     jpdbApiKey: "",
     defaultTooltipDelay: 300 as Milliseconds,
-    showUnknownVocabOnHover: false, // TODO this doesn't apply to subtitle page yet
+    showUnknownVocabOnHover: false,
 }
 export type LocalSettings = typeof defaultLocalSettings
 
