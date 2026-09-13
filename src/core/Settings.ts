@@ -41,56 +41,21 @@ export const furiganaModes = [
 ] as const satisfies SelectOption[]
 export type FuriganaMode = (typeof furiganaModes)[number][0]
 
-export interface LocalSettings {
-    regexReplacements: ReplacementEntry[]
-    skipChapterRegex: string
-    skipAssStyleRegex: string
-    customCss: string
-
-    miningMaxFrequency: number
-    miningMaxRecommendedCount: number
-    miningTrimKana: boolean
-    miningChronological: boolean
-
-    serverAddress: string
-    serverApiKey: string
-    jpdbApiKey: string
-
-    ankiVocabDeck: string,
-    ankiVocabModel: string,
-    ankiVocabNoteFilter: string,
-    ankiConnectAddress: string
-    ankiConnectApiKey: string
-    ankiFields: { [key in AnkiFieldKey]?: string }
-
-    volume: number
-
-    defaultStartOffset: Milliseconds
-    defaultEndOffset: Milliseconds
-
-    defaultTooltipDelay: Milliseconds
-
-    furiganaMode: FuriganaMode
-    readerBodySelector: string
-    readerIgnoreSelector: string
-    showUnknownVocabOnHover: boolean
-    tocWidth: number
-}
-
-export const defaultLocalSettings: LocalSettings = {
-    regexReplacements: [],
-
-    serverAddress: "127.0.0.1:4012",
-    serverApiKey: "",
-    jpdbApiKey: "",
+// Pay attention to type widening and use casts where needed
+// The alternative was having a separate interface, but that was way worse
+export const defaultLocalSettings = {
+    // Anki settings
+    ankiConnectAddress: "http://127.0.0.1:8765",
+    ankiConnectApiKey: "",
 
     ankiVocabDeck: "",
     ankiVocabModel: "",
     ankiVocabNoteFilter: "",
-    ankiConnectAddress: "http://127.0.0.1:8765",
-    ankiConnectApiKey: "",
-    ankiFields: {},
 
+    ankiFields: {} as { [key in AnkiFieldKey]?: string },
+
+    // Subtitle settings
+    regexReplacements: [] as ReplacementEntry[],
     skipChapterRegex: "",
     skipAssStyleRegex: "",
     customCss: "",
@@ -99,16 +64,23 @@ export const defaultLocalSettings: LocalSettings = {
     miningTrimKana: true,
     miningChronological: false,
     volume: 0.6,
-    defaultStartOffset: 0,
-    defaultEndOffset: 100,
+    defaultStartOffset: 0 as Milliseconds,
+    defaultEndOffset: 100 as Milliseconds,
 
-    defaultTooltipDelay: 300,
-    furiganaMode: "kanjiOrVocab",
+    // Reader settings
+    furiganaMode: "kanjiOrVocab" as FuriganaMode,
     readerBodySelector: "",
     readerIgnoreSelector: "",
-    showUnknownVocabOnHover: false,
-    tocWidth: 0
+    tocWidth: 0,
+
+    // Global settings
+    serverAddress: "127.0.0.1:4012",
+    serverApiKey: "",
+    jpdbApiKey: "",
+    defaultTooltipDelay: 300 as Milliseconds,
+    showUnknownVocabOnHover: false, // TODO this doesn't apply to subtitle page yet
 }
+export type LocalSettings = typeof defaultLocalSettings
 
 // make sure none of these settings are needed on immediately page load
 const syncSettings = ["defaultTooltipDelay", "showUnknownVocabOnHover"] satisfies (keyof LocalSettings)[]
