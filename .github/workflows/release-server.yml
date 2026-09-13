@@ -54,7 +54,8 @@ jobs:
         npm i
         node esbuild.mjs --prod
         sass src/main.scss:dist/main.css
-        zip -r $BuildPrefix-chromium.zip dist/*
+        cd dist
+        zip -r ../$BuildPrefix-chromium.zip .
 
     - name: Release
       uses: softprops/action-gh-release@v3
