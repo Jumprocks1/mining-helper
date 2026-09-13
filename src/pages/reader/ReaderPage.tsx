@@ -566,6 +566,7 @@ function OpenReaderSettings() {
                     onChange: v => setSetting("furiganaMode", v as any)
                 })}
             </div>
+            {await knownKanjiField()}
             <div className="field">
                 <label>Unknown Vocab Hover</label>
                 {Select({
@@ -574,7 +575,6 @@ function OpenReaderSettings() {
                     onChange: v => setSetting("showUnknownVocabOnHover", v === "true")
                 })}
             </div>
-            {await knownKanjiField()}
         </>
     }} />
 
@@ -618,7 +618,7 @@ async function knownKanjiField() {
     const ce = <div className="known-kanji-ce" contentEditable="plaintext-only" />
     ce.textContent = await getSetting("knownKanji")
     ce.addEventListener("input", () => setSetting("knownKanji", kanjiString(ce.textContent)))
-    return <div className="field">
+    return <div className="field" tooltip={"Used to hide furigana.\nInput the list of kanji directly into here, ie. '一二三'"}>
         <div className="label">Known Kanji</div>
         {ce}
     </div>
