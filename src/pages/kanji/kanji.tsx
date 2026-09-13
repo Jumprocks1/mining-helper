@@ -6,7 +6,7 @@ import { PageComponent } from "../../framework/PageComponent"
 import AnkiConnect, { AnkiNote, NoteBase } from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { serverPostJson } from "../../utils/Audio"
-import { addKnownKanji } from "../../utils/KanjiSet"
+import { addKnownAnkiKanji } from "../../utils/KanjiSet"
 import { getAnkiFurigana } from "../anki/CardList"
 
 const deckName = "Mining Helper Kanji"
@@ -210,7 +210,7 @@ async function createKanjiCard(kanji: string) {
             deckName, modelName: deckName
         }
     })
-    await addKnownKanji(kanji)
+    await addKnownAnkiKanji(kanji)
 }
 
 async function updateKanjiNote(kanji: string) {

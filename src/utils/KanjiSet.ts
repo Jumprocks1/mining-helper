@@ -3,31 +3,31 @@ import { BrowserStorage } from "./BrowserApi"
 
 type KanjiSet = Set<string> // single characters
 
-let localKanjiSet: KanjiSet | undefined
+let localAnkiKanjiSet: KanjiSet | undefined
 
 const knownKanjiAnkiQuery = `"deck:Mining Helper Kanji" -is:suspended`
 
-export async function loadKanjiSet(disableCache = false) {
-    if (!disableCache && localKanjiSet) return localKanjiSet
+export async function loadAnkiKanjiSet(disableCache = false) {
+    if (!disableCache && localAnkiKanjiSet) return localAnkiKanjiSet
     const list = (await BrowserStorage.local.get({ knownKanjiList: "" })).knownKanjiList
-    localKanjiSet = new Set(list)
-    return localKanjiSet
+    localAnkiKanjiSet = new Set(list)
+    return localAnkiKanjiSet
 }
 
-export async function addKnownKanji(kanji: string) {
-    const set = await loadKanjiSet()
+export async function addKnownAnkiKanji(kanji: string) {
+    const set = await loadAnkiKanjiSet()
     set.add(kanji)
     await BrowserStorage.local.set({ knownKanjiList: [...set].join("") })
 }
 
 // TODO need a button to call this somewhere
-export async function reloadKanjiSet() {
+export async function reloadAnkiKanjiSet() {
     const notes = await AnkiConnect.call("notesInfo", { query: knownKanjiAnkiQuery })
-    localKanjiSet = new Set<string>()
+    localAnkiKanjiSet = new Set<string>()
     for (const note of notes) {
         // TODO use configured field name here
         const kanji = note.fields["Kanji"]?.value
-        if (kanji) localKanjiSet.add(kanji)
+        if (kanji) localAnkiKanjiSet.add(kanji)
     }
-    await BrowserStorage.local.set({ knownKanjiList: [...localKanjiSet].join("") })
+    await BrowserStorage.local.set({ knownKanjiList: [...localAnkiKanjiSet].join("") })
 }

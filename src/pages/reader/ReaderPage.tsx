@@ -24,6 +24,7 @@ import { UrlTemplateReader } from "../../reader/UrlTemplateReader"
 import Draggable from "../../components/Draggable"
 import RecommendedMiningModal from "../subtitles/RecommendedMiningModal"
 import AnkiSettingsModal from "../anki/AnkiSettingsModal"
+import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
@@ -573,6 +574,7 @@ function OpenReaderSettings() {
                     onChange: v => setSetting("showUnknownVocabOnHover", v === "true")
                 })}
             </div>
+            {await knownKanjiField()}
         </>
     }} />
 
@@ -596,4 +598,28 @@ function OpenReaderSettings() {
         </>
     })
     return modal
+}
+
+function kanjiString(s: string) {
+    let o = []
+    const found = new Set<string>()
+    for (let i = 0; i < s.length; i++) {
+        const c = s[i]
+        if (!found.has(c) && unicodeType(s, i) === UnicodeCharacterType.Kanji) {
+            found.add(c)
+            o.push(c)
+        }
+    }
+    o.sort((a, b) => a > b ? 1 : a < b ? -1 : 0)
+    return o.join("")
+}
+
+async function knownKanjiField() {
+    const ce = <div className="known-kanji-ce" contentEditable="plaintext-only" />
+    ce.textContent = await getSetting("knownKanji")
+    ce.addEventListener("input", () => setSetting("knownKanji", kanjiString(ce.textContent)))
+    return <div className="field">
+        <div className="label">Known Kanji</div>
+        {ce}
+    </div>
 }

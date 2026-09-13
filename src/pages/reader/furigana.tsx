@@ -3,13 +3,19 @@ import { JpdbParseResponseWithNodes } from "../../reader/readerPageJpdb";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabState, VocabState } from "../../jpdb/JpdbState";
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil";
-import { loadKanjiSet } from "../../utils/KanjiSet";
+import { loadAnkiKanjiSet } from "../../utils/KanjiSet";
 
 // This should no-op when everything is already inside ruby tags
 export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
     const mode = await getSetting("furiganaMode")
     if (mode === "none") return
-    const knownKanji = await loadKanjiSet()
+    const knownAnkiKanji = await loadAnkiKanjiSet()
+    const extraKanji = await getSetting("knownKanji")
+    let knownKanji = knownAnkiKanji
+    if (extraKanji.length > 0) {
+        knownKanji = new Set<string>(knownAnkiKanji)
+        for (const e of extraKanji) knownKanji.add(e)
+    }
     const newNodes: Text[] = []
     const unknownTokens = jpdb.tokens.filter(e => needsFurigana(mode, e, jpdb.vocabulary[e[3]], knownKanji))
 

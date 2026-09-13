@@ -76,6 +76,7 @@ export const defaultLocalSettings = {
     readerBodySelector: "",
     readerIgnoreSelector: "",
     tocWidth: 0,
+    knownKanji: "", // this doesn't include the stuff imported from Anki. Have to combine the 2 sets
 
     // Global settings
     serverAddress: "127.0.0.1:4012",
