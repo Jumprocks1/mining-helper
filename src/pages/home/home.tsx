@@ -41,6 +41,7 @@ export default class HomePage extends PageComponent {
             <h2>Helpful Links</h2>
             <ul id="helpful-links">
                 <li><a href="https://jimaku.cc/">Jimaku</a></li>
+                <li><a href="https://jiten.moe/">Jiten</a></li>
                 <li><a href="https://jpdb.io/">jpdb.io</a></li>
                 <li><a href="https://jisho.org/">jisho.org</a></li>
                 <li><a href="https://guidetojapanese.org/learn/complete/">Tae Kim's Guide</a></li>

@@ -34,6 +34,18 @@ export function keyDownWithText(ev: KeyboardEvent, text: string) {
             ev.preventDefault()
             return true
         }
+    } else if (key == "n") {
+        const isSingleKanji = text.length === 1 && unicodeType(text) === UnicodeCharacterType.Kanji
+        if (isSingleKanji) {
+            openTab(`https://jiten.moe/kanji/${encodeURIComponent(text)}`)
+            ev.preventDefault()
+            return true
+        }
+        else {
+            openTab(`https://jiten.moe/parse?text=${encodeURIComponent(text)}`)
+            ev.preventDefault()
+            return true
+        }
     } else if (key === "s") {
         openTab(`ss.html?q=${encodeURIComponent(text)}`)
         ev.preventDefault()
@@ -52,12 +64,8 @@ export function handleKeyDown(ev: KeyboardEvent) {
 }
 
 function getCleanSelectionString(sel: Selection) {
-    if (sel.rangeCount === 0) return ""
-    const range = sel.getRangeAt(0)
-    // feels pretty silly to clone the whole thing, but it works fine and is fast
-    const clone = range.cloneContents()
-    clone.querySelectorAll("rt").forEach(rt => rt.remove())
-    return clone.textContent
+    // Used to do more complex stuff here, but this seems fine?
+    return sel.toString()
 }
 
 function isJapanese(s: string) {
