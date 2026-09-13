@@ -1,9 +1,19 @@
 {
   "name": "Anki Mining Helper",
   "$schema": "https://json.schemastore.org/chrome-manifest",
-  "version": "1.0",
+  "version": "0.0.1",
   "manifest_version": 3,
   "action": {},
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "5703f760-ce2d-42cc-b24f-7c1392fe4397",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
+    }
+  },
   "declarative_net_request": {
     "rule_resources": [
       {

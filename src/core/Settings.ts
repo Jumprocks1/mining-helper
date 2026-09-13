@@ -15,6 +15,7 @@ const defaultTemporarySettings: TemporarySettings = {
 
 function applyType<K extends string>(e: Record<K, { name: string, tooltip?: string }>) { return e }
 export const AnkiFieldInfo = applyType({
+    // Vocab fields
     word: { name: "Word", tooltip: "Raw kanji for word, ex: 時間" },
     wordReading: { name: "Word Reading", tooltip: "Kana reading for word, ex: じかん" },
     wordMeaning: { name: "Word Meaning", tooltip: "English meaning of word, ex: time, hour" },
@@ -27,6 +28,9 @@ export const AnkiFieldInfo = applyType({
     wordAudio: { name: "Word Audio" },
     sentenceAudio: { name: "Sentence Audio" },
     image: { name: "Image" },
+
+    // Kanji fields
+    // TODO
 })
 
 export type AnkiFieldKey = keyof typeof AnkiFieldInfo
