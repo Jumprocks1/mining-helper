@@ -134,7 +134,7 @@
 
 // TODO move inside layer once we also move .js-tooltip and .popover
 // Could consider moving this inside the main `.popover` declaration
-.popover.translation-popup {
+#translation-popup {
     font-size: 1em;
     max-width: 30em;
 }

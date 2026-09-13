@@ -91,8 +91,9 @@ async function activeFields(card: CardData) {
 }
 
 async function updateInAnki(card: CardData) {
-    // TODO this should use Furigana instead
-    const notes = await AnkiConnect.call("findNotes", { query: `word:${card.kanji}` })
+    // TODO this should use Furigana instead, but we don't have furi at this point
+    // Should also use configured fields
+    const notes = await AnkiConnect.call("findNotes", { query: `word:${card.kanji}2` })
     if (notes.length === 0) throw new Error(`No notes matching ${card.kanji}`)
     if (notes.length > 1) throw new Error(`Multiple notes matching ${card.kanji}`)
     const noteId = notes[0]

@@ -1,7 +1,7 @@
 import IconButton from "./basic/IconButton";
 import { Component } from "../framework/Component";
 import { Load, LoadableChildren } from "./Loader";
-import { getPortal, TrackOpenPopover, OpenPopovers, MarkPopoverClosed as MarkPopoverClosed } from "./basic/JsPopover";
+import { getPortal, TrackOpenPopover, OpenPopovers, MarkPopoverClosed } from "./basic/JsPopover";
 import { appendChild } from "../framework/createElement";
 import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 

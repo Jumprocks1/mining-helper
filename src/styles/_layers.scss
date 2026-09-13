@@ -9,6 +9,7 @@
 // base: stuff that is so basic/fundamental it doesn't need a classname
 // icons: stuff for the Material Icons - only used in AddIcons.tsx
 // elements: classnames that are fundmental but not really components.
+//    Could think of them as parts of the framework vs the "app"
 //    Also for components that are likely to have overriden styles
 //    For example, popovers have a lot of varieties.
 //    The base popover sets a lot of styles that should easily be overridden

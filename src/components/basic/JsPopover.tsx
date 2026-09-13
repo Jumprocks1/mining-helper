@@ -85,6 +85,7 @@ export class JsPopover extends Component {
             this.Node.style.setProperty("position-anchor", anchorName)
         }
     }
+    private Range?: Range
 
     get CloseOnClickaway() { return this.Type === "menu" || this.Type === "info-popup" }
 
@@ -101,26 +102,19 @@ export class JsPopover extends Component {
     SetContent(children: LoadableChildren) {
         replaceChildren(this.Node, Load(children))
     }
-    AnchorTo(range: Range) {
-        let anchor: Node | null = range.commonAncestorContainer
-        if (!(anchor instanceof HTMLElement)) anchor = anchor.parentElement
-        if (!anchor) return
-        const htmlAnchor = anchor as HTMLElement
-        this.Anchor = htmlAnchor
-        const defaultPos = htmlAnchor.getBoundingClientRect()
-        const rectangles = combineRectangles(getTextRectsRange(range))
-        let desiredPos: DOMRect | undefined
-        for (const rectangle of rectangles) {
-            if (!desiredPos) desiredPos = rectangle
-            if (rectangle.bottom > desiredPos.bottom)
-                desiredPos = rectangle
-            else if (rectangle.bottom === desiredPos.bottom && rectangle.left < desiredPos.left)
-                desiredPos = rectangle
+    AnchorToRange(range: Range) {
+        if (!this.Anchor) {
+            let anchor: Node | null = range.commonAncestorContainer
+            if (!(anchor instanceof HTMLElement)) anchor = anchor.parentElement
+            if (!anchor) return
+            const htmlAnchor = anchor as HTMLElement
+            this.Anchor = htmlAnchor
         }
-        if (desiredPos) {
-            this.Node.style.setProperty("left", (desiredPos.left - defaultPos.left) + "px")
-            this.Node.style.setProperty("top", (desiredPos.bottom - defaultPos.bottom) + "px")
-        }
+        this.Range = range
+        const defaultPos = this.Anchor.getBoundingClientRect()
+        const desiredPos = range.getBoundingClientRect()
+        this.Node.style.left = `calc(anchor(left) + ${desiredPos.left - defaultPos.left}px)`
+        this.Node.style.top = `calc(anchor(top) + ${desiredPos.bottom - defaultPos.top}px)`
     }
 
     Toggle() {
@@ -157,5 +151,37 @@ export class JsPopover extends Component {
 
         this.IsOpen = false
         this.Node.remove()
+    }
+
+    // not called automatically
+    // ideally it's called when opened, content changed, or position changed (including anchor/scroll position)
+    FixPosition() {
+        // If we aren't anchoring to a range, there's nothing to fix
+        // CSS should automatically reposition as long as left/top aren't set
+        if (!this.Range || !this.Anchor || !this.IsOpen) return
+
+        // Could add an intersection observer if we ever have tooltips that change size
+        // Think that's overkill for now though
+        const pos = this.Node.getBoundingClientRect()
+        const windowWidth = document.documentElement.clientWidth
+        const windowHeight = document.documentElement.clientHeight
+        let xShift = 0
+        if (pos.right > windowWidth) {
+            xShift = windowWidth - pos.right
+        } else if (pos.left < 0) {
+            // this one shouldn't happen since we are currently always spanning right
+            xShift = pos.left
+        }
+        // We don't bother checking the other condition for y direction since it should never happen
+        const flipY = pos.bottom > windowHeight
+        if (xShift !== 0 || flipY) {
+            const defaultPos = this.Anchor.getBoundingClientRect()
+            const desiredPos = this.Range.getBoundingClientRect()
+            this.Node.style.left = `calc(anchor(left) + ${desiredPos.left - defaultPos.left + xShift}px)`
+            if (flipY) {
+                // it would make more sense to set style.bottom but I was having issues with that
+                this.Node.style.top = `calc(anchor(top) + ${desiredPos.bottom - defaultPos.top - pos.height - desiredPos.height}px)`
+            } else this.Node.style.top = `calc(anchor(top) + ${desiredPos.bottom - defaultPos.top}px)`
+        }
     }
 }

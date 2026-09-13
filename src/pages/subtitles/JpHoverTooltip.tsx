@@ -25,17 +25,11 @@ export default class JpHoverTooltip extends JsPopover {
     Target(target: HTMLElement | Range, vocab: JpdbVocabulary, token?: JpdbToken) {
         if (!vocab.furigana) this.Close() // not sure what this line does
         if (target instanceof HTMLElement) {
+            this.Node.style.removeProperty("left")
+            this.Node.style.removeProperty("top")
             this.Anchor = target
-            this.Node.style.left = `anchor(left)`
-            this.Node.style.top = `anchor(bottom)`
         } else {
-            if (!this.Anchor) return
-            const parentRect = this.Anchor.getBoundingClientRect()
-            const rect = target.getBoundingClientRect()
-            const x = rect.left - parentRect.left
-            const y = rect.bottom - parentRect.top
-            this.Node.style.left = `calc(anchor(left) + ${x}px)`
-            this.Node.style.top = `calc(anchor(top) + ${y}px)`
+            this.AnchorToRange(target)
         }
         this.TargetBase(vocab, token)
     }
@@ -100,6 +94,7 @@ export default class JpHoverTooltip extends JsPopover {
             </div>)}
         </>)
         this.Open()
+        this.FixPosition()
     }
 }
 

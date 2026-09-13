@@ -80,14 +80,18 @@ export function handleTranslate(): Promise<unknown> | false {
     return false
 }
 
+let translationPopup: JsPopover | undefined
 async function showTranslation(selection: Selection, s: string) {
+    if (translationPopup) translationPopup.Close()
     const view = new JsPopover({
         type: "info-popup",
-        className: "translation-popup",
+        id: "translation-popup",
         hydrate: () => jpdbTranslate(s)
     })
-    view.AnchorTo(selection.getRangeAt(0))
+    view.AnchorToRange(selection.getRangeAt(0))
     view.Open()
+    view.FixPosition()
+    translationPopup = view
 }
 
 export function disallowGlobalInput(ev: KeyboardEvent) {
