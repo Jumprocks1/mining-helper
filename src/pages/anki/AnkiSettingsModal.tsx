@@ -129,16 +129,16 @@ const body = async (inner: HTMLElement) => {
             {await stringSettingsField("ankiConnectApiKey", "AnkiConnect API Key", "password")}
         </div>
         <div className="field-group">
-            <div className="field">
-                <label>Taget Deck</label>
+            <div className="field" tooltip={"Deck used when mining new vocab.\nAlso used for marked known words."}>
+                <label>Vocab Deck</label>
                 {Select({
                     defaultValue: await getSetting("ankiVocabDeck"),
                     loadOptions: () => AnkiConnect.call("deckNames", undefined),
                     onChange: v => setSetting("ankiVocabDeck", v)
                 })}
             </div>
-            <div className="field">
-                <label>Target Model</label>
+            <div className="field" tooltip="Model used when mining new vocab.">
+                <label>Vocab Deck Model</label>
                 {Select({
                     defaultValue: await getSetting("ankiVocabModel"),
                     loadOptions: () => AnkiConnect.call("modelNames", undefined),
@@ -154,10 +154,11 @@ const body = async (inner: HTMLElement) => {
                 async () => <span>
                     Can be any <ExternalLink href="https://docs.ankiweb.net/searching.html">Anki search string.</ExternalLink><br />
                     Mainly used for marking already known words.<br />
-                    Will use <code>"deck:{await getSetting("ankiVocabDeck")}"</code> if unset.
+                    Will use <code>"deck:{await getSetting("ankiVocabDeck")}"</code> if unset.<br />
+                    Recommend adding <code>-is:suspended</code> if you like to suspend cards.
                 </span>)}
         </div>
-        <h3>Field Mappings</h3>
+        <h3>Vocab Field Mappings</h3>
     </>
     const fieldMappings = <div className="anki-field-mappings" />
     for (const _key in AnkiFieldInfo) {
