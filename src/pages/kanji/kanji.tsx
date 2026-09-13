@@ -28,7 +28,7 @@ const main = async () => {
 
     const kanjiNotes = await AnkiConnect.call("notesInfo", { query: `deck:\"${deckName}\"` })
 
-    const vocabDeckName = await getSetting("targetAnkiDeck")
+    const vocabDeckName = await getSetting("ankiVocabDeck")
 
     const knownKanji = new Set<string>()
     for (const note of kanjiNotes) {
@@ -105,7 +105,7 @@ const main = async () => {
 
 async function getNoteInfo(kanji: string): Promise<NoteBase> {
     const res = await serverPostJson<KanjiInfo>(`kanji-info:${kanji}`)
-    const vocabDeckName = await getSetting("targetAnkiDeck")
+    const vocabDeckName = await getSetting("ankiVocabDeck")
 
     const ankiFields = await getSetting("ankiFields")
     function fieldName(key: AnkiFieldKey) {

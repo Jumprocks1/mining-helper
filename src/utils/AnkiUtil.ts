@@ -11,11 +11,11 @@ export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal
     const [fields, audio, picture] = await activeFields(card);
     const tags = ["ext-mined"]
     if (source) tags.push(source)
-    const deck = await getSetting("targetAnkiDeck")
+    const deck = await getSetting("ankiVocabDeck")
     const noteId = await AnkiConnect.call("addNote", {
         note: {
             deckName: deck,
-            modelName: await getSetting("targetAnkiModel"),
+            modelName: await getSetting("ankiVocabModel"),
             fields,
             audio,
             tags,

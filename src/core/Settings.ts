@@ -56,9 +56,9 @@ export interface LocalSettings {
     serverApiKey: string
     jpdbApiKey: string
 
-    targetAnkiDeck: string,
-    targetAnkiModel: string,
-    targetAnkiNoteFilter: string,
+    ankiVocabDeck: string,
+    ankiVocabModel: string,
+    ankiVocabNoteFilter: string,
     ankiConnectAddress: string
     ankiConnectApiKey: string
     ankiFields: { [key in AnkiFieldKey]?: string }
@@ -84,9 +84,9 @@ export const defaultLocalSettings: LocalSettings = {
     serverApiKey: "",
     jpdbApiKey: "",
 
-    targetAnkiDeck: "",
-    targetAnkiModel: "",
-    targetAnkiNoteFilter: "",
+    ankiVocabDeck: "",
+    ankiVocabModel: "",
+    ankiVocabNoteFilter: "",
     ankiConnectAddress: "http://127.0.0.1:8765",
     ankiConnectApiKey: "",
     ankiFields: {},

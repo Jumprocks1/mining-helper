@@ -23,6 +23,7 @@ import { VocabState } from "../../jpdb/JpdbState"
 import { UrlTemplateReader } from "../../reader/UrlTemplateReader"
 import Draggable from "../../components/Draggable"
 import RecommendedMiningModal from "../subtitles/RecommendedMiningModal"
+import AnkiSettingsModal from "../anki/AnkiSettingsModal"
 
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
@@ -579,12 +580,20 @@ function OpenReaderSettings() {
         header: "Reader Settings",
         body,
         id: "reader-settings-modal",
-        footer: <button onclick={() => {
-            modal.Close()
-            AdvancedSettingsModal()
-        }}>
-            Advanced Settings
-        </button>
+        footer: <>
+            <button onclick={() => {
+                modal.Close()
+                AnkiSettingsModal()
+            }}>
+                Anki Setup
+            </button>
+            <button onclick={() => {
+                modal.Close()
+                AdvancedSettingsModal()
+            }}>
+                Advanced Settings
+            </button>
+        </>
     })
     return modal
 }

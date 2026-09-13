@@ -39,7 +39,7 @@ export async function validateAnkiSettings(validator: SettingsValidator, onlyAnk
         if (decks.length === 0) throw "No Anki decks found"
         validator.Pass(`Found ${decks.length} decks`)
 
-        const deckName = await getSetting("targetAnkiDeck")
+        const deckName = await getSetting("ankiVocabDeck")
         if (!decks.includes(deckName)) throw (<div>Deck <code>{deckName}</code> not found</div>)
         let notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}"` })
         if (notes.length === 0)
@@ -47,7 +47,7 @@ export async function validateAnkiSettings(validator: SettingsValidator, onlyAnk
         else
             validator.Pass(<div>Found {notes.length} notes in <code>{deckName}</code></div>)
 
-        if (await getSetting("targetAnkiNoteFilter")) {
+        if (await getSetting("ankiVocabNoteFilter")) {
             const filter = await getTargetNoteFilter()
             notes = await AnkiConnect.call("findNotes", { query: filter })
             if (notes.length === 0)
@@ -57,7 +57,7 @@ export async function validateAnkiSettings(validator: SettingsValidator, onlyAnk
         }
 
         const models = await AnkiConnect.call("modelNames", undefined)
-        const modelName = await getSetting("targetAnkiModel")
+        const modelName = await getSetting("ankiVocabModel")
         if (!models.includes(modelName)) throw (<div>Model <code>{modelName}</code> not found</div>)
 
         notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}" "note:${modelName}"` })
@@ -95,9 +95,9 @@ export async function validateAnkiSettings(validator: SettingsValidator, onlyAnk
 }
 
 export async function getTargetNoteFilter() {
-    const s = await getSetting("targetAnkiNoteFilter")
+    const s = await getSetting("ankiVocabNoteFilter")
     if (s) return s
-    return `"deck:${await getSetting("targetAnkiDeck")}"`
+    return `"deck:${await getSetting("ankiVocabDeck")}"`
 }
 
 const body = async (inner: HTMLElement) => {
@@ -107,7 +107,7 @@ const body = async (inner: HTMLElement) => {
         const res = Select({
             defaultValue: ankiFields[key] ?? AnkiFieldInfo[key].name,
             includeEmpty: true,
-            loadOptions: async () => AnkiConnect.call("modelFieldNames", { modelName: await getSetting("targetAnkiModel") }),
+            loadOptions: async () => AnkiConnect.call("modelFieldNames", { modelName: await getSetting("ankiVocabModel") }),
             onChange: v => {
                 ankiFields[key] = v
                 setSetting("ankiFields", ankiFields) // not awaited
@@ -132,29 +132,29 @@ const body = async (inner: HTMLElement) => {
             <div className="field">
                 <label>Taget Deck</label>
                 {Select({
-                    defaultValue: await getSetting("targetAnkiDeck"),
+                    defaultValue: await getSetting("ankiVocabDeck"),
                     loadOptions: () => AnkiConnect.call("deckNames", undefined),
-                    onChange: v => setSetting("targetAnkiDeck", v)
+                    onChange: v => setSetting("ankiVocabDeck", v)
                 })}
             </div>
             <div className="field">
                 <label>Target Model</label>
                 {Select({
-                    defaultValue: await getSetting("targetAnkiModel"),
+                    defaultValue: await getSetting("ankiVocabModel"),
                     loadOptions: () => AnkiConnect.call("modelNames", undefined),
                     onChange: v => {
-                        setSetting("targetAnkiModel", v)
+                        setSetting("ankiVocabModel", v)
                         fields.forEach(e => e.Reset?.())
                     }
                 })}
             </div>
         </div>
         <div className="field-group">
-            {await stringSettingsField("targetAnkiNoteFilter", "Existing Note Filter", undefined,
+            {await stringSettingsField("ankiVocabNoteFilter", "Existing Note Filter", undefined,
                 async () => <span>
                     Can be any <ExternalLink href="https://docs.ankiweb.net/searching.html">Anki search string.</ExternalLink><br />
                     Mainly used for marking already known words.<br />
-                    Will use <code>"deck:{await getSetting("targetAnkiDeck")}"</code> if unset.
+                    Will use <code>"deck:{await getSetting("ankiVocabDeck")}"</code> if unset.
                 </span>)}
         </div>
         <h3>Field Mappings</h3>

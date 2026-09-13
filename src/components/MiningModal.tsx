@@ -134,7 +134,7 @@ export default (props: Props) => {
                 await saveToAnkiAndRemove(card, "mining-modal", force)
             } catch (e) {
                 if (e instanceof UserError && e.message === "cannot create note because it is a duplicate") {
-                    await AnkiConnect.call("guiBrowse", { query: `"deck:${await getSetting("targetAnkiDeck")}" word:${card.kanji}` })
+                    await AnkiConnect.call("guiBrowse", { query: `"deck:${await getSetting("ankiVocabDeck")}" word:${card.kanji}` })
                     throw `A duplicate note already exists.\nHold shift and save to force create.`
                 }
                 throw e

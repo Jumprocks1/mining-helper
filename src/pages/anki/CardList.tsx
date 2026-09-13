@@ -1,11 +1,11 @@
 import { Icon } from "../../components/basic/IconButton"
 import LoadingButton from "../../components/LoadingButton"
-import { getSetting,AnkiFieldKey,AnkiFieldInfo } from "../../core/Settings"
+import { getSetting, AnkiFieldKey, AnkiFieldInfo } from "../../core/Settings"
 import { furiganaTrimmed, simplifiedFurigana } from "../../jpdb/JpdbState"
 import AnkiConnect from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { BrowserStorage } from "../../utils/BrowserApi"
-import AnkiSettingsModal,{ getTargetNoteFilter } from "./AnkiSettingsModal"
+import AnkiSettingsModal, { getTargetNoteFilter } from "./AnkiSettingsModal"
 
 // we started using furigana for everything since kanji alone is not enough without context
 // kanji have multiple readings, and multiple readings can also target different kanji.
@@ -118,9 +118,9 @@ export default async () => {
         warning = <div className="warning">
             No AnkiConnect API key set, <button className="link-button" onclick={AnkiSettingsModal}>click here to set one</button>
         </div>
-    } else if (!await getSetting("targetAnkiDeck")) {
+    } else if (!await getSetting("ankiVocabDeck")) {
         warning = <div className="warning">
-            No target deck set, <button className="link-button" onclick={AnkiSettingsModal}>click here to set one</button>
+            No target vocab deck set, <button className="link-button" onclick={AnkiSettingsModal}>click here to set one</button>
         </div>
     }
 
