@@ -95,11 +95,15 @@ function needsFurigana(mode: FuriganaMode, token: JpdbToken, vocab: JpdbVocabula
     const unknownKanji = mode === "kanjiOrVocab" || mode === "unknownKanji"
 
     // we could probably do all this without the `token` parameter, but this feels nice
-    for (let i = 0; i < reading.length; i++) {
-        if (Array.isArray(reading[i])) {
+    if (unknownKanji) {
+        for (let i = 0; i < reading.length; i++) {
+            if (!Array.isArray(reading[i])) continue
             const kanji = reading[i][0]
-            if (unicodeType(kanji) === UnicodeCharacterType.Kanji) {
-                if (unknownKanji && !knownKanji.has(kanji)) return true
+            // This loop is because some readings are compound (今日[きょう])
+            for (let i = 0; i < kanji.length; i++) {
+                const c = kanji[i]
+                if (unicodeType(c) === UnicodeCharacterType.Kanji && !knownKanji.has(c))
+                    return true
             }
         }
     }
