@@ -179,8 +179,13 @@ export class JsPopover extends Component {
             const desiredPos = this.Range.getBoundingClientRect()
             this.Node.style.left = `calc(anchor(left) + ${desiredPos.left - defaultPos.left + xShift}px)`
             if (flipY) {
-                // it would make more sense to set style.bottom but I was having issues with that
-                this.Node.style.top = `calc(anchor(top) + ${desiredPos.bottom - defaultPos.top - pos.height - desiredPos.height}px)`
+                const newTop = defaultPos.top + desiredPos.bottom - defaultPos.top - pos.height - desiredPos.height
+                if (newTop < 0)
+                    // if flipping it flies off the top anyways, keep it the normal direction
+                    this.Node.style.top = `calc(anchor(top) + ${desiredPos.bottom - defaultPos.top}px)`
+                else
+                    // it would make more sense to set style.bottom but I was having issues with that
+                    this.Node.style.top = `calc(anchor(top) + ${desiredPos.bottom - defaultPos.top - pos.height - desiredPos.height}px)`
             } else this.Node.style.top = `calc(anchor(top) + ${desiredPos.bottom - defaultPos.top}px)`
         }
     }

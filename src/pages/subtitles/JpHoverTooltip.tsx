@@ -39,6 +39,7 @@ export default class JpHoverTooltip extends JsPopover {
     private TargetBase(vocab: JpdbVocabulary, token?: JpdbToken) {
         if (this.LoadedVocab === vocab) {
             this.Open()
+            this.FixPosition()
             return
         }
         this.LoadedVocab = vocab
