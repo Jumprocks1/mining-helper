@@ -6,6 +6,13 @@ export default class BrowserCache {
         this.Name = name
     }
 
+    async Clear() {
+        const cache = (this.Cache ??= (await (this.CachePromise ??= caches.open(this.Name))))
+        for (const key of await cache.keys()) {
+            await cache.delete(key)
+        }
+    }
+
     // TODO add a background based clean here
     // No need to await it, but it would keep track if it's already been started to prevent multiple runs
 

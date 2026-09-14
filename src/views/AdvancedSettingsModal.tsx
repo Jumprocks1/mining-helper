@@ -5,12 +5,14 @@ import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
 import { getSetting, setSetting, getDefaultSetting } from "../core/Settings";
 import { CurrentPage } from "../framework/Router";
+import { JitenCache } from "../jiten/JitenParseText";
 import { JpdbCache } from "../jpdb/JpdbParseText";
 import SubtitlesPage from "../pages/subtitles/subtitles";
 import { BrowserStorage } from "../utils/BrowserApi";
 
 async function ClearCache() {
     await JpdbCache.Clear();
+    await JitenCache.Clear()
 }
 
 async function customCssField() {
