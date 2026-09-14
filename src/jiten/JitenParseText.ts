@@ -1,5 +1,7 @@
 import { getSetting } from "../core/Settings";
 import { JpdbParseResponse, JpdbVocabulary } from "../jpdb/JpdbParseText";
+import { getStringHash } from "../reader/Library";
+import BrowserCache from "../utils/BrowserCache";
 import UserError from "../utils/UserError";
 import { delay } from "../utils/util";
 
@@ -63,8 +65,17 @@ export interface JitenParseResponse extends JitenResponse {
     tokens: JitenToken[][]
     vocabulary: JitenVocabulary[]
 }
-
-export async function JitenParseText(s: string[], fullJoin: string): Promise<JpdbParseResponse> {
+const cache = new BrowserCache("jiten-parse")
+export async function JitenParseText(s: string[], fullJoin: string, cacheOnly?: boolean): Promise<JpdbParseResponse | undefined> {
+    const res = await cache.GetJson(await getStringHash(fullJoin), cacheOnly ? undefined : () => JitenParseTextNoCache(s, fullJoin))
+    if (res) {
+        for (const vocab of res.vocabulary) {
+            vocab.furigana = vocab[7]
+        }
+    }
+    return res
+}
+async function JitenParseTextNoCache(s: string[], fullJoin: string): Promise<JpdbParseResponse> {
     // Note, we're still returning Jpdb parse responses from this
     let start = 0 // line number start of next request
     let responseOffset = 0 // character count to add to token indexes after response
@@ -103,10 +114,10 @@ export async function JitenParseText(s: string[], fullJoin: string): Promise<Jpd
         vocabIndexMap.set(vocab, i)
         const jpdbVocab: JpdbVocabulary = [
             vocab.spelling, "", roundFrequency(vocab.frequencyRank), vocab.meaningsChunks.map(e => e.join("; ")),
-            vocab.partsOfSpeech.map(e => e === "particle" ? "prt" : e), -1, [] as string[]
+            vocab.partsOfSpeech.map(e => e === "particle" ? "prt" : e), -1, [] as string[],
+            cleanJitenFurigana(vocab.reading)
         ] as JpdbVocabulary
         vocab.reading = cleanJitenFurigana(vocab.reading)
-        jpdbVocab.furigana = cleanJitenFurigana(vocab.reading)
         jpdbVocab.jitenId = vocab.wordId + "," + vocab.readingIndex
         finalRes.vocabulary.push(jpdbVocab)
         i += 1

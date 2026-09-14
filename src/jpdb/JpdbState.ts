@@ -115,7 +115,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
         }
     }
     if (!skipIgnoreCheck) {
-        const ignoredState = getIgnoredStateSync(vocab[5])
+        const ignoredState = getIgnoredStateSync(vocab)
         if (ignoredState) return [ignoredState, undefined]
     }
     if (vocab[4].includes("prt"))

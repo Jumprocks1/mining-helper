@@ -1,4 +1,5 @@
 import { BrowserStorage } from "../utils/BrowserApi"
+import { JpdbVocabulary } from "./JpdbParseText"
 import { VocabState } from "./JpdbState"
 
 type Entry = number | { vid: number, word?: string, expire?: number }
@@ -66,14 +67,28 @@ function getIgnoreLookupSync() {
         if (typeof e === "number") lookup.set(e, e)
         else lookup.set(e.vid, e)
     }
-    return lookup
+    return localIgnoreLookup = lookup
 }
 
-export function getIgnoredStateSync(vid: number): VocabState | false {
-    const lookup = getIgnoreLookupSync()
-    if (!lookup) throw Error("Ignore list not loaded")
-    const ignored = lookup.get(vid)
-    if (!ignored) return false
-    if (typeof ignored === "number") return VocabState.Ignored
-    return ignored.expire ? VocabState.TemporarilyIgnored : VocabState.Ignored
+export function getIgnoredStateSync(vocab: JpdbVocabulary): VocabState | false {
+    const vid = vocab[5]
+    if (vid !== -1) {
+        const lookup = getIgnoreLookupSync()
+        if (!lookup) throw Error("Ignore list not loaded")
+        const ignored = lookup.get(vid)
+        if (!ignored) return false
+        if (typeof ignored === "number") return VocabState.Ignored
+        return ignored.expire ? VocabState.TemporarilyIgnored : VocabState.Ignored
+    } else {
+        // TODO this isn't ideal, but is good enough for now
+        // think we'd want to add the kanji to the ignore map too
+        const list = localIgnoreList
+        if (!list) throw Error("Ignore list not loaded")
+        const ignored = list.find(e => typeof e === "number" ? false : e.word === vocab[0])
+        if (typeof ignored === "number") return VocabState.Ignored
+        if (ignored) {
+            return ignored.expire ? VocabState.TemporarilyIgnored : VocabState.Ignored
+        }
+        return false
+    }
 }

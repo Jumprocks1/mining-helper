@@ -13,10 +13,11 @@ export type JpdbVocabulary = [
     parts_of_speech: string[],
     vid: number,
     alt_spelling: never[],
+    furigana: string // TODO start using this instead
 ] & {
     // doesn't actually come populated from the API
     // set after parsing API response
-    furigana: string
+    furigana: string // TODO stop using these since they don't get saved to cache
     jitenId?: string
 }
 
