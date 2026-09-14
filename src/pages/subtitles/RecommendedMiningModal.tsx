@@ -55,6 +55,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
 
         loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
+            // We use < instead of <= so if the max is set to 10000, you don't get 9999 and 10000 (which are different lengths)
             .filter(e => (e[2] ?? Number.MAX_SAFE_INTEGER) < maxFrequency)
         const pendingRows: [JpdbVocabulary, HTMLElement, firstUsage: JpdbToken][] = []
         for (let i = 0; i < sorted.length; i++) {
@@ -95,12 +96,12 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
                 onClick={async ev => {
                     if (ignored) {
                         ignored = false
-                        await UnIgnoreVid(vocab[5])
+                        await UnIgnoreVid(vocab)
                         row.classList.remove("ignored")
                         row.classList.remove("temporarilyignored")
                     } else {
                         ignored = true
-                        await IgnoreVid(vocab[5], vocab[0], ev.shiftKey)
+                        await IgnoreVid(vocab, ev.shiftKey)
                         row.classList.add("ignored")
                         if (ev.shiftKey)
                             row.classList.add("temporarilyignored")

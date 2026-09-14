@@ -4,6 +4,7 @@ import StorageCache from "../utils/StorageCache";
 import { loadIgnoreList } from "./IgnoreList";
 import { ThrowUserError } from "../utils/UserError";
 import { getSetting } from "../core/Settings";
+import { JitenParseText } from "../jiten/JitenParseText";
 
 export type JpdbVocabulary = [
     spelling: string,
@@ -145,6 +146,9 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
 
 export default async function JpdbParseText(s: string[], cacheOnly?: true) {
     const fullJoin = s.join("\n")
+    if (await getSetting("jitenApiKey") && false) {
+        return await JitenParseText(s, fullJoin)
+    }
     const res = await JpdbCache.Get("jpdb_" + hash(fullJoin), cacheOnly ? undefined : () => JpdbParseTextNoCache(s, fullJoin))
     if (res) {
         // post-cached processing

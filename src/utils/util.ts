@@ -89,6 +89,7 @@ export function furiToRuby(furi: string) {
     return o
 }
 
+// TODO add Jiten support
 export async function lookupFuri(jp: string | undefined, highlight?: string) {
     if (!jp) return jp
     const json = await callJpdb("parse", {

@@ -72,8 +72,8 @@ export default class JpHoverTooltip extends JsPopover {
             tooltip={ActionTooltip(ignored ? "Restore" : "Ignore", undefined, ignored ? undefined :
                 "Hold ctrl to ignore for 30 days\nUseful for names/locations.")}
             onClick={async ev => {
-                if (ignored) await UnIgnoreVid(vocab[5])
-                else await IgnoreVid(vocab[5], vocab[0], ev.ctrlKey);
+                if (ignored) await UnIgnoreVid(vocab)
+                else await IgnoreVid(vocab, ev.ctrlKey);
                 this.LoadedVocab = undefined
                 this.TargetBase(vocab, token)
             }} />

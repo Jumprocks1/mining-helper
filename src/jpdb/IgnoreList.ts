@@ -2,8 +2,10 @@ import { BrowserStorage } from "../utils/BrowserApi"
 import { JpdbVocabulary } from "./JpdbParseText"
 import { VocabState } from "./JpdbState"
 
+// Ideally we move away from vid entirely here
+// vid is very poorly support by jpdb
 type Entry = number | { vid: number, word?: string, expire?: number }
-type IgnoreList = Entry[] // vid from jpdb
+type IgnoreList = Entry[]
 
 let localIgnoreList: IgnoreList | undefined
 let localIgnoreLookup: Map<number, Entry> | undefined
@@ -32,26 +34,33 @@ export async function loadIgnoreList(disableCache = false) {
     return localIgnoreList!
 }
 
-export async function IgnoreVid(vid: number, word?: string, temp?: boolean) {
+export async function IgnoreVid(vocab: JpdbVocabulary, temp?: boolean) {
     const list = await loadIgnoreList(true)
-    const alreadyExists = list.some(e => typeof e === "number" ? e === vid : e.vid === vid)
-    if (!alreadyExists) {
-        let obj: Entry = vid
-        if (word || temp) {
-            obj = { vid }
-            if (word) obj.word = word
-            // TODO could also allow only ignoring for a specific source for even longer
-            if (temp) obj.expire = Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 days
-        }
-        list.push(obj)
-        await BrowserStorage.local.set({ ignoreList: list })
-        if (localIgnoreLookup) localIgnoreLookup.set(vid, obj)
+    const state = getIgnoredStateSync(vocab)
+    if (state !== false) return
+
+    const vid = vocab[5]
+    const word = vocab[0]
+    let obj: Entry = vid
+    if (word || temp) {
+        obj = { vid }
+        if (word) obj.word = word
+        // TODO could also allow only ignoring for a specific source for even longer
+        if (temp) obj.expire = Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 days
     }
+    if (obj === -1) return
+    list.push(obj)
+    await BrowserStorage.local.set({ ignoreList: list })
+    if (localIgnoreLookup) localIgnoreLookup.set(vid, obj)
 }
 
-export async function UnIgnoreVid(vid: number) {
+export async function UnIgnoreVid(vocab: JpdbVocabulary) {
+    const vid = vocab[5]
+    const word = vocab[0]
     const list = await loadIgnoreList(true)
-    const index = list.findIndex(e => typeof e === "number" ? e === vid : e.vid === vid)
+    const index = vid === -1
+        ? list.findIndex(e => typeof e === "number" ? false : e.word === word)
+        : list.findIndex(e => typeof e === "number" ? e === vid : e.vid === vid)
     if (index >= 0) {
         list.splice(index, 1)
         await BrowserStorage.local.set({ ignoreList: list })
@@ -76,15 +85,16 @@ export function getIgnoredStateSync(vocab: JpdbVocabulary): VocabState | false {
         const lookup = getIgnoreLookupSync()
         if (!lookup) throw Error("Ignore list not loaded")
         const ignored = lookup.get(vid)
-        if (!ignored) return false
+        if (ignored === undefined) return false
         if (typeof ignored === "number") return VocabState.Ignored
         return ignored.expire ? VocabState.TemporarilyIgnored : VocabState.Ignored
     } else {
+        const word = vocab[0]
         // TODO this isn't ideal, but is good enough for now
         // think we'd want to add the kanji to the ignore map too
         const list = localIgnoreList
         if (!list) throw Error("Ignore list not loaded")
-        const ignored = list.find(e => typeof e === "number" ? false : e.word === vocab[0])
+        const ignored = list.find(e => typeof e === "number" ? false : e.word === word)
         if (typeof ignored === "number") return VocabState.Ignored
         if (ignored) {
             return ignored.expire ? VocabState.TemporarilyIgnored : VocabState.Ignored
