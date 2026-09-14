@@ -61,6 +61,15 @@ class AssertError extends Error {
 
 export const assert = {
     equal<T>(actual: T, expected: T) {
-        if (actual !== expected) throw new AssertError(`Expected ${expected}, got ${actual}`, assert.equal)
+        if (actual !== expected) {
+            if (Array.isArray(expected)) {
+                // Obviously this isn't great but that's fine for now
+                const actualS = JSON.stringify(actual)
+                const expectedS = JSON.stringify(expected)
+                if (actualS !== expectedS) throw new AssertError(`Expected ${expectedS}, got ${actualS}`, assert.equal)
+            } else {
+                throw new AssertError(`Expected ${expected}, got ${actual}`, assert.equal)
+            }
+        }
     }
 }

@@ -7,12 +7,12 @@ import { getSetting } from "../core/Settings";
 
 export type JpdbVocabulary = [
     spelling: string,
-    reading: string,
+    reading: never, // actually string but we don't use it
     frequency_rank: number | null,
     meanings: string[],
     parts_of_speech: string[],
     vid: number,
-    alt_spelling: string[],
+    alt_spelling: never[],
 ] & {
     // doesn't actually come populated from the API
     // set after parsing API response

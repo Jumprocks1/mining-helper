@@ -101,25 +101,101 @@ export async function JitenParseText(s: string[], fullJoin: string): Promise<Jpd
     let i = 0
     for (const vocab of vocabMap.values()) {
         vocabIndexMap.set(vocab, i)
-        // TODO don't think we use reading anywhere? need to double check
         const jpdbVocab: JpdbVocabulary = [
-            vocab.spelling, "", vocab.frequencyRank, vocab.meaningsChunks.map(e => e.join("; ")),
-            [] as string[], -1, [] as string[]
+            vocab.spelling, "", roundFrequency(vocab.frequencyRank), vocab.meaningsChunks.map(e => e.join("; ")),
+            vocab.partsOfSpeech.map(e => e === "particle" ? "prt" : e), -1, [] as string[]
         ] as JpdbVocabulary
-        // TODO the furigana here is bad when there's kana in the middle of the word
-        jpdbVocab.furigana = vocab.reading
+        vocab.reading = cleanJitenFurigana(vocab.reading)
+        jpdbVocab.furigana = cleanJitenFurigana(vocab.reading)
         jpdbVocab.jitenId = vocab.wordId + "," + vocab.readingIndex
         finalRes.vocabulary.push(jpdbVocab)
         i += 1
     }
     for (const token of jitenTokens) {
-        // start: number,
-        // length: number,
-        // reading: ([string, string] | string)[] | null,
-        // vocab_index: number
-        // TODO load the token reading from the vocab...
         // TODO conjugations would be nice to grab
-        finalRes.tokens.push([token.start, token.length, null, vocabIndexMap.get(vocabMap.get(token.wordId + "," + token.readingIndex)!)!])
+        const vocab = vocabMap.get(token.wordId + "," + token.readingIndex)!
+        finalRes.tokens.push([token.start, token.length,
+        readingFromFurigana(fullJoin.substring(token.start, token.end), vocab.reading), vocabIndexMap.get(vocab)!])
     }
     return finalRes
+}
+
+function roundFrequency(n: number) {
+    // think this makes it easier to read/compare, could be wrong
+    if (n < 100) return Math.ceil(n / 10) * 10
+    if (n < 10000) return Math.ceil(n / 100) * 100
+    return Math.ceil(n / 1000) * 1000
+}
+
+export function cleanJitenFurigana(furi: string) {
+    // Based on this https://github.com/Sirush/Jiten/blob/master/Jiten.Web/app/utils/convertToRuby.ts:
+    // I dispise this way of doing things, but it's needed to match jiten's behavior
+    const groupCharacter = /[一-鿿０-ｚ々ヵヶ]/
+    let o = ""
+    let pendingGroup: number | undefined
+    let inside = false
+    for (let i = 0; i < furi.length; i++) {
+        const c = furi[i]
+        if (inside) {
+            if (c === "]") inside = false
+            o += c
+        } else if (c.match(groupCharacter)) {
+            if (pendingGroup === undefined) pendingGroup = i
+        } else if (c === "[" && pendingGroup !== undefined) {
+            if (o.length > 0 && o[o.length - 1] !== "]") o += " "
+            inside = true
+            o += furi.substring(pendingGroup, i)
+            pendingGroup = undefined
+            o += c
+        } else {
+            pendingGroup = undefined
+            o += c
+        }
+    }
+    if (pendingGroup !== undefined) o += furi.substring(pendingGroup)
+    return o
+}
+
+export function readingFromFurigana(token: string, vocabFurigana: string): (string | [string, string])[] {
+    const o: (string | [string, string])[] = []
+
+    let j = 0 // position inside furigana
+    for (let i = 0; i < token.length; i++) {
+        const c = token[i]
+
+        let found: number | undefined = undefined
+        let insideBrackets = false
+        for (let k = j; k < vocabFurigana.length; k++) {
+            const f = vocabFurigana[k]
+            if (f === "[") insideBrackets = true
+            else if (f === "]") insideBrackets = false
+            if (f === c && !insideBrackets) {
+                found = k
+                break
+            }
+        }
+        let added = false
+        if (found !== undefined) {
+            j = found
+            const nextBracket = vocabFurigana.indexOf("[", found)
+            if (nextBracket != -1) {
+                const closingBracket = vocabFurigana.indexOf("]", nextBracket)
+                if (closingBracket != -1) {
+                    const cSub = token.substring(i, i + nextBracket - found)
+                    if (vocabFurigana.substring(found, nextBracket) === cSub) {
+                        o.push([cSub, vocabFurigana.substring(nextBracket + 1, closingBracket)])
+                        i += cSub.length - 1 // if we read extra characters, skip processing them later
+                        j = closingBracket
+                        added = true
+                    }
+                }
+            }
+        }
+        if (!added) {
+            if (o.length > 0 && !Array.isArray(o[o.length - 1])) {
+                o[o.length - 1] += c
+            } else o.push(c)
+        }
+    }
+    return o
 }
