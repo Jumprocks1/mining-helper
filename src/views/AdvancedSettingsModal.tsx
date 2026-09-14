@@ -54,6 +54,20 @@ export default () => {
                     initialValue={await getSetting("defaultTooltipDelay")}
                     onChange={v => setSetting("defaultTooltipDelay", v)} />
             </div>
+            <div className="field">
+                <label>Jiten API Key{" "}<Icon icon="help"
+                    component="a"
+                    componentProps={{
+                        href: "https://jiten.moe/settings",
+                        target: "_blank",
+                        rel: "noopener noreferrer"
+                    }}
+                    className="inline"
+                    tooltip={"You can get one from the very bottom of the jiten.moe settings page.\nAn account is required.\nClick to open jiten.moe"} /></label>
+                <input defaultValue={await getSetting("jitenApiKey")}
+                    type="password"
+                    onchange={e => setSetting("jitenApiKey", (e.target as HTMLInputElement).value)} />
+            </div>
             <div className="footer-buttons">
                 <LoadingButton onClick={ClearCache}>Clear Cache</LoadingButton>
                 <LoadingButton onClick={async () => {

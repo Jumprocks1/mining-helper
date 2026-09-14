@@ -82,6 +82,7 @@ export const defaultLocalSettings = {
     serverAddress: "127.0.0.1:4012",
     serverApiKey: "",
     jpdbApiKey: "",
+    jitenApiKey: "",
     defaultTooltipDelay: 300 as Milliseconds,
     showUnknownVocabOnHover: false,
 }

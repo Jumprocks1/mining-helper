@@ -17,6 +17,7 @@ export type JpdbVocabulary = [
     // doesn't actually come populated from the API
     // set after parsing API response
     furigana: string
+    jitenId?: string
 }
 
 export type JpdbToken = [

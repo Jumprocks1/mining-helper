@@ -129,7 +129,7 @@ const body = async (inner: HTMLElement) => {
             {await stringSettingsField("ankiConnectApiKey", "AnkiConnect API Key", "password")}
         </div>
         <div className="field-group">
-            <div className="field" tooltip={"Deck used when mining new vocab.\nAlso used for marked known words."}>
+            <div className="field" tooltip={"Deck used when mining new vocab.\nAlso used for marking known words."}>
                 <label>Vocab Deck</label>
                 {Select({
                     defaultValue: await getSetting("ankiVocabDeck"),
