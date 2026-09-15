@@ -187,6 +187,7 @@ export interface CardData {
 
     vid?: number // jpdb
     source?: string // filename + time (in seconds)
+    vocab?: JpdbVocabulary
 }
 
 // feels pretty sketchy but I think it's fine?

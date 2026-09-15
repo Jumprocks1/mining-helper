@@ -37,7 +37,6 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
     let maxFrequency = await pending[2]
     let maxCount = await pending[3]
 
-    let loadedRows: Record<number, HTMLElement> | undefined = undefined
     const body = <table className="row-container" />
     let loadedCount = 0
 
@@ -53,7 +52,6 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
 
         const i1Ids = i1 && props.subtitles && geti1Tokens(props.subtitles, jpdb, stateConfig)
 
-        loadedRows = {}
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
             // We use < instead of <= so if the max is set to 10000, you don't get 9999 and 10000 (which are different lengths)
             .filter(e => (e[2] ?? Number.MAX_SAFE_INTEGER) < maxFrequency)
@@ -143,7 +141,6 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
             if (originalState === VocabState.Ignored) row.classList.add("ignored")
             if (originalState === VocabState.TemporarilyIgnored) row.classList.add("temporarilyignored")
             if (state === VocabState.Kana) row.classList.add("kana")
-            loadedRows[vocab[5]] = row
             pendingRows.push([vocab, row, tokenUsages[0]])
         }
         if (chronological) pendingRows.sort((a, b) => a[2][0] - b[2][0])
@@ -201,14 +198,15 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
     })
 
     const reload = () => {
-        loadedRows = undefined
         body.replaceChildren(<Loader load={load} />)
     }
     reload()
 
     function mineHandler(card: CardData) {
-        if (loadedRows && card.vid !== undefined && loadedRows[card.vid]) {
-            loadedRows[card.vid].classList.add("known")
+        if (!card.vocab) return
+        for (const row of body.querySelectorAll<HTMLElement>(".vocab-row")) {
+            if (row.vocab === card.vocab)
+                row.classList.add("known")
         }
     }
 

@@ -90,6 +90,7 @@ export default (props: Props) => {
 
         if (jpdb && token) {
             vocab = jpdb.vocabulary[token[3]]
+            card.vocab = vocab
             card.kanji = vocab[0]
             card.furigana = vocab.furigana
             card.meaning = vocab[3][0]
