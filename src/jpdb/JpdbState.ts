@@ -15,6 +15,7 @@ export enum VocabState {
     New,
     Known,
     Particle,
+    Name,
     Kana,
     Similar,
     AltSpelling,
@@ -120,6 +121,8 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
     }
     if (vocab[4].includes("prt"))
         return [VocabState.Particle, undefined]
+    if (vocab[4].includes("family or surname") || vocab[4].includes("place name"))
+        return [VocabState.Name, undefined]
     let kanji = false
     for (let i = 0; i < word.length; i++) {
         const unicode = unicodeType(word, i)

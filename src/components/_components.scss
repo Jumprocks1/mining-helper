@@ -161,7 +161,7 @@
             &.particle {
                 color: $brightBlue;
             }
-            &.similar, &.kana, &.ignored, &.altspelling {
+            &.similar, &.kana, &.ignored, &.altspelling, &.name {
                 color: $brightYellow;
             }
             &.temporarilyignored {
