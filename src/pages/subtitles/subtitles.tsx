@@ -131,6 +131,8 @@ export default class SubtitlesPage extends PageComponent {
     }
 
     OffsetChanged = (offset: number) => {
+        // This is quite inefficient
+        // It has to reload the parsing info from cache for really no reason
         const subs = this.LoadedSubtitles?.subtitles
         if (subs) {
             if ((subs.offset ?? 0) !== offset) {

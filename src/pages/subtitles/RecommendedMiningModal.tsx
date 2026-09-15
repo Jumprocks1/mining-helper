@@ -203,10 +203,13 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
     reload()
 
     function mineHandler(card: CardData) {
-        if (!card.vocab) return
+        const v = card.vocab;
+        if (!v) return
         for (const row of body.querySelectorAll<HTMLElement>(".vocab-row")) {
-            if (row.vocab === card.vocab)
+            const rv = row.vocab
+            if (rv && rv.furigana === v.furigana && rv[0] === v[0]) {
                 row.classList.add("known")
+            }
         }
     }
 
