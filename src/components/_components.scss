@@ -148,9 +148,26 @@
         .ignore-button {
             align-self: flex-start;
         }
+        .float-right.stack {
+            display: flex;
+            margin-left: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            .row {
+                gap: $s1;
+                display: flex;
+            }
+            .icon-button {
+                padding: 0;
+            }
+            .conjugations {
+                font-size: 0.5em;
+                max-width: 25em;
+            }
+        }
         .vocab-state {
             padding-left: 1em;
-            margin-left: auto;
             font-size: 0.6em;
             &.new {
                 color: $brightRed;

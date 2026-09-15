@@ -123,10 +123,15 @@ async function JitenParseTextNoCache(s: string[], fullJoin: string): Promise<Jpd
         i += 1
     }
     for (const token of jitenTokens) {
-        // TODO conjugations would be nice to grab
         const vocab = vocabMap.get(token.wordId + "," + token.readingIndex)!
+
+        /* Conjugation filter based on:
+            https://github.com/Sirush/Jiten/blob/f30391ca59f92b6a3cb29e3c9d58ae52f47a1ed6/Jiten.Web/app/components/VocabularyDetail.vue#L244-L252
+            I don't know why they have the filters or the reverse
+        */
+        const conjugations = token.conjugations.filter(e => !e.startsWith("(") && e).reverse()
         finalRes.tokens.push([token.start, token.length,
-        readingFromFurigana(fullJoin.substring(token.start, token.end), vocab.reading), vocabIndexMap.get(vocab)!])
+        readingFromFurigana(fullJoin.substring(token.start, token.end), vocab.reading), vocabIndexMap.get(vocab)!, conjugations])
     }
     return finalRes
 }

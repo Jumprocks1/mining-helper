@@ -26,7 +26,8 @@ export type JpdbToken = [
     start: number,
     length: number,
     reading: ([string, string] | string)[] | null,
-    vocab_index: number
+    vocab_index: number,
+    conjugations?: string[]
 ]
 
 interface JpdbResponse {

@@ -80,16 +80,24 @@ export default class JpHoverTooltip extends JsPopover {
             }} />
         let ignoreButton = (ignored || vocabState === VocabState.New) && makeIgnoreButton()
 
+        const conjugations = token?.[4]
 
         this.SetContent(<>
             <div className="header">
                 {ruby}
                 <IconButton icon="play_arrow" onClick={() => playAudioThrow(vocab)} />
-                <span className={"vocab-state " + vocabStateString}>
-                    {vocabStateNode}{vocabNote ? <> - {vocabNote}</> : undefined}
-                </span>
-                {ignoreButton}
-                <span className="frequency">{vocab[2]}</span>
+                <div className="float-right stack">
+                    <div className="row">
+                        <span className={"vocab-state " + vocabStateString}>
+                            {vocabStateNode}{vocabNote ? <> - {vocabNote}</> : undefined}
+                        </span>
+                        {ignoreButton}
+                        <span className="frequency">{vocab[2]}</span>
+                    </div>
+                    {conjugations && conjugations.length > 0 && <div className="row conjugations">
+                        {conjugations.join("; ")}
+                    </div>}
+                </div>
             </div>
             {vocab[3].map((e, i) => <div>
                 {i + 1}. {e}
