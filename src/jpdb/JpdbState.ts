@@ -121,6 +121,8 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
     }
     if (vocab[4].includes("prt"))
         return [VocabState.Particle, undefined]
+    // Need to test this a bit, not sure if it will show up in situtations where it's not actually used as a name
+    // Could get rid of "historical term" too
     if (vocab[4].includes("family or surname") || vocab[4].includes("place name"))
         return [VocabState.Name, undefined]
     let kanji = false

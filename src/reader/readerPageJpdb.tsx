@@ -62,7 +62,7 @@ function visit(element: Element, nodes: Text[]) {
         } else if (e.nodeType === Node.ELEMENT_NODE) {
             const element = e as Element
             const tag = element.tagName
-            if (ignoreTags.has(tag))
+            if (ignoreTags.has(tag) || element.classList.contains("paragraph-index"))
                 continue
             if (tag === "BR") {
                 flush()

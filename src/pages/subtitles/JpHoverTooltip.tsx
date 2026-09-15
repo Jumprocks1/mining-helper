@@ -129,6 +129,13 @@ let targetKeyDown = false
 function mousemove(ev: MouseEvent) {
     mouseX = ev.clientX
     mouseY = ev.clientY
+    const key = getSettingSync("jpTooltipKey") as string
+    const specialKey = key.toLowerCase() + "Key"
+    if (specialKey in ev) {
+        // For shift/alt/ctrl we can trigger the popup without window focus since the press state is available on the mouse event
+        // @ts-expect-error
+        targetKeyDown = ev[specialKey]
+    }
     if (loadedHover?.tooltip) {
         // if there's a visible tooltip, don't close it when we move the mouse over it with the inverted open state
         const showTooltip = targetKeyDown !== loadedHover.handler.invert
