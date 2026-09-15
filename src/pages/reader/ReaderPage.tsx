@@ -397,7 +397,7 @@ export default class ReaderPage extends PageComponent {
         else if (key === "i") {
             if (this.TooltipHandler) {
                 this.TooltipHandler.invert = !this.TooltipHandler.invert
-                UpdateJpHover(false)
+                UpdateJpHover()
             }
         } else if (key === "arrowleft") {
             if (!this.Reader) return
@@ -550,6 +550,7 @@ function OpenReaderSettings() {
     const body = <Loader load={async () => {
         return <>
             {await JpdbApiKeyField()}
+            {await hotkeyField()}
             {await stringSettingsField("readerBodySelector", "Body Selector", undefined,
                 <div>CSS selector for filtering what content is displayed in the reader.{"\n"}
                     Separate multiple selectors with <em>;</em>. Earlier selectors are prioritized.{"\n\n"}
@@ -622,4 +623,18 @@ async function knownKanjiField() {
         <div className="label">Known Kanji</div>
         {ce}
     </div>
+}
+
+async function hotkeyField() {
+    const input = <input defaultValue={await getSetting("jpTooltipKey")} onkeydown={async ev => {
+        ev.preventDefault()
+        input.value = ev.key
+        await setSetting("jpTooltipKey", ev.key)
+    }} /> as HTMLInputElement
+    return <div className="field" tooltip={"Shows tooltip info for underlined vocab when holding this key.\n" +
+        "Defaults to Shift.\n" +
+        "Changing it is useful if you have Yomitan installed and bound to Shift."}>
+        <label>Hover Tooltip Hotkey</label>
+        {input}
+    </div >
 }

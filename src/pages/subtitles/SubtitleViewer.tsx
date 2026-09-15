@@ -108,7 +108,7 @@ export default class SubtitleViewer {
     // toggles whether or not shift needs to be held down to show additional information about the hovered word
     ToggleShift() {
         this.TooltipHandler.invert = !this.TooltipHandler.invert
-        UpdateJpHover(false)
+        UpdateJpHover()
     }
 
     updateBlock() {

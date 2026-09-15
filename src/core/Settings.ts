@@ -85,11 +85,13 @@ export const defaultLocalSettings = {
     jitenApiKey: "",
     defaultTooltipDelay: 300 as Milliseconds,
     showUnknownVocabOnHover: false,
+
+    jpTooltipKey: "Shift"
 }
 export type LocalSettings = typeof defaultLocalSettings
 
 // make sure none of these settings are needed on immediately page load
-const syncSettings = ["defaultTooltipDelay", "showUnknownVocabOnHover"] satisfies (keyof LocalSettings)[]
+const syncSettings = ["defaultTooltipDelay", "showUnknownVocabOnHover", "jpTooltipKey"] satisfies (keyof LocalSettings)[]
 const cachedSettings: { [key in keyof LocalSettings]?: LocalSettings[key] } & TemporarySettings = {
     ...defaultTemporarySettings
 }
