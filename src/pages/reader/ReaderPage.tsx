@@ -31,7 +31,7 @@ export default class ReaderPage extends PageComponent {
     override Title = "Mining Helper - Reader"
     override Node: HTMLElement
 
-    CurrentPageNode: ReaderPageNode = <div>Drop .epub here</div> as ReaderPageNode
+    CurrentPageNode: ReaderPageNode = <div>Drop .epub or paste text here</div> as ReaderPageNode
     HoverRectangleContainer = HoverRectangleContainer()
     PageWrapper = <div id="reader-page-node-wrapper">
         {this.CurrentPageNode}
