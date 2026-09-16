@@ -25,18 +25,20 @@ import Draggable from "../../components/Draggable"
 import RecommendedMiningModal from "../subtitles/RecommendedMiningModal"
 import AnkiSettingsModal from "../anki/AnkiSettingsModal"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
+import { userErrorMessage } from "../../utils/UserError"
 
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
     override Title = "Mining Helper - Reader"
     override Node: HTMLElement
 
-    CurrentPageNode: ReaderPageNode = <div>Drop .epub or paste text here</div> as ReaderPageNode
     HoverRectangleContainer = HoverRectangleContainer()
     PageWrapper = <div id="reader-page-node-wrapper">
-        {this.CurrentPageNode}
+        {<div>Drop .epub or paste text here</div>}
         {this.HoverRectangleContainer}
     </div>
+    // this is sketchy but I kind of like it
+    get CurrentPageNode() { return this.PageWrapper.firstChild as ReaderPageNode }
     ViewerNode: HTMLElement = <div id="reader-page-viewer" lang="ja">{this.PageWrapper}</div>
     PageIndicator: HTMLElement = <div id="page-indicator" onclick={() => this.JumpToPage()} className="clickable" tooltip={() => this.PageTooltip()}>0 / 0</div>
     PageIndicatorWrapper: HTMLElement = <div id="page-indicator-wrapper">{this.PageIndicator}</div>
@@ -181,7 +183,7 @@ export default class ReaderPage extends PageComponent {
         if (this.Library.lastBook) {
             const book = await this.Library.LoadBook(this.Library.lastBook)
             if (book && book.data) {
-                await this.LoadBook(book)
+                this.LoadBook(book) // don't await this
             }
         }
 
@@ -192,7 +194,7 @@ export default class ReaderPage extends PageComponent {
         this.TooltipHandler = RegisterJpHoverTooltip({
             body: this.PageWrapper,
             getTargetAndVocab: hovered => {
-                const jpdb = this.CurrentPageNode?.jpdb
+                const jpdb = this.CurrentPageNode.jpdb
                 if (!jpdb) return
                 // ends up 1 longer than the jpdb parse text if no match due to extra newline at end
                 let found: number | undefined
@@ -275,15 +277,25 @@ export default class ReaderPage extends PageComponent {
     }
 
     async LoadBook(book: LibraryBook) {
-        if (book === undefined) return
-        // TODO would be good to use an actual Loader call here - this would give support for error handling on page load
-        // Might be weird if it's nested within an outer loader on inital page load though
+        // Couldn't figure out a clean way to use existing loader class
+        // Main issues:
+        //    1. Depending on the context, we don't want to show a loader (next page)
+        //    2. The response node is returend from the load page call, which is precisely where we don't always want to show a loader
+        //    3. Sometimes there's a page-level loader (need support for nested loaders???)
+        //    4. We're using replaceWith to track the reader page node
+        //    5. LoadPage sometime returns undefined and therefore isn't a clean "return response node" method
+        //         If it doesn't do the replacement itself, it's also hard to run the "after connect code"
+        //         Fix for this one is to have a inner load page that never returns undefined
         const node = <div className="loader" /> as ReaderPageNode
-        replaceWith(this.CurrentPageNode!, node)
-        this.CurrentPageNode = node
-        this.Reader = await this.Library.OpenBook(book)
-        this.LoadToC()
-        await this.LoadPage(book.progress?.page ?? 0, true)
+        replaceWith(this.CurrentPageNode, node)
+        try {
+            this.Reader = await this.Library.OpenBook(book)
+            this.LoadToC()
+            await this.LoadPage(book.progress?.page ?? 0, true)
+        } catch (e) {
+            node.classList.add("errored")
+            node.tooltipError = userErrorMessage(e)
+        }
     }
 
     async LoadPage(page: number, initial: boolean = false) {
@@ -304,7 +316,6 @@ export default class ReaderPage extends PageComponent {
         this.EnhancePageNode(pageNode)
         // Make there's no important awaits after this call, otherwise we'll get a layout shift
         replaceWith(this.CurrentPageNode, pageNode)
-        this.CurrentPageNode = pageNode
 
         if (this.Reader instanceof EpubReader) {
             const tocPoints = this.ToC.querySelectorAll(".toc-point")
