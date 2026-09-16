@@ -70,6 +70,7 @@
             @include vertical-scroll;
         }
         #reader-page-viewer {
+            outline: none;
             padding-top: 16px;
             padding-left: 1.5em; // need extra room for the paragraph numbers
             padding-bottom: max(16px, 50vh); // for tooltip + scrolling

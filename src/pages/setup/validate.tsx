@@ -39,6 +39,7 @@ export async function validateSettings(validateButton: HTMLElement) {
     const tester = new SettingsValidator()
     tester.ShowLoading = true
     validateButton.tooltip = tester.Node
+    validateButton.tooltipConfig = { delay: 0 }
     await tester.Test(async () => {
         await validateJpdb(tester, false)
         await validateServerConnection(tester, false)

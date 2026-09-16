@@ -174,6 +174,7 @@ const body = async (inner: HTMLElement) => {
         const validator = new SettingsValidator()
         validator.ShowLoading = true
         validateButton.tooltip = validator.Node
+        validateButton.tooltipConfig = { delay: 0 }
         await validator.Test(e => validateAnkiSettings(e, true))
     }}>
         Validate Settings
