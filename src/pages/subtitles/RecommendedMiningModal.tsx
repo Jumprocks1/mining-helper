@@ -5,7 +5,7 @@ import NumberField from "../../components/basic/NumberField";
 import UpDownButtons from "../../components/basic/UpDownButtons";
 import Loader from "../../components/Loader";
 import { OpenModal } from "../../components/Modal";
-import { IgnoreVid, loadIgnoreList, UnIgnoreVid } from "../../jpdb/IgnoreList";
+import { IgnoreVocab, loadIgnoreList, UnIgnoreVocab } from "../../jpdb/IgnoreList";
 import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { geti1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../../jpdb/JpdbState";
 import { tryPlayAudio } from "../../utils/Audio";
@@ -94,12 +94,12 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
                 onClick={async ev => {
                     if (ignored) {
                         ignored = false
-                        await UnIgnoreVid(vocab)
+                        await UnIgnoreVocab(vocab)
                         row.classList.remove("ignored")
                         row.classList.remove("temporarilyignored")
                     } else {
                         ignored = true
-                        await IgnoreVid(vocab, ev.shiftKey)
+                        await IgnoreVocab(vocab, ev.shiftKey)
                         row.classList.add("ignored")
                         if (ev.shiftKey)
                             row.classList.add("temporarilyignored")

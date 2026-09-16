@@ -12,7 +12,7 @@ export type JpdbVocabulary = [
     frequency_rank: number | null,
     meanings: string[],
     parts_of_speech: string[],
-    vid: number,
+    vid: never,
     alt_spelling: never[],
     furigana: string // TODO start using this instead
 ] & {

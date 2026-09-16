@@ -5,7 +5,7 @@ import { Children } from "../../framework/createElement";
 import { onDeath } from "../../framework/Observer";
 import { ActionTooltip, SmallTooltip } from "../../framework/Tooltips";
 import { Brand } from "../../framework/util";
-import { IgnoreVid, UnIgnoreVid } from "../../jpdb/IgnoreList";
+import { IgnoreVocab, UnIgnoreVocab } from "../../jpdb/IgnoreList";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabState, getVocabStateAndNote, VocabState } from "../../jpdb/JpdbState";
 import AnkiConnect from "../../utils/AnkiConnect";
@@ -73,8 +73,8 @@ export default class JpHoverTooltip extends JsPopover {
             tooltip={ActionTooltip(ignored ? "Restore" : "Ignore", undefined, ignored ? undefined :
                 "Hold ctrl to ignore for 30 days\nUseful for names/locations.")}
             onClick={async ev => {
-                if (ignored) await UnIgnoreVid(vocab)
-                else await IgnoreVid(vocab, ev.ctrlKey);
+                if (ignored) await UnIgnoreVocab(vocab)
+                else await IgnoreVocab(vocab, ev.ctrlKey);
                 this.LoadedVocab = undefined
                 this.TargetBase(vocab, token)
             }} />
