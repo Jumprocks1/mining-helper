@@ -72,24 +72,25 @@ export default () => {
             </div>
             <div className="footer-buttons">
                 <LoadingButton onClick={ClearCache}>Clear Cache</LoadingButton>
-                <LoadingButton tooltip="Hold Ctrl to try loading JSON from your clipboard" onClick={async ev => {
-                    if (ev.ctrlKey) {
-                        ev.preventDefault()
-                        const text = await navigator.clipboard.readText();
-                        const json = JSON.parse(text)
-                        await BrowserStorage.local.set(json)
-                        return
-                    }
-                    if (BrowserStorage.local.getBytesInUse) {
-                        const used = await BrowserStorage.local.getBytesInUse()
-                        console.log(`Using ${used} bytes (${Math.round(used / BrowserStorage.local.QUOTA_BYTES * 100)}%)`)
-                    }
-                    const data = await BrowserStorage.local.get()
-                    for (const key in data) {
-                        if (key.startsWith(JpdbCache.Prefix)) delete data[key]
-                    }
-                    console.log(data)
-                }}>
+                <LoadingButton tooltip={"Saves storage to clipboard.\n"
+                    + "Also cleans/migrates storage.\nHold Ctrl to load from your clipboard instead"}
+                    onClick={async ev => {
+                        await migrate()
+                        if (ev.ctrlKey) {
+                            ev.preventDefault()
+                            const text = await navigator.clipboard.readText();
+                            const json = JSON.parse(text)
+                            await BrowserStorage.local.set(json)
+                            return
+                        }
+                        if (BrowserStorage.local.getBytesInUse) {
+                            const used = await BrowserStorage.local.getBytesInUse()
+                            console.log(`Using ${used} bytes (${Math.round(used / BrowserStorage.local.QUOTA_BYTES * 100)}%)`)
+                        }
+                        const data = await BrowserStorage.local.get()
+                        console.log(data)
+                        await navigator.clipboard.writeText(JSON.stringify(data))
+                    }}>
                     Log Storage
                 </LoadingButton>
             </div>
@@ -101,4 +102,12 @@ export default () => {
         body,
         id: "advanced-settings-modal"
     })
+}
+
+async function migrate() {
+    const keys = await BrowserStorage.local.getKeys()
+    for (const key of keys) {
+        if (key.startsWith("jpdb_cache_"))
+            await BrowserStorage.local.remove(key)
+    }
 }
