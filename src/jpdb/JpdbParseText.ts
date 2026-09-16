@@ -1,6 +1,6 @@
 import { hash, Subtitles } from "../utils/srt";
 import { delay, furiFromToken } from "../utils/util";
-import StorageCache from "../utils/StorageCache";
+import BrowserCache from "../utils/BrowserCache";
 import { loadIgnoreList } from "./IgnoreList";
 import { ThrowUserError } from "../utils/UserError";
 import { getSetting } from "../core/Settings";
@@ -54,10 +54,7 @@ export async function JpdbParseSubtitles(subtitles: Subtitles, cacheOnly?: true)
 }
 
 
-export const JpdbCache = new StorageCache({
-    prefix: "jpdb_cache_",
-    maxEntries: 20
-})
+export const JpdbCache = new BrowserCache("jpdb-parse", 4_000_000, 20)
 
 // had this fail at 5981 characters
 // seems inconsistent, might exclude certain characters or something
@@ -148,9 +145,9 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
 export default async function JpdbParseText(s: string[], cacheOnly?: true) {
     const fullJoin = s.join("\n")
     if (await getSetting("jitenApiKey") && false) {
-        return await JitenParseText(s, fullJoin)
+        return await JitenParseText(s, fullJoin, cacheOnly)
     }
-    const res = await JpdbCache.Get("jpdb_" + hash(fullJoin), cacheOnly ? undefined : () => JpdbParseTextNoCache(s, fullJoin))
+    const res = await JpdbCache.GetJson(hash(fullJoin).toString(), cacheOnly ? undefined : () => JpdbParseTextNoCache(s, fullJoin))
     if (res) {
         // post-cached processing
         for (let i = 0; i < res.tokens.length; i++) {
