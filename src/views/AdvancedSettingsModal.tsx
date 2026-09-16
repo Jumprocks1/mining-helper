@@ -72,12 +72,23 @@ export default () => {
             </div>
             <div className="footer-buttons">
                 <LoadingButton onClick={ClearCache}>Clear Cache</LoadingButton>
-                <LoadingButton onClick={async () => {
+                <LoadingButton tooltip="Hold Ctrl to try loading JSON from your clipboard" onClick={async ev => {
+                    if (ev.ctrlKey) {
+                        ev.preventDefault()
+                        const text = await navigator.clipboard.readText();
+                        const json = JSON.parse(text)
+                        await BrowserStorage.local.set(json)
+                        return
+                    }
                     if (BrowserStorage.local.getBytesInUse) {
                         const used = await BrowserStorage.local.getBytesInUse()
                         console.log(`Using ${used} bytes (${Math.round(used / BrowserStorage.local.QUOTA_BYTES * 100)}%)`)
                     }
-                    console.log(await BrowserStorage.local.get())
+                    const data = await BrowserStorage.local.get()
+                    for (const key in data) {
+                        if (key.startsWith(JpdbCache.Prefix)) delete data[key]
+                    }
+                    console.log(data)
                 }}>
                     Log Storage
                 </LoadingButton>
