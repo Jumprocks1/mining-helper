@@ -1,5 +1,5 @@
 import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
-import { callJpdb, ensureNoJpdbError, JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../jpdb/JpdbParseText";
+import { JpdbToken, JpdbVocabulary, ParseText } from "../jpdb/JpdbParseText";
 import { applyReplacementsTo, ReplacementEntry } from "../views/RegexReplacements";
 
 declare global {
@@ -89,20 +89,10 @@ export function furiToRuby(furi: string) {
     return o
 }
 
-// TODO add Jiten support
 export async function lookupFuri(jp: string | undefined, highlight?: string) {
     if (!jp) return jp
-    const json = await callJpdb("parse", {
-        text: jp,
-        token_fields: [
-            "position",
-            "length",
-            "furigana"
-        ],
-        position_length_encoding: "utf16"
-    }) as JpdbParseResponse
-    ensureNoJpdbError(json)
-    return tokensToFuri(jp, json.tokens, highlight)
+    const res = await ParseText([jp])
+    return tokensToFuri(jp, res.tokens, highlight)
 }
 
 // only needs first 3 indices of tokens

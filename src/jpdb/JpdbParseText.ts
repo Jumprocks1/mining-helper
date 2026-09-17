@@ -141,7 +141,8 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
         token[3] = indexMapping.get(token[3])!
     return finalRes
 }
-
+export function ParseText(s: string[]): Promise<JpdbParseResponse>
+export function ParseText(s: string[], cacheOnly: true | undefined): Promise<JpdbParseResponse | undefined>
 export async function ParseText(s: string[], cacheOnly?: true) {
     const fullJoin = s.join("\n")
     if (await getSetting("preferJitenApi") && await getSetting("jitenApiKey")) {
