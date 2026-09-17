@@ -20,7 +20,6 @@ export async function addKnownAnkiKanji(kanji: string) {
     await BrowserStorage.local.set({ knownAnkiKanji: [...set].join("") })
 }
 
-// TODO need a button to call this somewhere
 export async function reloadAnkiKanjiSet() {
     const notes = await AnkiConnect.call("notesInfo", { query: knownKanjiAnkiQuery })
     localAnkiKanjiSet = new Set<string>()
