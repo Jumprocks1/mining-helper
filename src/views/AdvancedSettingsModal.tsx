@@ -57,7 +57,7 @@ export default () => {
                     onChange={v => setSetting("defaultTooltipDelay", v)} />
             </div>
             <div className="field">
-                <label>Jiten API Key{" "}<Icon icon="help"
+                <label htmlFor="jitenApiKey">Jiten API Key{" "}<Icon icon="help"
                     component="a"
                     componentProps={{
                         href: "https://jiten.moe/settings",
@@ -65,8 +65,13 @@ export default () => {
                         rel: "noopener noreferrer"
                     }}
                     className="inline"
-                    tooltip={"You can get one from the very bottom of the jiten.moe settings page.\nAn account is required.\nClick to open jiten.moe"} /></label>
-                <input defaultValue={await getSetting("jitenApiKey")}
+                    tooltip={"You can get one from the very bottom of the jiten.moe settings page.\nAn account is required.\nClick to open jiten.moe"} />
+                    <label className="checkbox-switch" tooltip="When green, will prefer Jiten over jpdb.io">
+                        <input type="checkbox" defaultChecked={await getSetting("preferJitenApi")}
+                            onchange={ev => setSetting("preferJitenApi", (ev.target as HTMLInputElement).checked)} />
+                    </label>
+                </label>
+                <input id="jitenApiKey" defaultValue={await getSetting("jitenApiKey")}
                     type="password"
                     onchange={e => setSetting("jitenApiKey", (e.target as HTMLInputElement).value)} />
             </div>

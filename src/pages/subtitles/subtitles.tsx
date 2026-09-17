@@ -6,7 +6,7 @@ import MiningModal from "../../components/MiningModal"
 import { Modal, OpenModal } from "../../components/Modal"
 import IconButton, { IconButtonClass } from "../../components/basic/IconButton"
 import { applyReplacementsTo, getReplacements } from "../../views/RegexReplacements"
-import { JpdbParseResponse, JpdbParseSubtitles, JpdbToken } from "../../jpdb/JpdbParseText"
+import { ParseSubtitles, JpdbToken } from "../../jpdb/JpdbParseText"
 import RecommendedMiningModal from "./RecommendedMiningModal"
 import { getCharacterIndex, setSelection } from "../../utils/CharacterHighlighter"
 import { PageComponent } from "../../framework/PageComponent"
@@ -284,7 +284,7 @@ export default class SubtitlesPage extends PageComponent {
     JpdbLoadButton = IconButtonClass({
         icon: "document_search", onClick: async () => {
             if (!this.LoadedSubtitles) return
-            await JpdbParseSubtitles(this.LoadedSubtitles.subtitles)
+            await ParseSubtitles(this.LoadedSubtitles.subtitles)
             this.JpdbLoadButton.Disabled = true
         }, disabled: true,
         tooltip: ActionTooltip("Parse File", "T", "Parses the loaded subtitle file using jpdb's API")
@@ -525,7 +525,7 @@ export default class SubtitlesPage extends PageComponent {
 
         this.LoadedSubtitles = viewer
         viewer.JumpTo(viewer.LatestEntry(this.CurrentTime))
-        JpdbParseSubtitles(this.LoadedSubtitles.subtitles, true)
+        ParseSubtitles(this.LoadedSubtitles.subtitles, true)
             .then(() => this.JpdbLoadButton.Disabled = Boolean(subtitles.jpdbParse))
         setSetting("offset", offset) // set at the end to avoid triggering event handlers
         this.JpdbLoadButton.Disabled = Boolean(subtitles.jpdbParse)

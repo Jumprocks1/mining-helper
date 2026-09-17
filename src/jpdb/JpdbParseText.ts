@@ -40,14 +40,14 @@ export interface JpdbParseResponse extends JpdbResponse {
     vocabulary: JpdbVocabulary[]
 }
 
-export async function JpdbParseSubtitles(subtitles: Subtitles, cacheOnly?: true) {
+export async function ParseSubtitles(subtitles: Subtitles, cacheOnly?: true) {
     // can't do replacements since then the indices won't map properly
     // const replacements = await getReplacements()
     // we would have to do some advanced replacements to get this to work
     // const lines = subtitles.processedEntries
     //     .map(e => applyReplacementsTo(replacements, e.text, true))
     const lines = subtitles.processedEntries.map(e => e.text)
-    const res = await JpdbParseText(lines, cacheOnly)
+    const res = await ParseText(lines, cacheOnly)
     loadIgnoreList() // hover stuff requires this, if it's already loaded this doesn't do anything
     if (res) subtitles.jpdbParse = res
     return res
@@ -142,9 +142,9 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
     return finalRes
 }
 
-export default async function JpdbParseText(s: string[], cacheOnly?: true) {
+export async function ParseText(s: string[], cacheOnly?: true) {
     const fullJoin = s.join("\n")
-    if (await getSetting("jitenApiKey") && false) {
+    if (await getSetting("preferJitenApi") && await getSetting("jitenApiKey")) {
         return await JitenParseText(s, fullJoin, cacheOnly)
     }
     const res = await JpdbCache.GetJson(hash(fullJoin).toString(), cacheOnly ? undefined : () => JpdbParseTextNoCache(s, fullJoin))

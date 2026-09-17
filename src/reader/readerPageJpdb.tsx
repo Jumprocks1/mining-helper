@@ -1,5 +1,5 @@
 import { loadIgnoreList } from "../jpdb/IgnoreList";
-import JpdbParseText, { JpdbParseResponse } from "../jpdb/JpdbParseText";
+import { ParseText, JpdbParseResponse } from "../jpdb/JpdbParseText";
 import { ReaderPageNode } from "./BaseReader";
 
 export interface JpdbParseResponseWithNodes extends JpdbParseResponse {
@@ -23,7 +23,7 @@ export default async (page: ReaderPageNode, cacheOnly?: true): Promise<JpdbParse
             }
             else s += e.nodeValue!
         }
-        res = await JpdbParseText(lines, cacheOnly) as JpdbParseResponseWithNodes | undefined
+        res = await ParseText(lines, cacheOnly) as JpdbParseResponseWithNodes | undefined
     }
     if (res) {
         page.jpdb = res

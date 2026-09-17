@@ -83,6 +83,7 @@ export const defaultLocalSettings = {
     serverApiKey: "",
     jpdbApiKey: "",
     jitenApiKey: "",
+    preferJitenApi: false,
     defaultTooltipDelay: 300 as Milliseconds,
     showUnknownVocabOnHover: false,
 

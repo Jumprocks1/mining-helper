@@ -130,6 +130,64 @@
             cursor: grabbing;
         }
     }
+
+    .checkbox-switch {
+        display: block;
+        width: fit-content;
+        cursor: pointer;
+
+        $barHeight: 0.8em;
+        $barWidth: 1.8em;
+        $nobSize: 1em;
+
+        input {
+            // reset global input styles
+            appearance: none;
+            border: none;
+            padding: 0;
+            cursor: pointer;
+
+            display: block;
+            position: relative;
+
+            height: $barHeight;
+            width: $barWidth;
+            margin: 0.2em 0.5em;
+            border-radius: $barHeight / 2;
+
+            transition: background-color 0.2s;
+
+            background-color: #aaa;
+            &:checked {
+                background-color: $green;
+            }
+        }
+
+        input:checked::before {
+            transform: translateX($barWidth - $barHeight); // parent width - height
+        }
+
+        input::before {
+            box-shadow: rgba(0, 0, 0, 0.2) 0px 3px 3px -2px, rgba(0, 0, 0, 0.14) 0px 3px 4px 0px, rgba(0, 0, 0, 0.12) 0px 1px 8px 0px;
+            background-color: #eee;
+            aspect-ratio: 1;
+
+            position: absolute;
+            height: $nobSize;
+            inset: ($barHeight - $nobSize) / 2;
+
+            content: "";
+            transition: transform 0.2s;
+            border-radius: 50%;
+        }
+
+        input:hover::before, input:focus::before {
+            background-color: #fff;
+        }
+        input:active::before {
+            background-color: #bbb;
+        }
+    }
 }
 
 // TODO move inside layer once we also move .js-tooltip and .popover
