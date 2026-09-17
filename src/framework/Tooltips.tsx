@@ -94,6 +94,10 @@ export function UpdateTooltip(el: HTMLElement) {
     }
 }
 
+export function ForceShowTooltip(el: HTMLElement) {
+    show(el, true)
+}
+
 function hide() {
     if (!currentTooltip) return
     currentTooltip.Close()

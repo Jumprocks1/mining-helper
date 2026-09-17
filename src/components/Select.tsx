@@ -1,4 +1,5 @@
 import { Children } from "../framework/createElement"
+import { ForceShowTooltip } from "../framework/Tooltips"
 import { userErrorMessage } from "../utils/UserError"
 
 export type SelectOption = string | [value: string, display: Children]
@@ -61,8 +62,9 @@ export default ({ defaultValue = "", unsetLabel = "Unset", onChange, options, lo
                 console.error(e)
                 loaded = false
                 message.innerText = "Error occured"
-                // sadly this tooltip isn't visible until they close the list
+                select.blur()
                 select.tooltipError = userErrorMessage(e)
+                ForceShowTooltip(select)
             }
         }
         select.addEventListener("pointerdown", load)

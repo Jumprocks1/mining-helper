@@ -13,15 +13,7 @@ export async function validateAnkiSettings(validator: SettingsValidator, onlyAnk
     const button = () => <button onclick={() => AnkiSettingsModal()}><Icon icon="settings" />Configure Anki</button>
     try {
         try {
-            const permissions = await AnkiConnect.call("requestPermission", undefined)
-            if (permissions.permission === "denied") {
-                throw userErrorMessage2(`Access to AnkiConnect from ${location.origin} denied`,
-                    "Please check the AnkiConnect options inside Anki and ensure access is allowed.")
-            }
-            const apiKey = await getSetting("ankiConnectApiKey")
-            if (permissions.requireApikey && !apiKey)
-                throw userErrorMessage2(`An API key is required. Please add one in the settings ${onlyAnkiSettings ? "above" : "below"}.`,
-                    "To find your current API key, in Anki, go to Tools > Add-ons > AnkiConnect > Config > apiKey")
+            await throwAnkiConnectPermissions(onlyAnkiSettings)
         } catch (e) {
             if (e instanceof Error) {
                 if (String(e).includes("Failed to fetch")) {
@@ -103,11 +95,12 @@ export async function getTargetNoteFilter() {
 const body = async (inner: HTMLElement) => {
     const ankiFields = await getSetting("ankiFields")
     const fields: ReturnType<typeof Select>[] = []
+    let optionsLoader: Promise<string[]> | undefined
     const fieldSelect = (key: AnkiFieldKey) => {
         const res = Select({
             defaultValue: ankiFields[key] ?? AnkiFieldInfo[key].name,
             includeEmpty: true,
-            loadOptions: async () => AnkiConnect.call("modelFieldNames", { modelName: await getSetting("ankiVocabModel") }),
+            loadOptions: async () => optionsLoader ??= AnkiConnect.call("modelFieldNames", { modelName: await getSetting("ankiVocabModel") }),
             onChange: v => {
                 ankiFields[key] = v
                 setSetting("ankiFields", ankiFields) // not awaited
@@ -133,7 +126,10 @@ const body = async (inner: HTMLElement) => {
                 <label>Vocab Deck</label>
                 {Select({
                     defaultValue: await getSetting("ankiVocabDeck"),
-                    loadOptions: () => AnkiConnect.call("deckNames", undefined),
+                    loadOptions: async () => {
+                        await throwAnkiConnectPermissions(true)
+                        return await AnkiConnect.call("deckNames", undefined)
+                    },
                     onChange: v => setSetting("ankiVocabDeck", v)
                 })}
             </div>
@@ -189,3 +185,15 @@ const AnkiSettingsModal = () => OpenModal({
     header: "Configuring AnkiConnect"
 })
 export default AnkiSettingsModal
+
+export async function throwAnkiConnectPermissions(onlyAnkiSettings: boolean) {
+    const permissions = await AnkiConnect.call("requestPermission", undefined)
+    if (permissions.permission === "denied") {
+        throw userErrorMessage2(`Access to AnkiConnect from ${location.origin} denied`,
+            "Please check the AnkiConnect options inside Anki and ensure access is allowed.")
+    }
+    const apiKey = await getSetting("ankiConnectApiKey")
+    if (permissions.requireApikey && !apiKey)
+        throw userErrorMessage2(`An API key is required. Please add one in the settings ${onlyAnkiSettings ? "above" : "below"}.`,
+            "To find your current API key, in Anki, go to Tools > Add-ons > AnkiConnect > Config > apiKey")
+}
