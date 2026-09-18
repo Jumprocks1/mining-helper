@@ -88,7 +88,7 @@ export default class JpHoverTooltip extends JsPopover {
                 <IconButton icon="play_arrow" onClick={() => playAudioThrow(vocab)} />
                 <div className="float-right stack">
                     <div className="row">
-                        <span className={"vocab-state " + vocabStateString}>
+                        <span className={"vocab-state " + vocabStateString} tooltip={() => vocab[4].join("\n")}>
                             {vocabStateNode}{vocabNote ? <> - {vocabNote}</> : undefined}
                         </span>
                         {ignoreButton}
