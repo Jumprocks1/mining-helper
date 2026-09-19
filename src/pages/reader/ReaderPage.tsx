@@ -13,7 +13,7 @@ import { disallowGlobalInput, handleKeyDown, handleTranslate } from "../../utils
 import { JpdbApiKeyField } from "../../views/SettingsFields"
 import { getAnkiFurigana } from "../anki/CardList"
 import { HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "../subtitles/JpHoverTooltip"
-import { AddFurigana } from "./furigana"
+import { AddFurigana, addFuriganaOverrides } from "./furigana"
 import { BaseReader, ReaderPageNode } from "../../reader/BaseReader"
 import { stringSettingsField } from "../../views/SettingsModal"
 import AdvancedSettingsModal from "../../views/AdvancedSettingsModal"
@@ -26,6 +26,7 @@ import RecommendedMiningModal from "../subtitles/RecommendedMiningModal"
 import AnkiSettingsModal from "../anki/AnkiSettingsModal"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { userErrorMessage } from "../../utils/UserError"
+import FuriganaOverride from "../../reader/FuriganaOverride"
 
 export default class ReaderPage extends PageComponent {
     Id = "reader-page"
@@ -312,8 +313,8 @@ export default class ReaderPage extends PageComponent {
             await this.Library.Save()
         }
         const pageNode = await this.Reader.ReadPage(page)
+        await this.EnhancePageNode(pageNode)
         this.PageIndicator.textContent = `${page + 1} / ${this.Reader.PageCount}` // for url-template this can update after ReadPage is called
-        this.EnhancePageNode(pageNode)
         // Make there's no important awaits after this call, otherwise we'll get a layout shift
         replaceWith(this.CurrentPageNode, pageNode)
 
@@ -397,7 +398,10 @@ export default class ReaderPage extends PageComponent {
         let handled = true
         if (key === ",") {
             OpenReaderSettings()
-        } else if (key === "f") this.FuriganaButton.Click(undefined)
+        } else if (key === "f") {
+            if (!this.FuriganaButton.Disabled) this.FuriganaButton.Click(undefined)
+            else FuriganaOverride()
+        }
         else if (key === "t") {
             if (!handleTranslate())
                 this.JpdbLoadButton.Click(undefined)
@@ -454,7 +458,7 @@ export default class ReaderPage extends PageComponent {
     }
 
     // Stuff that doesn't really belong in the Reader classes
-    EnhancePageNode(node: ReaderPageNode) {
+    async EnhancePageNode(node: ReaderPageNode) {
         if (!this.Reader) return
         node.characterCount = node.textContent.replace(/\s/g, '').length
         let i = 0;
@@ -467,6 +471,7 @@ export default class ReaderPage extends PageComponent {
             }
             i += 1
         }
+        await addFuriganaOverrides(node)
     }
 
     async ToggleFullscreen() {

@@ -4,7 +4,6 @@ import { Load, LoadableChildren } from "../Loader";
 import { applyBaseComponentProps, BaseComponentProps } from "../../framework/util";
 import { onDeath } from "../../framework/Observer";
 import { addRouteChangeListener } from "../../framework/Router";
-import { combineRectangles, getTextRectsRange } from "../../utils/CharacterHighlighter";
 
 interface Props extends BaseComponentProps {
     hydrate?: LoadableChildren

@@ -153,7 +153,7 @@
             height: $barHeight;
             width: $barWidth;
             margin: 0.2em 0.5em;
-            border-radius: $barHeight / 2;
+            border-radius: calc($barHeight / 2);
 
             transition: background-color 0.2s;
 
@@ -174,7 +174,7 @@
 
             position: absolute;
             height: $nobSize;
-            inset: ($barHeight - $nobSize) / 2;
+            inset: calc(($barHeight - $nobSize) / 2);
 
             content: "";
             transition: transform 0.2s;

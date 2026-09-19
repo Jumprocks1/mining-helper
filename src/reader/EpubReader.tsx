@@ -203,6 +203,7 @@ export class EpubReader extends BaseReader {
     setupSanitizer() {
         this.sanitizer.allowElement({ name: "div", attributes: ["data-epub-ref-id"] })
         this.sanitizer.allowElement({ name: "g", attributes: ["data-epub-ref-id"], namespace: svgNS })
+        this.sanitizer.removeElement("title")
         // TODO could support links with href but really doesn't feel worth it
         this.sanitizer.removeAttribute("href")
     }

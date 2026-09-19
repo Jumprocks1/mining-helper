@@ -77,6 +77,7 @@ export const defaultLocalSettings = {
     readerIgnoreSelector: "",
     tocWidth: 0,
     knownKanji: "", // this doesn't include the stuff imported from Anki. Have to combine the 2 sets
+    furiganaOverrides: {} as Record<string, string>,
 
     // Global settings
     serverAddress: "127.0.0.1:4012",
@@ -139,6 +140,18 @@ export function getSetting<K extends SettingsKey>(key: K): AllSettings[K] | Prom
     if (key in defaultLocalSettings)
         // we could probably store the results of this in cachedSettings
         return BrowserStorage.local.get({ [key]: defaultLocalSettings[key as keyof LocalSettings] }).then(e => e[key]) as Promise<AllSettings[K]>
+    throw new Error()
+}
+
+export async function getSettingAndCache<K extends keyof LocalSettings>(key: K): Promise<LocalSettings[K]> {
+    if (key in cachedSettings)
+        // @ts-expect-error
+        return cachedSettings[key]
+    if (key in defaultLocalSettings) {
+        const res = (await BrowserStorage.local.get({ [key]: defaultLocalSettings[key as keyof LocalSettings] }))[key] as AllSettings[K]
+        cachedSettings[key] = res
+        return res
+    }
     throw new Error()
 }
 

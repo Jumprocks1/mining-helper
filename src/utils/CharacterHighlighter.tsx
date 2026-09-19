@@ -118,7 +118,7 @@ export function getTextRects(target: HTMLElement | Range) {
     }
 }
 
-export function getTextRectsRange(range: Range) {
+function getTextRectsRange(range: Range) {
     // This walks all text nodes in the common ancestor for `range`, skipping <rt>
     // For each node that overlaps the range, it select the part of the node inside of the input range
     // It then adds that text node's range to the output
@@ -149,6 +149,7 @@ export function getTextRectsRange(range: Range) {
     const walker = document.createTreeWalker(parent, NodeFilter.SHOW_TEXT)
     let node: Node | null
     while ((node = walker.nextNode())) {
+        // This is faster than using a walker filter, I think because it results in less data passing between the engine/JS
         if (node.parentElement?.closest("rt"))
             continue
         handle(node as Text)

@@ -195,3 +195,15 @@ body {
 code {
     color: color.mix(#FFFFFF, variables.$brightBlue, 70%);
 }
+
+@layer elements {
+    .label-field {
+        font-size: 0.7em;
+        display: flex;
+        flex-direction: column;
+        >input {
+            font-size: 1rem;
+            color: variables.$fontColor;
+        }
+    }
+}

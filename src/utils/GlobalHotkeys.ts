@@ -84,7 +84,6 @@ export function handleTranslate(): Promise<unknown> | false {
         const s = getCleanSelectionString(selection)
         if (isJapanese(s)) return showTranslation(selection, s)
     }
-    document.getSelection()
     return false
 }
 

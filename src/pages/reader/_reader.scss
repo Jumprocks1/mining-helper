@@ -92,6 +92,11 @@
                         color: #FCC;
                     }
                 }
+                .ruby-group.furigana-override {
+                    rt {
+                        color: #CFC;
+                    }
+                }
                 svg {
                     display: block;
                 }
@@ -149,5 +154,15 @@
         .known-kanji-ce {
             max-width: 30em;
         }
+    }
+}
+
+#furigana-override-modal {
+    div.label {
+        font-size: 0.7em;
+    }
+    .preview {
+        padding: $s1;
+        font-size: 1.3em;
     }
 }

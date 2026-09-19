@@ -1,9 +1,10 @@
-import { FuriganaMode, getSetting } from "../../core/Settings";
+import { FuriganaMode, getSetting, getSettingAndCache } from "../../core/Settings";
 import { JpdbParseResponseWithNodes } from "../../reader/readerPageJpdb";
 import { JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { getVocabState, VocabState } from "../../jpdb/JpdbState";
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil";
 import { loadAnkiKanjiSet } from "../../utils/KanjiSet";
+import { furiToRuby } from "../../utils/util";
 
 // This should no-op when everything is already inside ruby tags
 export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
@@ -31,7 +32,7 @@ export async function AddFurigana(jpdb: JpdbParseResponseWithNodes) {
         const nodeEnd = nodeStart + nodeContent.length
 
         let hasReplacement = false
-        let replacement: (string | Node | Text)[] = []
+        let replacement: (string | Node)[] = []
         function pushTo(pushTo: number) {
             if (currentPos === pushTo) return
             replacement.push(nodeContent.substring(currentPos - nodeStart, pushTo - nodeStart))
@@ -135,5 +136,49 @@ export function rubyFuriFromToken(word: string, token: JpdbToken) {
         }
         if (i < word.length) o.push(word.substring(i))
         return o
+    }
+}
+
+export async function addFuriganaOverrides(node: HTMLElement) {
+    const overrides = Object.entries(await getSettingAndCache("furiganaOverrides"))
+    if (overrides.length === 0) return
+
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+        acceptNode: node => {
+            // If node already has ruby (from source), skip
+            if (node.nodeName === "RUBY") return NodeFilter.FILTER_REJECT
+            return NodeFilter.FILTER_ACCEPT
+        }
+    })
+    let currentNode = walker.nextNode() as Text | null
+    while (currentNode) {
+        const value = currentNode.nodeValue
+        if (!value) continue
+
+        let replacements: [start: number, [string, string]][] = []
+        for (const entry of overrides) {
+            const found = value.indexOf(entry[0])
+            if (found >= 0) replacements.push([found, entry])
+        }
+        if (replacements.length > 0) {
+            replacements.sort((a, b) => a[0] - b[0])
+            let i = 0
+            const o: (string | Node | Text)[] = []
+            for (const r of replacements) {
+                if (i > r[0]) continue // overlapping replacements
+                const entry = r[1]
+                o.push(value.substring(0, r[0]))
+                const ruby = furiToRuby(entry[1])
+                ruby.classList.add("furigana-override")
+                o.push(ruby)
+                i = r[0] + entry[0].length
+            }
+            o.push(value.substring(i))
+            const t = currentNode
+            currentNode = walker.nextNode() as Text | null // have to get next node before replacing
+            t.replaceWith(...o)
+        } else {
+            currentNode = walker.nextNode() as Text | null
+        }
     }
 }
