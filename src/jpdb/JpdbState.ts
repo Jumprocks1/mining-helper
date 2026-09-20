@@ -126,7 +126,12 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
     if (vocab[4].includes("family or surname") ||
         vocab[4].includes("place name") ||
         vocab[4].includes("full name of a particular person") ||
-        vocab[4].includes("female name"))
+        vocab[4].includes("female name") ||
+        vocab[4].includes("name") ||
+        vocab[4].includes("name-place") ||
+        vocab[4].includes("unclassified name") ||
+        vocab[4].includes("historical term") ||
+        vocab[4].some(e => e.startsWith("given name")))
         return [VocabState.Name, undefined]
     let kanji = false
     for (let i = 0; i < word.length; i++) {
@@ -149,7 +154,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
 
 export function geti1Tokens(subtitles: Subtitles, jpdb: JpdbParseResponse, config: VocabStateConfig) {
     const { kanaUnknown } = config
-    const res = new Map<number, JpdbToken[]>()
+    const res = new Map<JpdbVocabulary, JpdbToken[]>()
     for (const entry of subtitles.processedEntries) {
         let unknown: JpdbToken | undefined
         const end = entry.characterOffset + entry.text.length
@@ -170,10 +175,10 @@ export function geti1Tokens(subtitles: Subtitles, jpdb: JpdbParseResponse, confi
         }
         // ignore entries with <3 tokens
         if (unknown !== undefined && tokenCount >= 3) {
-            const vid = jpdb.vocabulary[unknown[3]][5]
-            const existing = res.get(vid)
+            const vocab = jpdb.vocabulary[unknown[3]]
+            const existing = res.get(vocab)
             if (existing) existing.push(unknown)
-            else res.set(vid, [unknown])
+            else res.set(vocab, [unknown])
         }
     }
     return res

@@ -8,11 +8,11 @@ import { JitenParseText } from "../jiten/JitenParseText";
 
 export type JpdbVocabulary = [
     spelling: string,
-    reading: never, // actually string but we don't use it
+    reading: string, // not used outside of JPDB parse
     frequency_rank: number | null,
     meanings: string[],
     parts_of_speech: string[],
-    vid: never,
+    vid: number, // not used outside of JPDB parse
     alt_spelling: never[],
     furigana: string // TODO start using this instead
 ] & {
@@ -200,6 +200,8 @@ interface TranslateResponse extends JpdbParseResponse {
     text?: string
 }
 const translationCache = new Map<string, string>()
+// TODO add Google translate
+// https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=How%20old%20are%20you
 export async function jpdbTranslate(text: string) {
     const cache = translationCache.get(text)
     if (cache) return cache

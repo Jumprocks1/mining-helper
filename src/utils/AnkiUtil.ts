@@ -54,7 +54,6 @@ async function activeFields(card: CardData) {
         [fieldName("sentence")]: card.jpSentenceKanji,
         [fieldName("sentenceMeaning")]: card.enSentence,
         [fieldName("sentenceFurigana")]: card.jpSentenceFuri,
-        [fieldName("jpdbVid")]: card.vid?.toString(),
         [fieldName("source")]: card.source
     }
     const fields: Record<string, string> = {}
@@ -79,7 +78,7 @@ async function activeFields(card: CardData) {
     tryAddAudio(fieldName("sentenceAudio"), card.sentenceAudioLocalFile, card.sentenceAudioBytes)
     const picture: MediaAdd[] = []
     if (card.image) {
-        const filename = card.kanji + "_" + card.vid + "_image.jpg"
+        const filename = card.kanji + "_" + card.furigana + "_image.jpg"
         picture.push({
             // @ts-expect-error toBase64 is pretty new
             data: card.image.toBase64(),

@@ -79,7 +79,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
             }
             let tokenUsages: JpdbToken[]
             if (i1Ids) {
-                const found = i1Ids.get(vocab[5])
+                const found = i1Ids.get(vocab)
                 if (!found) continue
                 tokenUsages = found
             } else {

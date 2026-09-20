@@ -175,7 +175,6 @@ export interface CardData {
     sentenceIndex?: string
     meaningIndex?: string
 
-    vid?: number // jpdb
     source?: string // filename + time (in seconds)
     vocab?: JpdbVocabulary
 }

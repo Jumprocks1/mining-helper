@@ -96,12 +96,12 @@ export default (props: Props) => {
             card.meaning = vocab[3][0]
             if (!card.audioLocalFile) {
                 card.audioBytes = await tryGetAudioBytes(vocab)
-                if (card.audioBytes) card.audioLocalFile = `${card.kanji}_auto.mp3`
+                if (card.audioBytes) card.audioLocalFile = `${card.furigana}_auto.mp3`
             }
         } else {
             if (!card.audioLocalFile) {
                 card.audioBytes = await tryGetAudioBytes(card.kanji)
-                if (card.audioBytes) card.audioLocalFile = `${card.kanji}_auto.mp3`
+                if (card.audioBytes) card.audioLocalFile = `${card.furigana}_auto.mp3`
             }
         }
 
@@ -114,7 +114,6 @@ export default (props: Props) => {
             const meaning = meaningCE.innerText
             if (!meaning) throw new UserError("Meaning missing")
             if (!card.audioBytes) throw new UserError("Missing word audio")
-            if (vocab) card.vid = vocab[5]
             card.meaning = meaning
 
             // could load this from tokens, but it's tricky since user can modify it
@@ -300,7 +299,7 @@ export default (props: Props) => {
                 if (typeof sentenceAudio === "string") return "Failed to load"
                 const buffer = sentenceAudio.buffer.slice(sentenceAudio.byteOffset, sentenceAudio.byteOffset + sentenceAudio.byteLength)
                 card.sentenceAudioBytes = buffer
-                card.sentenceAudioLocalFile = `${card.kanji}_ex_mpv.ogg`
+                card.sentenceAudioLocalFile = `${card.furigana}_ex_mpv.ogg`
                 card.sentenceIndex = "mpv"
                 loadedOffsets = [so, eo]
                 const click = async (ev: MouseEvent) => {
