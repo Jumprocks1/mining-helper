@@ -157,8 +157,9 @@ export async function addFuriganaOverrides(node: HTMLElement) {
 
         let replacements: [start: number, [string, string]][] = []
         for (const entry of overrides) {
-            const found = value.indexOf(entry[0])
-            if (found >= 0) replacements.push([found, entry])
+            let found = -1
+            while ((found = value.indexOf(entry[0], found + 1)) >= 0)
+                replacements.push([found, entry])
         }
         if (replacements.length > 0) {
             replacements.sort((a, b) => a[0] - b[0])
@@ -167,7 +168,7 @@ export async function addFuriganaOverrides(node: HTMLElement) {
             for (const r of replacements) {
                 if (i > r[0]) continue // overlapping replacements
                 const entry = r[1]
-                o.push(value.substring(0, r[0]))
+                o.push(value.substring(i, r[0]))
                 const ruby = furiToRuby(entry[1])
                 ruby.classList.add("furigana-override")
                 o.push(ruby)

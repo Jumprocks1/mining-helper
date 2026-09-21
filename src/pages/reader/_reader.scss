@@ -104,6 +104,10 @@
                     text-decoration: none;
                     color: $linkColor
                 }
+                mark {
+                    color: $fontColor;
+                    background-color: #FF03;
+                }
                 p {
                     scroll-margin-block: 20vh;
                     margin-bottom: $s1*2;

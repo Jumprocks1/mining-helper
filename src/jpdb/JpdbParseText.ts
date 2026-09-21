@@ -203,6 +203,7 @@ const translationCache = new Map<string, string>()
 // TODO add Google translate
 // https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=How%20old%20are%20you
 export async function jpdbTranslate(text: string) {
+    text = text.trim()
     const cache = translationCache.get(text)
     if (cache) return cache
     if (text.length > 1000) throw "Text too long"
