@@ -18,6 +18,14 @@ export async function validateAnkiSettings(validator: SettingsValidator, onlyAnk
             if (e instanceof Error) {
                 if (String(e).includes("Failed to fetch")) {
                     validator.Error("Failed to connect to Anki")
+                    try {
+                        // @ts-expect-error
+                        const permission = await navigator.permissions.query({ name: "loopback-network" })
+                        if (permission.state === "denied") {
+                            validator.AppendOutput("Network permissions denied. Please configure this in your browser.")
+                            return
+                        }
+                    } catch { }
                     validator.AppendOutput(<div>Please ensure Anki is open with
                         {" "}<ExternalLink href="https://ankiweb.net/shared/info/2055492159">AnkiConnect installed</ExternalLink></div>)
                     validator.AppendOutput(<div>The attempted connection was to {await getSetting("ankiConnectAddress")}</div>)
