@@ -1,4 +1,4 @@
-import { Icon } from "../components/basic/IconButton";
+import IconButton, { Icon } from "../components/basic/IconButton";
 import NumberField from "../components/basic/NumberField";
 import Loader from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
@@ -30,7 +30,7 @@ export default () => {
         return <>
             <div className="field">
                 <div className="label">Custom CSS</div>
-                <div className="field-value monospace">{await customCssField()}</div>
+                <div className="monospace">{await customCssField()}</div>
             </div>
             <div className="field">
                 <label>Ignore ASS Style (Regex)<Icon icon="info" tooltip={() => {
@@ -75,6 +75,7 @@ export default () => {
                     type="password"
                     onchange={e => setSetting("jitenApiKey", (e.target as HTMLInputElement).value)} />
             </div>
+            {await mouseButtonField()}
             <div className="footer-buttons">
                 <LoadingButton onClick={ClearCache}>Clear Cache</LoadingButton>
                 <LoadingButton tooltip={"Saves storage to clipboard.\n"
@@ -115,4 +116,23 @@ async function migrate() {
         if (key.startsWith("jpdb_cache_"))
             await BrowserStorage.local.remove(key)
     }
+}
+
+
+const mouseButtonField = async () => {
+    const input = <input oncontextmenu={() => false}
+        defaultValue={(await getSetting("jpTooltipMouse"))?.toString() ?? ""} onmousedown={async ev => {
+            ev.preventDefault()
+            input.value = ev.button.toString()
+            await setSetting("jpTooltipMouse", ev.button as 0 | 1 | 2 | 3 | 4)
+        }} onmouseup={e => e.preventDefault()} /> as HTMLInputElement
+    return <div className="field" tooltip={"Shows tooltip info for underlined vocab when pressing this mouse button.\n" +
+        "Defaults to unbound.\n" +
+        "Useful for reading without using the keyboard."}>
+        <label className="no-stretch">Hover Tooltip Mouse Button <IconButton onClick={() => {
+            input.value = ""
+            setSetting("jpTooltipMouse", -1)
+        }} icon="close" /></label>
+        {input}
+    </div>
 }

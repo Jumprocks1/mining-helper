@@ -68,4 +68,10 @@
         display: flex;
         gap: $s1;
     }
+    label.no-stretch {
+        width: fit-content;
+        .icon-button {
+            padding: 0;
+        }
+    }
 }

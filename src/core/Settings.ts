@@ -88,12 +88,13 @@ export const defaultLocalSettings = {
     defaultTooltipDelay: 300 as Milliseconds,
     showUnknownVocabOnHover: false,
 
-    jpTooltipKey: "Shift"
-}
+    jpTooltipKey: "Shift",
+    jpTooltipMouse: -1,
+} satisfies Record<string, {}> // this just makes sure we don't assign to undefined
 export type LocalSettings = typeof defaultLocalSettings
 
 // make sure none of these settings are needed on immediately page load
-const syncSettings = ["defaultTooltipDelay", "showUnknownVocabOnHover", "jpTooltipKey"] satisfies (keyof LocalSettings)[]
+const syncSettings = ["defaultTooltipDelay", "showUnknownVocabOnHover", "jpTooltipKey", "jpTooltipMouse"] satisfies (keyof LocalSettings)[]
 const cachedSettings: { [key in keyof LocalSettings]?: LocalSettings[key] } & TemporarySettings = {
     ...defaultTemporarySettings
 }

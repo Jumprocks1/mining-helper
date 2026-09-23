@@ -144,6 +144,12 @@ function mousemove(ev: MouseEvent) {
         // @ts-expect-error
         targetKeyDown = ev[specialKey]
     }
+    const mouse = getSettingSync("jpTooltipMouse")
+    if (mouse >= 0) {
+        // there's no math formula since the web standard is fricked for this
+        const bit = mouse === 0 ? 1 : mouse === 1 ? 4 : mouse === 2 ? 2 : mouse === 3 ? 8 : mouse === 4 ? 16 : 0
+        targetKeyDown ||= Boolean(ev.buttons & bit)
+    }
     if (loadedHover?.tooltip) {
         // if there's a visible tooltip, don't close it when we move the mouse over it with the inverted open state
         const showTooltip = targetKeyDown !== loadedHover.handler.invert
@@ -165,6 +171,18 @@ function keydown(ev: KeyboardEvent) {
     targetKeyDown = true
     UpdateJpHover()
     if (loadedHover?.tooltip) ev.preventDefault()
+}
+function mouseup(ev: MouseEvent) {
+    if (ev.button !== getSettingSync("jpTooltipMouse")) return
+    targetKeyDown = false
+    UpdateJpHover()
+    ev.preventDefault()
+}
+function mousedown(ev: MouseEvent) {
+    if (ev.button !== getSettingSync("jpTooltipMouse")) return
+    targetKeyDown = true
+    UpdateJpHover()
+    ev.preventDefault()
 }
 
 // Assumes no mouse movement
@@ -262,6 +280,8 @@ export function RegisterJpHoverTooltip(handler: JpHoverTooltipHandler) {
         document.addEventListener("mousemove", mousemove)
         document.addEventListener("keyup", keyup)
         document.addEventListener("keydown", keydown)
+        document.addEventListener("mousedown", mousedown)
+        document.addEventListener("mouseup", mouseup)
     }
     handler.forceSetHoverState = state => setHoverState(state)
     kanjiTooltipHandlers.push(handler)
