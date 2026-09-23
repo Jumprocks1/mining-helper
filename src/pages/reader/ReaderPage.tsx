@@ -165,15 +165,16 @@ export default class ReaderPage extends PageComponent {
 
     PageTooltip() {
         if (!this.Reader) return
-        if (this.Reader.PageCount === 1) return "Pagination unavailable"
+        const characterCount = this.CurrentPageNode.characterCount
+        const characterCountString = characterCount && "Characters: " + characterCount
+        if (this.Reader.PageCount === 1) return characterCountString || "Pagination unavailable"
         let description: string[] = []
         if (this.Reader instanceof EpubReader) {
             description.push(this.Reader.spine[this.Reader.Page].href)
         } else if (this.Reader instanceof UrlTemplateReader) {
             description.push(this.Reader.urlFor(this.Reader.Page))
         }
-        let characterCount = this.CurrentPageNode.characterCount
-        if (characterCount) description.push("Characters: " + characterCount)
+        if (characterCountString) description.push(characterCountString)
         return ActionTooltip("Click to jump", undefined, description.join("\n"))
     }
 
