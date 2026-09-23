@@ -70,6 +70,8 @@
             @include vertical-scroll;
         }
         #reader-page-viewer {
+            // if there's fonts listed before Yu Gothic, punctation doesn't end up using Yu Gothic
+            font-family: Yu Gothic;
             outline: none;
             padding-top: 16px;
             padding-left: 1.5em; // need extra room for the paragraph numbers
@@ -83,7 +85,7 @@
                 padding-right: 16px;
             }
             &.shrink #reader-page-node-wrapper {
-                max-width: min(30em, 60vw - 1.5em);
+                max-width: min(30em, 60vw - 1.5em, 100vw - 20em);
             }
             .reader-page-node {
                 ruby:not(.ruby-auto-gen) {
