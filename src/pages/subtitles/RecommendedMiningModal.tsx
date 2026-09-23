@@ -53,8 +53,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
         const i1Ids = i1 && props.subtitles && geti1Tokens(props.subtitles, jpdb, stateConfig)
 
         const sorted = jpdb.vocabulary.toSorted((a, b) => (a[2] ?? Number.MAX_SAFE_INTEGER) - (b[2] ?? Number.MAX_SAFE_INTEGER))
-            // We use < instead of <= so if the max is set to 10000, you don't get 9999 and 10000 (which are different lengths)
-            .filter(e => (e[2] ?? Number.MAX_SAFE_INTEGER) < maxFrequency)
+            .filter(e => (e[2] ?? Number.MAX_SAFE_INTEGER) <= maxFrequency)
         const pendingRows: [JpdbVocabulary, HTMLElement, firstUsage: JpdbToken][] = []
         for (let i = 0; i < sorted.length; i++) {
             if (pendingRows.length >= maxCount) break

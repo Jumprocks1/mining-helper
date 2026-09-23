@@ -8,7 +8,7 @@ import { JitenParseText } from "../jiten/JitenParseText";
 
 export type JpdbVocabulary = [
     spelling: string,
-    reading: string, // not used outside of JPDB parse
+    reading: string, // only used by jpdb parse methods, prefer furigana elsewhere
     frequency_rank: number | null,
     meanings: string[],
     parts_of_speech: string[],
@@ -144,6 +144,9 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
 export function ParseText(s: string[]): Promise<JpdbParseResponse>
 export function ParseText(s: string[], cacheOnly: true | undefined): Promise<JpdbParseResponse | undefined>
 export async function ParseText(s: string[], cacheOnly?: true) {
+    // TODO the text here 100% changes when there's furigana overrides
+    // Looks like it's because it splits text nodes, which can leave spaces in their own nodes
+    // Since we don't trim and instead completely skip whitespace-only nodes, this causes some issues
     const fullJoin = s.join("\n")
     if (await getSetting("preferJitenApi") && await getSetting("jitenApiKey")) {
         return await JitenParseText(s, fullJoin, cacheOnly)

@@ -1,5 +1,6 @@
 import { getSetting } from "../core/Settings"
 import { JpdbVocabulary } from "../jpdb/JpdbParseText"
+import { furiBaseAndReading } from "../jpdb/JpdbState"
 import { urlToArrayBuffer } from "./util"
 
 let audioContext: AudioContext | undefined = undefined
@@ -87,7 +88,8 @@ export async function getAudioBytesThrow(vocab: JpdbVocabulary | string) {
         audioBytes = await serverPost(`audio-bytes-kanji:${vocab}`)
     } else {
         const kanji = vocab[0]
-        audioBytes = await serverPost(`audio-bytes-kanji:${kanji}:${vocab[1]}`)
+        const reading = furiBaseAndReading(vocab.furigana)[1]
+        audioBytes = await serverPost(`audio-bytes-kanji:${kanji}:${reading}`)
     }
     if (!audioBytes.ok) throw `Audio server returned ${audioBytes.statusText}`
     const buffer = await audioBytes.arrayBuffer()
