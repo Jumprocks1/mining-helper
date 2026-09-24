@@ -47,7 +47,7 @@ export class EpubReader extends BaseReader {
 
     async read(blob: Blob) {
         if (blob.type !== "application/epub+zip") throw new ReaderError(`Expected epub, got ${blob.type}`)
-        const reader = new ZipReader(new BlobReader(blob))
+        const reader = new ZipReader(new BlobReader(blob), { useWebWorkers: false })
         this._zip = {}
         for (const entry of await reader.getEntries()) {
             if (!entry.directory) this._zip[entry.filename] = entry

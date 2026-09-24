@@ -1,5 +1,5 @@
 import { JsPopover } from "../components/basic/JsPopover";
-import { jpdbTranslate } from "../jpdb/JpdbParseText";
+import { translate } from "../jpdb/JpdbParseText";
 import AnkiConnect from "./AnkiConnect";
 import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { jpdbEntryUrl } from "./util";
@@ -98,7 +98,7 @@ async function showTranslation(selection: Selection, s: string) {
     const view = new JsPopover({
         type: "info-popup",
         id: "translation-popup",
-        hydrate: () => jpdbTranslate(s)
+        hydrate: () => translate(s)
     })
     view.AnchorToRange(selection.getRangeAt(0))
     view.Open()

@@ -203,16 +203,27 @@ interface TranslateResponse extends JpdbParseResponse {
     text?: string
 }
 const translationCache = new Map<string, string>()
-// TODO add Google translate
-// https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=ja&dt=t&q=How%20old%20are%20you
-export async function jpdbTranslate(text: string) {
+export async function translate(text: string) {
     text = text.trim()
     const cache = translationCache.get(text)
     if (cache) return cache
     if (text.length > 1000) throw "Text too long"
     console.log(`translating ${text.length} characters...`)
+    const res = await googleTranslate(text) || await jpdbTranslate(text)
+    translationCache.set(text, res)
+    return res
+}
+async function jpdbTranslate(text: string) {
     const res = await callJpdb<TranslateResponse>("ja2en", { text })
     if (!res.text) throw "Failed to translate.\n" + JSON.stringify(res)
-    translationCache.set(text, res.text)
     return res.text
+}
+// This API is undocumented and could easily break randomly
+// It does seem a little better than jpdb though
+export async function googleTranslate(text: string) {
+    const url = new URL("https://translate.googleapis.com/translate_a/single?client=gtx&sl=ja&tl=en&dt=t")
+    url.searchParams.append("q", text)
+    const res = await fetch(url)
+    const json = await res.json()
+    return json[0].map((e: string[]) => e[0]).join("\n")
 }
