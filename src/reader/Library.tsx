@@ -21,6 +21,7 @@ interface LibraryBookBase {
     pageCount?: number
 
     progress?: BookProgress
+    totalCharacters?: number
 }
 
 export type LibraryBook = LibraryBookBase
@@ -121,10 +122,14 @@ export class Library {
         }
         let found = false
         for (let i = 0; i < this.books.length; i++) {
-            if (this.books[i].key === book.key) {
+            const e = this.books[i]
+            if (e.key === book.key) {
                 found = true
-                book.progress ??= this.books[i].progress
+                // put anything we want to 'permanently' save here
+                book.progress ??= e.progress
+                book.totalCharacters ??= e.totalCharacters
                 this.books[i] = book
+                break
             }
         }
         if (!found) this.books.push(book)
@@ -163,7 +168,7 @@ export class Library {
         if (book.source === "url-template") {
             return new UrlTemplateReader(book, this.Cache)
         } else if (book.contentType === "application/epub+zip") {
-            const reader = new EpubReader(book, { trimWhitespace: false })
+            const reader = new EpubReader(book)
             await reader.read(getBlob(book))
             return reader
         } else if (book.contentType === "text/html") {

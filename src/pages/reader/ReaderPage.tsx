@@ -175,6 +175,8 @@ export default class ReaderPage extends PageComponent {
             description.push(this.Reader.urlFor(this.Reader.Page))
         }
         if (characterCountString) description.push(characterCountString)
+        const totalCharacters = this.Reader.Book.totalCharacters
+        if (totalCharacters) description.push("Total characters: " + totalCharacters)
         return ActionTooltip("Click to jump", undefined, description.join("\n"))
     }
 

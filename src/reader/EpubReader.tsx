@@ -18,7 +18,6 @@ interface EpubToc {
 }
 
 interface EpubSettings {
-    trimWhitespace?: boolean
 }
 const svgNS = "http://www.w3.org/2000/svg"
 
@@ -59,6 +58,16 @@ export class EpubReader extends BaseReader {
         if (!opfPath) throw new ReaderError("Failed to find rootfile")
         await this.loadManifest(opfPath)
         await this.loadSpine()
+        if (this.Book.totalCharacters === undefined) {
+            console.log("loading character count")
+            // This can take quite awhile for a large book (200ms for medium size)
+            let total = 0
+            for (let i = 0; i < this.PageCount; i++) {
+                const page = await this.ReadPage(i, { skipImages: true })
+                total += page.textContent.replace(/\s/g, '').length
+            }
+            this.Book.totalCharacters = total
+        }
         return this
     }
 
@@ -134,7 +143,7 @@ export class EpubReader extends BaseReader {
     }
 
     // We sanitize in here to avoid accidentally dumping directly into page
-    override async ReadPage(page: number) {
+    override async ReadPage(page: number, config?: { skipImages?: true }) {
         const item = this.spine[page]
         if (!item) throw new ReaderError(`Page ${page} not found`)
         if (item.type !== "application/xhtml+xml") throw new ReaderError(`Expected xhtml, got ${item.type}`)
@@ -144,27 +153,20 @@ export class EpubReader extends BaseReader {
         const file = await this.readXML(item.href, true)
         const bodyNode = await this.SelectAndCleanPageBodyNode(file)
 
-        if (this.settings.trimWhitespace) {
-            const walker = file.createTreeWalker(bodyNode, NodeFilter.SHOW_TEXT);
-            let node;
-            while (node = walker.nextNode()) {
-                if (node.nodeValue) node.nodeValue = node.nodeValue.trim()
-            }
-        }
-
-        for (const e of bodyNode.querySelectorAll("svg[preserveAspectRatio=none]")) {
-            e.removeAttribute("preserveAspectRatio")
-        }
-
         const referenceElements = new Map<string, Node>()
 
-        const images = bodyNode.querySelectorAll("img, image")
-        for (const image of images) {
-            const id = referenceElements.size.toString()
-            referenceElements.set(id, image)
-            const placeholder = image instanceof SVGElement ? file.createElementNS(svgNS, "g") : <div />
-            placeholder.setAttribute("data-epub-ref-id", id)
-            image.replaceWith(placeholder)
+        if (!config?.skipImages) {
+            for (const e of bodyNode.querySelectorAll("svg[preserveAspectRatio=none]")) {
+                e.removeAttribute("preserveAspectRatio")
+            }
+            const images = bodyNode.querySelectorAll("img, image")
+            for (const image of images) {
+                const id = referenceElements.size.toString()
+                referenceElements.set(id, image)
+                const placeholder = image instanceof SVGElement ? file.createElementNS(svgNS, "g") : <div />
+                placeholder.setAttribute("data-epub-ref-id", id)
+                image.replaceWith(placeholder)
+            }
         }
         o.setHTML(bodyNode.getHTML(), { sanitizer: this.sanitizer })
         for (const el of o.querySelectorAll("*[data-epub-ref-id]")) {
