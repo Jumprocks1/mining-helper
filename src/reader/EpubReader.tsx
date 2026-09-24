@@ -57,17 +57,18 @@ export class EpubReader extends BaseReader {
         const rootFile = container.querySelector("container > rootfiles > rootfile")
         const opfPath = rootFile?.getAttribute("full-path")
         if (!opfPath) throw new ReaderError("Failed to find rootfile")
-        this._opfXML = await this.readXML(opfPath)
-        this.loadManifest()
+        await this.loadManifest(opfPath)
         await this.loadSpine()
         return this
     }
 
-    loadManifest() {
+    async loadManifest(opfPath: string) {
+        this._opfXML = await this.readXML(opfPath)
+        const dir = getDirectory(opfPath)
         this.manifest = {}
         const nodes = this.opfXML.querySelectorAll("package > manifest > item")
         for (const node of nodes) {
-            const href = node.getAttribute("href")
+            const href = dir + node.getAttribute("href")
             const type = node.getAttribute("media-type")
             if (href && type)
                 this.manifest[node.id] = { href, type }
@@ -85,7 +86,11 @@ export class EpubReader extends BaseReader {
                 if (item) this.spine.push(item)
             }
         }
-        const tocId = spine.getAttribute("toc")
+        let tocId = spine.getAttribute("toc")
+        if (!tocId) {
+            if ("toc.ncx" in this.manifest)
+                tocId = "toc.ncx"
+        }
         if (tocId) {
             const toc = this.manifest[tocId]
             if (toc) await this.loadToc(toc)
@@ -94,6 +99,7 @@ export class EpubReader extends BaseReader {
 
     async loadToc(toc: EpubItem) {
         if (toc.type !== "application/x-dtbncx+xml") throw new ReaderError(`Unexpected TOC type '${toc.type}'`)
+        const dir = getDirectory(toc.href)
         this.toc = { points: [] }
         const xml = await this.readXML(toc.href)
         const navPoints = xml.querySelectorAll("ncx > navMap > navPoint")
@@ -101,7 +107,7 @@ export class EpubReader extends BaseReader {
             const label = navPoint.querySelector("navLabel")!.textContent.trim()
             let href = navPoint.querySelector("content")!.getAttribute("src")!
             const spl = href.split("#")
-            href = spl[0]
+            href = dir + spl[0]
             const playOrder = navPoint.getAttribute("playOrder")
             this.toc.points.push({
                 label,
@@ -210,4 +216,10 @@ export class EpubReader extends BaseReader {
     override get PageCount(): number {
         return this.spine.length
     }
+}
+
+function getDirectory(path: string) {
+    const lastSlash = path.lastIndexOf("/")
+    if (lastSlash === -1) return ""
+    return path.substring(0, lastSlash + 1)
 }
