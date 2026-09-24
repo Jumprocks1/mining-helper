@@ -1,5 +1,6 @@
 import { JsPopover } from "../components/basic/JsPopover";
 import { jpdbTranslate } from "../jpdb/JpdbParseText";
+import AnkiConnect from "./AnkiConnect";
 import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { jpdbEntryUrl } from "./util";
 
@@ -48,6 +49,10 @@ export function keyDownWithText(ev: KeyboardEvent, text: string) {
         }
     } else if (key === "s") {
         openTab(`ss.html?q=${encodeURIComponent(text)}`)
+        ev.preventDefault()
+        return true
+    } else if (key === "a") {
+        AnkiConnect.call("guiBrowse", { query: `"word:*${text}*"` })
         ev.preventDefault()
         return true
     }
