@@ -1,4 +1,4 @@
-import { getAnkiFurigana } from "./pages/anki/CardList"
+import { getAnkiNoteKeys } from "./pages/anki/CardList"
 import { disallowGlobalInput, handleKeyDown } from "./utils/GlobalHotkeys"
 import { furiToReading } from "./utils/util"
 import "./framework/createElement"
@@ -65,13 +65,13 @@ async function getAudioOptions(vocab?: HTMLElement | null) {
 }
 
 async function afterLoad() {
-    const allAnkiFurigana = await getAnkiFurigana()
+    const ankiKeys = await getAnkiNoteKeys()
     const vocabs = document.querySelectorAll(".vocabulary")
     for (const vocab of vocabs) {
         const wordRuby = vocab.querySelector<HTMLElement>(".spelling ruby.v")
         if (wordRuby) {
-            const [, furigana] = kanjiAndFurigana(wordRuby)
-            if (allAnkiFurigana.includes(simplifiedFurigana(furigana))) {
+            const [kanji, furigana] = kanjiAndFurigana(wordRuby)
+            if (ankiKeys.includes(simplifiedFurigana(furigana)) || ankiKeys.includes(kanji)) {
                 vocab.classList.add("has-anki-card")
                 const target = vocab.querySelector<HTMLElement>(".primary-spelling > .spelling > div")
                 if (target) target.title = "Already has Anki card with this exact word field"
@@ -82,8 +82,8 @@ async function afterLoad() {
     for (const vocab of entries) {
         const wordRuby = vocab.querySelector<HTMLElement>(".vocabulary-spelling>a")
         if (wordRuby) {
-            const [, furigana] = kanjiAndFurigana(wordRuby)
-            if (allAnkiFurigana.includes(simplifiedFurigana(furigana)))
+            const [kanji, furigana] = kanjiAndFurigana(wordRuby)
+            if (ankiKeys.includes(simplifiedFurigana(furigana)) || ankiKeys.includes(kanji))
                 vocab.classList.add("has-anki-card")
         }
     }

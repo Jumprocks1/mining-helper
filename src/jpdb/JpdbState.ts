@@ -1,4 +1,5 @@
-import { getAnkiFuriganaSetSync, getAnkiFuriganaTrimmedMapSync } from "../pages/anki/CardList";
+import { getSettingSync } from "../core/Settings";
+import { getAnkiNoteKeysSetSync, getAnkiNoteKeysTrimmedMapSync } from "../pages/anki/CardList";
 import { UnicodeCharacterType, unicodeType } from "../utils/AnkiUtil";
 import { Subtitles } from "../utils/srt";
 import { getIgnoredStateSync } from "./IgnoreList";
@@ -66,6 +67,20 @@ export function furiBaseAndReading(furi: string, remove?: FuriganaRemove): [base
     return [base, reading]
 }
 
+export function TrimKana(s: string) {
+    let firstKanji = -1;
+    let lastKanji = -1;
+    for (let i = 0; i < s.length; i++) {
+        const state = unicodeType(s, i)
+        if (state === UnicodeCharacterType.Kanji) {
+            if (firstKanji === -1) firstKanji = i
+            lastKanji = i
+        }
+    }
+    if (firstKanji === -1) return ""
+    return s.substring(firstKanji, lastKanji + 1)
+}
+
 // Ideally only returns the relvant part of a furigana
 // should trim kana from the word + reading
 export function furiganaTrimmed(furi: string) {
@@ -90,18 +105,19 @@ export function getVocabState(vocab: JpdbVocabulary, config: VocabStateConfig = 
 export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateConfig = {}): [VocabState, string | undefined] {
     const { skipIgnoreCheck, trimKana } = config
 
-    const knownFuriganaSet = getAnkiFuriganaSetSync()
+    const knownVocab = getAnkiNoteKeysSetSync()
+    const keyField = getSettingSync("ankiNoteKey")
     const word = vocab[0]
     const furigana = vocab.furigana
     if (!furigana) throw `Missing furigana for ${vocab[0]}`
 
-    if (vocab && knownFuriganaSet) {
+    if (vocab && knownVocab) {
         const [base, reading] = furiBaseAndReading(furigana)
-        if (knownFuriganaSet.has(`${base}[${reading}]`))
+        if (knownVocab.has(keyField === "furigana" ? `${base}[${reading}]` : base))
             return [VocabState.Known, base]
         // Note this is not applied to the Anki cards in the known set
         const [numberTrimBase, numberTrimReading] = furiBaseAndReading(furigana, b => b.length === 1 && unicodeType(b) === UnicodeCharacterType.Number)
-        if (numberTrimBase !== base && knownFuriganaSet.has(`${numberTrimBase}[${numberTrimReading}]`))
+        if (numberTrimBase !== base && knownVocab.has(keyField === "furigana" ? `${numberTrimBase}[${numberTrimReading}]` : numberTrimBase))
             return [VocabState.Known, numberTrimBase]
         const altSpelling = vocab[6]
         if (altSpelling && altSpelling.length > 0) {
@@ -142,9 +158,9 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
     // TODO kana vocab is fine as long as it's past a certain frequency
     if (!kanji) return [VocabState.Kana, undefined]
     if (trimKana) {
-        const ankiFuriTrim = getAnkiFuriganaTrimmedMapSync()
+        const ankiFuriTrim = getAnkiNoteKeysTrimmedMapSync()
         if (ankiFuriTrim) {
-            const found = ankiFuriTrim.get(furiganaTrimmed(furigana))
+            const found = ankiFuriTrim.get(keyField === "furigana" ? furiganaTrimmed(furigana) : TrimKana(word))
             if (found) return [VocabState.Similar, furiBaseAndReading(found)[0]]
         }
     }

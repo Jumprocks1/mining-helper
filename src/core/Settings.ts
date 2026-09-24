@@ -90,11 +90,12 @@ export const defaultLocalSettings = {
 
     jpTooltipKey: "Shift",
     jpTooltipMouse: -1,
+    ankiNoteKey: "kanji" as "kanji" | "furigana"
 } satisfies Record<string, {}> // this just makes sure we don't assign to undefined
 export type LocalSettings = typeof defaultLocalSettings
 
 // make sure none of these settings are needed on immediately page load
-const syncSettings = ["defaultTooltipDelay", "showUnknownVocabOnHover", "jpTooltipKey", "jpTooltipMouse"] satisfies (keyof LocalSettings)[]
+const syncSettings = ["defaultTooltipDelay", "showUnknownVocabOnHover", "jpTooltipKey", "jpTooltipMouse", "ankiNoteKey"] satisfies (keyof LocalSettings)[]
 const cachedSettings: { [key in keyof LocalSettings]?: LocalSettings[key] } & TemporarySettings = {
     ...defaultTemporarySettings
 }
@@ -117,10 +118,9 @@ export function removeOnSettingChange<K extends SettingsKey>(key: K, listener: (
 
 // if settings aren't loaded yet, this will return the default value
 // this should be less than 10ms on page load
-export function getSettingSync<K extends SyncSettingsKey>(key: K) {
+export function getSettingSync<K extends SyncSettingsKey & keyof LocalSettings>(key: K): LocalSettings[K] {
     if (key in cachedSettings)
-        return cachedSettings[key]
-    // @ts-expect-error
+        return cachedSettings[key] as LocalSettings[K]
     return defaultLocalSettings[key]
 }
 

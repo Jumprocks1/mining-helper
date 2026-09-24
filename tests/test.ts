@@ -1,5 +1,5 @@
 import "./testContext"
-import { furiganaTrimmed, simplifiedFurigana } from "../src/jpdb/JpdbState"
+import { furiganaTrimmed, simplifiedFurigana, TrimKana } from "../src/jpdb/JpdbState"
 import { assert, executeTests, test } from "./testUtil"
 import { furiganaFromFullReading } from "../src/jpdb/JpdbParseText"
 import { UnicodeCharacterType, unicodeType } from "../src/utils/AnkiUtil"
@@ -27,6 +27,8 @@ test("simplified furigana", () => {
     assert.equal(furiFromToken("出来る", [0, 0, [["出", "で"], ["来", "き"], "る"], 0]), "出[で]来[き]る")
     // couldn't find a way to fix this assert while keeping the above functional
     // assert.equal(furiFromToken("来る", [0, 0, [["来", "き"], "た"], 0]), "来[く]る")
+
+    assert.equal(TrimKana("出来る"), "出来")
 })
 
 test("jiten", () => {

@@ -1,5 +1,5 @@
 import { getSetting, AnkiFieldKey, AnkiFieldInfo } from "../core/Settings";
-import { addAnkiFurigana } from "../pages/anki/CardList";
+import { trackNewAnkiCard } from "../pages/anki/CardList";
 import AnkiConnect, { MediaAdd } from "./AnkiConnect"
 import { BrowserStorage } from "./BrowserApi";
 import { TriggerEvent } from "./Events";
@@ -23,7 +23,7 @@ export async function saveToAnkiAndRemove(card: CardData, source?: "mining-modal
             options: { allowDuplicate: force ?? false }
         }
     })
-    await addAnkiFurigana(card.furigana) // could probably skip awaiting this
+    await trackNewAnkiCard(card) // could probably skip awaiting this
     await AnkiConnect.call("guiBrowse", { query: `"deck:${deck}" added:1` })
     const cards = await AnkiConnect.call("findCards", { query: `nid:${noteId}` })
     const cardId = cards.length > 0 && cards[0]

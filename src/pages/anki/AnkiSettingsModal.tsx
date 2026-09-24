@@ -8,6 +8,7 @@ import AnkiConnect from "../../utils/AnkiConnect";
 import SettingsValidator from "../../utils/SettingsValidator";
 import { userErrorMessage, userErrorMessage2 } from "../../utils/UserError";
 import { stringSettingsField } from "../../views/SettingsModal";
+import { refreshAnkiNoteList } from "./CardList";
 
 export async function validateAnkiSettings(validator: SettingsValidator, onlyAnkiSettings: boolean) {
     const button = () => <button onclick={() => AnkiSettingsModal()}><Icon icon="settings" />Configure Anki</button>
@@ -161,6 +162,17 @@ const body = async (inner: HTMLElement) => {
                     Will use <code>"deck:{await getSetting("ankiVocabDeck")}"</code> if unset.<br />
                     Recommend adding <code>-is:suspended</code> if you like to suspend cards.
                 </span>)}
+            <div className="field" tooltip={"Field used to figure out if a vocab is already in your Anki deck.\nIf your cards don't have a consistent furigana field, use the kanji field.\nMay require refreshing loaded notes after changing."}>
+                <label>Vocab Key Field</label>
+                {Select({
+                    defaultValue: await getSetting("ankiNoteKey"),
+                    options: [["kanji", "Kanji"], ["furigana", "Furigana"]],
+                    onChange: async v => {
+                        await setSetting("ankiNoteKey", v as "kanji" | "furigana")
+                        await refreshAnkiNoteList()
+                    }
+                })}
+            </div>
         </div>
         <h3>Vocab Field Mappings</h3>
     </>

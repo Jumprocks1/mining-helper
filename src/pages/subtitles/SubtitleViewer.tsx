@@ -1,4 +1,4 @@
-import { getAnkiFurigana } from "../../pages/anki/CardList"
+import { getAnkiNoteKeys } from "../../pages/anki/CardList"
 import { JpdbParseResponse } from "../../jpdb/JpdbParseText"
 import { getCharacterIndex, getSelectionRange } from "../../utils/CharacterHighlighter"
 import { formatTimestamp, SubtitleEntry, SubtitleEntryWithCharacterOffset, Subtitles } from "../../utils/srt"
@@ -100,7 +100,7 @@ export default class SubtitleViewer {
 
         // make sure anki words are loaded for later, this caches the result
         // no harm in calling multiple times if promise isn't resolved yet
-        getAnkiFurigana()
+        getAnkiNoteKeys()
     }
 
     TooltipHandler: JpHoverTooltipHandler
@@ -202,7 +202,7 @@ export default class SubtitleViewer {
     }
 
     async UnderlineWords() {
-        await getAnkiFurigana() // needed for AddStateClass
+        await getAnkiNoteKeys() // needed for AddStateClass
         const jpdb = this.subtitles.jpdbParse
         if (!jpdb) return
         const underlined = Boolean(this.Node.querySelector(".subtitles .underline"))
@@ -243,7 +243,7 @@ export default class SubtitleViewer {
     }
 
     async HighlightAnkiWords() {
-        const ankiFurigana = await getAnkiFurigana()
+        const ankiFurigana = await getAnkiNoteKeys()
         const knownCharacters = new Set<string>()
         for (const furi of ankiFurigana) {
             for (const c of furi) {

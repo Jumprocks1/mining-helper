@@ -1,4 +1,4 @@
-import { getAnkiFurigana } from "../anki/CardList";
+import { getAnkiNoteKeys } from "../anki/CardList";
 import CheckboxField from "../../components/basic/CheckboxField";
 import IconButton from "../../components/basic/IconButton";
 import NumberField from "../../components/basic/NumberField";
@@ -42,7 +42,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
 
     const load = async () => {
         const body = <></>
-        await getAnkiFurigana()
+        await getAnkiNoteKeys()
         await loadIgnoreList()
 
         const stateConfig: VocabStateConfig = {

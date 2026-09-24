@@ -7,7 +7,7 @@ import AnkiConnect, { AnkiNote, NoteBase } from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { serverPostJson } from "../../utils/Audio"
 import { addKnownAnkiKanji, reloadAnkiKanjiSet } from "../../utils/KanjiSet"
-import { getAnkiFurigana } from "../anki/CardList"
+import { getAnkiNoteKeys } from "../anki/CardList"
 
 const deckName = "Mining Helper Kanji"
 
@@ -37,7 +37,7 @@ const main = async () => {
         knownKanji.add(kanji)
     }
 
-    const vocab = await getAnkiFurigana()
+    const vocab = await getAnkiNoteKeys()
     let knownKanjiUsages = 0
     let unknownKanjiUsages = 0
     let vocabKanji = new Set<string>()

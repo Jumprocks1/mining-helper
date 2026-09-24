@@ -11,7 +11,7 @@ import { ActionTooltip } from "../../framework/Tooltips"
 import { JpdbToken } from "../../jpdb/JpdbParseText"
 import { disallowGlobalInput, handleKeyDown, handleTranslate } from "../../utils/GlobalHotkeys"
 import { JpdbApiKeyField } from "../../views/SettingsFields"
-import { getAnkiFurigana } from "../anki/CardList"
+import { getAnkiNoteKeys } from "../anki/CardList"
 import { HoverRectangleContainer, JpHoverTooltipHandler, RegisterJpHoverTooltip, UpdateHoverBox, UpdateJpHover } from "../subtitles/JpHoverTooltip"
 import { AddFurigana, addFuriganaOverrides } from "./furigana"
 import { BaseReader, ReaderPageNode } from "../../reader/BaseReader"
@@ -160,7 +160,7 @@ export default class ReaderPage extends PageComponent {
             if (ev.clientX > x + pLeft) setHoverState(undefined)
             else setHoverState(p)
         })
-        getAnkiFurigana()
+        getAnkiNoteKeys()
     }
 
     PageTooltip() {
