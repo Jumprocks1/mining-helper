@@ -19,3 +19,4 @@ Some source files are not kept in source control to keep the repo small/modular.
     - https://github.com/gambolputty/wikitable2csv
     - https://wikitable2csv.ggor.de/
     - This one has some manual cleaning
+    - Don't really remember what I needed this for

@@ -1,6 +1,7 @@
 import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 import { userErrorMessage } from "../utils/UserError";
 import { Component } from "../framework/Component"
+import { ForceShowTooltip } from "../framework/Tooltips";
 
 export interface LoadingButtonProps extends BaseComponentProps {
     onClick?: (ev: MouseEvent) => unknown, // can return promise
@@ -46,6 +47,7 @@ export default class LoadingButton extends Component {
                 const message = userErrorMessage(error)
                 this.Node.classList.add("errored")
                 this.Node.tooltipError = message
+                ForceShowTooltip(this.Node)
                 if (!canRetry) this.Disabled = true
             }).then(() => {
                 this.Loading = false;

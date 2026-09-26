@@ -7,6 +7,8 @@ using MiningHelper.Utils;
 
 namespace MiningHelper;
 
+// TODO should be able to remove this and convert to JavaScript
+// Can store the .json files in Git LFS
 public static class KanjiInfo
 {
     // https://www.edrdg.org/kanjidic/kanjidic2_dtdh.html
@@ -121,6 +123,7 @@ public static class KanjiInfo
                 var kanji = spl[0];
                 var parts = new List<KanjiPart>();
                 var kanjiInfo = o[kanji];
+                // TODO Idk what this does - should run it on the Kanji I already mined
                 foreach (var part in spl[1].Split(' ', StringSplitOptions.TrimEntries))
                 {
                     // Contains checks for variants

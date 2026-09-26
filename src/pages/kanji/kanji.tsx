@@ -107,7 +107,7 @@ const main = async () => {
 }
 
 async function getNoteInfo(kanji: string): Promise<NoteBase> {
-    const res = await serverPostJson<KanjiInfo>(`kanji-info:${kanji}`)
+    const res = await getKanjiInfo(kanji)
     const vocabDeckName = await getSetting("ankiVocabDeck")
 
     const ankiFields = await getSetting("ankiFields")
@@ -264,4 +264,9 @@ function getReadingFor(kanji: string, furigana: string) {
             else target = ""
         }
     }
+}
+
+async function getKanjiInfo(kanji: string) {
+    // TODO should be possible to load this with JS entirely
+    return await serverPostJson<KanjiInfo>(`kanji-info:${kanji}`)
 }
