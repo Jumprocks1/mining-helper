@@ -175,8 +175,11 @@ export default class ReaderPage extends PageComponent {
             description.push(this.Reader.urlFor(this.Reader.Page))
         }
         if (characterCountString) description.push(characterCountString)
-        const totalCharacters = this.Reader.Book.totalCharacters
-        if (totalCharacters) description.push("Total characters: " + totalCharacters)
+        const characterCounts = this.Reader.Book.characterCounts
+        if (characterCounts) {
+            let total = Object.values(characterCounts).reduce((a, b) => a + b, 0)
+            description.push("Total characters: " + total)
+        }
         return ActionTooltip("Click to jump", undefined, description.join("\n"))
     }
 
@@ -372,12 +375,20 @@ export default class ReaderPage extends PageComponent {
         const o: Node[] = []
         if (reader instanceof EpubReader) {
             const toc = reader.toc
+
+            const characterCounts = reader.Book.characterCounts
             for (let i = 0; i < toc.points.length; i++) {
                 const e = toc.points[i]
                 const nextTocPage = i < toc.points.length - 1 ? toc.points[i + 1].spinePage : reader.spine.length
-                o.push(<div className="link-button toc-point"
-                    onclick={() => this.LoadPage(e.spinePage)}
-                    tooltip={`Click to view\nPages ${e.spinePage + 1}-${nextTocPage}`}>
+                let tooltip = `Click to view\nPages ${e.spinePage + 1}-${nextTocPage}`
+                if (characterCounts) {
+                    let total = 0
+                    for (let p = e.spinePage; p < nextTocPage; p++)
+                        total += characterCounts[p]
+                    tooltip += "\nTotal characters: " + total
+                }
+                o.push(<div className="link-button toc-point" tooltip={tooltip}
+                    onclick={() => this.LoadPage(e.spinePage)}>
                     {e.label}
                 </div>)
             }

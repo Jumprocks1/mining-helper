@@ -58,15 +58,14 @@ export class EpubReader extends BaseReader {
         if (!opfPath) throw new ReaderError("Failed to find rootfile")
         await this.loadManifest(opfPath)
         await this.loadSpine()
-        if (this.Book.totalCharacters === undefined) {
+        if (this.Book.characterCounts === undefined) {
             console.log("loading character count")
             // This can take quite awhile for a large book (200ms for medium size)
-            let total = 0
+            this.Book.characterCounts = {}
             for (let i = 0; i < this.PageCount; i++) {
                 const page = await this.ReadPage(i, { skipImages: true })
-                total += page.textContent.replace(/\s/g, '').length
+                this.Book.characterCounts[i] = page.textContent.replace(/\s/g, '').length
             }
-            this.Book.totalCharacters = total
         }
         return this
     }

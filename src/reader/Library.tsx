@@ -21,7 +21,7 @@ interface LibraryBookBase {
     pageCount?: number
 
     progress?: BookProgress
-    totalCharacters?: number
+    characterCounts?: Record<number, number>
 }
 
 export type LibraryBook = LibraryBookBase
@@ -127,7 +127,7 @@ export class Library {
                 found = true
                 // put anything we want to 'permanently' save here
                 book.progress ??= e.progress
-                book.totalCharacters ??= e.totalCharacters
+                book.characterCounts ??= e.characterCounts
                 this.books[i] = book
                 break
             }
