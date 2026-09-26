@@ -35,7 +35,7 @@ export async function resolveAudio(audio: PlayableAudio): Promise<ArrayBuffer | 
 
 export async function playAudio(name: string, audio: PlayableAudio, offset: number = 0) {
     const bytes = await resolveAudio(audio)
-    if (!bytes) return
+    if (!bytes) throw "No audio found"
     audioContext ??= new AudioContext()
     if (gainNode === undefined) {
         gainNode = audioContext.createGain()
