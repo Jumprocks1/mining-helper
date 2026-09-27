@@ -183,15 +183,15 @@ function noteInfoToKanjiNote(kanji: string, sortedNotes: AnkiNote[], kanjiInfo: 
 
     return {
         fields: {
-            Kanji: kanjiInfo.Kanji,
-            Meaning: kanjiInfo.Meanings.join(", "),
-            Radical: kanjiInfo.Radical.Kanji + " - " + kanjiInfo.Radical.Meaning,
+            Kanji: kanjiInfo.kanji,
+            Meaning: kanjiInfo.meanings.join(", "),
+            Radical: kanjiInfo.radical.kanji + " - " + kanjiInfo.radical.meaning,
             // we use <br> for line breaks so it renders a bit better in Anki browser
             // on the actual card rendering side, we'll split out the <br> anyways
-            Parts: kanjiInfo.Parts?.map(e => e.Meaning ? e.Part + " - " + e.Meaning : e.Part).join("<br>"),
-            ["Kun Readings"]: kanjiInfo.KunReadings.join(", "),
-            ["On Readings"]: kanjiInfo.OnReadings.join(", "),
-            ["Name Readings"]: kanjiInfo.NameReadings.join(", "),
+            Parts: kanjiInfo.parts?.map(e => e.meaning ? e.part + " - " + e.meaning : e.part).join("<br>"),
+            ["Kun Readings"]: kanjiInfo.kunReadings.join(", "),
+            ["On Readings"]: kanjiInfo.onReadings.join(", "),
+            ["Name Readings"]: kanjiInfo.nameReadings.join(", "),
             ["Examples"]: simpleExamples.join("<br>")
             // Variants: , // don't think we really needs these for now
         },

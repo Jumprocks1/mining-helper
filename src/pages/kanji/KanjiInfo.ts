@@ -1,37 +1,30 @@
 import BrowserCache from "../../utils/BrowserCache";
 import { fetchSource } from "../../utils/Sources";
 
-// Casing in this file is a bit goofy since these used to be in C#
-// I'll make it consistent eventually
-
 interface RadicalInfo {
-    Kanji: string
-    Meaning: string
+    kanji: string
+    meaning: string
 }
 interface KanjiPart {
-    Part: string
-    Meaning?: string
+    part: string
+    meaning?: string
 }
 
-export interface KanjiInfo {
-    Kanji: string
-    Parts?: KanjiPart[]
-    StrokeCount: number
-    Radical: RadicalInfo
-    Meanings: string[]
-    KunReadings: string[]
-    OnReadings: string[]
-    NameReadings: string[]
-}
-interface SimplifiedKanjiInfo {
+interface KanjiInfoBase {
     kanji: string
     parts?: KanjiPart[]
-    radicalIndex: number
     strokeCount: number
     meanings: string[]
     kunReadings: string[]
     onReadings: string[]
     nameReadings: string[]
+}
+
+export interface KanjiInfo extends KanjiInfoBase {
+    radical: RadicalInfo
+}
+interface SimplifiedKanjiInfo extends KanjiInfoBase {
+    radicalIndex: number
 }
 interface KanjiInfoStore { kanji: Record<string, SimplifiedKanjiInfo>, radicals: RadicalInfo[] }
 
@@ -39,14 +32,8 @@ export async function getKanjiInfo(kanji: string): Promise<KanjiInfo> {
     const store = await getKanjiInfoStore()
     const info = store.kanji[kanji]
     return {
-        Kanji: info.kanji,
-        Parts: info.parts,
-        KunReadings: info.kunReadings,
-        Meanings: info.meanings,
-        NameReadings: info.nameReadings,
-        OnReadings: info.onReadings,
-        Radical: store.radicals[info.radicalIndex],
-        StrokeCount: info.strokeCount
+        ...info,
+        radical: store.radicals[info.radicalIndex],
     }
 }
 
@@ -55,7 +42,7 @@ const kanjiInfoStoreCache = new BrowserCache("kanji-info-store", 10_000_000, 1)
 // This is quite slow on first run, but hardly matter since once cached it's instant
 async function getKanjiInfoStore() {
     // Could compress this a bunch, but it being ~3MB JSON is really not that bad
-    return (kanjiDictionaryPromise ??= kanjiInfoStoreCache.GetJson("v1", loadKanjiDictionaryNoCache))
+    return (kanjiDictionaryPromise ??= kanjiInfoStoreCache.GetJson("v2", loadKanjiDictionaryNoCache))
 }
 
 async function loadKanjiDictionaryNoCache(): Promise<KanjiInfoStore> {
@@ -96,19 +83,19 @@ async function loadKanjiDictionaryNoCache(): Promise<KanjiInfoStore> {
             if (!kanjiInfo) throw `${kanji} not found`
             for (const part of spl[1].trim().split(' ')) {
                 // Contains checks for variants
-                const radicalI = radicals.findIndex(e => e.Kanji.includes(part))
+                const radicalI = radicals.findIndex(e => e.kanji.includes(part))
                 // If one of the parts is the kanji (or main radical) itself, no need to include it
                 // if the part is the entire kanji but that kanji also appears inside a radical definition,
                 //   we use that updated meaning
                 if ((part == kanji && radicalI === -1) || radicalI == kanjiInfo.radicalIndex) continue;
-                let meaning = radicals[radicalI]?.Meaning
+                let meaning = radicals[radicalI]?.meaning
                 if (!meaning) {
                     const partInfo = o[part]
                     if (partInfo) meaning = partInfo.meanings.join(", ")
                 }
-                parts.push({ Part: part, Meaning: meaning })
+                parts.push({ part, meaning })
             }
-            parts.sort((a, b) => getStrokeCount(a.Part) - getStrokeCount(b.Part))
+            parts.sort((a, b) => getStrokeCount(a.part) - getStrokeCount(b.part))
             kanjiInfo.parts = parts
         }
     }
@@ -182,7 +169,7 @@ async function getRadicals() {
         }
         const kanji = readField()
         const _ = readField()
-        o.push({ Kanji: kanji, Meaning: readField() })
+        o.push({ kanji, meaning: readField() })
     }
     return o
 }
