@@ -97,7 +97,5 @@ public static class AppSettings
         return File.OpenRead(path);
     }
 
-    public static string KanjiDicPath => GetFullPath("sources/kanjidic2.xml.gz");
-    public static string KradFilePath => GetFullPath("sources/kradfile.gz");
     public static string GetFullPath(string path) => Path.GetFullPath(path, SettingsFolder);
 }

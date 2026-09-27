@@ -289,11 +289,6 @@ public class CommandHandler
             }
             else if (commandName == "validate")
                 await SendResponse(context, await ValidateSetup.Validate(InputListener));
-            else if (commandName == "kanji-info")
-            {
-                if (commandValue == null) throw new Exception("Value required");
-                await SendResponse(context, KanjiInfo.Get(commandValue));
-            }
             else context.Error($"Unrecognized {source} command: {command}");
         }
         catch (UserException e)

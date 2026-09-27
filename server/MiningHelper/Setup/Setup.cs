@@ -18,31 +18,10 @@ public static partial class Setup
             Program.Print($"  Please copy the above key into the web interface's 'Server API Key' setting");
         }
         SetupMpv();
-        await DownloadKanjiFiles();
         SqliteSeeder.Setup();
         await DownloadFfmpeg();
         Program.Print("Setup complete, press any key to exit");
         Console.ReadKey(true);
-    }
-    public static async Task DownloadKanjiFiles()
-    {
-        static async Task<bool> check(string path, string url, string sizeEstimate)
-        {
-            if (!File.Exists(path))
-            {
-                Program.Print($"{Path.GetFileName(path)} missing", ConsoleColor.Yellow);
-                Program.Print("  This file is only needed if you plan on creating kanji cards.");
-                Program.Print("  This is not needed for mining vocab cards.");
-                var d = await AskDownload("  ", url, path, sizeEstimate);
-                if (!d) return false;
-            }
-            else Program.Print($"{Path.GetFileName(path)} found", ConsoleColor.DarkGray);
-            return true;
-        }
-        if (!await check(AppSettings.KanjiDicPath, "https://www.edrdg.org/kanjidic/kanjidic2.xml.gz", "~1.5MB"))
-            return;
-        if (!await check(AppSettings.KradFilePath, "https://www.edrdg.org/pub/Nihongo/kradfile.gz", "~50kB"))
-            return;
     }
 
     public static async Task<bool> AskDownload(string indent, string url, string outputPath, string sizeEstimate)

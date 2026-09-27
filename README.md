@@ -14,7 +14,6 @@ Here's a rough outline of what it will help you set up:
 4. Configure AnkiConnect + Anki field mappings
 5. Add jpdb API key
 6. Ensure `ffmpeg` is installed and in the system path
-7. Download kanji dictionary files (if you want to make kanji cards)
 
 ## [Web](https://jumprocks1.github.io/mining-helper) vs [Extension](https://github.com/Jumprocks1/mining-helper/releases) versions
 The extension version will always have more features than the web version due to having slightly more permissions. Currently, there are the following minor differences:
