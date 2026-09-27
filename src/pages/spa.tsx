@@ -17,7 +17,7 @@ BindSpaRouter({
     pages,
     routePreference: "html",
     fallbackPage: HomePage,
-    basePath: GITHUB_PAGES ? "mining-helper" : undefined,
+    basePath: GITHUB_PAGES ? "/mining-helper" : undefined,
     fallbackTitle: "Mining Helper",
     fallbackLayout: MainLayout,
     onInit: onPageLoad,

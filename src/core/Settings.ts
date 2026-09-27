@@ -64,7 +64,7 @@ export const defaultLocalSettings = {
     skipAssStyleRegex: "",
     customCss: "",
     miningMaxRecommendedCount: 40,
-    miningMaxFrequency: 20_000,
+    miningMaxFrequency: 10_000,
     miningTrimKana: true,
     miningChronological: false,
     volume: 0.6,

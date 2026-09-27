@@ -39,7 +39,7 @@ function getRouteFromLocation() {
         if (dot >= 0) path = path.substring(0, dot)
     }
 
-    const base = cleanedBase()
+    const base = globalRouterProps.basePath
     if (base && path.startsWith(base)) {
         path = path.substring(base.length)
     }
@@ -56,14 +56,6 @@ function getRouteFromLocation() {
 let globalRouterProps: Props = undefined
 // @ts-expect-error - this gets set right away, so might as well be not-undefined
 let currentPage: PageComponent = undefined
-
-function cleanedBase() {
-    let base = globalRouterProps.basePath
-    if (!base) return
-    if (!base.startsWith("/")) base = "/" + base
-    if (!base.endsWith("/")) base = base + "/"
-    return base
-}
 
 export function navigateTo(page: PageDefinition | string) {
     let path = typeof page === "string" ? page : page.path
@@ -93,7 +85,19 @@ export function addRouteChangeListener(listener: () => void) {
     onRouteChangeListeners.push(listener)
 }
 
+export function homeUrl() {
+    if (globalRouterProps.basePath) {
+        return document.location.hostname + globalRouterProps.basePath
+    }
+    return document.location.origin
+}
+
 export function BindSpaRouter(props: Props) {
+    const base = props.basePath
+    if (base) {
+        if (!base.startsWith("/")) throw "Base path must start with /"
+        if (base.endsWith("/")) throw "Base path can't end with /"
+    }
     globalRouterProps = props
     function init() {
         const target = props.target()

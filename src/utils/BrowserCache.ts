@@ -18,7 +18,8 @@ export default class BrowserCache {
     }
 
     Cleaned = false
-    async Clean() {
+    // Incoming is the amount of stuff we're about to add
+    async Clean(incoming = 0) {
         // Only allow 1 clean per page load
         if (this.Cleaned) return
         this.Cleaned = true
@@ -36,7 +37,7 @@ export default class BrowserCache {
             }
         }
         objects.sort((a, b) => b[0] - a[0])
-        while (bytesInUse > this.MaxUsage || objects.length > this.MaxEntries) {
+        while (bytesInUse > this.MaxUsage || objects.length > (this.MaxEntries - incoming)) {
             const pop = objects.pop()
             if (!pop) break
             await cache.delete(pop[2])
@@ -52,7 +53,7 @@ export default class BrowserCache {
         const getAndStore = async () => {
             if (!get) throw new Error()
             // This will only run on the first uncached get per page load
-            const cleanPromise = this.Cleaned ? undefined : this.Clean()
+            const cleanPromise = this.Cleaned ? undefined : this.Clean(1)
             const value = await get()
             const s = JSON.stringify(value)
             const response = new Response(s, {

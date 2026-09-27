@@ -20,3 +20,9 @@ Some source files are not kept in source control to keep the repo small/modular.
     - https://wikitable2csv.ggor.de/
     - This one has some manual cleaning
     - Don't really remember what I needed this for
+
+# Licenses
+kradfile + kanjidic2 are provided under the following license: https://www.edrdg.org/edrdg/licence.html.
+If that page isn't working, see https://creativecommons.org/licenses/by-sa/4.0/
+
+TODO: I should add one of these somewhere on the site: https://www.edrdg.org/edrdg/sample.html

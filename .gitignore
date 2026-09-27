@@ -2,6 +2,7 @@ _metadata
 
 dist/js
 dist/main.css
+dist/sources
 
 node_modules
 
