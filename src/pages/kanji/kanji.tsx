@@ -1,6 +1,6 @@
 import IconButton, { Icon } from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
-import { AnkiFieldInfo, AnkiFieldKey, getSetting } from "../../core/Settings"
+import { AnkiFieldInfo, AnkiFieldKey, ankiFieldSync, getSetting, getSettingAndCache } from "../../core/Settings"
 import { Children } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import AnkiConnect, { AnkiNote, NoteBase } from "../../utils/AnkiConnect"
@@ -110,7 +110,7 @@ async function getNoteInfo(kanji: string): Promise<NoteBase> {
     const res = await getKanjiInfo(kanji)
     const vocabDeckName = await getSetting("ankiVocabDeck")
 
-    const ankiFields = await getSetting("ankiFields")
+    const ankiFields = await getSettingAndCache("ankiFields")
     function fieldName(key: AnkiFieldKey) {
         return ankiFields[key] ?? AnkiFieldInfo[key].name
     }
@@ -150,7 +150,6 @@ async function getNoteInfo(kanji: string): Promise<NoteBase> {
     return noteInfoToKanjiNote(kanji, sortedNotesIndices.map(e => noteInfo[e]), res)
 }
 
-// TODO this method doesn't actually use notesWithIntervals, it really needs sortedNotes
 // This method shouldn't do anything expensive (network calls, large filters) so it can be bulk called
 function noteInfoToKanjiNote(kanji: string, sortedNotes: AnkiNote[], kanjiInfo: KanjiInfo): NoteBase {
     // these should be all different readings, if there's <5, it will pull whatever has the best interval
@@ -176,8 +175,8 @@ function noteInfoToKanjiNote(kanji: string, sortedNotes: AnkiNote[], kanjiInfo: 
     }
 
     const simpleExamples = examples.map(e => {
-        const furigana = e.fields["Word Furigana"]?.value
-        const meaning = e.fields["Word Meaning"]?.value
+        const furigana = e.fields[ankiFieldSync("wordFurigana")]?.value
+        const meaning = e.fields[ankiFieldSync("wordMeaning")]?.value
         return `${furigana} - ${meaning}`
     })
 
@@ -192,9 +191,11 @@ function noteInfoToKanjiNote(kanji: string, sortedNotes: AnkiNote[], kanjiInfo: 
             ["Kun Readings"]: kanjiInfo.kunReadings.join(", "),
             ["On Readings"]: kanjiInfo.onReadings.join(", "),
             ["Name Readings"]: kanjiInfo.nameReadings.join(", "),
-            ["Examples"]: simpleExamples.join("<br>")
+            ["Examples"]: simpleExamples.join("<br>"),
+            Sentence: examples[0].fields[ankiFieldSync("sentence")]?.value,
+            ["Sentence Audio"]: examples[0].fields[ankiFieldSync("sentenceAudio")]?.value
             // Variants: , // don't think we really needs these for now
-        },
+        }
     }
 }
 

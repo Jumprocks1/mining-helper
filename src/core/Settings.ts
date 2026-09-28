@@ -123,6 +123,11 @@ export function getSettingSync<K extends SyncSettingsKey & keyof LocalSettings>(
         return cachedSettings[key] as LocalSettings[K]
     return defaultLocalSettings[key]
 }
+export function ankiFieldSync<K extends AnkiFieldKey>(field: K) {
+    if (!("ankiFields" in cachedSettings))
+        throw `Anki field info not cached`
+    return cachedSettings["ankiFields"]![field] ?? AnkiFieldInfo[field].name
+}
 
 export function getDefaultSetting<K extends keyof AllSettings>(key: K): AllSettings[K] {
     if (key in defaultLocalSettings)
