@@ -68,10 +68,24 @@
         display: flex;
         gap: $s1;
     }
+    .modal-body {
+        >button {
+            margin-top: $s1;
+        }
+    }
     label.no-stretch {
         width: fit-content;
         .icon-button {
             padding: 0;
         }
+    }
+}
+
+#ignored-vocab-modal {
+    th {
+        padding: 0 $s1 * 2;
+    }
+    td {
+        padding: 0 $s1;
     }
 }

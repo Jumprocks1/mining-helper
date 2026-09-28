@@ -37,6 +37,9 @@ body {
             color: variables.$linkColor
         }
     }
+    table {
+        border-collapse: collapse;
+    }
     input {
         display: block;
         &:not([type="checkbox"]) {

@@ -36,8 +36,11 @@ export async function IgnoreVocab(vocab: JpdbVocabulary, temp?: boolean) {
     const list = await loadIgnoreList(true)
     const state = getIgnoredStateSync(vocab)
     if (state !== false) return
+    return IgnoreWord(vocab[0], temp, list)
+}
 
-    const word = vocab[0]
+export async function IgnoreWord(word: string, temp?: boolean, list?: IgnoreList) {
+    list ??= await loadIgnoreList(true)
     const obj: Entry = { word }
     // TODO could also allow only ignoring for a specific source for even longer
     if (temp) obj.expire = Date.now() + 30 * 24 * 60 * 60 * 1000 // 30 days
@@ -47,7 +50,9 @@ export async function IgnoreVocab(vocab: JpdbVocabulary, temp?: boolean) {
 }
 
 export async function UnIgnoreVocab(vocab: JpdbVocabulary) {
-    const word = vocab[0]
+    return UnIgnoreWord(vocab[0])
+}
+export async function UnIgnoreWord(word: string) {
     const list = await loadIgnoreList(true)
     const index = list.findIndex(e => e.word === word)
     if (index >= 0) {

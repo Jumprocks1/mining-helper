@@ -9,6 +9,7 @@ import { JitenCache } from "../jiten/JitenParseText";
 import { JpdbCache } from "../jpdb/JpdbParseText";
 import SubtitlesPage from "../pages/subtitles/subtitles";
 import { BrowserStorage } from "../utils/BrowserApi";
+import IgnoredVocabView from "./IgnoredVocabView";
 
 async function ClearCache() {
     await JpdbCache.Clear();
@@ -26,8 +27,8 @@ async function customCssField() {
 }
 
 export default () => {
-    const body = <Loader load={async () => {
-        return <>
+    const body = <Loader load={async () => <>
+        <div className="modal-body">
             <div className="field">
                 <div className="label">Custom CSS</div>
                 <div className="monospace">{await customCssField()}</div>
@@ -76,38 +77,40 @@ export default () => {
                     onchange={e => setSetting("jitenApiKey", (e.target as HTMLInputElement).value)} />
             </div>
             {await mouseButtonField()}
-            <div className="footer-buttons">
-                <LoadingButton onClick={ClearCache}>Clear Cache</LoadingButton>
-                <LoadingButton tooltip={"Saves storage to clipboard.\n"
-                    + "Also cleans/migrates storage.\nHold Ctrl to load from your clipboard instead"}
-                    onClick={async ev => {
-                        await migrate()
-                        if (ev.ctrlKey) {
-                            ev.preventDefault()
-                            const text = await navigator.clipboard.readText();
-                            const json = JSON.parse(text)
-                            await BrowserStorage.local.set(json)
-                            return
-                        }
-                        if (BrowserStorage.local.getBytesInUse) {
-                            const used = await BrowserStorage.local.getBytesInUse()
-                            console.log(`Using ${used} bytes (${Math.round(used / BrowserStorage.local.QUOTA_BYTES * 100)}%)`)
-                        }
-                        const data = await BrowserStorage.local.get()
-                        console.log(data)
-                        await navigator.clipboard.writeText(JSON.stringify(data))
-                    }}>
-                    Log Storage
-                </LoadingButton>
-            </div>
-        </>
-    }} />
+            <button onclick={() => { modal.Close(); IgnoredVocabView() }}>View Ignored Vocab</button>
+        </div>
+        <div className="footer-buttons">
+            <LoadingButton onClick={ClearCache}>Clear Cache</LoadingButton>
+            <LoadingButton tooltip={"Saves storage to clipboard.\n"
+                + "Also cleans/migrates storage.\nHold Ctrl to load from your clipboard instead"}
+                onClick={async ev => {
+                    await migrate()
+                    if (ev.ctrlKey) {
+                        ev.preventDefault()
+                        const text = await navigator.clipboard.readText();
+                        const json = JSON.parse(text)
+                        await BrowserStorage.local.set(json)
+                        return
+                    }
+                    if (BrowserStorage.local.getBytesInUse) {
+                        const used = await BrowserStorage.local.getBytesInUse()
+                        console.log(`Using ${used} bytes (${Math.round(used / BrowserStorage.local.QUOTA_BYTES * 100)}%)`)
+                    }
+                    const data = await BrowserStorage.local.get()
+                    console.log(data)
+                    await navigator.clipboard.writeText(JSON.stringify(data))
+                }}>
+                Log Storage
+            </LoadingButton>
+        </div>
+    </>} />
 
-    return OpenModal({
+    const modal = OpenModal({
         header: "Advanced Settings",
         body,
         id: "advanced-settings-modal"
     })
+    return modal
 }
 
 async function migrate() {
