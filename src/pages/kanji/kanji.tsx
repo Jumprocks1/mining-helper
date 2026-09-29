@@ -121,22 +121,25 @@ async function getNoteInfo(kanji: string): Promise<NoteBase> {
     const intervals = await AnkiConnect.call("getIntervals", { cards: cardIds })
 
     const sortInfo = noteInfo.map((e, i) => {
-        let kanjiCount = 0
-        let hasKana = false
+        let nonHira = 0 // includes kanji or katakana
+        let hasHira = false
         const kanji = e.fields[fieldName("word")]!.value
         for (let i = 0; i < kanji.length; i++) {
             const type = unicodeType(kanji, i)
-            if (type === UnicodeCharacterType.Kanji)
-                kanjiCount += 1
+            const unicode = kanji.charCodeAt(i)
+            // We used to treat hiragana and katakana the same
+            // Now we treat katakana separately since a katakana + kanji compound word really doesn't desereve to be a #1 example
+            if (type === UnicodeCharacterType.Kanji || (unicode >= 0x30a0 && unicode <= 0x30ff))
+                nonHira += 1
             else if (type === UnicodeCharacterType.Kana)
-                hasKana = true
+                hasHira = true
 
         }
         // when there's multiple kanji, we don't really care if it has kana or not
         // 1 kanji no kana = 0
         // 1 kanji has kana = 1
         // multiple kanji = 2
-        return [kanjiCount > 1 ? 2 : hasKana ? 1 : 0, intervals[i]] as const
+        return [nonHira > 1 ? 2 : hasHira ? 1 : 0, intervals[i]] as const
     })
     const sortedNotesIndices: number[] = []
     for (let i = 0; i < noteInfo.length; i++)
