@@ -1,6 +1,8 @@
+import IconButton from "../components/basic/IconButton"
+import Loader from "../components/Loader"
 import LoadingButton from "../components/LoadingButton"
 import { OpenModal } from "../components/Modal"
-import { getSetting, setSetting } from "../core/Settings"
+import { getSetting, getSettingAndCache, setSetting } from "../core/Settings"
 import { furiToRuby } from "../utils/util"
 
 export default function () {
@@ -30,10 +32,10 @@ export default function () {
         if (currentNode.nodeName === 'RUBY') {
             if (furigana && furigana[furigana.length - 1] != "]") furigana += " "
             for (const node of currentNode.childNodes) {
-                if (node.nodeType === Node.TEXT_NODE)
-                    furigana += node.textContent?.trim() ?? ""
-                else if (node.nodeName === "RT") {
+                if (node.nodeName === "RT") {
                     furigana += `[${node.textContent?.trim() ?? ""}]`
+                } else {
+                    furigana += node.textContent?.trim() ?? ""
                 }
             }
             currentNode = walker.nextSibling()
@@ -42,13 +44,15 @@ export default function () {
             currentNode = walker.nextNode()
         }
     }
+    overrideModal(baseText, furigana)
+}
 
+function overrideModal(baseText: string, furigana: string) {
     const preview = <div className="preview" />
     function refreshPreview() {
         preview.replaceChildren(furiToRuby(furigana))
     }
     refreshPreview()
-
     const modal = OpenModal({
         header: "Overriding Furigana",
         body: <div>
@@ -69,15 +73,21 @@ export default function () {
             const overrides = await getSetting("furiganaOverrides")
             const exists = baseText in overrides
             return <>
+                {<button onclick={() => {
+                    modal.Close()
+                    AllFuriganaOverrides()
+                }}>
+                    View All
+                </button>}
                 {exists && <LoadingButton onClick={async () => {
                     delete overrides[baseText]
                     await setSetting("furiganaOverrides", overrides)
-                    modal.Close()
+                    modal.Close("removed")
                 }}>Remove</LoadingButton>}
                 <LoadingButton onClick={async () => {
                     overrides[baseText] = furigana
                     await setSetting("furiganaOverrides", overrides)
-                    modal.Close()
+                    modal.Close("saved")
                 }}>Save</LoadingButton>
             </>
         },
@@ -99,4 +109,49 @@ function expandRubyRange(range: Range) {
         if (container === range.startContainer) range.setStartBefore(ruby)
         else range.setEndAfter(ruby)
     }
+}
+
+function AllFuriganaOverrides() {
+    const load = async () => {
+        const overrides = await getSettingAndCache("furiganaOverrides")
+        const overrideList = Object.entries(overrides).reverse()
+        const body = <tbody>
+            {overrideList.map(e => {
+                const row = <tr>
+                    <td>{e[0]}</td>
+                    <td>{furiToRuby(e[1])}</td>
+                    <td>
+                        <div className="row">
+                            <IconButton icon="edit" onClick={async () => overrideModal(e[0], e[1])
+                                .RegisterOnClose(e => { if (e) modal.Reload(load) })} />
+                            <IconButton icon="delete"
+                                onClick={async () => {
+                                    delete overrides[e[0]]
+                                    await setSetting("furiganaOverrides", overrides)
+                                    row.remove()
+                                }} />
+                        </div>
+                    </td>
+                </tr>
+                return row
+            })}
+        </tbody>
+        return <table>
+            <thead>
+                <tr>
+                    <th>Base</th>
+                    <th>Furigana</th>
+                    <th />
+                </tr>
+            </thead>
+            {body}
+        </table>
+    }
+
+    const modal = OpenModal({
+        header: "Furigana Overrides",
+        body: load,
+        id: "all-furigana-overrides-modal"
+    })
+    return modal
 }

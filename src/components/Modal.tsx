@@ -2,7 +2,7 @@ import IconButton from "./basic/IconButton";
 import { Component } from "../framework/Component";
 import { Load, LoadableChildren } from "./Loader";
 import { getPortal, TrackOpenPopover, OpenPopovers, MarkPopoverClosed } from "./basic/JsPopover";
-import { appendChild } from "../framework/createElement";
+import { appendChild, replaceChildren } from "../framework/createElement";
 import { applyBaseComponentProps, BaseComponentProps } from "../framework/util";
 
 export interface ModalProps extends BaseComponentProps {
@@ -26,8 +26,8 @@ export class Modal extends Component {
 
     getMinimizeTarget?: ModalProps["getMinimizeTarget"]
 
-    OnCloseHandlers?: (() => void)[]
-    RegisterOnClose(onClose: () => void) {
+    private OnCloseHandlers?: ((data?: any) => void)[]
+    RegisterOnClose(onClose: (data?: any) => void) {
         if (!this.IsOpen) {
             onClose() // invoke immediately, important for things like disposing memory
             return
@@ -80,21 +80,24 @@ export class Modal extends Component {
         this.Node = res
     }
 
-    // bit awkward but should be fine
-    // main reason is so sub-classes can have extra return values in OnClose
-    _closeNoOnClose() {
+    Reload(body: LoadableChildren) {
+        replaceChildren(this.Body, Load(body))
+    }
+
+    // Not sure why this isn't inlined
+    private _closeNoOnClose(data?: any) {
         if (!this.IsOpen) return
         this.IsOpen = false;
         this.Node.remove()
         if (this.OnCloseHandlers) {
-            this.OnCloseHandlers.forEach(e => e())
+            this.OnCloseHandlers.forEach(e => e(data))
             this.OnCloseHandlers = undefined
         }
     }
-    Close() {
+    Close(data?: any) {
         if (!this.IsOpen) return
         MarkPopoverClosed(this)
-        this._closeNoOnClose()
+        this._closeNoOnClose(data)
         // it's fine if OnClose calls this Close for some reason since the guard above will prevent a loop
         this.OnClose()
     }

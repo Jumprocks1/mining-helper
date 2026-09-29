@@ -81,11 +81,14 @@
     }
 }
 
-#ignored-vocab-modal {
+#ignored-vocab-modal, #all-furigana-overrides-modal {
     th {
         padding: 0 $s1 * 2;
     }
     td {
         padding: 0 $s1;
+    }
+    .row {
+        display: flex;
     }
 }

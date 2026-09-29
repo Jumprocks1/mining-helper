@@ -46,13 +46,13 @@ export default () => {
                         row.classList.toggle("hide", !(word as string).includes((ev.target as HTMLInputElement).value))
                     }
                 }
-            }} placeholder="Search..."></input>
+            }} placeholder="Search..." />
             <table>
                 <thead>
                     <tr>
                         <th>Word</th>
                         <th>Expires</th>
-                        <th></th>
+                        <th />
                     </tr>
                 </thead>
                 {body}
