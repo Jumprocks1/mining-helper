@@ -91,18 +91,30 @@ async function JitenParseTextNoCache(s: string[], fullJoin: string): Promise<Jpd
             end += 1;
         }
         console.log(`Fetching ${start}-${end} / ${s.length} lines, ${len} / ${fullJoin.length} characters`)
-        // Jiten does accept arrays, but I think this will be easier to manage at least for now
-        // Otherwise we'd have to add the \n offset after parsing
-        const text = s.slice(start, end).join("\n")
-        const json = await callJiten<JitenParseResponse>("reader/parse", { text: [text] })
-        for (const token of json.tokens[0]) {
-            token.start += responseOffset
-            token.end += responseOffset
-            jitenTokens.push(token)
+        // Jiten has some sort of bug where if there's a bunch of punctation characters in a row, it gets lost
+        // In particular, I saw this with Oregairu V1 p28.287
+        // This is a pretty awkward way to fix it, but don't think there's any other way
+        // Even just adding 4 fullwidth spaces at the start of the line can break it
+        const text = s.slice(start, end)
+        let startTrimmed: number[] = []
+        for (let i = 0; i < text.length; i++) {
+            const trimmed = text[i].replace(/^[「\s]+/g, "")
+            startTrimmed.push(text[i].length - trimmed.length)
+            text[i] = trimmed.replace(/[…。」\s]+$/g, "")
+        }
+        const json = await callJiten<JitenParseResponse>("reader/parse", { text })
+        for (let i = start; i < end; i++) {
+            const trimOffset = startTrimmed[i - start]
+            responseOffset += trimOffset
+            for (const token of json.tokens[i - start]) {
+                token.start += responseOffset
+                token.end += responseOffset
+                jitenTokens.push(token)
+            }
+            responseOffset += s[i].length - trimOffset + 1
         }
         for (const vocab of json.vocabulary) vocabMap.set(vocab.wordId + "," + vocab.readingIndex, vocab)
         sentCount += 1
-        responseOffset += text.length + 1 // +1 because the merged text will have another \n
 
         start = end
         if (start < s.length && sentCount >= 2) await delay(2000)
