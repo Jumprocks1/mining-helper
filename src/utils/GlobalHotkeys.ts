@@ -1,5 +1,5 @@
 import { JsPopover } from "../components/basic/JsPopover";
-import { translate } from "../jpdb/JpdbParseText";
+import { translate, tts } from "../jpdb/JpdbParseText";
 import AnkiConnect from "./AnkiConnect";
 import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { jpdbEntryUrl } from "./util";
@@ -82,12 +82,12 @@ function isJapanese(s: string) {
     return false
 }
 
-export function handleTranslate(): Promise<unknown> | false {
+export function handleTranslate(useTts?: boolean): Promise<unknown> | false {
     const selection = getSelection()
     const hasSelection = selection !== null && !selection.isCollapsed
     if (hasSelection) {
         const s = getCleanSelectionString(selection)
-        if (isJapanese(s)) return showTranslation(selection, s)
+        if (isJapanese(s)) return useTts ? tts(s) : showTranslation(selection, s)
     }
     return false
 }

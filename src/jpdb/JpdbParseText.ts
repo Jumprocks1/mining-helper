@@ -227,3 +227,10 @@ export async function googleTranslate(text: string) {
     const json = await res.json()
     return json[0].map((e: string[]) => e[0]).join("\n")
 }
+export async function tts(text: string) {
+    text = text.trim()
+    if (text.length > 1000) throw "Text too long"
+    const utter = new SpeechSynthesisUtterance(text)
+    utter.lang = "ja"
+    speechSynthesis.speak(utter)
+}

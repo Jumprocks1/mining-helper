@@ -406,9 +406,17 @@ export default class ReaderPage extends PageComponent {
         if (disallowGlobalInput(ev)) return
         if (handleKeyDown(ev)) return
 
+        const key = ev.key.toLowerCase()
+
+        if (ev.shiftKey && key === "t") {
+            if (handleTranslate(true)) {
+                ev.preventDefault()
+                return
+            }
+        }
+
         if (ev.ctrlKey || ev.shiftKey || ev.altKey || ev.metaKey) return
 
-        const key = ev.key.toLowerCase()
         let handled = true
         if (key === ",") {
             OpenReaderSettings()
