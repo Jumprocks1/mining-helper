@@ -12,6 +12,7 @@
 @use "components/components";
 @use "views/RegexReplacements";
 @use "views/settings";
+@use "core/commandPalette";
 @use "sass:color";
 
 @layer elements {
