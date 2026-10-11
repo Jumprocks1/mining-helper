@@ -1,8 +1,10 @@
 _metadata
 
-dist/js
+dist/js/*
 dist/main.css
 dist/sources
+
+!dist/js/PinkNoise.js
 
 node_modules
 

@@ -33,13 +33,25 @@
                 >div {
                     padding: 0 $s1 * 2;
                     font-size: 0.8em;
+                }
+                .option {
+                    cursor: pointer;
                     &.selected {
                         background: $darkBlue;
                     }
+                    &:hover {
+                        position: relative;
+                        &::after {
+                            content: "";
+                            position: absolute;
+                            inset: 0;
+                            background-color: rgba(255, 255, 255, 0.1);
+                        }
+                    }
                 }
-                .not-found {
-                    opacity: 0.5;
-                }
+            }
+            .not-found {
+                opacity: 0.5;
             }
         }
     }

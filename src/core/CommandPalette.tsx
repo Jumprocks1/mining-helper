@@ -1,6 +1,7 @@
 import { getPortal, MarkPopoverClosed, OpenPopovers, TrackOpenPopover } from "../components/basic/JsPopover";
 import { Component } from "../framework/Component";
 import { replaceChildren } from "../framework/createElement";
+import PinkNoise from "../utils/PinkNoise";
 
 interface CommandInfo {
     name: string
@@ -15,9 +16,7 @@ function GetCommands() {
         function add(name: string, action: () => void) {
             c.push({ name, action, filterString: name.toLowerCase() })
         }
-        add("Pink Noise", () => {
-            console.log("TODO")
-        })
+        add("Pink Noise", () => PinkNoise())
         commands = c
     }
     return commands
@@ -41,6 +40,14 @@ class CommandPalette extends Component {
                 {this.Results}
             </div>
         </div>
+        this.Results.onpointerdown = e => {
+            const target = e.target as HTMLElement
+            const button = target.closest<HTMLElement>(".option")
+            if (button && button.data) {
+                this.Close()
+                this.Run(button.data)
+            }
+        }
         this.Input.oninput = () => this.RefreshResults()
         this.Input.onkeydown = e => {
             if (e.key === "Enter") {
@@ -81,9 +88,10 @@ class CommandPalette extends Component {
         }
         let found = false
         const divs = commands.map(e => {
-            const o = <div>
+            const o = <div className="option">
                 {e.name}
             </div>
+            o.data = e
             if (e === this.Selected) {
                 found = true
                 o.classList.add("selected")
