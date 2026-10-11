@@ -147,7 +147,7 @@ export function getVocabStateAndNote(vocab: JpdbVocabulary, config: VocabStateCo
         vocab[4].includes("name-place") ||
         vocab[4].includes("name-surname") ||
         vocab[4].includes("unclassified name") ||
-        vocab[4].includes("historical term") ||
+        // vocab[4].includes("historical term") || // this filters out 晒す
         vocab[4].some(e => e.startsWith("given name")))
         return [VocabState.Name, undefined]
     let kanji = false

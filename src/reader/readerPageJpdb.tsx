@@ -34,7 +34,7 @@ export default async (page: ReaderPageNode, cacheOnly?: true): Promise<JpdbParse
 
 
 
-const ignoreTags = new Set(["RT", "TITLE", "SVG", "IMG"])
+const ignoreTags = new Set(["RT", "TITLE", "SVG", "IMG", "RP"])
 // mostly from https://www.w3schools.com/html/html_blocks.asp
 const blockTags = new Set([
     "ADDRESS", "ARTICLE", "ASIDE", "BLOCKQUOTE", "DD", "DIV", "DL", "DT",

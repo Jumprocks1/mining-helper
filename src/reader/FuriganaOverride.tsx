@@ -34,6 +34,8 @@ export default function () {
             for (const node of currentNode.childNodes) {
                 if (node.nodeName === "RT") {
                     furigana += `[${node.textContent?.trim() ?? ""}]`
+                } else if (node.nodeName === "RP") {
+                    continue
                 } else {
                     furigana += node.textContent?.trim() ?? ""
                 }
