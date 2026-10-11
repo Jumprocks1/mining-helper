@@ -1,38 +1,28 @@
 # Bugs
-- Shift on rec modal word tooltips wasn't working
-    - Haven't reproduced yet, should attatch debugger next time
 - Tooltip can flash like crazy if you hover a button border
     - Seems to be some sort of subpixel overlap, despite the anchor being set so there's no overlap
 
 # High prio
-- Prioritize enm subs?
+- Option for hiding parts of vocab furigana if some of the kanji is known
+- Some way of highlighting suspended vocab extra
+    - For now, probably put this in the recommended mining modal
+- Some way to favorite passages/sections
+- Some sort of warning when the audio didn't match the furigana/reading fully
+- Way of refreshing + viewing + configuring Anki kanji deck
+    - Settings will have to go in the Anki view, so this might take a bit
+    - Should show up on the regular Anki page under a second header
+    - Can add a collapsible header
+        - Can add a loader in the header that checks the settings
+        - Would show a green if everything under the header is good to go
+        - Yellow for warning (ie. 0 cards)
 - Some way of showing rarer kana vocab
-- Rec modal tooltip requires a mouse movement
-- Override jpdb id button when mining
-    - 傷痕 in koori 8
+- Override when mining
+    - 強いて言うなら => 強いて
     - Override word, audio, highlighting
-    - 素性 Re:Zero ep 73, pulled the correct meaning + audio, but the furigana reading was wrong
-        - Kind of seems like a JPDB bug, probably can't do anything
-        - I also had to swap out the reading inside the sentence, should be doable
-        - I think the reading for the vocab was wrong because we pull it from the sentence, and the JPDB sentence parsing was incorrect
 - Hide .ass marker things? should try running .ass => .srt and see what ffmpeg does
     - These show up as a bunch of numbers currently. Need to find example
-- `SETUP.md`
 - Setup page - maybe we just get things released with a `SETUP.md`
-    - Add more info for server check instructions
-    - Add non-origin requiring server check
-        - Make it like `/ping`, allow all origins
-    - Full instructions
-    - Validate buttons
     - ffmpeg, mpv, local audio database, API keys, mpv script, websocket, http
-    - lib folder for ffmpeg
-    - Setup flag
-        - Move mpv script and set the exe location
-        - Make sure we check each step to see if it's already set
-    - Should make a nice system that takes delegate and checks stuff
-        - Delegate should be able to easily return async progress as well as a final output error
-        - Should use same delegates/functions for all validate/setup checks
-- SetupMpv function not complete
 - README has a TODO in it
 - Make sure release has
     - setup.bat
@@ -47,17 +37,15 @@
 
 # Before sharing
 - Search for all TODOs
-- SPA
-    - Move Chrome API to separate file with a shim
-    - I wonder if audio bytes/arraybuffer will be saveable in localstorage
-- Add error messages when API key isn't set up
-    - Way to configure API key, make it as easy as possible
 - Make sure it works (with good errors) without different parts
-    - server API key
     - missing audio files
 - Demo videos
 
 # Eventually
+- Crunchyroll/non-mpv support
+- Hotkey page
+- Mining/srt database to help with mining from written material
+- When hovering a token with multiple underline rectangles, place tooltip on the one closest to mouse?
 - Some way of selecting different English subs, was an issue for Guilty Crown
 - Hotkeys for recommended modal - highlight current row, up/down to go to next vocab
     - Nice because we might be staring at mpv instead of looking where mouse is
@@ -82,7 +70,7 @@
     - Probably add advanced search modal, let you enter whatever you want for audio
 
 # Not really necessary
-- JSZip doubles the bundle size...
+- Another way to update card audio (without browsing jpdb.io)
 - Chapter filtering doesn't account for offset
 - Built in video player so mpv isn't technically needed? Probably not since anyone with the media files would have mpv
 - Hook into other video sites like asbplayer does

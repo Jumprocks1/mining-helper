@@ -23,7 +23,6 @@ export const AnkiFieldInfo = applyType({
     sentence: { name: "Sentence" },
     sentenceMeaning: { name: "Sentence Meaning" },
     sentenceFurigana: { name: "Sentence Furigana" },
-    jpdbVid: { name: "Jpdb Vid", tooltip: "ID linking back to jpdb\nNot really used yet" },
     source: { name: "Source", tooltip: "Filename + timestamp for mined cards" },
     wordAudio: { name: "Word Audio" },
     sentenceAudio: { name: "Sentence Audio" },
