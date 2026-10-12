@@ -1,5 +1,6 @@
 import { SelectOption } from "../components/Select"
 import { BrowserStorage } from "../utils/BrowserApi"
+import type { PinkNoiseConfig } from "../utils/PinkNoise"
 import type { ReplacementEntry } from "../views/RegexReplacements"
 
 type Milliseconds = number
@@ -89,7 +90,9 @@ export const defaultLocalSettings = {
 
     jpTooltipKey: "Shift",
     jpTooltipMouse: -1,
-    ankiNoteKey: "kanji" as "kanji" | "furigana"
+    ankiNoteKey: "kanji" as "kanji" | "furigana",
+
+    pinkNoise: { volume: 0.05 } satisfies PinkNoiseConfig as PinkNoiseConfig,
 } satisfies Record<string, {}> // this just makes sure we don't assign to undefined
 export type LocalSettings = typeof defaultLocalSettings
 

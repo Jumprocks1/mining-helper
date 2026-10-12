@@ -1,12 +1,16 @@
 import { getSetting } from "../core/Settings"
 import { JpdbVocabulary } from "../jpdb/JpdbParseText"
 import { furiBaseAndReading } from "../jpdb/JpdbState"
+import { mutePinkNoiseDuring } from "./PinkNoise"
 import { urlToArrayBuffer } from "./util"
 
 let audioContext: AudioContext | undefined = undefined
 let gainNode: GainNode | undefined = undefined
 let playing: Record<string, AudioBufferSourceNode> = {}
 
+export function getAudioContext() {
+    return audioContext ??= new AudioContext()
+}
 
 function stopAll() {
     for (const key in playing) {
@@ -36,16 +40,17 @@ export async function resolveAudio(audio: PlayableAudio): Promise<ArrayBuffer | 
 export async function playAudio(name: string, audio: PlayableAudio, offset: number = 0) {
     const bytes = await resolveAudio(audio)
     if (!bytes) throw "No audio found"
-    audioContext ??= new AudioContext()
+    const context = getAudioContext()
     if (gainNode === undefined) {
-        gainNode = audioContext.createGain()
-        gainNode.connect(audioContext.destination)
+        gainNode = context.createGain()
+        gainNode.connect(context.destination)
     }
     gainNode.gain.value = await getSetting("volume")
-    const source = audioContext.createBufferSource();
+    const source = context.createBufferSource();
     // audio thread needs a copy of the buffer, so we have to slice
-    source.buffer = await audioContext.decodeAudioData(bytes.slice(0));
+    source.buffer = await context.decodeAudioData(bytes.slice(0));
     source.connect(gainNode);
+    mutePinkNoiseDuring(source)
 
     stopAll()
 

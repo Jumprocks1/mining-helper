@@ -13,12 +13,12 @@ type KeysOfType<T, V> = {
     [K in keyof T]: T[K] extends V ? K : never
 }[keyof T]
 
-function inputToVolume(input: number) {
+export function inputToVolume(input: number) {
     // technically should do some logarithms and stuff here, but this is fine
     input /= 100
     return Math.pow(input, 2)
 }
-function volumeToInput(volume: number) {
+export function volumeToInput(volume: number) {
     return Math.round(Math.pow(volume, 1 / 2) * 100)
 }
 export async function stringSettingsField(key: KeysOfType<LocalSettings, string>, label: string, type?: string, tooltip?: LoadableChildren) {

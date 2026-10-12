@@ -1,7 +1,7 @@
 import { getPortal, MarkPopoverClosed, OpenPopovers, TrackOpenPopover } from "../components/basic/JsPopover";
 import { Component } from "../framework/Component";
 import { replaceChildren } from "../framework/createElement";
-import PinkNoise from "../utils/PinkNoise";
+import PinkNoise, { ConfigurePinkNoise } from "../utils/PinkNoise";
 
 interface CommandInfo {
     name: string
@@ -17,6 +17,7 @@ function GetCommands() {
             c.push({ name, action, filterString: name.toLowerCase() })
         }
         add("Pink Noise", () => PinkNoise())
+        add("Configure Pink Noise", () => ConfigurePinkNoise())
         commands = c
     }
     return commands
@@ -133,9 +134,6 @@ export function RegisterCommandPalette() {
             e.preventDefault()
         }
     })
-
-
-    setTimeout(OpenCommandPalette, 30)
 }
 
 export function OpenCommandPalette() {
