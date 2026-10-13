@@ -51,8 +51,24 @@ class CommandPalette extends Component {
         }
         this.Input.oninput = () => this.RefreshResults()
         this.Input.onkeydown = e => {
+            let handled = true
             if (e.key === "Enter") {
                 this.Select()
+            } else if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+                const selected = this.Results.querySelector<HTMLElement>(".selected")
+                if (selected) {
+                    const next = e.key === "ArrowDown" ? (selected.nextElementSibling ?? this.Results.firstElementChild)
+                        : (selected.previousElementSibling ?? this.Results.lastElementChild)
+                    if (next) {
+                        selected.classList.remove("selected")
+                        next.classList.add("selected")
+                        this.Selected = next.data
+                    }
+                }
+            } else handled = false
+            if (handled) {
+                e.preventDefault()
+                e.stopPropagation()
             }
         }
     }
@@ -111,6 +127,7 @@ class CommandPalette extends Component {
         if (this.Node.id) OpenPopovers.find(e => e.Node?.id === this.Node.id)?.Close()
         TrackOpenPopover(this)
         this.IsOpen = true
+        this.Selected = undefined
         this.Input.value = ""
         getPortal().append(this.Node)
         this.Input.focus()
