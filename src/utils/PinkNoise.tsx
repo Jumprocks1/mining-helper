@@ -61,7 +61,7 @@ export default async () => {
 export function mutePinkNoiseDuring(audio: AudioBufferSourceNode) {
     const m = muter
     if (!m) return
-    m.gain.exponentialRampToValueAtTime(0.7, m.context.currentTime + 0.5)
+    m.gain.exponentialRampToValueAtTime(0.9, m.context.currentTime + 0.2)
     audio.addEventListener("ended", () => m.gain.exponentialRampToValueAtTime(1, m.context.currentTime + 5))
 }
 

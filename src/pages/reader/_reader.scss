@@ -25,6 +25,7 @@
         }
         #status-info {
             position: absolute;
+            z-index: 1;
             right: 0;
             padding: $s1 * 1;
             padding-right: $s1 * 2;
@@ -101,6 +102,9 @@
                 }
                 svg {
                     display: block;
+                }
+                img {
+                    max-width: 100%;
                 }
                 a {
                     text-decoration: none;
