@@ -32,5 +32,6 @@ export class HtmlReader extends BaseReader {
     setupSanitizer() {
         // TODO should eventually support these
         this.sanitizer.removeAttribute("href")
+        this.sanitizer.replaceElementWithChildren("span")
     }
 }
