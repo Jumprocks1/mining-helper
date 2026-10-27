@@ -1,9 +1,12 @@
 import IconButton, { Icon } from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
+import LoadingButton from "../../components/LoadingButton"
 import { OpenModal } from "../../components/Modal"
 import { CurrentPage } from "../../framework/Router"
 import { Library } from "../../reader/Library"
 import ReaderPage from "./ReaderPage"
+
+declare var GITHUB_PAGES: boolean | undefined
 
 // TODO should allow dropping file into here
 export default () => {
@@ -118,11 +121,35 @@ export default () => {
         input.focus()
     }} tooltip={<div>Replace the page number with <em>$page</em> to enable pagination.{"\n"}
         Ex: https://ncode.syosetu.com/n2267be/$page/</div>}>Add URL</button>
+    const addHookButton = !GITHUB_PAGES && <LoadingButton onClick={async () => {
+        const tabs = await browser.tabs.query({})
+        for (const tab of tabs) {
+            const key = tab.url
+            if (key?.match("https://.*\.novelgame\.jp/game/.*")) {
+                const library = await Library.Instance()
+                let existing = false
+                for (const book of library.books) {
+                    if (book.key === key) {
+                        existing = true
+                        break
+                    }
+                }
+                if (existing) continue
+                library.books.push({ key, source: "page-hook", name: tab.title })
+                await library.Save()
+                modal.Body.replaceChildren(<Loader load={loadBody} />)
+                break
+            }
+        }
+    }}> Add Hook</LoadingButton>
     const modal = OpenModal({
         header: "Library",
         id: "library-modal",
         body: <Loader load={loadBody} />,
-        footer: <div>{addUrlNode}</div>
+        footer: <div>
+            {addHookButton}
+            {addUrlNode}
+        </div>
     })
     return modal
 }
