@@ -46,6 +46,15 @@
         "js/jpdb-content.js"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://*.novelgame.jp/game/*"
+      ],
+      "js": [
+        "js/hook/novelgame.js"
+      ],
+      "run_at": "document_idle"
     }
   ]
 }
