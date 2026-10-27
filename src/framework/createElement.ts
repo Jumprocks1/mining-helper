@@ -1,7 +1,3 @@
-import HotReload from "./HotReload";
-
-HotReload() // Idk where else to put this oh well
-
 type NormalChild = string | Node
 type SingleChild = NormalChild | { Node: Children } | false | undefined
 export type Children = SingleChild | Children[] | (() => Children)

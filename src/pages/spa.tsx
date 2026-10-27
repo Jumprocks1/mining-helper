@@ -6,6 +6,9 @@ import { debounce } from "../utils/util"
 import { RegisterTooltipEvents } from "../framework/Tooltips";
 import { onSettingChange, getSetting } from "../core/Settings";
 import { RegisterCommandPalette } from "../core/CommandPalette";
+import HotReload from "../framework/HotReload";
+
+HotReload()
 
 // we could target body directly, but that has issues since we clear the body on each page load
 // if we store things like the modal portal in the body, they would get removed on navigation
