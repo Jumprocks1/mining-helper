@@ -65,7 +65,9 @@ export function createElement(element: string | FC,
             // note, function will trigger this, ie. `function A() {}`, lambda will not `const A = () => {}`
             // looks like this is fixable with checking getOwnPropertyDescriptor prototype.writable, but it's fine for now
             // @ts-expect-error
-            el = new element(properties ?? {}).Node;
+            const instance = new element(properties ?? {})
+            if (instance instanceof HTMLElement) el = instance
+            else el = instance.Node;
         } else {
             el = element(properties ?? {});
         }

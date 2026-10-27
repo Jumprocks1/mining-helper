@@ -1,3 +1,5 @@
+import { CurrentPage } from '../framework/Router'
+import ReaderPage from '../pages/reader/ReaderPage'
 import { BaseReader, ReaderPageNode } from './BaseReader'
 import { LibraryBook } from './Library'
 
@@ -9,6 +11,13 @@ interface HookMessage {
 interface HookData {
     messages: HookMessage[]
 }
+
+class OnConnectElement extends HTMLElement {
+    OnConnect?: (connected: boolean) => void
+    connectedCallback() { this.OnConnect?.(true) }
+    disconnectedCallback() { this.OnConnect?.(false) }
+}
+customElements.define("on-connect", OnConnectElement)
 
 export class HookReader extends BaseReader {
     override get PageCount(): number {
@@ -25,6 +34,12 @@ export class HookReader extends BaseReader {
         if (this.page) return this.page
 
         const page = <div className="reader-page-node" /> as ReaderPageNode
+        const onConnect = new OnConnectElement()
+        onConnect.OnConnect = connected => {
+            if (connected) browser.runtime.onMessage.addListener(onMessage)
+            else browser.runtime.onMessage.removeListener(onMessage)
+        }
+        page.append(onConnect)
         this.page = page
         let tempData: Partial<HookData> = {}
         if (typeof this.Book.data === "string") {
@@ -37,24 +52,22 @@ export class HookReader extends BaseReader {
         for (const message of parsedData.messages) page.append(this.MessageToParagraph(message))
 
         const onMessage = (message: any) => {
-            // TODO this still probably leaks memory
-            if (!page.isConnected) browser.runtime.onMessage.removeListener(onMessage)
             if (message.type === "hook-text") {
+                const readerPage = CurrentPage(ReaderPage)
                 const text: string = message.text
                 const name: string | undefined = message.name
                 const index = parsedData.messages.findIndex(e => e.name === name && e.text === text)
                 if (index !== -1) {
-                    // TODO highlight in the reader
+                    readerPage?.FocusParagraph(index)
                     return
                 }
                 const hookMessage: HookMessage = { text }
                 if (name) hookMessage.name = name
                 parsedData.messages.push(hookMessage)
-                page.append(this.MessageToParagraph(message)) // TODO these are missing nice features since they don't go through enhance
+                readerPage?.AppendParagraph(this.MessageToParagraph(message))
                 this.Enqueue(async () => {
-                    const page = this.ReaderPage
-                    if (!page) return
-                    const library = page.Library
+                    if (!readerPage) return
+                    const library = readerPage.Library
                     if (!library) return
                     const cache = library.Cache
                     if (!this.Book.cacheKey) return
@@ -70,7 +83,6 @@ export class HookReader extends BaseReader {
                 })
             }
         }
-        browser.runtime.onMessage.addListener(onMessage)
         return this.page
     }
 

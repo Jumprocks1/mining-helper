@@ -297,7 +297,6 @@ export default class ReaderPage extends PageComponent {
         replaceWith(this.CurrentPageNode, node)
         try {
             this.Reader = await this.Library.OpenBook(book)
-            this.Reader.ReaderPage = this
             this.LoadToC()
             await this.LoadPage(book.progress?.page ?? 0, true)
         } catch (e) {
@@ -368,6 +367,45 @@ export default class ReaderPage extends PageComponent {
             newParagraphNode.scrollIntoView({ block: "nearest" })
         }
         await this.Library.Save() // TODO this is also called inside LoadPage
+    }
+
+    async FocusParagraph(newParagraph: number) {
+        if (!this.Reader) return
+        const oldParagraph = this.Reader.Paragraph
+        this.Reader.ProgressState.paragraphs[this.Reader.Page] = newParagraph
+        let oldParagraphNode: HTMLElement | undefined
+        let newParagraphNode: HTMLElement | undefined
+        for (const p of this.CurrentPageNode.querySelectorAll("p")) {
+            p.classList.toggle("saved-position", p.paragraphIndex === newParagraph)
+            if (p.paragraphIndex === oldParagraph) oldParagraphNode = p
+            else if (p.paragraphIndex === newParagraph) newParagraphNode = p
+        }
+        if (oldParagraphNode && newParagraphNode) {
+            this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldParagraphNode.getBoundingClientRect().top)
+            newParagraphNode.scrollIntoView({ block: "nearest" })
+        }
+        await this.Library.Save()
+    }
+
+    async AppendParagraph(newParagraphNode: HTMLElement) {
+        if (!this.Reader) return
+        const index = this.CurrentPageNode.querySelectorAll("p").length
+        newParagraphNode.paragraphIndex = index
+        newParagraphNode.appendChild(<div className="paragraph-index">{index + 1}</div>)
+        this.CurrentPageNode.append(newParagraphNode)
+
+        const oldParagraph = this.Reader.Paragraph
+        this.Reader.ProgressState.paragraphs[this.Reader.Page] = index
+        let oldParagraphNode: HTMLElement | undefined
+        for (const p of this.CurrentPageNode.querySelectorAll("p")) {
+            p.classList.toggle("saved-position", p.paragraphIndex === index)
+            if (p.paragraphIndex === oldParagraph) oldParagraphNode = p
+        }
+        if (oldParagraphNode) {
+            this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldParagraphNode.getBoundingClientRect().top)
+            newParagraphNode.scrollIntoView({ block: "nearest" })
+        }
+        await this.Library.Save()
     }
 
     LoadToC() {

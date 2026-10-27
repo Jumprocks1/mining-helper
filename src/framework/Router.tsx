@@ -74,8 +74,13 @@ export function navigateTo(page: PageDefinition | string) {
     for (const e of onRouteChangeListeners) e()
 }
 
-
-export function CurrentPage() {
+type Constructor<T> = new (...args: any[]) => T
+export function CurrentPage(): PageComponent | undefined;
+export function CurrentPage<T>(instance: Constructor<T>): T | undefined;
+export function CurrentPage(instance?: Function) {
+    if (instance) {
+        return currentPage instanceof instance ? currentPage : undefined
+    }
     return currentPage
 }
 
