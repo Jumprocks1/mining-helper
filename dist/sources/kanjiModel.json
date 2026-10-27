@@ -1,0 +1,21 @@
+{
+  "css": ".card {\n font-family: \"Segoe UI\", \"Yu Gothic\";\n font-size: 48px;\n text-align: center;\n}\n\n#kanji {\nfont-size:96px;\nline-height:1;\n}\n#meaning {\nline-height:1;\nmargin-top:0.1em;\n}\n\n.spoiler:not(:hover), .spoiler:not(:hover) b {\n\tcolor:transparent;\nbackground: #333\n}\n\nruby > rt {\n\tuser-select: none;\n}\n\nb{color: #5586cd}\n\n.external-link {\nfont-size:0.7em;\nopacity: 0.3;\npadding: 0.3em;\n}\n\n#radical {\n  color: #dfd;\n\tfont-size: 0.8em;\nline-height:1.2;\n}\n#parts {\n\topacity: 0.7;\nfont-size:0.6em;\nline-height:1.2;\n}\n\n.left-block {\ntext-align:left;\ndisplay:inline-block;\nmax-width:25em;\n}\n\n#sentence {\nmargin-top:0.2em;\n}\n\n#examples {\nfont-size:0.6em;\n}\n.reading {\nfont-size:0.5em;\n}\nlabel {\nopacity:0.5;\n}",
+  "inOrderFields": [
+    "Kanji",
+    "Meaning",
+    "Radical",
+    "Parts",
+    "Variants",
+    "Examples",
+    "Kun Readings",
+    "On Readings",
+    "Name Readings",
+    "Notes"
+  ],
+  "cardTemplates": [
+    {
+      "Front": "<div lang=\"ja\">\n<div id=\"kanji\">{{Kanji}}</div>\n</div>\n\n<script>\nif (!window._hotkeysBound) {\n    window._hotkeysBound = true\n    function getCleanSelectionString(sel) {\n        if (sel.rangeCount === 0) return \"\"\n        const range = sel.getRangeAt(0)\n        const clone = range.cloneContents()\n        clone.querySelectorAll(\"rt\").forEach(rt => rt.remove())\n        return clone.textContent\n    }\n    document.addEventListener(\"keydown\", ev => {\n        const sel = getSelection()\n        if (sel && !sel.isCollapsed) {\n            const text = getCleanSelectionString(sel)\n            const key = ev.key.toLowerCase()\n            let url = undefined\n            if (key === \"_j\")\n                url = `https://jisho.org/search/${encodeURIComponent(text)}`\n            else if (key === \"j\") {\nif (text.length === 1) \nurl = `https://jpdb.io/kanji/${encodeURIComponent(text)}`\nelse \n                 url = `https://jpdb.io/search?q=${encodeURIComponent(text)}&lang=english`\n}\n            if (url) {\n                window.open(url, \"_blank\", \"noopener,noreferrer\")\n                ev.preventDefault()\n            }\n        }\n    })\n}\n</script>",
+      "Back": "<div lang=\"ja\">\n<div id=\"kanji\">{{Kanji}}</div>\n\n<div id=\"meaning\">{{Meaning}}</div>\n<div>\n<a class=\"external-link\" href=\"https://jisho.org/search/{{Kanji}} %23kanji\">j</a>\n<a class=\"external-link\" href=\"https://jpdb.io/kanji/{{Kanji}}\">d</a>\n<a class=\"external-link\" href=\"https://wanikani.com/kanji/{{Kanji}}\">w</a>\n</div>\n\n<div>\n<div class=\"left-block\">\n<div id=\"radical\">{{Radical}}</div>\n<div id=\"parts\">{{Parts}}</div>\n</div>\n</div>\n\n<div class=\"left-block\">\n\n<div id=\"examples\">\n{{furigana:Examples}}\n</div>\n\n{{#Kun Readings}}\n<div class=\"reading\">\n<label>Kun:</label> {{Kun Readings}}\n</div>\n{{/Kun Readings}}\n\n{{#On Readings}}\n<div class=\"reading\">\n<label>On:</label> {{On Readings}}\n</div>\n{{/On Readings}}\n\n{{#Name Readings}}\n<div class=\"reading\">\n<label>Name:</label> {{Name Readings}}\n</div>\n{{/Name Readings}}\n\n\n{{#Notes}}\n\t<div style=\"font-size: 20px; padding-top:12px\">{{Notes}}</div>\n{{/Notes}}\n</div>\n</div>"
+    }
+  ]
+}

@@ -6,6 +6,7 @@ import { PageComponent } from "../../framework/PageComponent"
 import AnkiConnect, { AnkiNote, NoteBase } from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { addKnownAnkiKanji, reloadAnkiKanjiSet } from "../../utils/KanjiSet"
+import { fetchSource } from "../../utils/Sources"
 import { ErrorDisplay } from "../../utils/UserError"
 import { getAnkiNoteKeys } from "../anki/CardList"
 import { getKanjiInfo, KanjiInfo } from "./KanjiInfo"
@@ -25,12 +26,36 @@ export default class KanjiPage extends PageComponent {
     }
 }
 
+// (async () => {
+//     const model = (await AnkiConnect.callAny("findModelsByName", { modelNames: ["Mining Helper Kanji"] }))[0]
+//     console.log(model)
+//     console.log({
+//         css: model.css,
+//         inOrderFields: model.flds.map((e: any) => e.name),
+//         cardTemplates: model.tmpls.map((e: any) => ({ Front: e.qfmt, Back: e.afmt }))
+//     })
+// })();
 
-const main = async () => {
+const main = async (reload: () => void) => {
     const kanjiDeck = await AnkiConnect.call("deckNames", undefined)
-    if (!kanjiDeck.includes(deckName)) throw `Deck named '${deckName}' not found`
+    if (!kanjiDeck.includes(KanjiDeckName)) {
+        return <>
+            {ErrorDisplay(`Deck named '${KanjiDeckName}' not found`)}
+            <LoadingButton onClick={async () => {
+                await AnkiConnect.call("createDeck", { deck: KanjiDeckName })
+                const kanjiModel = await new Response(await fetchSource("kanjiModel.json")).json()
+                kanjiModel.modelName = KanjiDeckName
+                await AnkiConnect.call("createModel", kanjiModel)
+                reload()
+            }} tooltip={`This will create a new deck named '${KanjiDeckName}'.\n` +
+                "It will also create a corresponding note type.\n" +
+                "You'll want to manually configure the preset afterwards (ie. add FSRS)."}>
+                Click here to create a new Anki Deck
+            </LoadingButton>
+        </>
+    }
 
-    const kanjiNotes = await AnkiConnect.call("notesInfo", { query: `deck:\"${deckName}\"` })
+    const kanjiNotes = await AnkiConnect.call("notesInfo", { query: `deck:\"${KanjiDeckName}\"` })
 
     const vocabDeckName = await getSetting("ankiVocabDeck")
 

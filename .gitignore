@@ -2,7 +2,8 @@ _metadata
 
 dist/js/*
 dist/main.css
-dist/sources
+dist/sources/*
+!dist/sources/kanjiModel.json
 
 !dist/js/PinkNoise.js
 

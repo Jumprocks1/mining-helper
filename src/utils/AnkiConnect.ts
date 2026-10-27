@@ -103,6 +103,7 @@ interface AnkiConnectActionMap {
     getIntervals: { params: { cards: number[] }, returns: number[] },
     cardsToNotes: { params: { cards: number[] }, returns: number[] },
     createDeck: { params: { deck: string }, returns: number }
+    createModel: { params: any, returns: number }
 }
 
 export interface NoteAdd extends NoteBase {
