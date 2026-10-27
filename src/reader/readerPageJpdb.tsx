@@ -1,5 +1,5 @@
 import { loadIgnoreList } from "../jpdb/IgnoreList";
-import { ParseText, JpdbParseResponse } from "../jpdb/JpdbParseText";
+import { ParseText, JpdbParseResponse, updateParseCache } from "../jpdb/JpdbParseText";
 import { ReaderPageNode } from "./BaseReader";
 
 export interface JpdbParseResponseWithNodes extends JpdbParseResponse {
@@ -13,16 +13,7 @@ export default async (page: ReaderPageNode, cacheOnly?: true): Promise<JpdbParse
     let res: JpdbParseResponseWithNodes | undefined
     if (nodes.length === 0) res = { tokens: [], vocabulary: [], nodes: [] }
     else {
-        let s = ""
-        const lines = []
-        for (let i = 0; i < nodes.length; i++) {
-            const e = nodes[i]
-            if (e === newLine) {
-                lines.push(s)
-                s = ""
-            }
-            else s += e.nodeValue!
-        }
+        const lines = nodesToLines(nodes)
         res = await ParseText(lines, cacheOnly) as JpdbParseResponseWithNodes | undefined
     }
     if (res) {
@@ -30,6 +21,59 @@ export default async (page: ReaderPageNode, cacheOnly?: true): Promise<JpdbParse
         res.nodes = nodes
     }
     return res
+}
+
+function nodesToLines(nodes: Text[]) {
+    let s = ""
+    const lines = []
+    for (let i = 0; i < nodes.length; i++) {
+        const e = nodes[i]
+        if (e === newLine) {
+            lines.push(s)
+            s = ""
+        }
+        else s += e.nodeValue!
+    }
+    return lines
+}
+
+function mergeJpdbResults(a: JpdbParseResponseWithNodes, b: JpdbParseResponseWithNodes) {
+    let offset = 0
+    for (const node of a.nodes) offset += node.length
+
+    const vocabMap = new Map<string, number>()
+    for (let i = 0; i < a.vocabulary.length; i++)
+        vocabMap.set(a.vocabulary[i].furigana, i)
+
+    for (const token of b.tokens) {
+        token[0] += offset
+        const vocab = b.vocabulary[token[3]]
+        const found = vocabMap.get(vocab.furigana)
+        if (found === undefined) {
+            token[3] = a.vocabulary.length
+            a.vocabulary.push(vocab)
+        } else {
+            token[3] = found
+        }
+    }
+    a.tokens.push(...b.tokens)
+    a.nodes.push(...b.nodes)
+}
+
+export async function updateJpdbParse(page: ReaderPageNode, newElement: HTMLElement) {
+    const jpdb = page.jpdb
+    if (!jpdb) return
+    const nodes = getReaderPageTextNodes(newElement)
+    if (nodes.length === 0) return
+    const lines = nodesToLines(nodes)
+    const newJpdb = await ParseText(lines, undefined, true) as JpdbParseResponseWithNodes | undefined
+    if (newJpdb) {
+        newJpdb.nodes = nodes
+        const oldLines = nodesToLines(jpdb.nodes)
+        mergeJpdbResults(jpdb, newJpdb)
+        const clonedJpdb: JpdbParseResponse = { tokens: jpdb.tokens, vocabulary: jpdb.vocabulary } // ignore nodes
+        updateParseCache(oldLines, nodesToLines(jpdb.nodes), clonedJpdb)
+    }
 }
 
 
@@ -43,9 +87,9 @@ const blockTags = new Set([
     "NAV", "OL", "P", "PRE", "SECTION", "TABLE", "TFOOT", "UL"
 ])
 
-function getReaderPageTextNodes(page: ReaderPageNode) {
+function getReaderPageTextNodes(element: HTMLElement) {
     const o: Text[] = []
-    visit(page, o)
+    visit(element, o)
     return o
 }
 

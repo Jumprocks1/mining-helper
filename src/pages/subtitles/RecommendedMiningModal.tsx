@@ -8,7 +8,7 @@ import { OpenModal } from "../../components/Modal";
 import { IgnoreVocab, loadIgnoreList, UnIgnoreVocab } from "../../jpdb/IgnoreList";
 import { JpdbParseResponse, JpdbToken, JpdbVocabulary } from "../../jpdb/JpdbParseText";
 import { geti1Tokens, getVocabState, getVocabStateAndNote, VocabState, VocabStateConfig } from "../../jpdb/JpdbState";
-import { tryPlayAudio } from "../../utils/Audio";
+import { playAudioThrow } from "../../utils/Audio";
 import { ClearEventHandler, RegisterEventHandler } from "../../utils/Events";
 import { Subtitles } from "../../utils/srt";
 import { CardData } from "../../utils/util";
@@ -130,7 +130,7 @@ export default async (getMinimizeTarget: () => DOMRect | undefined, props: Recom
                 <td><div>
                     <IconButton icon="play_arrow" onClick={() => {
                         row.focus()
-                        return tryPlayAudio(vocab)
+                        return playAudioThrow(vocab)
                     }} />
                 </div></td>
                 <td className="grow-column"><div><span><span className="vocab-kanji">{vocab[0]}</span> - {vocab[3][0]}</span></div></td>

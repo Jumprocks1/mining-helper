@@ -4,7 +4,7 @@ import { OpenModal } from "../../components/Modal"
 import Select from "../../components/Select"
 import { furiganaModes, getSetting, getSettingSync, resetSetting, setSetting } from "../../core/Settings"
 import { EpubReader } from "../../reader/EpubReader"
-import readerPageJpdb from "../../reader/readerPageJpdb"
+import readerPageJpdb, { updateJpdbParse } from "../../reader/readerPageJpdb"
 import { replaceChildren, replaceWith } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import { ActionTooltip } from "../../framework/Tooltips"
@@ -389,15 +389,17 @@ export default class ReaderPage extends PageComponent {
 
     async AppendParagraph(newParagraphNode: HTMLElement) {
         if (!this.Reader) return
-        const index = this.CurrentPageNode.querySelectorAll("p").length
+
+        const page = this.CurrentPageNode
+        const index = page.querySelectorAll("p").length
         newParagraphNode.paragraphIndex = index
         newParagraphNode.appendChild(<div className="paragraph-index">{index + 1}</div>)
-        this.CurrentPageNode.append(newParagraphNode)
+        page.append(newParagraphNode)
 
         const oldParagraph = this.Reader.Paragraph
         this.Reader.ProgressState.paragraphs[this.Reader.Page] = index
         let oldParagraphNode: HTMLElement | undefined
-        for (const p of this.CurrentPageNode.querySelectorAll("p")) {
+        for (const p of page.querySelectorAll("p")) {
             p.classList.toggle("saved-position", p.paragraphIndex === index)
             if (p.paragraphIndex === oldParagraph) oldParagraphNode = p
         }
@@ -405,7 +407,14 @@ export default class ReaderPage extends PageComponent {
             this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldParagraphNode.getBoundingClientRect().top)
             newParagraphNode.scrollIntoView({ block: "nearest" })
         }
-        await this.Library.Save()
+        const furigana = addFuriganaOverrides(newParagraphNode)
+            .then(async () => {
+                if (!page.jpdb) return
+                await updateJpdbParse(page, newParagraphNode)
+                if (this.FuriganaButton.Disabled)
+                    await AddFurigana(page.jpdb)
+            })
+        await Promise.all([this.Library.Save(), furigana])
     }
 
     LoadToC() {

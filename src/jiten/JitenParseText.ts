@@ -66,8 +66,8 @@ export interface JitenParseResponse extends JitenResponse {
     vocabulary: JitenVocabulary[]
 }
 export const JitenCache = new BrowserCache("jiten-parse", 4_000_000, 30)
-export async function JitenParseText(s: string[], fullJoin: string, cacheOnly?: boolean): Promise<JpdbParseResponse | undefined> {
-    const res = await JitenCache.GetJson(await getStringHash(fullJoin), cacheOnly ? undefined : () => JitenParseTextNoCache(s, fullJoin))
+export async function JitenParseText(s: string[], fullJoin: string, cacheOnly?: boolean, skipSave?: boolean): Promise<JpdbParseResponse | undefined> {
+    const res = await JitenCache.GetJson(await getStringHash(fullJoin), cacheOnly ? undefined : () => JitenParseTextNoCache(s, fullJoin), undefined, skipSave)
     if (res) {
         for (const vocab of res.vocabulary) {
             vocab.furigana = vocab[7]

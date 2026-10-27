@@ -44,10 +44,30 @@ export default class BrowserCache {
             bytesInUse -= pop[1]
         }
     }
+    async Remove(key: string) {
+        const cache = (this.Cache ??= (await (this.CachePromise ??= caches.open(this.Name))))
+        const cacheKey = `https://jumprocks1.github.io/_/cache/${key}`
+        return await cache.delete(cacheKey)
+    }
+    async Put(key: string, value: any) {
+        const cache = (this.Cache ??= (await (this.CachePromise ??= caches.open(this.Name))))
+        const cacheKey = `https://jumprocks1.github.io/_/cache/${key}`
+        await cache.put(cacheKey, this.Response(value))
+    }
+    Response(value: any) {
+        const s = JSON.stringify(value)
+        return new Response(s, {
+            headers: {
+                "Content-Type": "application/json",
+                "Content-Length": s.length.toString(),
+                Date: Date.now().toString()
+            }
+        })
+    }
 
     async GetJson<T>(key: string, get: () => Promise<T>, forceRefresh?: boolean): Promise<T>;
-    async GetJson<T>(key: string, get?: () => Promise<T>, forceRefresh?: boolean): Promise<T | undefined>;
-    async GetJson<T>(key: string, get?: () => Promise<T>, forceRefresh?: boolean): Promise<T | undefined> {
+    async GetJson<T>(key: string, get?: () => Promise<T>, forceRefresh?: boolean, skipSave?: boolean): Promise<T | undefined>;
+    async GetJson<T>(key: string, get?: () => Promise<T>, forceRefresh?: boolean, skipSave?: boolean): Promise<T | undefined> {
         const cache = (this.Cache ??= (await (this.CachePromise ??= caches.open(this.Name))))
         const cacheKey = `https://jumprocks1.github.io/_/cache/${key}`
         const getAndStore = async () => {
@@ -55,16 +75,10 @@ export default class BrowserCache {
             // This will only run on the first uncached get per page load
             const cleanPromise = this.Cleaned ? undefined : this.Clean(1)
             const value = await get()
-            const s = JSON.stringify(value)
-            const response = new Response(s, {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Content-Length": s.length.toString(),
-                    Date: Date.now().toString()
-                }
-            })
             if (cleanPromise) await cleanPromise // make sure cleaning is done before we save
-            await cache.put(cacheKey, response)
+            if (!skipSave) {
+                await cache.put(cacheKey, this.Response(value))
+            }
             return value
         }
         if (forceRefresh) {

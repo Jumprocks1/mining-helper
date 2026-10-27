@@ -4,7 +4,8 @@ import BrowserCache from "../utils/BrowserCache";
 import { loadIgnoreList } from "./IgnoreList";
 import { ThrowUserError } from "../utils/UserError";
 import { getSetting } from "../core/Settings";
-import { JitenParseText } from "../jiten/JitenParseText";
+import { JitenCache, JitenParseText } from "../jiten/JitenParseText";
+import { getStringHash } from "../reader/Library";
 
 export type JpdbVocabulary = [
     spelling: string,
@@ -141,17 +142,20 @@ async function JpdbParseTextNoCache(s: string[], fullJoin: string) {
         token[3] = indexMapping.get(token[3])!
     return finalRes
 }
+async function preferJiten() {
+    return await getSetting("preferJitenApi") && await getSetting("jitenApiKey")
+}
 export function ParseText(s: string[]): Promise<JpdbParseResponse>
-export function ParseText(s: string[], cacheOnly: true | undefined): Promise<JpdbParseResponse | undefined>
-export async function ParseText(s: string[], cacheOnly?: true) {
+export function ParseText(s: string[], cacheOnly: true | undefined, skipSave?: true): Promise<JpdbParseResponse | undefined>
+export async function ParseText(s: string[], cacheOnly?: true, skipSave?: true) {
     // TODO the text here 100% changes when there's furigana overrides
     // Looks like it's because it splits text nodes, which can leave spaces in their own nodes
     // Since we don't trim and instead completely skip whitespace-only nodes, this causes some issues
     const fullJoin = s.join("\n")
-    if (await getSetting("preferJitenApi") && await getSetting("jitenApiKey")) {
-        return await JitenParseText(s, fullJoin, cacheOnly)
+    if (await preferJiten()) {
+        return await JitenParseText(s, fullJoin, cacheOnly, skipSave)
     }
-    const res = await JpdbCache.GetJson(hash(fullJoin).toString(), cacheOnly ? undefined : () => JpdbParseTextNoCache(s, fullJoin))
+    const res = await JpdbCache.GetJson(await getStringHash(fullJoin), cacheOnly ? undefined : () => JpdbParseTextNoCache(s, fullJoin), undefined, skipSave)
     if (res) {
         // post-cached processing
         for (let i = 0; i < res.tokens.length; i++) {
@@ -169,6 +173,13 @@ export async function ParseText(s: string[], cacheOnly?: true) {
         }
     }
     return res
+}
+export async function updateParseCache(oldLines: string[], newLines: string[], newJpdb: JpdbParseResponse) {
+    const oldCacheKey = await getStringHash(oldLines.join("\n"))
+    const newCacheKey = await getStringHash(newLines.join("\n"))
+    const cache = await preferJiten() ? JitenCache : JpdbCache
+    cache.Remove(oldCacheKey)
+    cache.Put(newCacheKey, newJpdb)
 }
 
 // trims excess reading information and then combines
