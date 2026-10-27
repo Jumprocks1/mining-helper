@@ -1,11 +1,10 @@
+import { KanjiDeckName } from "../pages/kanji/kanji"
 import AnkiConnect from "./AnkiConnect"
 import { BrowserStorage } from "./BrowserApi"
 
 type KanjiSet = Set<string> // single characters
 
 let localAnkiKanjiSet: KanjiSet | undefined
-
-const knownKanjiAnkiQuery = `"deck:Mining Helper Kanji" -is:suspended`
 
 export async function loadAnkiKanjiSet(disableCache = false) {
     if (!disableCache && localAnkiKanjiSet) return localAnkiKanjiSet
@@ -21,6 +20,7 @@ export async function addKnownAnkiKanji(kanji: string) {
 }
 
 export async function reloadAnkiKanjiSet() {
+    const knownKanjiAnkiQuery = `"deck:${KanjiDeckName}" -is:suspended`
     const notes = await AnkiConnect.call("notesInfo", { query: knownKanjiAnkiQuery })
     localAnkiKanjiSet = new Set<string>()
     for (const note of notes) {

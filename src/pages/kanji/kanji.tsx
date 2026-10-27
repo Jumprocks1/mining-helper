@@ -1,23 +1,27 @@
 import IconButton, { Icon } from "../../components/basic/IconButton"
 import Loader from "../../components/Loader"
+import LoadingButton from "../../components/LoadingButton"
 import { AnkiFieldInfo, AnkiFieldKey, ankiFieldSync, getSetting, getSettingAndCache } from "../../core/Settings"
-import { Children } from "../../framework/createElement"
 import { PageComponent } from "../../framework/PageComponent"
 import AnkiConnect, { AnkiNote, NoteBase } from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { addKnownAnkiKanji, reloadAnkiKanjiSet } from "../../utils/KanjiSet"
+import { ErrorDisplay } from "../../utils/UserError"
 import { getAnkiNoteKeys } from "../anki/CardList"
 import { getKanjiInfo, KanjiInfo } from "./KanjiInfo"
 
-const deckName = "Mining Helper Kanji"
+export const KanjiDeckName = "Mining Helper Kanji"
 
 export default class KanjiPage extends PageComponent {
     Id = "kanji-page"
     override Title = "Mining Helper - Kanji"
-    Node: Children
+    Node: HTMLElement = <div id="loading-container" />
     constructor() {
         super()
-        this.Node = <Loader load={main} showFullError />
+        this.Loader()
+    }
+    Loader() {
+        this.Node.replaceChildren(<Loader load={() => main(() => this.Loader())} showFullError />)
     }
 }
 
@@ -88,20 +92,25 @@ const main = async () => {
         <hr />
         <div id="recommended-kanji">
             <h4>Recommended Kanji</h4>
-            {recommendedKanji.map(e => <div>
-                <a href={`https://jisho.org/search/${encodeURIComponent(`${e[0]} #kanji`)}`}
-                    tooltip="View on jisho"
-                    rel="noopener noreferrer" target="_blank">j</a>
-                <a href={`https://jpdb.io/kanji/${encodeURIComponent(e[0])}`}
-                    tooltip="View on jpdb"
-                    rel="noopener noreferrer" target="_blank">d</a>
-                {/* TODO pressing this should remove this row (and maybe add a new one) */}
-                <IconButton icon="add" onClick={() => createKanjiCard(e[0])} tooltip="Add to Kanji deck" />
-                <span>{e[0]} - <span className="link-button"
-                    onclick={() => AnkiConnect.call("guiBrowse", { query: `deck:\"${vocabDeckName}\" word:*${e[0]}*` })}>
-                    {e[1]} usages
-                </span></span>
-            </div>)}
+            {recommendedKanji.map(e => {
+                const button = <IconButton icon="add" onClick={async () => {
+                    await createKanjiCard(e[0])
+                    button.replaceWith(<Icon icon="check" className="success" />)
+                }} tooltip="Add to Kanji deck" />
+                return <div>
+                    <a href={`https://jisho.org/search/${encodeURIComponent(`${e[0]} #kanji`)}`}
+                        tooltip="View on jisho"
+                        rel="noopener noreferrer" target="_blank">j</a>
+                    <a href={`https://jpdb.io/kanji/${encodeURIComponent(e[0])}`}
+                        tooltip="View on jpdb"
+                        rel="noopener noreferrer" target="_blank">d</a>
+                    {button}
+                    <span>{e[0]} - <span className="link-button"
+                        onclick={() => AnkiConnect.call("guiBrowse", { query: `deck:\"${vocabDeckName}\" word:*${e[0]}*` })}>
+                        {e[1]} usages
+                    </span></span>
+                </div>
+            })}
         </div>
     </div>
 }
@@ -204,7 +213,7 @@ function noteInfoToKanjiNote(kanji: string, sortedNotes: AnkiNote[], kanjiInfo: 
 
 async function updateAllKanjiNotes() {
     // This is really slow, could definitely speed it up like 100x
-    const kanjiNotes = await AnkiConnect.call("notesInfo", { query: `deck:\"${deckName}\"` })
+    const kanjiNotes = await AnkiConnect.call("notesInfo", { query: `deck:\"${KanjiDeckName}\"` })
     for (const note of kanjiNotes) {
         await updateKanjiNote(note.fields["Kanji"]!.value)
     }
@@ -214,7 +223,7 @@ async function createKanjiCard(kanji: string) {
     await AnkiConnect.call("addNote", {
         note: {
             ...await getNoteInfo(kanji),
-            deckName, modelName: deckName
+            deckName: KanjiDeckName, modelName: KanjiDeckName
         }
     })
     await addKnownAnkiKanji(kanji)
@@ -223,7 +232,7 @@ async function createKanjiCard(kanji: string) {
 async function updateKanjiNote(kanji: string) {
     if (kanji === "ALL KANJI") return updateAllKanjiNotes()
     if (!kanji) return
-    const notes = await AnkiConnect.call("findNotes", { query: `"deck:${deckName}" kanji:${kanji}` })
+    const notes = await AnkiConnect.call("findNotes", { query: `"deck:${KanjiDeckName}" kanji:${kanji}` })
     if (notes.length === 0) throw new Error(`No notes matching ${kanji}`)
     if (notes.length > 1) throw new Error(`Multiple notes matching ${kanji}`)
     return AnkiConnect.call("updateNote", {
