@@ -13,7 +13,8 @@ const serve = process.argv.includes('--serve')
 const config = {
     entryPoints: [
         "./src/pages/spa.tsx",
-        "./src/jpdb-content.tsx"
+        "./src/jpdb-content.tsx",
+        "./src/hook/novelgame.tsx"
     ],
     bundle: true,
     minify: prod,

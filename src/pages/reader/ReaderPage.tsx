@@ -297,6 +297,7 @@ export default class ReaderPage extends PageComponent {
         replaceWith(this.CurrentPageNode, node)
         try {
             this.Reader = await this.Library.OpenBook(book)
+            this.Reader.ReaderPage = this
             this.LoadToC()
             await this.LoadPage(book.progress?.page ?? 0, true)
         } catch (e) {
@@ -480,6 +481,7 @@ export default class ReaderPage extends PageComponent {
     }
 
     // Stuff that doesn't really belong in the Reader classes
+    // TODO this will need a way of adding a single paragraph
     async EnhancePageNode(node: ReaderPageNode) {
         if (!this.Reader) return
         node.characterCount = node.textContent.replace(/\s/g, '').length

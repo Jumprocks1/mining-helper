@@ -1,5 +1,6 @@
 import { getSetting } from "../core/Settings";
 import { type Brand } from "../framework/util";
+import ReaderPage from "../pages/reader/ReaderPage";
 import { LibraryBook } from "./Library";
 import { type JpdbParseResponseWithNodes } from "./readerPageJpdb";
 
@@ -11,6 +12,7 @@ export abstract class BaseReader {
     abstract ReadPage(page: number): Promise<ReaderPageNode>
 
     Book: LibraryBook
+    ReaderPage?: ReaderPage
     constructor(book: LibraryBook) {
         this.Book = book
     }

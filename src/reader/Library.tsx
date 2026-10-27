@@ -2,6 +2,7 @@ import { BrowserStorage } from "../utils/BrowserApi"
 import { BaseReader } from "./BaseReader"
 import { EpubReader } from "./EpubReader"
 import { HtmlReader } from "./HtmlReader"
+import { HookReader } from "./HookReader"
 import { UrlTemplateReader } from "./UrlTemplateReader"
 
 // this gets serialized, don't include any blobs here
@@ -13,7 +14,7 @@ interface LibraryData {
 interface LibraryBookBase {
     // Most of this should be "throwaway" other than progress
     key: BookKey
-    source: "url" | "file" | "clipboard" | "url-template"
+    source: "url" | "file" | "clipboard" | "url-template" | "page-hook"
     name?: string
     data?: string | Blob
     cacheKey?: string
@@ -95,7 +96,7 @@ export class Library {
         if (!book.data && book.cacheKey) {
             const response = await this.Cache.match(book.cacheKey)
             if (response) book.data = await response.blob()
-            else delete book.cacheKey // make sure we remember there's no cache
+            else if (book.source !== "page-hook") delete book.cacheKey // make sure we remember there's no cache
         }
         if (!book.data) {
             if (book.source === "url" && typeof book.key === "string") {
@@ -106,8 +107,11 @@ export class Library {
                 // These don't really need any meaningful data for now
                 book.data = "{}"
             }
+            if (book.source === "page-hook") {
+                book.data = "{}"
+            }
         }
-        if (!book.cacheKey) {
+        if (!book.cacheKey && book.source !== "page-hook") {
             const blob = getBlob(book)
             if (blob.size < 100_000_000) {
                 book.cacheKey = `https://jumprocks1.github.io/_/reader/blob/${await getBlobHash(blob)}`
@@ -167,6 +171,8 @@ export class Library {
         if (!book.data) throw new Error("Book missing data")
         if (book.source === "url-template") {
             return new UrlTemplateReader(book, this.Cache)
+        } else if (book.source === "page-hook") {
+            return new HookReader(book)
         } else if (book.contentType === "application/epub+zip") {
             const reader = new EpubReader(book)
             await reader.read(getBlob(book))

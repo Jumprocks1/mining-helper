@@ -1,8 +1,9 @@
 import "../framework/createElement"
 
-const querySelector = ".message_inner";
+const mainTextSelector = ".message_inner";
+const nameSelector = ".name_space"
 // only count as final once this amount of ms has passed and no changes are found
-const stableDelayMs = 100
+const stableDelayMs = 200
 
 let updateQueued = false
 function queueUpdate() {
@@ -13,24 +14,20 @@ function queueUpdate() {
 
 function update() {
     updateQueued = false
-    const el = document.querySelector(querySelector)
+    const el = document.querySelector(mainTextSelector)
     const text = el?.textContent ?? ""
     debounceText(text)
 }
 
 let pendingTextLoad: number | undefined = undefined
-let pendingTextString = ""
+let lastText = ""
 function debounceText(text: string) {
-    if (!text || text === pendingTextString) return
+    if (!text || text === lastText) return
+    lastText = text
     clearTimeout(pendingTextLoad)
-    pendingTextLoad = setTimeout(() => processText(text), stableDelayMs)
-}
-
-function processText(text: string) {
-    browser.runtime.sendMessage({
-        type: "hook-text",
-        value: text
-    })
+    const name = document.querySelector(nameSelector)?.textContent
+    const message = { type: "hook-text", text, name }
+    pendingTextLoad = setTimeout(() => browser.runtime.sendMessage(message), stableDelayMs)
 }
 
 const observer = new MutationObserver(queueUpdate)

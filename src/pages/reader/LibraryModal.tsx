@@ -43,7 +43,7 @@ export default () => {
                             }
                         }
                     }
-                    const canOpen = (e.cacheKey && cacheKeys.has(e.cacheKey)) || e.source === "url" || e.source === "url-template"
+                    const canOpen = (e.cacheKey && cacheKeys.has(e.cacheKey)) || e.source === "url" || e.source === "url-template" || e.source === "page-hook"
                     let name = e.name
                     // Could name these like 1/2/3 as they come in eventually
                     if (!name && e.source === "clipboard") name = "Clipboard"
@@ -135,13 +135,13 @@ export default () => {
                     }
                 }
                 if (existing) continue
-                library.books.push({ key, source: "page-hook", name: tab.title })
+                library.books.push({ key, source: "page-hook", name: tab.title, cacheKey: key })
                 await library.Save()
                 modal.Body.replaceChildren(<Loader load={loadBody} />)
                 break
             }
         }
-    }}> Add Hook</LoadingButton>
+    }}>Add Hook</LoadingButton>
     const modal = OpenModal({
         header: "Library",
         id: "library-modal",

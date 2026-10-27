@@ -153,6 +153,13 @@
                             display: block;
                         }
                     }
+                    span.hook-message-name {
+                        display: block;
+                        width: fit-content;
+                        font-size: 0.75em;
+                        opacity: 0.75;
+                        border-bottom: $border0;
+                    }
                 }
                 hr {
                     margin: $s1 * 2 0;

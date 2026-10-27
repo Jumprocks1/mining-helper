@@ -5,7 +5,7 @@ browser.storage.session.setAccessLevel({
 });
 
 browser.runtime.onMessage.addListener(message => {
-    if (message.startsWith("open:")) {
+    if (typeof message === "string" && message.startsWith("open:")) {
         browser.tabs.create({ url: message.substring(5) })
     }
 });
