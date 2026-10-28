@@ -15,7 +15,22 @@ function queueUpdate() {
 function update() {
     updateQueued = false
     const el = document.querySelector(mainTextSelector)
-    const text = el?.textContent ?? ""
+    let text = ""
+    if (el) {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
+            {
+                acceptNode(node) {
+                    if (node.nodeName === "BR" || node.nodeType === Node.TEXT_NODE)
+                        return NodeFilter.FILTER_ACCEPT
+                    return NodeFilter.FILTER_SKIP;
+                }
+            })
+        let currentNode;
+        while (currentNode = walker.nextNode()) {
+            if (currentNode.nodeName === "BR") text += "\n"
+            else text += currentNode.textContent
+        }
+    }
     debounceText(text)
 }
 

@@ -89,6 +89,11 @@
                 max-width: min(30em, 60vw - 1.5em, 100vw - 20em);
             }
             .reader-page-node {
+                &.hook-reader {
+                    p {
+                        white-space: pre-wrap;
+                    }
+                }
                 ruby:not(.ruby-auto-gen) {
                     rt {
                         // highlight readings we're more confident in

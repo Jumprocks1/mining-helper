@@ -33,7 +33,7 @@ export class HookReader extends BaseReader {
     override async ReadPage(_: number): Promise<ReaderPageNode> {
         if (this.page) return this.page
 
-        const page = <div className="reader-page-node" /> as ReaderPageNode
+        const page = <div className="reader-page-node hook-reader" /> as ReaderPageNode
         const onConnect = new OnConnectElement()
         onConnect.OnConnect = connected => {
             if (connected) browser.runtime.onMessage.addListener(onMessage)
