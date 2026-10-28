@@ -93,6 +93,12 @@
                     p {
                         white-space: pre-wrap;
                     }
+                    .option {
+                        display: list-item;
+                        list-style-type: "◦";
+                        list-style-position: inside;
+                        margin: $s1 0;
+                    }
                 }
                 ruby:not(.ruby-auto-gen) {
                     rt {

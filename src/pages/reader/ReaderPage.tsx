@@ -387,34 +387,36 @@ export default class ReaderPage extends PageComponent {
         await this.Library.Save()
     }
 
-    async AppendParagraph(newParagraphNode: HTMLElement) {
+    async AppendNode(newNode: HTMLElement) {
         if (!this.Reader) return
-
         const page = this.CurrentPageNode
-        const index = page.querySelectorAll("p").length
-        newParagraphNode.paragraphIndex = index
-        newParagraphNode.appendChild(<div className="paragraph-index">{index + 1}</div>)
-        page.append(newParagraphNode)
+        page.append(newNode)
+        const newParagraphNode = newNode.querySelector("p")
+        if (newParagraphNode) {
+            const index = page.querySelectorAll("p").length - 1
+            newParagraphNode.paragraphIndex = index
+            newParagraphNode.appendChild(<div className="paragraph-index">{index + 1}</div>)
+            const oldParagraph = this.Reader.Paragraph
+            this.Reader.ProgressState.paragraphs[this.Reader.Page] = index
+            let oldParagraphNode: HTMLElement | undefined
+            for (const p of page.querySelectorAll("p")) {
+                p.classList.toggle("saved-position", p.paragraphIndex === index)
+                if (p.paragraphIndex === oldParagraph) oldParagraphNode = p
+            }
+            if (oldParagraphNode) {
+                this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldParagraphNode.getBoundingClientRect().top)
+                newParagraphNode.scrollIntoView({ block: "nearest" })
+            }
+        }
+        await Promise.all([this.Library.Save(), this.UpdateParsing(page, newNode)])
+    }
 
-        const oldParagraph = this.Reader.Paragraph
-        this.Reader.ProgressState.paragraphs[this.Reader.Page] = index
-        let oldParagraphNode: HTMLElement | undefined
-        for (const p of page.querySelectorAll("p")) {
-            p.classList.toggle("saved-position", p.paragraphIndex === index)
-            if (p.paragraphIndex === oldParagraph) oldParagraphNode = p
-        }
-        if (oldParagraphNode) {
-            this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldParagraphNode.getBoundingClientRect().top)
-            newParagraphNode.scrollIntoView({ block: "nearest" })
-        }
-        const furigana = addFuriganaOverrides(newParagraphNode)
-            .then(async () => {
-                if (!page.jpdb) return
-                await updateJpdbParse(page, newParagraphNode)
-                if (this.FuriganaButton.Disabled)
-                    await AddFurigana(page.jpdb)
-            })
-        await Promise.all([this.Library.Save(), furigana])
+    async UpdateParsing(page: ReaderPageNode, newNode: HTMLElement) {
+        await addFuriganaOverrides(newNode)
+        if (!page.jpdb) return
+        await updateJpdbParse(page, newNode)
+        if (this.FuriganaButton.Disabled)
+            await AddFurigana(page.jpdb)
     }
 
     LoadToC() {

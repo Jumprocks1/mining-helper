@@ -2,6 +2,8 @@ import "../framework/createElement"
 
 const mainTextSelector = ".message_inner";
 const nameSelector = ".name_space"
+// const extraQuery = ".button_graphic, .event-setting-element"
+const optionSelector = ".event-setting-element"
 // only count as final once this amount of ms has passed and no changes are found
 const stableDelayMs = 200
 
@@ -41,7 +43,8 @@ function debounceText(text: string) {
     lastText = text
     clearTimeout(pendingTextLoad)
     const name = document.querySelector(nameSelector)?.textContent
-    const message = { type: "hook-text", text, name }
+    const options = [...document.querySelectorAll(optionSelector)].map(e => e.textContent).filter(e => e)
+    const message = { type: "hook-text", text, name, options }
     pendingTextLoad = setTimeout(() => browser.runtime.sendMessage(message), stableDelayMs)
 }
 

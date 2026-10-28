@@ -153,7 +153,10 @@ export async function addFuriganaOverrides(node: HTMLElement) {
     let currentNode = walker.nextNode() as Text | null
     while (currentNode) {
         const value = currentNode.nodeValue
-        if (!value) continue
+        if (!value) {
+            currentNode = walker.nextNode() as Text | null
+            continue
+        }
 
         let replacements: [start: number, [string, string]][] = []
         for (const entry of overrides) {

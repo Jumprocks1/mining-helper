@@ -1,3 +1,4 @@
+import { appendChild } from '../framework/createElement'
 import { CurrentPage } from '../framework/Router'
 import ReaderPage from '../pages/reader/ReaderPage'
 import { BaseReader, ReaderPageNode } from './BaseReader'
@@ -6,6 +7,7 @@ import { LibraryBook } from './Library'
 interface HookMessage {
     name?: string
     text: string
+    options?: string[]
 }
 
 interface HookData {
@@ -24,11 +26,15 @@ export class HookReader extends BaseReader {
         return 1
     }
 
-    MessageToParagraph(message: HookMessage) {
+    MessageToNode(message: HookMessage) {
         const paragraph = <p />
+        const node = <div>{paragraph}</div>
         if (message.name) paragraph.append(<span className="hook-message-name">{message.name}</span>)
         paragraph.append(message.text)
-        return paragraph
+        if (message.options) {
+            appendChild(node, message.options.map((e: any) => <div className="option">{e}</div>))
+        }
+        return node
     }
     override async ReadPage(_: number): Promise<ReaderPageNode> {
         if (this.page) return this.page
@@ -49,41 +55,51 @@ export class HookReader extends BaseReader {
         }
         tempData.messages ??= []
         const parsedData = tempData as HookData
-        for (const message of parsedData.messages) page.append(this.MessageToParagraph(message))
+        for (const message of parsedData.messages)
+            page.append(this.MessageToNode(message))
 
-        const onMessage = (message: any) => {
+        const onMessage = async (message: any) => {
             if (message.type === "hook-text") {
                 const readerPage = CurrentPage(ReaderPage)
                 const text: string = message.text
                 const name: string | undefined = message.name
-                const index = parsedData.messages.findIndex(e => e.name === name && e.text === text)
+                const options: string[] | undefined = message.options
+                const index = parsedData.messages.findIndex(e => e.name === name && e.text === text && e.options?.length === message.options?.length)
                 if (index !== -1) {
                     readerPage?.FocusParagraph(index)
                     return
                 }
                 const hookMessage: HookMessage = { text }
                 if (name) hookMessage.name = name
+                if (options) hookMessage.options = options
                 parsedData.messages.push(hookMessage)
-                readerPage?.AppendParagraph(this.MessageToParagraph(message))
-                this.Enqueue(async () => {
-                    if (!readerPage) return
-                    const library = readerPage.Library
-                    if (!library) return
-                    const cache = library.Cache
-                    if (!this.Book.cacheKey) return
-                    const jsonString = JSON.stringify(parsedData)
-                    const blob = new Blob([jsonString])
-                    const response = new Response(blob, {
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Content-Length": blob.size.toString()
-                        }
-                    })
-                    await cache.put(this.Book.cacheKey, response)
-                })
+                this.QueueSaveBookData(parsedData)
+
+                // TODO probably has some sketchy race conditions with the furigana stuff
+                await readerPage?.AppendNode(this.MessageToNode(message))
             }
         }
         return this.page
+    }
+
+    QueueSaveBookData(parsedData: HookData) {
+        this.Enqueue(async () => {
+            const readerPage = CurrentPage(ReaderPage)
+            if (!readerPage) return
+            const library = readerPage.Library
+            if (!library) return
+            const cache = library.Cache
+            if (!this.Book.cacheKey) return
+            const jsonString = JSON.stringify(parsedData)
+            const blob = new Blob([jsonString])
+            const response = new Response(blob, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Content-Length": blob.size.toString()
+                }
+            })
+            await cache.put(this.Book.cacheKey, response)
+        })
     }
 
     page: ReaderPageNode | undefined
