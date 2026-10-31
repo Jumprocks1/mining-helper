@@ -19,7 +19,7 @@ class OnConnectElement extends HTMLElement {
     connectedCallback() { this.OnConnect?.(true) }
     disconnectedCallback() { this.OnConnect?.(false) }
 }
-customElements.define("on-connect", OnConnectElement)
+customElements?.define("on-connect", OnConnectElement)
 
 export class HookReader extends BaseReader {
     override get PageCount(): number {

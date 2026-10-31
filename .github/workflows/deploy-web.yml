@@ -41,6 +41,7 @@ jobs:
         npm i
         node esbuild.mjs --prod --gh-pages
         sass src/main.scss:dist/main.css
+        cp -r sources/* dist/sources/
 
     - name: Setup Pages
       uses: actions/configure-pages@v6
