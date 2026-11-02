@@ -28,6 +28,7 @@ export class HookReader extends BaseReader {
 
     MessageToNode(message: HookMessage) {
         const paragraph = <p />
+        // Could skip the div if there's no name/options
         const node = <div>{paragraph}</div>
         if (message.name) paragraph.append(<span className="hook-message-name">{message.name}</span>)
         paragraph.append(message.text)
@@ -41,11 +42,32 @@ export class HookReader extends BaseReader {
 
         const page = <div className="reader-page-node hook-reader" /> as ReaderPageNode
         const onConnect = new OnConnectElement()
+        const advance = async () => {
+            const tabs = await browser.tabs.query({ url: this.Book.key as string })
+            for (const tab of tabs) {
+                if (tab.id) {
+                    await browser.tabs.sendMessage(tab.id, { type: "advance-page" })
+                }
+            }
+        }
         onConnect.OnConnect = connected => {
-            if (connected) browser.runtime.onMessage.addListener(onMessage)
-            else browser.runtime.onMessage.removeListener(onMessage)
+            const onKeydown = async (e: KeyboardEvent) => {
+                if (e.key === " ") {
+                    e.preventDefault()
+                    await advance()
+                }
+            }
+            if (connected) {
+                browser.runtime.onMessage.addListener(onMessage)
+                document.addEventListener("keydown", onKeydown)
+            }
+            else {
+                browser.runtime.onMessage.removeListener(onMessage)
+                document.removeEventListener("keydown", onKeydown)
+            }
         }
         page.append(onConnect)
+        page.append(<button onclick={advance} id="advance-button">Advance</button>)
         this.page = page
         let tempData: Partial<HookData> = {}
         if (typeof this.Book.data === "string") {
@@ -64,14 +86,14 @@ export class HookReader extends BaseReader {
                 const text: string = message.text
                 const name: string | undefined = message.name
                 const options: string[] | undefined = message.options
-                const index = parsedData.messages.findIndex(e => e.name === name && e.text === text && e.options?.length === message.options?.length)
+                const index = parsedData.messages.findIndex(e => e.name === name && e.text === text && (e.options?.length ?? 0) === (message.options?.length ?? 0))
                 if (index !== -1) {
                     readerPage?.FocusParagraph(index)
                     return
                 }
                 const hookMessage: HookMessage = { text }
                 if (name) hookMessage.name = name
-                if (options) hookMessage.options = options
+                if (options && options.length > 0) hookMessage.options = options
                 parsedData.messages.push(hookMessage)
                 this.QueueSaveBookData(parsedData)
 
