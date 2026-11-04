@@ -29,6 +29,7 @@ export default class JpHoverTooltip extends JsPopover {
             this.Node.style.removeProperty("left")
             this.Node.style.removeProperty("top")
             this.Anchor = target
+            this.Range = undefined
         } else {
             this.AnchorToRange(target)
         }

@@ -84,7 +84,7 @@ export class JsPopover extends Component {
             this.Node.style.setProperty("position-anchor", anchorName)
         }
     }
-    private Range?: Range
+    protected Range?: Range
 
     get CloseOnClickaway() { return this.Type === "menu" || this.Type === "info-popup" }
 
