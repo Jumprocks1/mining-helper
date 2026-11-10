@@ -4,6 +4,7 @@ import { EpubReader } from "./EpubReader"
 import { HtmlReader } from "./HtmlReader"
 import { HookReader } from "./HookReader"
 import { UrlTemplateReader } from "./UrlTemplateReader"
+import { getStringHash } from "../utils/util"
 
 // this gets serialized, don't include any blobs here
 interface LibraryData {
@@ -246,12 +247,6 @@ export async function urlToBlob(url: string) {
     return resp.blob()
 }
 
-export async function getStringHash(s: string): Promise<string> {
-    const enc = new TextEncoder()
-    const hashBuffer = await crypto.subtle.digest("SHA-256", enc.encode(s))
-    // @ts-expect-error toHex was added in 2025
-    return new Uint8Array(hashBuffer).toHex()
-}
 async function getBlobHash(blob: Blob): Promise<string> {
     const hashBuffer = await crypto.subtle.digest("SHA-256", await blob.arrayBuffer())
     // @ts-expect-error toHex was added in 2025

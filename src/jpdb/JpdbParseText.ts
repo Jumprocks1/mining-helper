@@ -1,11 +1,10 @@
 import { hash, Subtitles } from "../utils/srt";
-import { delay, furiFromToken } from "../utils/util";
+import { delay, furiFromToken, getStringHash } from "../utils/util";
 import BrowserCache from "../utils/BrowserCache";
 import { loadIgnoreList } from "./IgnoreList";
 import { ThrowUserError } from "../utils/UserError";
 import { getSetting } from "../core/Settings";
 import { JitenCache, JitenParseText } from "../jiten/JitenParseText";
-import { getStringHash } from "../reader/Library";
 
 export type JpdbVocabulary = [
     spelling: string,

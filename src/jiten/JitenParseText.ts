@@ -1,9 +1,8 @@
 import { getSetting } from "../core/Settings";
 import { JpdbParseResponse, JpdbVocabulary } from "../jpdb/JpdbParseText";
-import { getStringHash } from "../reader/Library";
 import BrowserCache from "../utils/BrowserCache";
 import UserError from "../utils/UserError";
-import { delay } from "../utils/util";
+import { delay, getStringHash } from "../utils/util";
 
 const maxParseCharacters = 50_000 // the API seems to list 81000 as the limit. Staying under to be safe with new lines and such
 

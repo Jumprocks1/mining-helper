@@ -306,3 +306,10 @@ export function debounce(key: string | Symbol, delay: number, callback: () => vo
         callback()
     }, delay))
 }
+
+export async function getStringHash(s: string): Promise<string> {
+    const enc = new TextEncoder()
+    const hashBuffer = await crypto.subtle.digest("SHA-256", enc.encode(s))
+    // @ts-expect-error toHex was added in 2025
+    return new Uint8Array(hashBuffer).toHex()
+}
