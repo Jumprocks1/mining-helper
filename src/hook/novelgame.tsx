@@ -6,7 +6,7 @@ const optionSelector = ".event-setting-element"
 const advanceClickSelector = ".layer_event_click"
 
 // only count as final once this amount of ms has passed and no changes are found
-const stableDelayMs = 250
+const stableDelayMs = 300
 
 let updateQueued = false
 function queueUpdate() {
@@ -46,7 +46,7 @@ let lastOptionsCount = 0
 function debounceText(text: string) {
     // this is a bit tricky since we want to debounce, but also don't want to skip certain things
     const optionElements = document.querySelectorAll(optionSelector)
-    if (!text || text === lastText && optionElements.length == lastOptionsCount) return
+    if ((!text || text === lastText) && optionElements.length == lastOptionsCount) return
     const options = [...optionElements].map(e => e.textContent).filter(e => e)
     lastOptionsCount = options.length
     lastText = text

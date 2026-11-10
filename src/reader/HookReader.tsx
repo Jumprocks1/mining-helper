@@ -6,7 +6,7 @@ import { LibraryBook } from './Library'
 
 interface HookMessage {
     name?: string
-    text: string
+    text?: string
     options?: string[]
 }
 
@@ -27,11 +27,14 @@ export class HookReader extends BaseReader {
     }
 
     MessageToNode(message: HookMessage) {
-        const paragraph = <p />
         // Could skip the div if there's no name/options
-        const node = <div>{paragraph}</div>
-        if (message.name) paragraph.append(<span className="hook-message-name">{message.name}</span>)
-        paragraph.append(message.text)
+        const node = <div />
+        if (message.name || message.text) {
+            const paragraph = <p />
+            if (message.name) paragraph.append(<span className="hook-message-name">{message.name}</span>)
+            if (message.text) paragraph.append(message.text)
+            node.append(paragraph)
+        }
         if (message.options) {
             appendChild(node, message.options.map((e: any) => <div className="option">{e}</div>))
         }
@@ -83,15 +86,26 @@ export class HookReader extends BaseReader {
         const onMessage = async (message: any) => {
             if (message.type === "hook-text") {
                 const readerPage = CurrentPage(ReaderPage)
-                const text: string = message.text
+                const text: string | undefined = message.text
                 const name: string | undefined = message.name
                 const options: string[] | undefined = message.options
-                const index = parsedData.messages.findIndex(e => e.name === name && e.text === text && (e.options?.length ?? 0) === (message.options?.length ?? 0))
+                const index = parsedData.messages.findIndex(e => {
+                    if ((e.name ?? "") !== (name ?? "")) return false
+                    if ((e.text ?? "") !== (text ?? "")) return false
+                    if ((e.options?.length ?? 0) !== (options?.length ?? 0)) return false
+                    if (options && e.options) {
+                        for (let i = 0; i < options.length; i++) {
+                            if (options[i] !== e.options[i]) return false
+                        }
+                    }
+                    return true
+                })
                 if (index !== -1) {
                     readerPage?.FocusParagraph(index)
                     return
                 }
-                const hookMessage: HookMessage = { text }
+                const hookMessage: HookMessage = {}
+                if (text) hookMessage.text = text
                 if (name) hookMessage.name = name
                 if (options && options.length > 0) hookMessage.options = options
                 parsedData.messages.push(hookMessage)
