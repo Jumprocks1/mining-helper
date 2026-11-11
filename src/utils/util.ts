@@ -1,6 +1,6 @@
-import { UnicodeCharacterType, unicodeType } from "./AnkiUtil";
 import { JpdbToken, JpdbVocabulary, ParseText } from "../jpdb/JpdbParseText";
 import { applyReplacementsTo, ReplacementEntry } from "../views/RegexReplacements";
+import { furiBaseAndReading } from "../jpdb/JpdbState";
 
 declare global {
     interface HTMLElement {
@@ -182,20 +182,8 @@ export interface CardData {
 // feels pretty sketchy but I think it's fine?
 export function furiToReading(s: string | undefined) {
     if (!s) return s
-    let o = ""
-    let nonKanji = 0
-    for (let i = 0; i < s.length; i++) {
-        const c = s[i]
-        if (c === "[")
-            o = o.substring(0, nonKanji)
-        else if (c !== "]") {
-            if (c !== " ")
-                o += c
-            if (unicodeType(s, i) !== UnicodeCharacterType.Kanji)
-                nonKanji = o.length
-        }
-    }
-    return o
+    // Could optimize this, oh well
+    return furiBaseAndReading(s)[1]
 }
 
 type Child = Node | string
