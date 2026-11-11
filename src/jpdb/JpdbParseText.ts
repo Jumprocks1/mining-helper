@@ -5,6 +5,7 @@ import { loadIgnoreList } from "./IgnoreList";
 import { ThrowUserError } from "../utils/UserError";
 import { getSetting } from "../core/Settings";
 import { JitenCache, JitenParseText } from "../jiten/JitenParseText";
+import { furiBaseAndReading } from "./JpdbState";
 
 export type JpdbVocabulary = [
     spelling: string,
@@ -290,4 +291,53 @@ export function furiganaFromFullReading2(base: string, reading: string): [furiga
     if (i > 0) o = `${base.substring(0, i)} ${o}`;
     if (j > 0) o += `${base.substring(base.length - j)}`
     return [o, perfect]
+}
+
+export async function bulkFurigana(text: string[], readings?: (string | undefined)[]): Promise<string[]> {
+    // We add some extra new lines to make sure context doesn't spread
+
+    const estimatedFurigana = text.map((e, i) => {
+        const reading = readings?.[i]
+        if (!reading) return undefined
+        return furiganaFromFullReading2(e, reading)
+    })
+    const o: string[] = []
+    const unknown: number[] = []
+    for (let i = 0; i < text.length; i++) {
+        const furi = estimatedFurigana[i]
+        if (furi && furi[1]) {
+            o[i] = furi[0]
+        } else unknown.push(i)
+    }
+    const unknownLines = unknown.map(e => text[e] + "\n\n")
+    const parse = await ParseText(unknownLines)
+    const fullJoin = unknownLines.join("\n")
+
+    let p = 0
+    let i = 0
+    let tokenI = 0
+    while (i < unknown.length) {
+        const index = unknown[i]
+        let furi = ""
+        const nextP = p + text[index].length + 3
+        while (tokenI < parse.tokens.length && parse.tokens[tokenI][0] < nextP) {
+            if (furi && !furi.endsWith("]")) furi += " "
+            const token = parse.tokens[tokenI]
+            furi += furiFromToken(fullJoin.substring(token[0], token[0] + token[1]), token)
+            tokenI += 1
+        }
+
+        const [, parsedReading] = furiBaseAndReading(furi)
+        const reading = readings?.[index]
+        if (reading && parsedReading !== reading.replaceAll(" ", "")) {
+            const estimate = estimatedFurigana[index]![0]
+            console.warn(`Reading mismatch for ${text[index]}: ${reading}, ${parsedReading}. Using ${estimate}`)
+            o[index] = estimate
+        } else {
+            o[index] = furi
+        }
+        i += 1
+        p = nextP
+    }
+    return o
 }

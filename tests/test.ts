@@ -1,10 +1,11 @@
 import "./testContext"
-import { furiganaTrimmed, simplifiedFurigana, TrimKana } from "../src/jpdb/JpdbState"
+import { furiBaseAndReading, furiganaTrimmed, simplifiedFurigana, TrimKana } from "../src/jpdb/JpdbState"
 import { assert, executeTests, test } from "./testUtil"
-import { furiganaFromFullReading } from "../src/jpdb/JpdbParseText"
+import { furiganaFromFullReading, furiganaFromFullReading2 } from "../src/jpdb/JpdbParseText"
 import { UnicodeCharacterType, unicodeType } from "../src/utils/AnkiUtil"
-import { furiFromToken } from "../src/utils/util"
+import { furiFromToken, furiToReading } from "../src/utils/util"
 import { cleanJitenFurigana, readingFromFurigana } from "../src/jiten/JitenParseText"
+import { readFileSync } from "node:fs"
 
 test("simplified furigana", () => {
     assert.equal(simplifiedFurigana(""), "")
@@ -21,7 +22,7 @@ test("simplified furigana", () => {
     assert.equal(unicodeType("1"), UnicodeCharacterType.Other)
     assert.equal(unicodeType("１"), UnicodeCharacterType.Number)
 
-    assert.equal(furiganaFromFullReading("どう考えても", "どうかんがえても"), "どう 考[かんが] えても")
+    assert.equal(furiganaFromFullReading("どう考えても", "どうかんがえても"), "どう 考[かんが]えても")
     assert.equal(furiganaFromFullReading("どうかんがえても", "どうかんがえても"), "どうかんがえても")
 
     assert.equal(furiFromToken("出来る", [0, 0, [["出", "で"], ["来", "き"], "る"], 0]), "出[で]来[き]る")
@@ -29,6 +30,7 @@ test("simplified furigana", () => {
     // assert.equal(furiFromToken("来る", [0, 0, [["来", "き"], "た"], 0]), "来[く]る")
 
     assert.equal(TrimKana("出来る"), "出来")
+    assert.equal(furiToReading("大[だい]々[だい]的[てき]"), "だいだいてき")
 })
 
 test("jiten", () => {
@@ -49,4 +51,42 @@ test("jiten", () => {
     assert.equal(readingFromFurigana("痛い目", cleanJitenFurigana("痛[いた]い目[め]")), [["痛", "いた"], "い", ["目", "め"]])
 })
 
-executeTests()
+
+const checkFuri = (res: [string, boolean], expected: string | [string, boolean]) => {
+    if (typeof expected === "string") expected = [expected, true]
+    assert.equal(res, expected)
+}
+test("furiganaFromFullReading2", () => {
+    checkFuri(furiganaFromFullReading2("a", "a"), "a")
+    checkFuri(furiganaFromFullReading2("A", "a"), "A[a]")
+    checkFuri(furiganaFromFullReading2("Ab", "ab"), "A[a]b")
+    checkFuri(furiganaFromFullReading2("bAb", "bab"), "b A[a]b")
+    checkFuri(furiganaFromFullReading2("AbCde", "aabccde"), "A[aa]b C[cc]de")
+    checkFuri(furiganaFromFullReading2("AaB", "aabb"), "A[a]a B[bb]")
+})
+
+test({ name: "kaishi", skipByDefault: true }, () => {
+    const data = readFileSync("tests/kaishi.txt", "utf8")
+    for (const line of data.split("\n")) {
+        if (line.startsWith("#") || !line) continue
+        const row = line.split("\t")
+        const kanji = row[0]
+        const furi = row[3].replaceAll("] ", "]")
+        const reading = (row[1] || furiBaseAndReading(furi)[1]).replaceAll(" ", "")
+        if (reading.includes("・")) continue;
+        const res = furiganaFromFullReading2(kanji, reading)
+        const bad = (i: number) => unicodeType(kanji, i) !== UnicodeCharacterType.Kana
+        let hasConsec = false
+        for (let i = 0; i < kanji.length - 1; i++) {
+            if (bad(i) && bad(i + 1)) {
+                hasConsec = true
+                break
+            }
+        }
+        try {
+            if (res[1] || !hasConsec) checkFuri(res, furi)
+        } catch { console.log(furi) }
+    }
+})
+
+await executeTests()
