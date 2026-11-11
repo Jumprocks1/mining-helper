@@ -16,6 +16,9 @@ if ($subs.Count -eq 0) {
         if ($response -ne "y") { exit; }
         # Expand-Archive is jank and can't handle `[]` characters. This will usually remove them
         $relativeOutput = Resolve-Path -Relative -LiteralPath $zip.DirectoryName
+        if ((Split-Path $zip.DirectoryName -Leaf) -ne "subs") {
+            $relativeOutput = Join-Path $relativeOutput "subs"
+        }
         Expand-Archive -LiteralPath $zip.FullName -DestinationPath $relativeOutput
         $subs = gci -LiteralPath $dir -Recurse |? {$_.Extension -in ".srt",".ass"} | sort Name
     }
