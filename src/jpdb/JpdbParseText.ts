@@ -193,7 +193,7 @@ export function furiganaFromFullReading(base: string, reading: string) {
     reading = reading.substring(i, reading.length - j)
     let o = `${base.substring(i, base.length - j)}[${reading}]`
     if (i > 0) o = `${base.substring(0, i)} ${o}`;
-    if (j > 0) o += ` ${base.substring(base.length - j)}`
+    if (j > 0) o += `${base.substring(base.length - j)}`
     return o
 }
 
@@ -243,4 +243,51 @@ export async function tts(text: string) {
     const utter = new SpeechSynthesisUtterance(text)
     utter.lang = "ja"
     speechSynthesis.speak(utter)
+}
+
+function combine(a: [string, boolean], b: [string, boolean], c: string): [furigana: string, perfect: boolean] {
+    const bracket = b[0].indexOf("[")
+    const spacePos = b[0].indexOf(" ")
+    const space = bracket === -1 ? "" : spacePos === -1 ? " " : spacePos < bracket ? "" : " "
+    return [a[0] + c + space + b[0], a[1] && b[1]]
+}
+
+function furiganaFromFullReading2Inner(base: string, reading: string): [furigana: string, perfect: boolean] {
+    if (reading.length === 0) return [base, true]
+    if (base.length === 1) return [`${base}[${reading}]`, true]
+
+    for (let i = 0; i < base.length; i++) {
+        const c = base[i]
+        const ri = reading.indexOf(c)
+        if (ri !== -1 && ri === reading.lastIndexOf(c)) {
+            const a = furiganaFromFullReading2Inner(base.substring(0, i), reading.substring(0, ri))
+            const b = furiganaFromFullReading2Inner(base.substring(i + 1), reading.substring(ri + 1))
+            return combine(a, b, c)
+        } else if (ri !== -1) {
+            const last = reading.lastIndexOf(c)
+            // if one of the indexes matches the current index, we know the left part must be 1 kana per kanji
+            if (last === i || ri === i) {
+                const a = furiganaFromFullReading2Inner(base.substring(0, i), reading.substring(0, i))
+                const b = furiganaFromFullReading2Inner(base.substring(i + 1), reading.substring(i + 1))
+                return combine(a, b, c)
+            }
+            // could do the same counting from the right, oh well
+        }
+        // There are more edge cases I could add here, but doesn't seem worth it
+    }
+    return [`${base}[${reading}]`, false]
+}
+// see tests
+// realistically this isn't much better than the regular furiganaFromFullReading
+export function furiganaFromFullReading2(base: string, reading: string): [furigana: string, perfect: boolean] {
+    let i = 0;
+    while (i < base.length && i < reading.length && base[i] === reading[i]) i += 1
+    let j = 0;
+    while (j < base.length && j < reading.length && base[base.length - j - 1] === reading[reading.length - j - 1]) j += 1
+    if (i + j >= base.length) return [base, true]
+    reading = reading.substring(i, reading.length - j)
+    let [o, perfect] = furiganaFromFullReading2Inner(base.substring(i, base.length - j), reading)
+    if (i > 0) o = `${base.substring(0, i)} ${o}`;
+    if (j > 0) o += `${base.substring(base.length - j)}`
+    return [o, perfect]
 }
