@@ -9,7 +9,7 @@ declare global {
 const tests: TestInfo[] = []
 
 interface TestInfo extends TestInfoBase {
-    run: () => void
+    run: () => void | Promise<void>
 }
 
 interface TestInfoBase {
@@ -30,7 +30,7 @@ export function test(name: string | Omit<TestInfo, "run"> & { run?: TestInfo["ru
     }
 }
 
-export function executeTests() {
+export async function executeTests() {
     const boundary: { stack?: any } = {}
     Error.captureStackTrace(boundary, executeTests)
     const boundaryLines = boundary.stack.split('\n')
@@ -62,7 +62,8 @@ export function executeTests() {
     for (const test of filteredTests) {
         total += 1
         try {
-            test.run()
+            const r = test.run()
+            if (r instanceof Promise) await r
             passed += 1
         } catch (e: any) {
             if (e.stack && boundary.stack) {

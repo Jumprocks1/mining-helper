@@ -10,7 +10,7 @@ const run = () => {
         console.log("Waiting for debugger...")
         args.push("--inspect-wait")
     }
-    args.push("./dist/js/test.js")
+    args.push("./dist/js/test.mjs")
     const extraArgs = process.argv.indexOf("--")
     if (extraArgs !== -1) args.push(...process.argv.slice(extraArgs + 1))
     return spawn(
@@ -26,11 +26,13 @@ const config = {
     minify: false,
     platform: "node",
     sourcemap: "inline",
-    outdir: "./dist/js",
+    outfile: "./dist/js/test.mjs",
     define: {
         HOT_RELOAD_CSS: String(false),
         TEST: "true"
-    }
+    },
+    format: "esm",
+    target: "node20"
 }
 
 if (watch) {
