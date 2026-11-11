@@ -50,7 +50,8 @@ export function executeTests() {
     let filteredTests = tests
 
     if (filter) {
-        filteredTests = tests.filter(e => e.name.includes(filter) || e.tags?.includes(filter))
+        const regex = new RegExp(filter, "i")
+        filteredTests = tests.filter(e => e.name.match(regex) || e.tags?.match(filter))
     } else {
         filteredTests = tests.filter(e => !e.skipByDefault)
     }
