@@ -11,6 +11,8 @@ const run = () => {
         args.push("--inspect-wait")
     }
     args.push("./dist/js/test.js")
+    const extraArgs = process.argv.indexOf("--")
+    if (extraArgs !== -1) args.push(...process.argv.slice(extraArgs + 1))
     return spawn(
         process.execPath, // node
         args, { stdio: "inherit" }

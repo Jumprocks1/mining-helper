@@ -3,8 +3,8 @@ param(
     [switch]$Debug
 )
 
-$args = @()
-if ($Watch) { $args += "--watch" }
-if ($Debug) { $args += "--debug" }
+$a = @()
+if ($Watch) { $a += "--watch" }
+if ($Debug) { $a += "--debug" }
 
-node esbuild-test.mjs @args
+node esbuild-test.mjs @a -- @args

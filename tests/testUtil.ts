@@ -8,13 +8,26 @@ declare global {
 
 const tests: TestInfo[] = []
 
-interface TestInfo {
-    name: string
+interface TestInfo extends TestInfoBase {
     run: () => void
 }
 
-export function test(name: string, run: TestInfo["run"]) {
-    tests.push({ name, run })
+interface TestInfoBase {
+    name: string
+    tags?: string
+    skipByDefault?: boolean
+}
+
+export function test(name: string, run: TestInfo["run"]): void
+export function test(info: Omit<TestInfo, "run">, run: TestInfo["run"]): void
+export function test(info: TestInfo): void
+export function test(name: string | Omit<TestInfo, "run"> & { run?: TestInfo["run"] }, run?: TestInfo["run"]) {
+    if (typeof name === "string")
+        tests.push({ name, run: run! })
+    else {
+        if (run) name.run = run
+        tests.push(name as TestInfo)
+    }
 }
 
 export function executeTests() {
@@ -22,11 +35,30 @@ export function executeTests() {
     Error.captureStackTrace(boundary, executeTests)
     const boundaryLines = boundary.stack.split('\n')
 
-    console.log(`Running ${tests.length} tests`)
-    // TODO add filters
+    const args = process.argv.slice(2)
+    let filter = ""
+    let pos = 0
+    for (let i = 0; i < args.length; i++) {
+        if (!args[i].startsWith("-")) {
+            if (pos === 0) {
+                filter = args[i]
+                pos += 1
+            }
+        }
+    }
+
+    let filteredTests = tests
+
+    if (filter) {
+        filteredTests = tests.filter(e => e.name.includes(filter) || e.tags?.includes(filter))
+    } else {
+        filteredTests = tests.filter(e => !e.skipByDefault)
+    }
+
+    console.log(`Running ${filteredTests.length} tests`)
     let total = 0
     let passed = 0
-    for (const test of tests) {
+    for (const test of filteredTests) {
         total += 1
         try {
             test.run()
