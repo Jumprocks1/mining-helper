@@ -3,6 +3,7 @@ import Loader from "../../components/Loader"
 import LoadingButton from "../../components/LoadingButton"
 import { AnkiFieldInfo, AnkiFieldKey, ankiFieldSync, getSetting, getSettingAndCache } from "../../core/Settings"
 import { PageComponent } from "../../framework/PageComponent"
+import { bulkFurigana } from "../../jpdb/JpdbParseText"
 import AnkiConnect, { AnkiNote, NoteBase } from "../../utils/AnkiConnect"
 import { UnicodeCharacterType, unicodeType } from "../../utils/AnkiUtil"
 import { addKnownAnkiKanji, reloadAnkiKanjiSet } from "../../utils/KanjiSet"
@@ -184,18 +185,41 @@ async function getNoteInfo(kanji: string): Promise<NoteBase> {
         // 2nd one is intentionally inverted
         return (a[0] - b[0] || b[1] - a[1])
     })
-    return noteInfoToKanjiNote(kanji, sortedNotesIndices.map(e => noteInfo[e]), res)
+    const vocabInfo = await ankiNotesToVocabInfo(sortedNotesIndices.map(e => noteInfo[e]), fieldName)
+    return noteInfoToKanjiNote(kanji, vocabInfo, res)
+}
+
+async function ankiNotesToVocabInfo(ankiNotes: AnkiNote[], fieldName: (key: AnkiFieldKey) => string) {
+    const o: VocabInfoForKanji[] = ankiNotes.map(e => ({
+        kanji: e.fields[fieldName("word")]!.value,
+        furigana: e.fields[fieldName("wordFurigana")]?.value,
+        reading: e.fields[fieldName("wordReading")]?.value,
+        meaning: e.fields[fieldName("wordMeaning")]?.value,
+    }))
+    const missingI = []
+    for (let i = 0; i < o.length; i++)
+        if (!o[i].furigana) missingI.push(i)
+    const furigana = await bulkFurigana(missingI.map(e => o[e].kanji), missingI.map(e => o[e].reading))
+    for (let i = 0; i < furigana.length; i++)
+        o[missingI[i]].furigana = furigana[i]
+    return o
+}
+
+interface VocabInfoForKanji {
+    kanji: string
+    furigana?: string
+    reading?: string
+    meaning?: string
 }
 
 // This method shouldn't do anything expensive (network calls, large filters) so it can be bulk called
-function noteInfoToKanjiNote(kanji: string, sortedNotes: AnkiNote[], kanjiInfo: KanjiInfo): NoteBase {
+function noteInfoToKanjiNote(kanji: string, sortedNotes: VocabInfoForKanji[], kanjiInfo: KanjiInfo): NoteBase {
     // these should be all different readings, if there's <5, it will pull whatever has the best interval
-    // TODO this assumes some fields in the vocab deck when we could be pulling those from settings
-    const examples: AnkiNote[] = []
+    const examples: VocabInfoForKanji[] = []
 
     const foundReadings = new Set<string>()
     for (const note of sortedNotes) {
-        const furigana = note.fields["Word Furigana"]?.value
+        const furigana = note.furigana
         if (furigana) {
             const reading = getReadingFor(kanji, furigana)
             if (reading) {
@@ -212,8 +236,8 @@ function noteInfoToKanjiNote(kanji: string, sortedNotes: AnkiNote[], kanjiInfo: 
     }
 
     const simpleExamples = examples.map(e => {
-        const furigana = e.fields[ankiFieldSync("wordFurigana")]?.value
-        const meaning = e.fields[ankiFieldSync("wordMeaning")]?.value
+        const furigana = e.furigana
+        const meaning = e.meaning
         return `${furigana} - ${meaning}`
     })
 
@@ -229,8 +253,8 @@ function noteInfoToKanjiNote(kanji: string, sortedNotes: AnkiNote[], kanjiInfo: 
             ["On Readings"]: kanjiInfo.onReadings.join(", "),
             ["Name Readings"]: kanjiInfo.nameReadings.join(", "),
             ["Examples"]: simpleExamples.join("<br>"),
-            Sentence: examples[0].fields[ankiFieldSync("sentence")]?.value,
-            ["Sentence Audio"]: examples[0].fields[ankiFieldSync("sentenceAudio")]?.value
+            // Sentence: examples[0].fields[ankiFieldSync("sentence")]?.value,
+            // ["Sentence Audio"]: examples[0].fields[ankiFieldSync("sentenceAudio")]?.value
             // Variants: , // don't think we really needs these for now
         }
     }

@@ -294,6 +294,7 @@ export function furiganaFromFullReading2(base: string, reading: string): [furiga
 }
 
 export async function bulkFurigana(text: string[], readings?: (string | undefined)[]): Promise<string[]> {
+    if (text.length === 0) return []
     // We add some extra new lines to make sure context doesn't spread
 
     const estimatedFurigana = text.map((e, i) => {
@@ -321,11 +322,19 @@ export async function bulkFurigana(text: string[], readings?: (string | undefine
         let furi = ""
         const nextP = p + text[index].length + 3
         while (tokenI < parse.tokens.length && parse.tokens[tokenI][0] < nextP) {
-            if (furi && !furi.endsWith("]")) furi += " "
             const token = parse.tokens[tokenI]
+            if (p != token[0]) {
+                furi += fullJoin.substring(p, token[0])
+                p = token[0]
+            }
+            if (furi && !furi.endsWith("]")) furi += " "
             furi += furiFromToken(fullJoin.substring(token[0], token[0] + token[1]), token)
+            p += token[1]
             tokenI += 1
         }
+        if (p < nextP - 3)
+            furi += fullJoin.substring(p, nextP - 3)
+        p = nextP
 
         const [, parsedReading] = furiBaseAndReading(furi)
         const reading = readings?.[index]
@@ -337,7 +346,6 @@ export async function bulkFurigana(text: string[], readings?: (string | undefine
             o[index] = furi
         }
         i += 1
-        p = nextP
     }
     return o
 }
