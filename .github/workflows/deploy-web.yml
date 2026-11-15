@@ -29,6 +29,8 @@ jobs:
     
     steps:
     - uses: actions/checkout@v6
+      with:
+        lfs: true
     - uses: dw-labs-org/dart-sass-gha@v1
 
     - name: Setup Node
