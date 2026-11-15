@@ -53,6 +53,8 @@ function debounceText(text: string) {
 
     clearTimeout(pendingTextLoad)
     const name = document.querySelector(nameSelector)?.textContent
+    // if there's a name but no text, assume it's still loading
+    if (!text && !options.length) return
 
     // needed because when trimming, we have to consider the entire message content
     // without this, a message that's split into 3 would not get trimmed on the 3rd send

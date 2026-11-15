@@ -29,12 +29,12 @@ export class HookReader extends BaseReader {
     MessageToNode(message: HookMessage) {
         // Could skip the div if there's no name/options
         const node = <div />
+        const paragraph = <p />
         if (message.name || message.text) {
-            const paragraph = <p />
             if (message.name) paragraph.append(<span className="hook-message-name">{message.name}</span>)
             if (message.text) paragraph.append(message.text)
-            node.append(paragraph)
         }
+        node.append(paragraph)
         if (message.options) {
             appendChild(node, message.options.map((e: any) => <div className="option">{e}</div>))
         }
@@ -89,6 +89,7 @@ export class HookReader extends BaseReader {
                 const text: string | undefined = message.text
                 const name: string | undefined = message.name
                 const options: string[] | undefined = message.options
+                if (!text && !options?.length) return
                 const index = parsedData.messages.findIndex(e => {
                     if ((e.name ?? "") !== (name ?? "")) return false
                     if ((e.text ?? "") !== (text ?? "")) return false
