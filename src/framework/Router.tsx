@@ -92,7 +92,7 @@ export function addRouteChangeListener(listener: () => void) {
 
 export function homeUrl() {
     if (globalRouterProps.basePath) {
-        return document.location.hostname + globalRouterProps.basePath
+        return document.location.origin + globalRouterProps.basePath
     }
     return document.location.origin
 }
