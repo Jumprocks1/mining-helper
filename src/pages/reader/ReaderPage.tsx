@@ -390,23 +390,25 @@ export default class ReaderPage extends PageComponent {
     async AppendNode(newNode: HTMLElement) {
         if (!this.Reader) return
         const page = this.CurrentPageNode
-        page.append(newNode)
+        let oldPos: number | undefined = undefined
         const newParagraphNode = newNode.querySelector("p")
         if (newParagraphNode) {
-            const index = page.querySelectorAll("p").length - 1
+            const index = page.querySelectorAll("p").length
             newParagraphNode.paragraphIndex = index
+            newParagraphNode.classList.toggle("saved-position", true)
             newParagraphNode.appendChild(<div className="paragraph-index">{index + 1}</div>)
             const oldParagraph = this.Reader.Paragraph
             this.Reader.ProgressState.paragraphs[this.Reader.Page] = index
-            let oldParagraphNode: HTMLElement | undefined
             for (const p of page.querySelectorAll("p")) {
-                p.classList.toggle("saved-position", p.paragraphIndex === index)
-                if (p.paragraphIndex === oldParagraph) oldParagraphNode = p
+                p.classList.toggle("saved-position", false)
+                // we need the position before we call append, since the browser will move things
+                if (p.paragraphIndex === oldParagraph) oldPos = p?.getBoundingClientRect().top
             }
-            if (oldParagraphNode) {
-                this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldParagraphNode.getBoundingClientRect().top)
-                newParagraphNode.scrollIntoView({ block: "nearest" })
-            }
+        }
+        page.append(newNode)
+        if (newParagraphNode && oldPos !== undefined) {
+            this.ViewerNode.scrollBy(0, newParagraphNode.getBoundingClientRect().top - oldPos)
+            newParagraphNode.scrollIntoView({ block: "nearest" })
         }
         await Promise.all([this.Library.Save(), this.UpdateParsing(page, newNode)])
     }
