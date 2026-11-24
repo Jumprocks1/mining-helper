@@ -26,7 +26,22 @@ interface LibraryBookBase {
     characterCounts?: Record<number, number>
 }
 
-export type LibraryBook = LibraryBookBase
+interface LibraryHookBook extends LibraryBookBase {
+    source: "page-hook"
+    config?: {
+        hookDelay?: number
+        mainTextSelector?: string
+        nameSelector?: string
+        optionSelector?: string
+        advanceClickSelector?: string
+    }
+}
+interface LibraryBookOther extends LibraryBookBase {
+    source: "url" | "file" | "clipboard" | "url-template"
+    config?: undefined
+}
+
+export type LibraryBook = LibraryBookOther | LibraryHookBook
 
 // Will eventually add more stuff to this like notes
 // "Progress" will just mean persistent data that the user wouldn't want to lose

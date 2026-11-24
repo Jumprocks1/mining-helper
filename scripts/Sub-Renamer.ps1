@@ -19,7 +19,7 @@ if ($subs.Count -eq 0) {
         if ((Split-Path $zip.DirectoryName -Leaf) -ne "subs") {
             $relativeOutput = Join-Path $relativeOutput "subs"
         }
-        Expand-Archive -LiteralPath $zip.FullName -DestinationPath $relativeOutput
+        [System.IO.Compression.ZipFile]::ExtractToDirectory($zip.FullName,$relativeOutput)
         $subs = gci -LiteralPath $dir -Recurse |? {$_.Extension -in ".srt",".ass"} | sort Name
     }
 }

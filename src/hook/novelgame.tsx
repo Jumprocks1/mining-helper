@@ -1,12 +1,17 @@
 import "../framework/createElement"
 
-const mainTextSelector = ".message_inner";
-const nameSelector = ".name_space"
-const optionSelector = ".event-setting-element"
-const advanceClickSelector = ".layer_event_click"
 
-// only count as final once this amount of ms has passed and no changes are found
-const stableDelayMs = 300
+let initialConfigReceived = false
+const defaultConfig = {
+    mainTextSelector: ".message_inner",
+    nameSelector: ".name_space",
+    optionSelector: ".event-setting-element",
+    advanceClickSelector: ".layer_event_click",
+    // only count as final once this amount of ms has passed and no changes are found
+    hookDelay: 300,
+}
+const config = { ...defaultConfig }
+
 
 let updateQueued = false
 function queueUpdate() {
@@ -17,7 +22,7 @@ function queueUpdate() {
 
 function update() {
     updateQueued = false
-    const els = [...document.querySelectorAll(mainTextSelector)]
+    const els = [...document.querySelectorAll(config.mainTextSelector)]
     let text = ""
     for (const el of els) {
         if (text != "") text += "\n\n"
@@ -45,14 +50,14 @@ let lastText = ""
 let lastOptionsCount = 0
 function debounceText(text: string) {
     // this is a bit tricky since we want to debounce, but also don't want to skip certain things
-    const optionElements = document.querySelectorAll(optionSelector)
+    const optionElements = document.querySelectorAll(config.optionSelector)
     if ((!text || text === lastText) && optionElements.length == lastOptionsCount) return
     const options = [...optionElements].map(e => e.textContent).filter(e => e)
     lastOptionsCount = options.length
     lastText = text
 
     clearTimeout(pendingTextLoad)
-    const name = document.querySelector(nameSelector)?.textContent
+    const name = document.querySelector(config.nameSelector)?.textContent
     // if there's a name but no text, assume it's still loading
     if (!text && !options.length) return
 
@@ -69,7 +74,7 @@ function debounceText(text: string) {
     pendingTextLoad = setTimeout(() => {
         lastPayload = fullPayload
         browser.runtime.sendMessage(trimmedPayload)
-    }, stableDelayMs)
+    }, config.hookDelay)
 }
 
 const observer = new MutationObserver(queueUpdate)
@@ -77,7 +82,27 @@ observer.observe(document.body, { childList: true, subtree: true })
 
 browser.runtime.onMessage.addListener(message => {
     if (message.type === "advance-page") {
-        const el = document.querySelector<HTMLElement>(advanceClickSelector)
+        const el = document.querySelector<HTMLElement>(config.advanceClickSelector)
         if (el) el.click()
+    } else if (message.type === "update-config") {
+        initialConfigReceived = true
+        const newConfig = message.config
+        if (newConfig) {
+            for (const key in newConfig) {
+                let v = newConfig[key]
+                if (v !== undefined) {
+                    if (v === "") v = (defaultConfig as Record<any, any>)[key];
+                    (config as Record<any, any>)[key] = v
+                }
+            }
+        }
     }
 })
+
+function requestInitialConfig() {
+    if (initialConfigReceived) return
+    // could probably load this from the browser storage instead
+    browser.runtime.sendMessage({ type: "request-config" })
+    setTimeout(requestInitialConfig, 1000)
+}
+requestInitialConfig()

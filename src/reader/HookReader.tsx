@@ -40,19 +40,22 @@ export class HookReader extends BaseReader {
         }
         return node
     }
+
+    sendMessage = async (message: any) => {
+        const tabs = await browser.tabs.query({ url: this.Book.key as string })
+        for (const tab of tabs) {
+            if (tab.id) {
+                await browser.tabs.sendMessage(tab.id, message)
+            }
+        }
+    }
+
     override async ReadPage(_: number): Promise<ReaderPageNode> {
         if (this.page) return this.page
 
         const page = <div className="reader-page-node hook-reader" /> as ReaderPageNode
         const onConnect = new OnConnectElement()
-        const advance = async () => {
-            const tabs = await browser.tabs.query({ url: this.Book.key as string })
-            for (const tab of tabs) {
-                if (tab.id) {
-                    await browser.tabs.sendMessage(tab.id, { type: "advance-page" })
-                }
-            }
-        }
+        const advance = () => this.sendMessage({ type: "advance-page" })
         onConnect.OnConnect = connected => {
             const onKeydown = async (e: KeyboardEvent) => {
                 if (e.key === " ") {
@@ -114,6 +117,8 @@ export class HookReader extends BaseReader {
 
                 // TODO probably has some sketchy race conditions with the furigana stuff
                 await readerPage?.AppendNode(this.MessageToNode(message))
+            } else if (message.type === "request-config") {
+                this.sendMessage({ type: "update-config", config: this.Book.config })
             }
         }
         return this.page

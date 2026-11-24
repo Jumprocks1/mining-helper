@@ -114,6 +114,10 @@
             td, th {
                 padding: 0 $s1
             }
+            .nowrap {
+                display: flex;
+                align-items: center;
+            }
             .cached {
                 >div {
                     display: flex;

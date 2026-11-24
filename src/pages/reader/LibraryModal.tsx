@@ -4,6 +4,7 @@ import LoadingButton from "../../components/LoadingButton"
 import { OpenModal } from "../../components/Modal"
 import { CurrentPage } from "../../framework/Router"
 import { Library } from "../../reader/Library"
+import ConfigureBookModal from "./ConfigureBookModal"
 import ReaderPage from "./ReaderPage"
 
 declare var GITHUB_PAGES: boolean | undefined
@@ -43,6 +44,7 @@ export default () => {
                             }
                         }
                     }
+                    const canConfigure = e.source === "page-hook"
                     const canOpen = (e.cacheKey && cacheKeys.has(e.cacheKey)) || e.source === "url" || e.source === "url-template" || e.source === "page-hook"
                     let name = e.name
                     // Could name these like 1/2/3 as they come in eventually
@@ -91,7 +93,12 @@ export default () => {
                         {nameCell}
                         <td>{progress}</td>
                         <td>{type}</td>
-                        <td>{e.source}</td>
+                        <td>
+                            {!canConfigure ? e.source :
+                                <div className="nowrap">
+                                    {e.source}{canConfigure && <IconButton icon="settings" onClick={() => ConfigureBookModal(library, e)} />}
+                                </div>}
+                        </td>
                         <td className="cached">
                             <div>
                                 {cachedSize ? byteFormat(cachedSize) : <Icon className="error" icon="close" />}
