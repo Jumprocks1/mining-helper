@@ -95,6 +95,7 @@ browser.runtime.onMessage.addListener(message => {
                     (config as Record<any, any>)[key] = v
                 }
             }
+            queueUpdate()
         }
     }
 })
